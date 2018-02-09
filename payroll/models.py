@@ -34,12 +34,12 @@ class Salary(models.Model):
     vintage = models.IntegerField()
 
     def __str__(self):
-        return self.amount
+        return str(self.amount)
 
 class Tenure(models.Model):
-    person = models.ForeignKey('Person', on_delete=models.CASCADE)
-    position = models.ForeignKey('Position', on_delete=models.CASCADE)
-    salary = models.ForeignKey('Salary', on_delete=models.CASCADE)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, null=True)
+    position = models.ForeignKey('Position', on_delete=models.CASCADE, null=True)
+    salary = models.ForeignKey('Salary', on_delete=models.CASCADE, null=True)
     start_date = models.DateField(null=True)
 
     def __str__(self):

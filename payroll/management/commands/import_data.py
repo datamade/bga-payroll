@@ -22,12 +22,27 @@ class Command(BaseCommand):
             self._create_raw_table()
 
             pwd = os.path.dirname(__file__)
-            file = os.path.join(pwd, 'raw', '2017_payroll.csv')
+            file = os.path.join(pwd, '2017_payroll.sorted.csv')
 
             print('Inserting 2017 data')
             with open(file, 'r', encoding='WINDOWS-1250') as f:
                 cursor = connection.cursor()
-                cursor.copy_expert('COPY raw_payroll FROM STDIN CSV HEADER', f)
+
+                copy = '''
+                    COPY raw_payroll (
+                        null_id,
+                        employer,
+                        last_name,
+                        first_name,
+                        title,
+                        department,
+                        salary,
+                        start_date,
+                        vintage
+                    ) FROM STDIN CSV
+                '''
+
+                cursor.copy_expert(copy, f)
 
             print('Indexing raw data')
             self._make_indexes()
@@ -46,9 +61,9 @@ class Command(BaseCommand):
 
         print('Extracting salaries')
         self._insert_salary()
-
-        print('Extracting tenures')
-        self._insert_tenure()
+#
+#        print('Extracting tenures')
+#        self._insert_tenure()
 
     def _run(self, query):
         with connection.cursor() as cursor:
@@ -59,7 +74,8 @@ class Command(BaseCommand):
 
         create = '''
             CREATE TABLE raw_payroll (
-                id VARCHAR,
+                id UUID DEFAULT uuid_generate_v4(),
+                null_id VARCHAR,
                 employer VARCHAR,
                 last_name VARCHAR,
                 first_name VARCHAR,
@@ -116,14 +132,7 @@ class Command(BaseCommand):
 
         select = '''
             INSERT INTO payroll_person (first_name, last_name)
-            SELECT DISTINCT ON (
-                employer,
-                department,
-                first_name,
-                last_name,
-                title,
-                salary
-            )
+            SELECT
                 trim(first_name),
                 trim(last_name)
             FROM raw_payroll
@@ -132,8 +141,6 @@ class Command(BaseCommand):
         self._run(select)
 
     def _insert_position(self):
-        self._run(truncate)
-
         select = '''
             INSERT INTO payroll_position (department_id, title)
             SELECT DISTINCT ON (
@@ -171,14 +178,12 @@ class Command(BaseCommand):
             INSERT INTO payroll_tenure (
                 person_id,
                 position_id,
-                salary_id,
                 start_date
             )
 
-            SELECT
+            SELECT DISTINCT ON (person_id, position_id)
                 person.id AS person_id,
                 position_id,
-                sal.id AS salary_id,
                 NULLIF(trim(start_date), '')::DATE
             FROM raw_payroll AS raw
 
@@ -200,12 +205,13 @@ class Command(BaseCommand):
             AND trim(raw.department) = jobs.department
             AND trim(raw.title) = jobs.title
 
-            JOIN payroll_salary AS sal
-              ON REGEXP_REPLACE(raw.salary, '[^0-9,.]', '', 'g')::NUMERIC = sal.amount
-
             JOIN payroll_person AS person
               ON trim(raw.first_name) = person.first_name
              AND trim(raw.last_name) = person.last_name
+
+            WHERE raw.employer = jobs.employer
+              AND raw.department = jobs.department
+              AND raw.title = jobs.title
         '''
 
         self._run(select)
