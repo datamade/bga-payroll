@@ -25,7 +25,6 @@ class Command(BaseCommand):
             file = os.path.join(pwd, 'raw', '2017_payroll.csv')
 
             print('Inserting 2017 data')
-            # id,Employer,Last Name,First Name,Title,Department,Salary,Date Started,Data Year
             with open(file, 'r', encoding='WINDOWS-1250') as f:
                 cursor = connection.cursor()
                 cursor.copy_expert('COPY raw_payroll FROM STDIN CSV HEADER', f)
@@ -33,24 +32,23 @@ class Command(BaseCommand):
             print('Indexing raw data')
             self._make_indexes()
 
-#        print('Extracting governmental units')
-#        self._insert_gov_unit()
-#
-#        print('Extracting departments')
-#        self._insert_department()
-#
-#        print('Extracting people')
-#        self._insert_person()
-#
-#        print('Extracting positions')
-#        self._insert_position()
-#
-#        print('Extracting salaries')
-#        self._insert_salary()
+        print('Extracting governmental units')
+        self._insert_gov_unit()
+
+        print('Extracting departments')
+        self._insert_department()
+
+        print('Extracting people')
+        self._insert_person()
+
+        print('Extracting positions')
+        self._insert_position()
+
+        print('Extracting salaries')
+        self._insert_salary()
 
         print('Extracting tenures')
         self._insert_tenure()
-
 
     def _run(self, query):
         with connection.cursor() as cursor:
