@@ -61,9 +61,9 @@ class Command(BaseCommand):
 
         print('Extracting salaries')
         self._insert_salary()
-#
-#        print('Extracting tenures')
-#        self._insert_tenure()
+
+        print('Extracting tenures')
+        self._insert_tenure()
 
     def _run(self, query):
         with connection.cursor() as cursor:
@@ -106,7 +106,7 @@ class Command(BaseCommand):
 
         select = '''
             INSERT INTO payroll_governmentalunit (name)
-            SELECT DISTINCT trim(employer) FROM raw_payroll
+            SELECT DISTINCT TRIM(employer) FROM raw_payroll
         '''
 
         self._run(select)
@@ -116,11 +116,10 @@ class Command(BaseCommand):
             INSERT INTO payroll_department (governmental_unit_id, name)
             SELECT DISTINCT ON (employer, department)
                 gunit.id,
-                trim(department)
+                TRIM(department)
             FROM raw_payroll AS raw
             JOIN payroll_governmentalunit AS gunit
-            ON raw.employer = gunit.name
-            WHERE department IS NOT NULL
+            ON TRIM(raw.employer) = gunit.name
         '''
 
         self._run(select)
@@ -131,10 +130,11 @@ class Command(BaseCommand):
         self._run(truncate)
 
         select = '''
-            INSERT INTO payroll_person (first_name, last_name)
+            INSERT INTO payroll_person (id, first_name, last_name)
             SELECT
-                trim(first_name),
-                trim(last_name)
+                id,
+                TRIM(first_name),
+                TRIM(last_name)
             FROM raw_payroll
         '''
 
@@ -149,10 +149,10 @@ class Command(BaseCommand):
                 title
             )
                 dept.id,
-                trim(title)
+                TRIM(title)
             FROM raw_payroll AS raw
             JOIN payroll_department AS dept
-            ON raw.department = dept.name
+            ON TRIM(raw.department) = dept.name
         '''
 
         self._run(select)
@@ -174,44 +174,41 @@ class Command(BaseCommand):
         self._run(select)
 
     def _insert_tenure(self):
+        '''
+        NOTE TO SELF: This doesn't account for tenures in positions
+        where the title or department is null in the source data
+        (about 33k records, in total). Find a way to get those, too.
+        '''
         select = '''
             INSERT INTO payroll_tenure (
                 person_id,
                 position_id,
+                salary_id,
                 start_date
             )
-
-            SELECT DISTINCT ON (person_id, position_id)
-                person.id AS person_id,
+            SELECT DISTINCT ON (raw.id)
+                raw.id,
                 position_id,
-                NULLIF(trim(start_date), '')::DATE
+                sal.id,
+                NULLIF(TRIM(raw.start_date), '')::date
             FROM raw_payroll AS raw
 
             JOIN (
-            SELECT
-                gunit.name AS employer,
-                dept.name AS department,
-                pos.id AS position_id,
-                pos.title AS title
-            FROM payroll_governmentalunit AS gunit
-
-            JOIN payroll_department AS dept
-              ON dept.governmental_unit_id = gunit.id
-
-            JOIN payroll_position AS pos
-              ON pos.department_id = dept.id
+                SELECT
+                    dept.name AS department,
+                    pos.title AS title,
+                    pos.id AS position_id
+                FROM payroll_department AS dept
+                JOIN payroll_position AS pos
+                  ON dept.id = pos.department_id
             ) AS jobs
-            ON trim(raw.employer) = jobs.employer
-            AND trim(raw.department) = jobs.department
-            AND trim(raw.title) = jobs.title
+            ON TRIM(raw.department) = jobs.department
+            AND TRIM(raw.title) = jobs.title
 
-            JOIN payroll_person AS person
-              ON trim(raw.first_name) = person.first_name
-             AND trim(raw.last_name) = person.last_name
-
-            WHERE raw.employer = jobs.employer
-              AND raw.department = jobs.department
-              AND raw.title = jobs.title
+            JOIN payroll_salary AS sal
+              ON REGEXP_REPLACE(
+                  raw.salary, '[^0-9,.]', '', 'g'
+              )::NUMERIC = sal.amount
         '''
 
         self._run(select)
