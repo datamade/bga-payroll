@@ -84,12 +84,9 @@ class Command(BaseCommand):
 
         select = '''
             INSERT INTO payroll_employer (name)
-            SELECT DISTINCT employer FROM raw_payroll
-        '''
+            SELECT DISTINCT employer FROM raw_payroll;
 
-        self._run(select)
 
-        select = '''
             INSERT INTO payroll_employer (parent_id, name)
             SELECT DISTINCT ON (id, department)
                 emp.id,
@@ -97,12 +94,19 @@ class Command(BaseCommand):
             FROM raw_payroll AS raw
             JOIN payroll_employer AS emp
             ON raw.employer = emp.name
-            WHERE raw.department IS NOT NULL
+            WHERE raw.department IS NOT NULL;
         '''
 
         self._run(select)
 
     def _insert_person(self):
+        '''
+        NOTE: This creates multiples of people who have different titles
+        within the same department. This seems preferable to deleting
+        two John Smiths working in the same department. We could potentially
+        lose a John Smith if two started in the same department on the same
+        day with the same rate of pay.
+        '''
         truncate = 'TRUNCATE payroll_person CASCADE'
 
         self._run(truncate)
@@ -141,6 +145,7 @@ class Command(BaseCommand):
             JOIN payroll_employer AS emp
             ON raw.employer = emp.name
             WHERE raw.department IS NULL;
+
 
             INSERT INTO payroll_position (employer_id, title)
             WITH department AS (
