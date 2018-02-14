@@ -49,9 +49,9 @@ class Command(BaseCommand):
             cursor.execute(query)
 
     def _create_raw_table(self):
-        drop = 'DROP TABLE IF EXISTS raw_payroll'
+        self._run('DROP TABLE IF EXISTS raw_payroll')
 
-        create = '''
+        self._run('''
             CREATE TABLE raw_payroll (
                 null_id VARCHAR,
                 employer VARCHAR,
@@ -63,10 +63,7 @@ class Command(BaseCommand):
                 start_date VARCHAR,
                 vintage INT
             )
-        '''
-
-        self._run(drop)
-        self._run(create)
+        ''')
 
     def _make_indexes(self):
         for field in ('employer', 'department',
@@ -78,15 +75,14 @@ class Command(BaseCommand):
             self._run(index)
 
     def _insert_employer(self):
-        truncate = 'TRUNCATE payroll_employer CASCADE'
+        self._run('TRUNCATE payroll_employer CASCADE')
 
-        self._run(truncate)
-
-        select = '''
+        self._run('''
             INSERT INTO payroll_employer (name)
-            SELECT DISTINCT employer FROM raw_payroll;
+            SELECT DISTINCT employer FROM raw_payroll
+        ''')
 
-
+        self._run('''
             INSERT INTO payroll_employer (parent_id, name)
             SELECT DISTINCT ON (id, department)
                 emp.id,
@@ -95,9 +91,7 @@ class Command(BaseCommand):
             JOIN payroll_employer AS emp
             ON raw.employer = emp.name
             WHERE raw.department IS NOT NULL;
-        '''
-
-        self._run(select)
+        ''')
 
     def _insert_person(self):
         '''
@@ -107,11 +101,9 @@ class Command(BaseCommand):
         lose a John Smith if two started in the same department on the same
         day with the same rate of pay.
         '''
-        truncate = 'TRUNCATE payroll_person CASCADE'
+        self._run('TRUNCATE payroll_person CASCADE')
 
-        self._run(truncate)
-
-        select = '''
+        self._run('''
             INSERT INTO payroll_person (first_name, last_name)
             SELECT DISTINCT ON (
                 employer,
@@ -124,16 +116,12 @@ class Command(BaseCommand):
                 first_name,
                 last_name
             FROM raw_payroll
-        '''
-
-        self._run(select)
+        ''')
 
     def _insert_position(self):
-        truncate = 'TRUNCATE payroll_employer CASCADE'
+        # Cleared by truncating employer table
 
-        self._run(truncate)
-
-        select = '''
+        self._run('''
             INSERT INTO payroll_position (employer_id, title)
             SELECT DISTINCT ON (
                 employer,
@@ -144,9 +132,10 @@ class Command(BaseCommand):
             FROM raw_payroll AS raw
             JOIN payroll_employer AS emp
             ON raw.employer = emp.name
-            WHERE raw.department IS NULL;
+            WHERE raw.department IS NULL
+        ''')
 
-
+        self._run('''
             INSERT INTO payroll_position (employer_id, title)
             WITH department AS (
                 SELECT
@@ -169,26 +158,21 @@ class Command(BaseCommand):
             ON raw.employer = dept.parent
             AND raw.department = dept.department
             WHERE raw.department IS NOT NULL;
-        '''
-
-        self._run(select)
+        ''')
 
     def _insert_salary(self):
         '''
         Take advantage of ordered inserts and automatic serials to create
         a temp table with a serial ID, fill it with data, insert some of
-        that data into the salary table, then use the salary serial ID (which
-        will equal the serial ID from the salary table) to insert the rest
-        of the data into the person_salaries table.
+        that data into the salary table, then use the resulting salary serial
+        ID (which will equal the serial ID from the salary table) to insert
+        the rest of the data into the person_salaries table.
         '''
-        truncate = 'TRUNCATE payroll_salary CASCADE'
+        # Cleared by truncating employer table
 
-        self._run(truncate)
+        self._run('ALTER SEQUENCE payroll_salary_id_seq RESTART WITH 1')
 
-        transaction = '''
-            ALTER SEQUENCE payroll_salary_id_seq RESTART WITH 1;
-
-
+        self._run('''
             CREATE TEMP TABLE ps_lookup (
                 id SERIAL,
                 person_id INT,
@@ -196,9 +180,10 @@ class Command(BaseCommand):
                 amount DOUBLE PRECISION,
                 start_date DATE,
                 vintage INT
-            );
+            )
+        ''')
 
-
+        self._run('''
             INSERT INTO ps_lookup (person_id, position_id, amount, start_date, vintage)
             WITH positions AS (
                 SELECT
@@ -226,9 +211,10 @@ class Command(BaseCommand):
             ON person.first_name = raw.first_name
             AND person.last_name = raw.last_name
 
-            WHERE raw.department IS NULL;
+            WHERE raw.department IS NULL
+        ''')
 
-
+        self._run('''
             INSERT INTO ps_lookup (person_id, position_id, amount, start_date, vintage)
             WITH positions AS (
                 SELECT
@@ -260,9 +246,10 @@ class Command(BaseCommand):
             ON person.first_name = raw.first_name
             AND person.last_name = raw.last_name
 
-            WHERE raw.department IS NOT NULL;
+            WHERE raw.department IS NOT NULL
+        ''')
 
-
+        self._run('''
             INSERT INTO payroll_salary (amount, start_date, vintage, position_id)
             SELECT
                 amount,
@@ -277,7 +264,5 @@ class Command(BaseCommand):
                 person_id,
                 id
             FROM ps_lookup;
-        '''
-
-        self._run(transaction)
+        ''')
 
