@@ -163,7 +163,7 @@ class Command(BaseCommand):
             JOIN department AS dept
             ON raw.employer = dept.parent
             AND raw.department = dept.department
-            WHERE raw.department IS NOT NULL
+            WHERE raw.department IS NOT NULL;
         '''
 
         self._run(select)
