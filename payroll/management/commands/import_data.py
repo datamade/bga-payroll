@@ -27,31 +27,13 @@ class Command(BaseCommand):
             print('Inserting 2017 data')
             with open(file, 'r', encoding='WINDOWS-1250') as f:
                 cursor = connection.cursor()
-
-                copy = '''
-                    COPY raw_payroll (
-                        null_id,
-                        employer,
-                        last_name,
-                        first_name,
-                        title,
-                        department,
-                        salary,
-                        start_date,
-                        vintage
-                    ) FROM STDIN CSV
-                '''
-
-                cursor.copy_expert(copy, f)
+                cursor.copy_expert('COPY raw_payroll FROM STDIN CSV', f)
 
             print('Indexing raw data')
             self._make_indexes()
 
-        print('Extracting governmental units')
-        self._insert_gov_unit()
-
-        print('Extracting departments')
-        self._insert_department()
+        print('Extracting employers')
+        self._insert_employer()
 
         print('Extracting people')
         self._insert_person()
@@ -59,11 +41,8 @@ class Command(BaseCommand):
         print('Extracting positions')
         self._insert_position()
 
-        print('Extracting salaries')
+        print('Extracting salary')
         self._insert_salary()
-
-        print('Extracting tenures')
-        self._insert_tenure()
 
     def _run(self, query):
         with connection.cursor() as cursor:
@@ -74,7 +53,6 @@ class Command(BaseCommand):
 
         create = '''
             CREATE TABLE raw_payroll (
-                id UUID DEFAULT uuid_generate_v4(),
                 null_id VARCHAR,
                 employer VARCHAR,
                 last_name VARCHAR,
@@ -99,27 +77,27 @@ class Command(BaseCommand):
 
             self._run(index)
 
-    def _insert_gov_unit(self):
-        truncate = 'TRUNCATE payroll_governmentalunit CASCADE'
+    def _insert_employer(self):
+        truncate = 'TRUNCATE payroll_employer CASCADE'
 
         self._run(truncate)
 
         select = '''
-            INSERT INTO payroll_governmentalunit (name)
-            SELECT DISTINCT TRIM(employer) FROM raw_payroll
+            INSERT INTO payroll_employer (name)
+            SELECT DISTINCT employer FROM raw_payroll
         '''
 
         self._run(select)
 
-    def _insert_department(self):
         select = '''
-            INSERT INTO payroll_department (governmental_unit_id, name)
-            SELECT DISTINCT ON (employer, department)
-                gunit.id,
-                TRIM(department)
+            INSERT INTO payroll_employer (parent_id, name)
+            SELECT DISTINCT ON (id, department)
+                emp.id,
+                raw.department
             FROM raw_payroll AS raw
-            JOIN payroll_governmentalunit AS gunit
-            ON TRIM(raw.employer) = gunit.name
+            JOIN payroll_employer AS emp
+            ON raw.employer = emp.name
+            WHERE raw.department IS NOT NULL
         '''
 
         self._run(select)
@@ -130,85 +108,171 @@ class Command(BaseCommand):
         self._run(truncate)
 
         select = '''
-            INSERT INTO payroll_person (id, first_name, last_name)
-            SELECT
-                id,
-                TRIM(first_name),
-                TRIM(last_name)
+            INSERT INTO payroll_person (first_name, last_name)
+            SELECT DISTINCT ON (
+                employer,
+                department,
+                first_name,
+                last_name,
+                title,
+                start_date
+            )
+                first_name,
+                last_name
             FROM raw_payroll
         '''
 
         self._run(select)
 
     def _insert_position(self):
+        truncate = 'TRUNCATE payroll_employer CASCADE'
+
+        self._run(truncate)
+
         select = '''
-            INSERT INTO payroll_position (department_id, title)
+            INSERT INTO payroll_position (employer_id, title)
             SELECT DISTINCT ON (
                 employer,
-                department,
+                title
+            )
+                emp.id,
+                COALESCE(title, 'EMPLOYEE')
+            FROM raw_payroll AS raw
+            JOIN payroll_employer AS emp
+            ON raw.employer = emp.name
+            WHERE raw.department IS NULL;
+
+            INSERT INTO payroll_position (employer_id, title)
+            WITH department AS (
+                SELECT
+                    child.id AS id,
+                    parent.name AS parent,
+                    child.name AS department
+                FROM payroll_employer AS child
+                JOIN payroll_employer AS parent
+                ON child.parent_id = parent.id
+            )
+            SELECT DISTINCT ON (
+                raw.employer,
+                raw.department,
                 title
             )
                 dept.id,
-                TRIM(title)
+                COALESCE(title, 'EMPLOYEE')
             FROM raw_payroll AS raw
-            JOIN payroll_department AS dept
-            ON TRIM(raw.department) = dept.name
+            JOIN department AS dept
+            ON raw.employer = dept.parent
+            AND raw.department = dept.department
+            WHERE raw.department IS NOT NULL
         '''
 
         self._run(select)
 
     def _insert_salary(self):
+        '''
+        Take advantage of ordered inserts and automatic serials to create
+        a temp table with a serial ID, fill it with data, insert some of
+        that data into the salary table, then use the salary serial ID (which
+        will equal the serial ID from the salary table) to insert the rest
+        of the data into the person_salaries table.
+        '''
         truncate = 'TRUNCATE payroll_salary CASCADE'
 
         self._run(truncate)
 
-        select = '''
-            INSERT INTO payroll_salary (amount, vintage)
-            SELECT DISTINCT ON (salary)
-                REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
-                vintage
-            FROM raw_payroll
-            WHERE salary IS NOT NULL
-        '''
+        transaction = '''
+            ALTER SEQUENCE payroll_salary_id_seq RESTART WITH 1;
 
-        self._run(select)
 
-    def _insert_tenure(self):
-        '''
-        NOTE TO SELF: This doesn't account for tenures in positions
-        where the title or department is null in the source data
-        (about 33k records, in total). Find a way to get those, too.
-        '''
-        select = '''
-            INSERT INTO payroll_tenure (
-                person_id,
-                position_id,
-                salary_id,
-                start_date
+            CREATE TEMP TABLE ps_lookup (
+                id SERIAL,
+                person_id INT,
+                position_id INT,
+                amount DOUBLE PRECISION,
+                start_date DATE,
+                vintage INT
+            );
+
+
+            INSERT INTO ps_lookup (person_id, position_id, amount, start_date, vintage)
+            WITH positions AS (
+                SELECT
+                    employer.id AS employer_id,
+                    employer.name AS employer_name,
+                    position.id AS position_id,
+                    position.title AS position_name
+                FROM payroll_employer AS employer
+                JOIN payroll_position AS position
+                ON position.employer_id = employer.id
             )
-            SELECT DISTINCT ON (raw.id)
-                raw.id,
-                position_id,
-                sal.id,
-                NULLIF(TRIM(raw.start_date), '')::date
+            SELECT DISTINCT ON (employer_id, person_id, position_id, salary, start_date)
+                person.id AS person_id,
+                position.position_id,
+                REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
+                raw.start_date::date,
+                '2017'::int AS vintage
             FROM raw_payroll AS raw
 
-            JOIN (
-                SELECT
-                    dept.name AS department,
-                    pos.title AS title,
-                    pos.id AS position_id
-                FROM payroll_department AS dept
-                JOIN payroll_position AS pos
-                  ON dept.id = pos.department_id
-            ) AS jobs
-            ON TRIM(raw.department) = jobs.department
-            AND TRIM(raw.title) = jobs.title
+            JOIN positions AS position
+            ON position.employer_name = raw.employer
+            AND position.position_name = COALESCE(raw.title, 'EMPLOYEE')
 
-            JOIN payroll_salary AS sal
-              ON REGEXP_REPLACE(
-                  raw.salary, '[^0-9,.]', '', 'g'
-              )::NUMERIC = sal.amount
+            JOIN payroll_person AS person
+            ON person.first_name = raw.first_name
+            AND person.last_name = raw.last_name
+
+            WHERE raw.department IS NULL;
+
+
+            INSERT INTO ps_lookup (person_id, position_id, amount, start_date, vintage)
+            WITH positions AS (
+                SELECT
+                    child_employer.id AS employer_id,
+                    child_employer.name AS employer_name,
+                    parent_employer.name AS parent_employer_name,
+                    position.id AS position_id,
+                    position.title AS position_name
+                FROM payroll_employer AS child_employer
+                JOIN payroll_employer AS parent_employer
+                ON child_employer.parent_id = parent_employer.id
+                JOIN payroll_position AS position
+                ON position.employer_id = child_employer.id
+            )
+            SELECT DISTINCT ON (employer_id, person_id, position_id, salary, raw.start_date)
+                person.id AS person_id,
+                position.position_id,
+                REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
+                NULLIF(TRIM(raw.start_date), '')::date,
+                '2017'::int AS vintage
+            FROM raw_payroll AS raw
+
+            JOIN positions AS position
+            ON position.parent_employer_name = raw.employer
+            AND position.employer_name = raw.department
+            AND position.position_name = COALESCE(raw.title, 'EMPLOYEE')
+
+            JOIN payroll_person AS person
+            ON person.first_name = raw.first_name
+            AND person.last_name = raw.last_name
+
+            WHERE raw.department IS NOT NULL;
+
+
+            INSERT INTO payroll_salary (amount, start_date, vintage, position_id)
+            SELECT
+                amount,
+                start_date,
+                vintage,
+                position_id
+            FROM ps_lookup;
+
+
+            INSERT INTO payroll_person_salaries (person_id, salary_id)
+            SELECT
+                person_id,
+                id
+            FROM ps_lookup;
         '''
 
-        self._run(select)
+        self._run(transaction)
+
