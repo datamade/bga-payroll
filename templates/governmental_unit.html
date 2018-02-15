@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="col-md-9">
+  <h2>Governmental Unit</h2>
+
+  {% for unit in units %}
+    {{ unit }}
+  {% endfor %}
+</div>
+
+{% endblock %}

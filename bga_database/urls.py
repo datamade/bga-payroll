@@ -16,6 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from payroll import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.index, name='home'),
+    path('governmental-unit/<int:id>/', views.governmental_unit, name='gunit'),
+    path('governmental-unit/', views.governmental_unit, name='gunit')
 ]
