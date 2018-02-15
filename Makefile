@@ -1,21 +1,23 @@
-PG_DB=bga
+PG_DB=bga_payroll
+INPUT=payroll/management/commands/2017_payroll.sorted.csv
 
-payroll : raw/2016_payroll.csv
-	psql -d $(PG_DB) -c " \
-		CREATE TABLE IF NOT EXISTS $@ ( \
-			record INT, \
-			agency_number INT, \
-			first_name VARCHAR, \
-			last_name VARCHAR, \
-			title VARCHAR, \
-			department VARCHAR, \
-			salary DECIMAL, \
-			date_started BIGINT, \
-			year INT, \
-			employer VARCHAR, \
-			upload_date DATE, \
-			upload_date_and_time TIMESTAMP \
-		)"; \
-	csvcut -c 1,2,3,4,5,6,7,8,11,12,13,14 $< | \
-	tail -n +2 | \
-	psql -d $(PG_DB) -c "COPY $@ FROM STDIN CSV"
+
+.INTERMEDIATE : $(INPUT)
+
+database : $(PG_DB) inserts
+
+# Sort by employer, department, title, first name, last name and remove duplicates
+$(INPUT) : raw/2017_payroll.csv
+	export LC_ALL='C'; \
+	tail +2 $< | \
+	sort --field-separator=',' -k2 -k6 -k5 -k4 -k3 | \
+	uniq > $@
+
+$(PG_DB) :
+	psql -d $(PG_DB) -c "\d" > /dev/null 2>&1 || ( \
+	createdb $@ && \
+	psql -d $(PG_DB) -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"' && \
+	python manage.py migrate)
+
+inserts : $(INPUT)
+	python manage.py import_data
