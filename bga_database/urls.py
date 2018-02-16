@@ -21,6 +21,6 @@ from payroll import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='home'),
-    path('governmental-unit/<int:id>/', views.governmental_unit, name='gunit'),
-    path('governmental-unit/', views.governmental_unit, name='gunit')
+    path('governmental-unit/<int:uid>/', views.governmental_unit, name='unit'),
+    path('error/<int:error_code>', views.error, name='error')
 ]
