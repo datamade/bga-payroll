@@ -44,7 +44,7 @@
       {% for salary in salaries[:5] %}
         <tr>
           <td>{{ salary.person|title }}</td>
-          <td>{{ salary.position|title }}</td>
+          <td>{{ salary.position.title|title }}</td>
           <td>{{ salary.position.employer|title }}</td>
           <td>{{ salary.start_date or '' }}</td>
           <td>{{ "${:,.2f}".format(salary.amount) }}</td>
@@ -81,7 +81,13 @@
 <script src="{{ static('js/salary_distribution_chart.js') }}"></script>
 
 <script type="text/javascript">
-  make_distribution_chart('{{ unit.name|title }}', {{ salary_json|safe }});
+  {% if unit.departments.all() %}
+    var distribution_type = 'department';
+  {% else %}
+    var distribution_type = 'employee';
+  {% endif %}
+
+  make_distribution_chart('{{ unit.name|title }}', {{ salary_json|safe }}, distribution_type);
 </script>
 
 {% endblock %}

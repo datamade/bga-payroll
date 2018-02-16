@@ -1,13 +1,19 @@
-var make_distribution_chart = function(entity_name, data) {
+var make_distribution_chart = function(entity_name, data, type) {
   var salaries = Array();
 
   data.forEach(function(salary) {
     salaries.push(salary.amount);
   });
 
+  if ( type == 'department' ) {
+    var title = 'Average Salary by Department'
+  } else {
+    var title = 'Salary Distribution'
+  }
+
   Highcharts.chart('distribution-chart', {
       title: {
-          text: entity_name + ' Salary Distribution',
+          text: entity_name + ' ' + title,
       },
       xAxis: {
           reversed: true,
@@ -25,18 +31,24 @@ var make_distribution_chart = function(entity_name, data) {
 
       series: [{
           name: 'Salary',
-          type: 'column',
+          type: 'area',
           data: salaries,
-          zIndex: -1,
+          id: 'salaries',
           tooltip: {
             headerFormat: '',
             pointFormatter: function(point) {
-              var employee = data[this.x];
-              var name = employee.name;
-              var position = employee.position;
-              var salary = this.y;
-              return '<strong>' + name + '</strong><br />' + position + '<br />$' + salary;
-            }
+              if ( type == 'department' ) {
+                var department = data[this.x].department;
+                var average = this.y;
+                return '<strong>' + department + '</strong><br />' + '<br />$' + average;
+              } else {
+                var employee = data[this.x];
+                var name = employee.name;
+                var position = employee.position;
+                var salary = this.y;
+                return '<strong>' + name + '</strong><br />' + position + '<br />$' + salary;
+              }
+            },
           },
           color: '#6c757c',
       }],
