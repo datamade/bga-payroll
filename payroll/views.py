@@ -24,7 +24,7 @@ def governmental_unit(request, uid):
         error_page = reverse(error, kwargs={'error_code': 404})
         return redirect(error_page)
 
-    if not unit.departments:
+    if unit.is_department:
         department_page = reverse('department', kwargs={'uid': uid})
         return redirect(department_page)
 
@@ -68,13 +68,13 @@ def governmental_unit(request, uid):
 
 def department(request, uid):
     try:
-        unit = Employer.objects.filter(parent_id__isnull=False).get(id=uid)
+        department = Employer.objects.filter(parent_id__isnull=False).get(id=uid)
 
     except Employer.DoesNotExist:
         error_page = reverse(error, kwargs={'error_code': 404})
         return redirect(error_page)
 
-    person_salaries = Salary.of_employer(unit.id)
+    person_salaries = Salary.of_employer(department.id)
     average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
 
     salary_json = []
@@ -87,7 +87,7 @@ def department(request, uid):
         })
 
     return render(request, 'department.html', {
-        'unit': unit,
+        'department': department,
         'salaries': person_salaries,
         'average_salary': average_salary,
         'salary_json': json.dumps(salary_json),
