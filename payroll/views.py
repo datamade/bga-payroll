@@ -16,16 +16,16 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-def governmental_unit(request, uid):
+def governmental_unit(request, slug):
     try:
-        unit = Employer.objects.filter(parent_id__isnull=True).get(id=uid)
+        unit = Employer.objects.filter(parent_id__isnull=True).get(slug=slug)
 
     except Employer.DoesNotExist:
         error_page = reverse(error, kwargs={'error_code': 404})
         return redirect(error_page)
 
     if not unit.departments:
-        department_page = reverse('department', kwargs={'uid': uid})
+        department_page = reverse('department', kwargs={'slug': slug})
         return redirect(department_page)
 
     else:
@@ -66,9 +66,9 @@ def governmental_unit(request, uid):
     })
 
 
-def department(request, uid):
+def department(request, slug):
     try:
-        department = Employer.objects.filter(parent_id__isnull=False).get(id=uid)
+        department = Employer.objects.filter(parent_id__isnull=False).get(slug=slug)
 
     except Employer.DoesNotExist:
         error_page = reverse(error, kwargs={'error_code': 404})
