@@ -16,7 +16,7 @@ $(INPUT) : raw/2017_payroll.csv
 $(PG_DB) :
 	psql -d $(PG_DB) -c "\d" > /dev/null 2>&1 || ( \
 	createdb $@ && \
-	psql -d $(PG_DB) -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"' && \
+	python manage.py makemigrations && \
 	python manage.py migrate)
 
 inserts : $(INPUT)

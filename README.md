@@ -28,15 +28,15 @@ Perform the following steps from your terminal.
     ```bash
     pip install -r requirements.txt
     ```
-4. Create the database and add 2017 data. (This may take a couple of minutes.)
-
-    ```bash
-    make database
-    ```
-5. Copy the local settings file.
+4. Copy the local settings file.
 
     ```bash
     cp bga_database/local_settings.py.example bga_database/local_settings.py
+    ```
+5. Create the database and add 2017 data. (This may take a couple of minutes.)
+
+    ```bash
+    make database
     ```
 6. Run the app.
 
