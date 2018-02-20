@@ -1,7 +1,7 @@
 import json
 
 from django.db import connection
-from django.db.models import Avg, Q
+from django.db.models import Avg
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
