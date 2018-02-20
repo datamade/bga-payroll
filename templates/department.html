@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}{{ department.name|title }}{% endblock %}
+{% block title %}{{ entity.name|title }}{% endblock %}
 
 {% block content %}
 <div class="col-md-12">
-  <h2>{{ department.name|title }}</h2>
+  <h2>{{ entity.name|title }}</h2>
 
   <div class="card">
     <div class="card-header bg-warning">
@@ -40,7 +40,7 @@
 <script src="{{ static('js/salary_distribution_chart.js') }}"></script>
 
 <script type="text/javascript">
-  make_distribution_chart('{{ department.name|title }}',
+  make_distribution_chart('{{ entity.name|title }}',
                           {{ salary_json|safe }},
                           'employee');
 

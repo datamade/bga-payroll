@@ -59,7 +59,7 @@ def governmental_unit(request, uid):
                 })
 
     return render(request, 'governmental_unit.html', {
-        'unit': unit,
+        'entity': unit,
         'salaries': person_salaries,
         'average_salary': average_salary,
         'salary_json': json.dumps(department_salaries),
@@ -87,7 +87,7 @@ def department(request, uid):
         })
 
     return render(request, 'department.html', {
-        'department': department,
+        'entity': department,
         'salaries': person_salaries,
         'average_salary': average_salary,
         'salary_json': json.dumps(salary_json),

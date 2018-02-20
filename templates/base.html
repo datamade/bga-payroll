@@ -20,8 +20,8 @@
     <div class="navbar navbar-dark bg-dark">
       <a class="navbar-brand" href="/">Better Government Association</a>
     </div>
-    <div class="container" id="main-content">
-      <br />
+    <div class="container" id="main-content"><br />
+      {% include 'partials/breadcrumbs.html' %}
       {% block content %}{% endblock %}
     </div> <!-- /container -->
     {% block modals %}{% endblock %}
