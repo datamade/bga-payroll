@@ -34,21 +34,6 @@
       {% include 'partials/person_table.html' %}
     </div>
   </div>
-  <br />
-  {% with departments = entity.departments.all() %}
-    {% if departments %}
-    <div class="card">
-      <div class="card-header bg-warning">
-        <i class="fas fa-briefcase"></i> Departments
-      </div>
-      <div class="card-body">
-        {% for department in departments %}
-          {{ department }}<br />
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-  {% endwith %}
 </div>
 {% endblock %}
 
@@ -57,7 +42,7 @@
 
 <script type="text/javascript">
   ChartHelper.make_salary_chart(
-    '{{ entity.name|title }}', {{ salary_json|safe }}, 'department'
+    '{{ entity.name|title }}', {{ salary_json|safe }}, 'employee'
   );
 </script>
 {% endblock %}
