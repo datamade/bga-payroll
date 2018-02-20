@@ -55,7 +55,7 @@ class Salary(models.Model):
             return self.person_set.get()
 
     @property
-    def wage(self):
+    def is_wage(self):
         '''
         Some salary data is hourly, or per appearance. This isn't explicit in
         the source, but we can intuit based on the amount. Return True if the

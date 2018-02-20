@@ -53,13 +53,11 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ static('js/salary_distribution_chart.js') }}"></script>
+<script src="{{ static('js/chart_helper.js') }}"></script>
 
 <script type="text/javascript">
-  make_distribution_chart('{{ entity.name|title }}',
-                          {{ salary_json|safe }},
-                          'department');
-
-  console.log({{ salary_json|safe }});
+  ChartHelper.make_salary_chart(
+    '{{ entity.name|title }}', {{ salary_json|safe }}, 'department'
+  );
 </script>
 {% endblock %}
