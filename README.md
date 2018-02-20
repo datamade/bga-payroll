@@ -18,7 +18,7 @@ Perform the following steps from your terminal.
     git clone https://github.com/datamade/bga-payroll.git
     cd bga-payroll
     ```
-2. Create a virtual environment. (We recommend using [`virtualenv`](http://virtualenv.readthedocs.org/en/latest/virtualenv.html) and [`virtualenvwrapper`](http://virtualenvwrapper.readthedocs.org/en/latest/install.html) for working in a virtualized development environment.)
+2. Create a virtual environment. (We recommend using [`virtualenvwrapper`](http://virtualenvwrapper.readthedocs.org/en/latest/install.html) for working in a virtualized development environment.)
 
     ```bash
     mkvirtualenv bga
