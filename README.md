@@ -33,7 +33,12 @@ Perform the following steps from your terminal.
     ```bash
     make database
     ```
-5. Run the app.
+5. Copy the local settings file.
+
+    ```bash
+    cp bga_database/local_settings.py.example bga_database/local_settings.py
+    ```
+6. Run the app.
 
     ```bash
     python manage.py runserver
