@@ -3,6 +3,7 @@
 {% block title %}{{ entity.name|title }}{% endblock %}
 
 {% block content %}
+{% include 'partials/breadcrumbs.html' %}
 <div class="col-md-12">
   <h2>{{ entity.name|title }}</h2>
 
