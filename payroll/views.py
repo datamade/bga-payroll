@@ -16,7 +16,7 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-def governmental_unit(request, uid=None):
+def governmental_unit(request, uid):
     try:
         unit = Employer.objects.filter(parent_id__isnull=True).get(id=uid)
 
@@ -24,32 +24,16 @@ def governmental_unit(request, uid=None):
         error_page = reverse(error, kwargs={'error_code': 404})
         return redirect(error_page)
 
-#            SELECT
-#                CONCAT_WS(' ', person.first_name, person.last_name),
-#                position.title,
-#                salary.amount
-#            FROM payroll_salary AS salary
-#            JOIN payroll_person_salaries AS ps
-#            ON ps.salary_id = salary.id
-#            JOIN payroll_person as person
-#            ON ps.person_id = person.id
-#            JOIN payroll_position AS position
-#            ON salary.position_id = position.id
-#            JOIN payroll_employer AS employer
-#            ON position.employer_id = employer.id
-#            WHERE employer.parent_id = {id}
-#            OR employer.id = {id}
-#            ORDER BY salary.amount
+    if not unit.departments:
+        department_page = reverse('department', kwargs={'uid': uid})
+        return redirect(department_page)
 
-    salaries = Salary.objects.filter(
-        Q(position__employer_id=uid) | Q(position__employer__parent_id=uid)
-    ).order_by('-amount')
+    else:
+        person_salaries = Salary.of_employer(unit.id)
+        average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
 
-    average_salary = salaries.aggregate(Avg('amount'))['amount__avg']
+        department_salaries = []
 
-    salary_json = []
-
-    if unit.departments:
         with connection.cursor() as cursor:
             query = '''
                 SELECT
@@ -69,22 +53,42 @@ def governmental_unit(request, uid=None):
             cursor.execute(query)
 
             for department, average in cursor:
-                salary_json.append({
+                department_salaries.append({
                     'amount': round(average, 2),
                     'department': department.title(),
                 })
 
-    else:
-        for salary in salaries:
-            salary_json.append({
-                'name': str(salary.person).title(),
-                'position': str(salary.position).title(),
-                'amount': salary.amount,
-            })
-
     return render(request, 'governmental_unit.html', {
         'unit': unit,
-        'salaries': salaries,
-        'salary_json': json.dumps(salary_json),
+        'salaries': person_salaries,
         'average_salary': average_salary,
+        'salary_json': json.dumps(department_salaries),
+    })
+
+
+def department(request, uid):
+    try:
+        unit = Employer.objects.filter(parent_id__isnull=False).get(id=uid)
+
+    except Employer.DoesNotExist:
+        error_page = reverse(error, kwargs={'error_code': 404})
+        return redirect(error_page)
+
+    person_salaries = Salary.of_employer(unit.id)
+    average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
+
+    salary_json = []
+
+    for salary in person_salaries:
+        salary_json.append({
+            'name': str(salary.person).title(),
+            'position': str(salary.position).title(),
+            'amount': salary.amount,
+        })
+
+    return render(request, 'department.html', {
+        'unit': unit,
+        'salaries': person_salaries,
+        'average_salary': average_salary,
+        'salary_json': json.dumps(salary_json),
     })
