@@ -2,16 +2,9 @@
   <em>
   	{% if entity.parent %}
   <a href="governmental-unit/PARENT_ID">
-  	 {{ entity.parent }}</a> > 
-
-  <a href="department/DEPARTMENT_ID">{{ entity }}</a> <br/>
-
- Parent ID: {{ entity.parent.id }}<br />
-  Parent is department: {{ entity.parent.is_department }}</a><br />
+  	 {{ entity.parent.id }}</a> > 
+  <a href="department/DEPARTMENT_ID">{{ entity.id }}</a> <br/>
 {% endif %}
 
-
-Entity ID: {{ entity.id }}<br />
-Entity is department: {{ entity.is_department }}
   </em>
 </div>
