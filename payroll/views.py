@@ -24,7 +24,7 @@ def governmental_unit(request, uid):
         error_page = reverse(error, kwargs={'error_code': 404})
         return redirect(error_page)
 
-    if unit.is_department:
+    if not unit.departments:
         department_page = reverse('department', kwargs={'uid': uid})
         return redirect(department_page)
 
