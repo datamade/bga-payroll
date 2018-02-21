@@ -2,3 +2,5 @@ Django==2.0.2
 psycopg2==2.7.4
 jinja2==2.10
 django-debug-toolbar==1.9.1
+pytest==3.4.1
+https://github.com/datamade/pytest-flake8/zipball/master
