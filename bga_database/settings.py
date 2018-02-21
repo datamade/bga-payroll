@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 import os
 
-from .local_settings import *
+from .local_settings import *  # noqa
 
 
 ALLOWED_HOSTS = []
