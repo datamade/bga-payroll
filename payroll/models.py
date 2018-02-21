@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 
 class Employer(models.Model):
@@ -7,9 +8,31 @@ class Employer(models.Model):
                                null=True,
                                on_delete=models.CASCADE,
                                related_name='departments')
+    slug = models.SlugField(max_length=255, unique=True, null=True)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._make_slug()
+
+        super().save()
+
+    def _make_slug(self):
+        if self.parent:
+            slug = slugify('{0} {1}'.format(self.parent, self.name))
+        else:
+            slug = slugify(self.name)
+
+        i = 1
+        unique_slug = slug
+
+        while Employer.objects.filter(slug=unique_slug).exists():
+            unique_slug = '{0}-{1}'.format(slug, str(i))
+            i += 1
+
+        return unique_slug
 
     @property
     def is_department(self):

@@ -3,6 +3,8 @@ import os
 from django.core.management.base import BaseCommand
 from django.db import connection
 
+from payroll.models import Employer
+
 
 class Command(BaseCommand):
     help = 'Import some data to get this show on the road'
@@ -10,9 +12,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--skip_raw',
                             action='store_true',
-                            help='Drop and recreate the table for the raw data')
+                            help='Don\'t bother making the raw table over again.')
+
+        parser.add_argument('--slug_employer',
+                            action='store_true',
+                            help='Add slugs to the employer, do nothing else.')
 
     def handle(self, *args, **kwargs):
+        if kwargs.get('slug_employer'):
+            print('Slugging employers')
+            self._slug_employer()
+            return
+
         if kwargs.get('skip_raw'):
             print('Skipping create raw table')
 
@@ -33,6 +44,9 @@ class Command(BaseCommand):
 
         print('Extracting employers')
         self._insert_employer()
+
+        print('Slugging employers')
+        self._slug_employer()
 
         print('Extracting people')
         self._insert_person()
@@ -91,6 +105,14 @@ class Command(BaseCommand):
             ON raw.employer = emp.name
             WHERE raw.department IS NOT NULL;
         ''')
+
+    def _slug_employer(self):
+        '''
+        We override the `save` method to auto-generate a unique slug. So,
+        just call it here.
+        '''
+        for e in Employer.objects.all():
+            e.save()
 
     def _insert_person(self):
         '''
