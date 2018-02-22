@@ -1,20 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}HELLO{% endblock %}
+{% block title %}Illinois Payroll Database{% endblock %}
 
 {% block extra_css %}
 <link href="{{ static('css/jquery-ui.min.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<div class="col-md-12">
-    <form id="entity-form" method="get">
-        <input type="text" id="entity-lookup" class="form-control form-control-lg" />
-        <input type="hidden" id="selected-entity" />
+<div class="col-9">
+  <h2>Illinois Payroll Database</h2>
+
+  <p class="lead">Are you curious how much your public officials make? Follow the money!</p>
+
+  <p>With the BGA's searchable database of public payrolls across Illinois, you can easily access information relating to the spending of state and local units of government.</p>
+
+  <form id="entity-form" method="get">
+    <div class="row">
+      <div class="col-10">
+        <input type="text" id="entity-lookup" class="form-control form-control-lg" placeholder="Chicago" />
+      </div>
+      <div class="col-2">
         <button type="submit" class="btn btn-primary btn-lg">
-          Submit!
+          <i class="fas fa-search"></i> Search
         </button>
-    </form>
+      </div>
+    </div>
+  </form>
 </div>
 {% endblock %}
 
