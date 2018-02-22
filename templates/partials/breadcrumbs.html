@@ -1,9 +1,12 @@
 <div id="breadcrumbs" class="col-md-12">
-  <em>
+ 
   	{% if entity.parent %}
-  <a href="/governmental-unit/524">{{ entity.parent }}</a> > 
-  <a href="/department/7864 ">{{ entity }}</a> <br/>
-{% endif %}
+  		<a href="/governmental-unit/{{ entity.parent.slug }}">{{ entity.parent|title }}</a> <i class="fas fa-angle-right"></i>	
+	{% endif %}
 
-  </em>
+	{% if entity.department %}
+		<a href="/department/{{ entity.slug }} ">{{ entity|title }}</a> <br/>
+	{% else %}
+ 		<a href="/governmental-unit/{{ entity.slug }} ">{{ entity|title }}</a> <br/>
+ 	{% endif %}
 </div>
