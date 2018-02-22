@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}HELLO{% endblock %}
+
+{% block extra_css %}
+<link href="{{ static('css/jquery-ui.min.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="col-md-12">
+    <form id="entity-form" method="get">
+        <input type="text" id="entity-lookup" class="form-control form-control-lg" />
+        <input type="hidden" id="selected-entity" />
+        <button type="submit" class="btn btn-primary btn-lg">
+          Submit!
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
+{% endblock %}
