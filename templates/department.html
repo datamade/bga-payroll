@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}{{ entity.name }}{% endblock %}
+{% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
 {% include 'partials/breadcrumbs.html' %}
 <div class="col-md-12">
-  <h2 class="md-3"><i class="far fa-building"></i> {{ entity.name|title }}</h2>
+  <h2 class="md-3"><i class="far fa-building"></i> {{ entity }}</h2>
 
   {%
     set aggregate_stats = namespace(
