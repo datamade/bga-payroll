@@ -40,7 +40,7 @@ class Employer(SluggedModel):
 
     def __str__(self):
         if self.parent:
-            return '{} {}'.format(self.parent, self.name).title()
+            return '{} – {}'.format(self.parent, self.name).title()
 
         else:
             return self.name.title()
@@ -69,7 +69,7 @@ class Position(models.Model):
     title = models.CharField(max_length=255, null=True)
 
     def __str__(self):
-        title = '{0} {1}'.format(self.employer.name, self.title)
+        title = '{0} – {1}'.format(self.employer, self.title)
         return title.title()
 
 

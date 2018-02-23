@@ -1,13 +1,17 @@
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a href="/">All</a>
-      </li>
-    {% if entity.parent %}
-      <li class="breadcrumb-item">
-        <a href="/employer/{{ entity.parent.slug }}">{{ entity.parent }}</a>
-      </li>
-    {% endif %}
-    <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
-  </ol>
-</nav>
+<li class="breadcrumb-item">
+  <a href="/">All</a>
+</li>
+
+{% if entity.parent %}
+  <li class="breadcrumb-item">
+    <a href="/employer/{{ entity.parent.slug }}">{{ entity.parent }}</a>
+  </li>
+{% endif %}
+
+<li class="breadcrumb-item active" aria-current="page">
+  {% if '/person/' in request.path %} {# Link if shown on person page #}
+    <a href="/employer/{{ entity.slug }}">{{ entity }}</a>
+  {% else %}
+    {{ entity }}
+  {% endif %}
+</li>

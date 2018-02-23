@@ -3,9 +3,20 @@
 {% block title %}{{ entity|title }}{% endblock %}
 
 {% block content %}
-{% include 'partials/breadcrumbs.html' %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    {% with entity = entity.salaries.first().position.employer %}
+      {% include 'partials/breadcrumbs.html' %}
+    {% endwith %}
+    <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
+  </ol>
+</nav>
 
 <div class="col-md-12">
-  {{ entity }}
+  <h2>{{ entity }} <small>{{ entity.salaries.first().position }}</small></h2>
+
+  {% for salary in entity.salaries.all() %}
+    {{ salary }}
+  {% endfor %}
 </div>
 {% endblock %}
