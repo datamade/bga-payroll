@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'payroll',
     'debug_toolbar',
+    'django.contrib.postgres',
 ]
 
 MIDDLEWARE = [

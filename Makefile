@@ -17,7 +17,12 @@ $(PG_DB) :
 	psql -d $(PG_DB) -c "\d" > /dev/null 2>&1 || ( \
 	createdb $@ && \
 	python manage.py makemigrations && \
-	python manage.py migrate)
+	python manage.py migrate && \
+	psql -d $(PG_DB) -c " \
+		CREATE TRIGGER person_tsvectorupdate BEFORE INSERT OR UPDATE \
+		ON payroll_person FOR EACH ROW EXECUTE PROCEDURE \
+		tsvector_update_trigger(search_vector, 'pg_catalog.english', first_name, last_name) \
+	")
 
 inserts : $(INPUT)
 	python manage.py import_data
