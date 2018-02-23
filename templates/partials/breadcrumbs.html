@@ -1,11 +1,13 @@
-<div id="breadcrumbs" class="col-md-12">
-  {% if entity.parent %}
-  	<a href="/governmental-unit/{{ entity.parent.slug }}">{{ entity.parent|title }}</a> <i class="fas fa-angle-right"></i>
-	{% endif %}
-
-	{% if entity.is_department %}
-		<a href="/department/{{ entity.slug }} ">{{ entity|title }}</a> <br/>
-	{% else %}
- 		<a href="/governmental-unit/{{ entity.slug }} ">{{ entity|title }}</a> <br/>
- 	{% endif %}
-</div>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="/">All Employers</a>
+      </li>
+    {% if entity.parent %}
+      <li class="breadcrumb-item">
+        <a href="/employer/{{ entity.parent.slug }}">{{ entity.parent|title }}</a>
+      </li>
+    {% endif %}
+    <li class="breadcrumb-item active" aria-current="page">{{ entity|title }}</li>
+  </ol>
+</nav>

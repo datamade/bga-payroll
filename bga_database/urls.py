@@ -23,8 +23,7 @@ from payroll import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='home'),
-    path('governmental-unit/<str:slug>/', views.governmental_unit, name='unit'),
-    path('department/<str:slug>/', views.department, name='department'),
+    path('employer/<str:slug>/', views.employer, name='employer'),
     path('<int:error_code>', views.error, name='error'),
     path('entity-lookup/', views.entity_lookup, name='entity-lookup'),
 ]

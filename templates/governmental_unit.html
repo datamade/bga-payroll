@@ -13,9 +13,9 @@
     </div>
     <div class="card-body">
       <ul>
-        <li><strong>{{ salaries|length }}</strong> employees</li>
+        <li><strong>{{ department_salaries|sum(attribute='headcount') }}</strong> employees</li>
         <li><strong>{{ "${:,.2f}".format(average_salary) }}</strong> average salary</li>
-        <li><strong>{{ "${:,.2f}".format(salaries|sum(attribute='amount')) }}</strong> total expenditure</li>
+        <li><strong>{{ "${:,.2f}".format(department_salaries|sum(attribute='total_budget')) }}</strong> total expenditure</li>
       </ul>
     </div>
   </div>
@@ -36,7 +36,6 @@
   </div>
   <br />
   {% with departments = entity.departments.all() %}
-    {% if departments %}
     <div class="card">
       <div class="card-header bg-warning">
         <i class="fas fa-briefcase"></i> Departments
@@ -47,7 +46,6 @@
         {% endfor %}
       </div>
     </div>
-    {% endif %}
   {% endwith %}
 </div>
 {% endblock %}
