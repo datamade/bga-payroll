@@ -25,7 +25,8 @@ urlpatterns = [
     path('', views.index, name='home'),
     path('governmental-unit/<str:slug>/', views.governmental_unit, name='unit'),
     path('department/<str:slug>/', views.department, name='department'),
-    path('error/<int:error_code>', views.error, name='error')
+    path('<int:error_code>', views.error, name='error'),
+    path('entity-lookup/', views.entity_lookup, name='entity-lookup'),
 ]
 
 

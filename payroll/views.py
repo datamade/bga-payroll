@@ -1,15 +1,18 @@
+from itertools import chain
 import json
 
 from django.db import connection
-from django.db.models import Avg
+from django.db.models import Avg, Q
+from django.db.models.functions import Length
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
-from payroll.models import Employer, Salary
+from payroll.models import Employer, Salary, Person
 
 
 def index(request):
-    return render(request, 'base.html')
+    return render(request, 'index.html')
 
 
 def error(request, error_code):
@@ -92,3 +95,46 @@ def department(request, slug):
         'average_salary': average_salary,
         'salary_json': json.dumps(salary_json),
     })
+
+
+def entity_lookup(request):
+    q = request.GET['term']
+
+    employers = Employer.objects.all()
+    people = Person.objects.all()
+
+    if q:
+        # Show exacts first
+        employers = employers.filter(name__istartswith=q)\
+                             .order_by(Length('name').asc())[:10]
+
+        last_token = q.split(' ')[-1]
+
+        people = people.filter(
+            Q(search_vector=q) | Q(last_name__istartswith=last_token)
+        )[:10]
+
+    entities = []
+
+    for e in chain(people, employers):
+        data = {'label': str(e)}
+
+        if isinstance(e, Person):
+            url = '/person/{}'.format(e.id)
+            category = 'Person'
+
+        else:
+            category = 'Employer'
+            if e.parent_id:
+                url = '/department/{}'.format(e.slug)
+            else:
+                url = '/governmental-unit/{}'.format(e.slug)
+
+        data.update({
+            'value': url,
+            'category': category,
+        })
+
+        entities.append(data)
+
+    return JsonResponse(entities, safe=False)

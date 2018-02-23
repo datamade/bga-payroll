@@ -1,3 +1,4 @@
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.utils.text import slugify
 
@@ -11,7 +12,11 @@ class Employer(models.Model):
     slug = models.SlugField(max_length=255, unique=True, null=True)
 
     def __str__(self):
-        return self.name
+        if self.parent:
+            return '{} {}'.format(self.parent, self.name).title()
+
+        else:
+            return self.name.title()
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -46,6 +51,7 @@ class Person(models.Model):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     salaries = models.ManyToManyField('Salary')
+    search_vector = SearchVectorField(max_length=255, null=True)
 
     def __str__(self):
         return '{0} {1}'.format(self.first_name, self.last_name)
