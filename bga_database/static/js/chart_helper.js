@@ -1,36 +1,23 @@
 var ChartHelper = ChartHelper || {};
 
 var ChartHelper = {
-  extract_salaries: function(data) {
-    var salaries = Array();
+  extract_values: function(data) {
+    var values = Array();
 
-    data.forEach(function(salary) {
-      salaries.push(salary.amount);
+    data.forEach(function(bin) {
+      values.push(bin.value);
     });
 
-    return salaries;
+    return values;
   },
   make_salary_chart: function(entity_name, data, entity_type) {
-    var salaries = ChartHelper.extract_salaries(data);
+    var values = ChartHelper.extract_values(data);
     var title;
-    var tooltip_func;
 
     if (entity_type === 'department') {
-      title = 'Average Salary by Department';
-      tooltip_func = function(point) {
-        var department = data[this.x].department;
-        var average = this.y;
-        return '<strong>' + department + '</strong><br />' + '<br />$' + average;
-      };
+      title = 'Average Department Salary Distribution';
     } else if (entity_type === 'employee') {
-      title = 'Salary Distribution';
-      tooltip_func = function(point) {
-        var employee = data[this.x];
-        var name = employee.name;
-        var position = employee.position;
-        var salary = this.y;
-        return '<strong>' + name + '</strong><br />' + position + '<br />$' + salary;
-      };
+      title = 'Employee Salary Distribution';
     }
 
     Highcharts.chart('distribution-chart', {
@@ -38,25 +25,31 @@ var ChartHelper = {
         text: entity_name + ' ' + title,
       },
       xAxis: {
-        reversed: true,
         labels: {
-          enabled: false,
+          enabled: true,
+          formatter: function() {
+            return '$' + data[this.value].edge;
+          },
         },
         tickColor: 'white',
       },
       yAxis: {
         title: {
-          text: 'Salary ($)',
+          text: 'n ' + entity_type + 's',
         },
       },
       series: [{
-        name: 'Salary',
-        type: 'area',
-        data: salaries,
+        name: entity_type + 's',
+        type: 'column',
+        data: values,
         id: 'salaries',
         tooltip: {
           headerFormat: '', // Remove header
-          pointFormatter: tooltip_func,
+          pointFormatter: function(point) {
+            var current_bin = data[this.x].edge;
+            var next_bin = data[this.x + 1].edge; // TO-DO: Fix for min and max
+            return this.y + ' ' + entity_type + 's earn between ' + current_bin + ' & ' + next_bin;
+          },
         },
         color: '#6c757c',
       }],

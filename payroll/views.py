@@ -8,6 +8,8 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
+import numpy as np
+
 from payroll.models import Employer, Salary, Person
 
 
@@ -70,27 +72,21 @@ def get_unit_context(unit):
                 'headcount': headcount,
             })
 
-        return {
-            'entity': unit,
-            'salaries': person_salaries,
-            'average_salary': average_salary,
-            'department_salaries': department_salaries,
-            'salary_json': json.dumps(department_salaries),
-        }
+    salary_json = bin_salary_data([d['amount'] for d in department_salaries])
+
+    return {
+        'entity': unit,
+        'salaries': person_salaries,
+        'average_salary': average_salary,
+        'department_salaries': department_salaries,
+        'salary_json': json.dumps(salary_json),
+    }
 
 
 def get_department_context(department):
     person_salaries = Salary.of_employer(department.id)
     average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
-
-    salary_json = []
-
-    for salary in person_salaries:
-        salary_json.append({
-            'name': str(salary.person).title(),
-            'position': str(salary.position).title(),
-            'amount': salary.amount,
-        })
+    salary_json = bin_salary_data([s.amount for s in data])
 
     return {
         'entity': department,
@@ -98,6 +94,20 @@ def get_department_context(department):
         'average_salary': average_salary,
         'salary_json': json.dumps(salary_json),
     }
+
+
+def bin_salary_data(data):
+    values, edges = np.histogram(data, bins=5)
+
+    salary_json = []
+
+    for value, edge in zip(values, edges):
+        salary_json.append({
+            'value': int(value),
+            'edge': int(edge),
+        })
+
+    return salary_json
 
 
 def entity_lookup(request):
