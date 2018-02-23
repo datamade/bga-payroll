@@ -3,13 +3,40 @@ from django.db import models
 from django.utils.text import slugify
 
 
-class Employer(models.Model):
+class SluggedModel(models.Model):
+    slug = models.SlugField(max_length=255, unique=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._make_unique_slug()
+
+        super().save()
+
+    def _make_base_slug(self):
+        return slugify(str(self))
+
+    def _make_unique_slug(self):
+        slug = self._make_base_slug()
+
+        i = 1
+        unique_slug = slug
+
+        while type(self).objects.filter(slug=unique_slug).exists():
+            unique_slug = '{0}-{1}'.format(slug, str(i))
+            i += 1
+
+        return unique_slug
+
+    class Meta:
+        abstract = True
+
+
+class Employer(SluggedModel):
     name = models.CharField(max_length=255)
     parent = models.ForeignKey('self',
                                null=True,
                                on_delete=models.CASCADE,
                                related_name='departments')
-    slug = models.SlugField(max_length=255, unique=True, null=True)
 
     def __str__(self):
         if self.parent:
@@ -17,27 +44,6 @@ class Employer(models.Model):
 
         else:
             return self.name.title()
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = self._make_slug()
-
-        super().save()
-
-    def _make_slug(self):
-        if self.parent:
-            slug = slugify('{0} {1}'.format(self.parent, self.name))
-        else:
-            slug = slugify(self.name)
-
-        i = 1
-        unique_slug = slug
-
-        while Employer.objects.filter(slug=unique_slug).exists():
-            unique_slug = '{0}-{1}'.format(slug, str(i))
-            i += 1
-
-        return unique_slug
 
     @property
     def is_department(self):
@@ -47,14 +53,15 @@ class Employer(models.Model):
         return bool(self.parent)
 
 
-class Person(models.Model):
+class Person(SluggedModel):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     salaries = models.ManyToManyField('Salary')
     search_vector = SearchVectorField(max_length=255, null=True)
 
     def __str__(self):
-        return '{0} {1}'.format(self.first_name, self.last_name)
+        name = '{0} {1}'.format(self.first_name, self.last_name)
+        return name.lstrip('-').title()
 
 
 class Position(models.Model):
@@ -62,7 +69,8 @@ class Position(models.Model):
     title = models.CharField(max_length=255, null=True)
 
     def __str__(self):
-        return '{0} {1}'.format(self.employer.name, self.title)
+        title = '{0} {1}'.format(self.employer.name, self.title)
+        return title.title()
 
 
 class Salary(models.Model):

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entity|title }}{% endblock %}
+
+{% block content %}
+{% include 'partials/breadcrumbs.html' %}
+
+<div class="col-md-12">
+  {{ entity }}
+</div>
+{% endblock %}

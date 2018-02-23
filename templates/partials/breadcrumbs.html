@@ -1,13 +1,13 @@
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
       <li class="breadcrumb-item">
-        <a href="/">All Employers</a>
+        <a href="/">All</a>
       </li>
     {% if entity.parent %}
       <li class="breadcrumb-item">
-        <a href="/employer/{{ entity.parent.slug }}">{{ entity.parent|title }}</a>
+        <a href="/employer/{{ entity.parent.slug }}">{{ entity.parent }}</a>
       </li>
     {% endif %}
-    <li class="breadcrumb-item active" aria-current="page">{{ entity|title }}</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
   </ol>
 </nav>

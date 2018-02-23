@@ -39,6 +39,19 @@ def employer(request, slug):
         return render(request, 'governmental_unit.html', context)
 
 
+def person(request, slug):
+    try:
+        person = Person.objects.get(slug=slug)
+
+    except Employer.DoesNotExist:
+        error_page = reverse(error, kwargs={'error_code': 404})
+        return redirect(error_page)
+
+    return render(request, 'person.html', {
+        'entity': person,
+    })
+
+
 def get_unit_context(unit):
     person_salaries = Salary.of_employer(unit.id)[:5]
 
@@ -154,15 +167,15 @@ def entity_lookup(request):
         data = {'label': str(e)}
 
         if isinstance(e, Person):
-            url = '/person/{}'.format(e.id)
+            url = '/person/{slug}'
             category = 'Person'
 
         else:
-            url = '/employer/{}'.format(e.slug)
+            url = '/employer/{slug}'
             category = 'Employer'
 
         data.update({
-            'value': url,
+            'value': url.format(slug=e.slug),
             'category': category,
         })
 
