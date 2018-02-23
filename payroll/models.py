@@ -12,7 +12,11 @@ class Employer(models.Model):
     slug = models.SlugField(max_length=255, unique=True, null=True)
 
     def __str__(self):
-        return self.name
+        if self.parent:
+            return '{} {}'.format(self.parent, self.name).title()
+
+        else:
+            return self.name.title()
 
     def save(self, *args, **kwargs):
         if not self.slug:

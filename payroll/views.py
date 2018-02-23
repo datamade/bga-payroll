@@ -2,8 +2,8 @@ from itertools import chain
 import json
 
 from django.db import connection
-from django.contrib.postgres.search import SearchVector
 from django.db.models import Avg, Q
+from django.db.models.functions import Length
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -104,13 +104,15 @@ def entity_lookup(request):
     people = Person.objects.all()
 
     if q:
-        employers = Employer.objects.filter(name__istartswith=q)[:5]
+        # Show exacts first
+        employers = employers.filter(name__istartswith=q)\
+                             .order_by(Length('name').asc())[:10]
 
         last_token = q.split(' ')[-1]
 
         people = people.filter(
             Q(search_vector=q) | Q(last_name__istartswith=last_token)
-        )[:5]
+        )[:10]
 
     entities = []
 
