@@ -41,9 +41,24 @@
         <i class="fas fa-briefcase"></i> Departments
       </div>
       <div class="card-body">
-        {% for department in departments %}
-          {{ department }}<br />
+        <table class="table table-striped table-hover">
+          <thead class="bg-secondary">
+          <tr>
+            <th scope="col">Department</th>
+            <th scope="col">Number of Employees</th>
+            <th scope="col">Budget</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for department in department_salaries %}
+          <tr>
+            <td>{{ department['department'] }}</td>
+            <td>{{ department['headcount'] }}</td>
+            <td>{{ "${:,.2f}".format(department['total_budget']) }}</td>
+          </tr>
         {% endfor %}
+        </tbody>
+        </table>
       </div>
     </div>
   {% endwith %}
