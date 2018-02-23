@@ -19,64 +19,67 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-def governmental_unit(request, slug):
+def employer(request, slug):
     try:
-        unit = Employer.objects.filter(parent_id__isnull=True).get(slug=slug)
+        entity = Employer.objects.get(slug=slug)
 
     except Employer.DoesNotExist:
         error_page = reverse(error, kwargs={'error_code': 404})
         return redirect(error_page)
 
-    if not unit.departments:
-        department_page = reverse('department', kwargs={'slug': slug})
-        return redirect(department_page)
+    if entity.is_department or not entity.departments.all():
+        context = get_department_context(entity)
+        return render(request, 'department.html', context)
 
     else:
-        person_salaries = Salary.of_employer(unit.id)
-        average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
-
-        department_salaries = []
-
-        with connection.cursor() as cursor:
-            query = '''
-                SELECT
-                    e.name,
-                    AVG(s.amount)
-                FROM payroll_salary AS s
-                JOIN payroll_position AS p
-                ON s.position_id = p.id
-                JOIN payroll_employer AS e
-                ON p.employer_id = e.id
-                WHERE e.parent_id = {id}
-                OR e.id = {id}
-                GROUP BY e.id, e.name
-                ORDER BY AVG(s.amount) DESC
-            '''.format(id=unit.id)
-
-            cursor.execute(query)
-
-            for department, average in cursor:
-                department_salaries.append({
-                    'amount': round(average, 2),
-                    'department': department.title(),
-                })
-
-    return render(request, 'governmental_unit.html', {
-        'entity': unit,
-        'salaries': person_salaries,
-        'average_salary': average_salary,
-        'salary_json': json.dumps(department_salaries),
-    })
+        context = get_unit_context(entity)
+        return render(request, 'governmental_unit.html', context)
 
 
-def department(request, slug):
-    try:
-        department = Employer.objects.filter(parent_id__isnull=False).get(slug=slug)
+def get_unit_context(unit):
+    person_salaries = Salary.of_employer(unit.id)[:5]
+    average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
 
-    except Employer.DoesNotExist:
-        error_page = reverse(error, kwargs={'error_code': 404})
-        return redirect(error_page)
+    department_salaries = []
 
+    with connection.cursor() as cursor:
+        query = '''
+            SELECT
+                e.name,
+                AVG(s.amount) AS average,
+                SUM(s.amount) AS budget,
+                COUNT(*) AS headcount
+            FROM payroll_salary AS s
+            JOIN payroll_position AS p
+            ON s.position_id = p.id
+            JOIN payroll_employer AS e
+            ON p.employer_id = e.id
+            WHERE e.parent_id = {id}
+            OR e.id = {id}
+            GROUP BY e.id, e.name
+            ORDER BY AVG(s.amount) DESC
+        '''.format(id=unit.id)
+
+        cursor.execute(query)
+
+        for department, average, budget, headcount in cursor:
+            department_salaries.append({
+                'department': department.title(),
+                'amount': round(average, 2),
+                'total_budget': budget,
+                'headcount': headcount,
+            })
+
+        return {
+            'entity': unit,
+            'salaries': person_salaries,
+            'average_salary': average_salary,
+            'department_salaries': department_salaries,
+            'salary_json': json.dumps(department_salaries),
+        }
+
+
+def get_department_context(department):
     person_salaries = Salary.of_employer(department.id)
     average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
 
@@ -89,12 +92,12 @@ def department(request, slug):
             'amount': salary.amount,
         })
 
-    return render(request, 'department.html', {
+    return {
         'entity': department,
         'salaries': person_salaries,
         'average_salary': average_salary,
         'salary_json': json.dumps(salary_json),
-    })
+    }
 
 
 def entity_lookup(request):
@@ -116,7 +119,7 @@ def entity_lookup(request):
 
     entities = []
 
-    for e in chain(people, employers):
+    for e in chain(employers, people):
         data = {'label': str(e)}
 
         if isinstance(e, Person):
@@ -124,11 +127,8 @@ def entity_lookup(request):
             category = 'Person'
 
         else:
+            url = '/employer/{}'.format(e.slug)
             category = 'Employer'
-            if e.parent_id:
-                url = '/department/{}'.format(e.slug)
-            else:
-                url = '/governmental-unit/{}'.format(e.slug)
 
         data.update({
             'value': url,

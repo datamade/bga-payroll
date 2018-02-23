@@ -30,6 +30,7 @@ $(document).ready(function() {
             event.preventDefault();
             input.val(ui.item.label);
             $('#entity-form').attr('action', ui.item.value);
+            $('#submit-button').attr('disabled', false);
         },
     });
 });
