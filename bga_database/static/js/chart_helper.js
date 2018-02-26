@@ -20,6 +20,16 @@ var ChartHelper = {
       title = 'Employee Salary Distribution';
     }
 
+    var tooltip_format = function(point) {
+      var edges = data[this.x];
+      return this.y + ' ' + entity_type + 's earn between $' + edges.lower_edge + ' and $' + edges.upper_edge;
+    };
+
+    var axis_format = function() {
+      var edges = data[this.value];
+      return '$' + edges.lower_edge + ' – $' + edges.upper_edge;
+    };
+
     Highcharts.chart('distribution-chart', {
       title: {
         text: entity_name + ' ' + title,
@@ -27,15 +37,13 @@ var ChartHelper = {
       xAxis: {
         labels: {
           enabled: true,
-          formatter: function() {
-            return '$' + data[this.value].edge;
-          },
+          formatter: axis_format,
         },
         tickColor: 'white',
       },
       yAxis: {
         title: {
-          text: 'n ' + entity_type + 's',
+          text: 'Number of ' + entity_type + 's',
         },
       },
       series: [{
@@ -45,11 +53,7 @@ var ChartHelper = {
         id: 'salaries',
         tooltip: {
           headerFormat: '', // Remove header
-          pointFormatter: function(point) {
-            var current_bin = data[this.x].edge;
-            var next_bin = data[this.x + 1].edge; // TO-DO: Fix for min and max
-            return this.y + ' ' + entity_type + 's earn between ' + current_bin + ' & ' + next_bin;
-          },
+          pointFormatter: tooltip_format,
         },
         color: '#6c757c',
       }],

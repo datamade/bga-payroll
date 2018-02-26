@@ -11,6 +11,7 @@ from django.urls import reverse
 import numpy as np
 
 from payroll.models import Employer, Salary, Person
+from payroll.utils import format_number
 
 
 def index(request):
@@ -86,7 +87,7 @@ def get_unit_context(unit):
 def get_department_context(department):
     person_salaries = Salary.of_employer(department.id)
     average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
-    salary_json = bin_salary_data([s.amount for s in data])
+    salary_json = bin_salary_data([s.amount for s in person_salaries])
 
     return {
         'entity': department,
@@ -97,14 +98,17 @@ def get_department_context(department):
 
 
 def bin_salary_data(data):
-    values, edges = np.histogram(data, bins=5)
+    values, edges = np.histogram(data, bins=6)
 
     salary_json = []
 
-    for value, edge in zip(values, edges):
+    for i, value in enumerate(values):
+        lower, upper = int(edges[i]), int(edges[i + 1])
+
         salary_json.append({
             'value': int(value),
-            'edge': int(edge),
+            'lower_edge': format_number(lower),
+            'upper_edge': format_number(upper),
         })
 
     return salary_json

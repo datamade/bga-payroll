@@ -13,9 +13,9 @@
     </div>
     <div class="card-body">
       <ul>
-        <li><strong>{{ salaries|length }}</strong> employees</li>
-        <li><strong>{{ "${:,.2f}".format(average_salary) }}</strong> average salary</li>
-        <li><strong>{{ "${:,.2f}".format(salaries|sum(attribute='amount')) }}</strong> total expenditure</li>
+        <li><strong>{{ salaries|length|format_number }}</strong> employees</li>
+        <li><strong>${{ average_salary|format_number }}</strong> average salary</li>
+        <li><strong>${{ salaries|sum(attribute='amount')|format_number }}</strong> total expenditure</li>
       </ul>
     </div>
   </div>
