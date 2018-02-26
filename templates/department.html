@@ -5,33 +5,35 @@
 {% block content %}
 {% include 'partials/breadcrumbs.html' %}
 <div class="col-md-12">
-  <h2>{{ entity.name|title }}</h2>
+  <h2 class="md-3"><i class="far fa-building"></i> {{ entity.name|title }}</h2>
 
-  <div class="card">
-    <div class="card-header bg-warning">
-      <i class="fas fa-list-ul"></i> Summary
-    </div>
-    <div class="card-body">
-      <ul>
-        <li><strong>{{ salaries|length|format_number }}</strong> employees</li>
-        <li><strong>${{ average_salary|format_number }}</strong> average salary</li>
-        <li><strong>${{ salaries|sum(attribute='amount')|format_number }}</strong> total expenditure</li>
-      </ul>
-    </div>
+  {%
+    set aggregate_stats = namespace(
+      headcount = salaries|length,
+      mean_salary = average_salary,
+      total_expenditure = salaries|sum(attribute='amount'),
+    )
+  %}
+  <div class="row mb-4">
+    {% with context = aggregate_stats %}
+      {% include 'partials/baseball_stats.html' %}
+    {% endwith %}
   </div>
-  <br />
-  <div class="card">
+
+  <div class="card mb-4">
     <div class="card-body">
+      <h3 class="card-title mb-4">
+        <i class="fas fa-users"></i> Employees
+        <small><a href="#">View all</a></small>
+      </h3>
+
+      <h4 class="card-subtitle mb-3">Top earners in {{ entity }}</h4>
+      {% with unit = false %}
+        {% include 'partials/person_table.html' %}
+      {% endwith %}
+
+      <h4 class="card-subtitle mt-5 mb-4">{{ entity }} employee salary distribution</h4>
       <div id="distribution-chart"></div>
-    </div>
-  </div>
-  <br />
-  <div class="card">
-    <div class="card-header bg-warning">
-      <i class="fas fa-users"></i> Highest paid employees
-    </div>
-    <div class="card-body bg-gray">
-      {% include 'partials/person_table.html' %}
     </div>
   </div>
 </div>
@@ -41,8 +43,6 @@
 <script src="{{ static('js/chart_helper.js') }}"></script>
 
 <script type="text/javascript">
-  ChartHelper.make_salary_chart(
-    '{{ entity.name|title }}', {{ salary_json|safe }}, 'employee'
-  );
+  ChartHelper.make_salary_chart({{ salary_json|safe }}, 'employee');
 </script>
 {% endblock %}

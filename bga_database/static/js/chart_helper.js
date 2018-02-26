@@ -10,15 +10,8 @@ var ChartHelper = {
 
     return values;
   },
-  make_salary_chart: function(entity_name, data, entity_type) {
+  make_salary_chart: function(data, entity_type) {
     var values = ChartHelper.extract_values(data);
-    var title;
-
-    if (entity_type === 'department') {
-      title = 'Average Department Salary Distribution';
-    } else if (entity_type === 'employee') {
-      title = 'Employee Salary Distribution';
-    }
 
     var tooltip_format = function(point) {
       var edges = data[this.x];
@@ -32,14 +25,16 @@ var ChartHelper = {
 
     Highcharts.chart('distribution-chart', {
       title: {
-        text: entity_name + ' ' + title,
+        text: '', // Done in template
       },
       xAxis: {
         labels: {
           enabled: true,
           formatter: axis_format,
         },
-        tickColor: 'white',
+        title: {
+          text: 'Salary range',
+        },
       },
       yAxis: {
         title: {
