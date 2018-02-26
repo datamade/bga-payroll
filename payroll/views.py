@@ -11,7 +11,7 @@ from django.urls import reverse
 import numpy as np
 
 from payroll.models import Employer, Salary, Person
-from payroll.utils import format_number
+from payroll.utils import format_ballpark_number
 
 
 def index(request):
@@ -41,7 +41,6 @@ def employer(request, slug):
 
 def get_unit_context(unit):
     person_salaries = Salary.of_employer(unit.id)[:5]
-    average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
 
     department_salaries = []
 
@@ -51,7 +50,8 @@ def get_unit_context(unit):
                 e.name,
                 AVG(s.amount) AS average,
                 SUM(s.amount) AS budget,
-                COUNT(*) AS headcount
+                COUNT(*) AS headcount,
+                e.slug AS slug
             FROM payroll_salary AS s
             JOIN payroll_position AS p
             ON s.position_id = p.id
@@ -60,18 +60,35 @@ def get_unit_context(unit):
             WHERE e.parent_id = {id}
             OR e.id = {id}
             GROUP BY e.id, e.name
-            ORDER BY AVG(s.amount) DESC
+            ORDER BY SUM(s.amount) DESC
         '''.format(id=unit.id)
 
         cursor.execute(query)
 
-        for department, average, budget, headcount in cursor:
+        for department, average, budget, headcount, slug in cursor:
             department_salaries.append({
                 'department': department.title(),
                 'amount': round(average, 2),
                 'total_budget': budget,
                 'headcount': headcount,
+                'slug': slug,
             })
+
+        query = '''
+            SELECT AVG(s.amount) AS average
+            FROM payroll_salary AS s
+            JOIN payroll_position AS p
+            ON s.position_id = p.id
+            JOIN payroll_employer AS e
+            ON p.employer_id = e.id
+            WHERE e.parent_id = {id}
+            OR e.id = {id}
+        '''.format(id=unit.id)
+
+        cursor.execute(query)
+
+        result, = cursor
+        average_salary, = result
 
     salary_json = bin_salary_data([d['amount'] for d in department_salaries])
 
@@ -107,8 +124,8 @@ def bin_salary_data(data):
 
         salary_json.append({
             'value': int(value),
-            'lower_edge': format_number(lower),
-            'upper_edge': format_number(upper),
+            'lower_edge': format_ballpark_number(lower),
+            'upper_edge': format_ballpark_number(upper),
         })
 
     return salary_json

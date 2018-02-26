@@ -3,7 +3,9 @@
   <tr>
     <th scope="col">Name</th>
     <th scope="col">Position</th>
+    {% if unit %}
     <th scope="col">Department</th>
+    {% endif %}
     <th scope="col">Start date</th>
     <th scope="col">Salary</th>
   </tr>
@@ -11,15 +13,14 @@
 <tbody>
 {% for salary in salaries[:5] %}
   <tr>
-    <td>{{ salary.person|title }}</td>
+    <td><a href="#">{{ salary.person|title }}</a></td>
     <td>{{ salary.position.title|title }}</td>
-    <td>{{ salary.position.employer|title }}</td>
-    <td>{{ salary.start_date or '' }}</td>
-    <td>{{ "${:,.2f}".format(salary.amount) }}</td>
+    {% if unit %}
+    <td><a href="/employer/{{ salary.position.employer.slug }}">{{ salary.position.employer }}</a></td>
+    {% endif %}
+    <td>{{ salary.start_date }}</td>
+    <td>{{ "${:,.0f}".format(salary.amount) }}</td>
   </tr>
 {% endfor %}
 </tbody>
 </table>
-<button class="btn btn-lg btn-dark float-right">
-  <i class="fas fa-search"></i> See more employees
-</button>
