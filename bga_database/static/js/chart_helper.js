@@ -1,62 +1,59 @@
 var ChartHelper = ChartHelper || {};
 
 var ChartHelper = {
-  extract_salaries: function(data) {
-    var salaries = Array();
+  extract_values: function(data) {
+    var values = Array();
 
-    data.forEach(function(salary) {
-      salaries.push(salary.amount);
+    data.forEach(function(bin) {
+      values.push(bin.value);
     });
 
-    return salaries;
+    return values;
   },
   make_salary_chart: function(entity_name, data, entity_type) {
-    var salaries = ChartHelper.extract_salaries(data);
+    var values = ChartHelper.extract_values(data);
     var title;
-    var tooltip_func;
 
     if (entity_type === 'department') {
-      title = 'Average Salary by Department';
-      tooltip_func = function(point) {
-        var department = data[this.x].department;
-        var average = this.y;
-        return '<strong>' + department + '</strong><br />' + '<br />$' + average;
-      };
+      title = 'Average Department Salary Distribution';
     } else if (entity_type === 'employee') {
-      title = 'Salary Distribution';
-      tooltip_func = function(point) {
-        var employee = data[this.x];
-        var name = employee.name;
-        var position = employee.position;
-        var salary = this.y;
-        return '<strong>' + name + '</strong><br />' + position + '<br />$' + salary;
-      };
+      title = 'Employee Salary Distribution';
     }
+
+    var tooltip_format = function(point) {
+      var edges = data[this.x];
+      return this.y + ' ' + entity_type + 's earn between $' + edges.lower_edge + ' and $' + edges.upper_edge;
+    };
+
+    var axis_format = function() {
+      var edges = data[this.value];
+      return '$' + edges.lower_edge + ' – $' + edges.upper_edge;
+    };
 
     Highcharts.chart('distribution-chart', {
       title: {
         text: entity_name + ' ' + title,
       },
       xAxis: {
-        reversed: true,
         labels: {
-          enabled: false,
+          enabled: true,
+          formatter: axis_format,
         },
         tickColor: 'white',
       },
       yAxis: {
         title: {
-          text: 'Salary ($)',
+          text: 'Number of ' + entity_type + 's',
         },
       },
       series: [{
-        name: 'Salary',
-        type: 'area',
-        data: salaries,
+        name: entity_type + 's',
+        type: 'column',
+        data: values,
         id: 'salaries',
         tooltip: {
           headerFormat: '', // Remove header
-          pointFormatter: tooltip_func,
+          pointFormatter: tooltip_format,
         },
         color: '#6c757c',
       }],

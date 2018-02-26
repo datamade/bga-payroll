@@ -3,6 +3,8 @@ from django.urls import reverse
 
 from jinja2 import Environment
 
+from payroll.utils import format_number
+
 
 def environment(**options):
     env = Environment(**options)
@@ -10,4 +12,7 @@ def environment(**options):
         'static': staticfiles_storage.url,
         'url': reverse,
     })
+
+    env.filters['format_number'] = format_number
+
     return env
