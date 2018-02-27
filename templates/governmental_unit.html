@@ -29,7 +29,7 @@
     <div class="card-body">
       <h3 class="card-title mb-4">
         <i class="fas fa-users"></i> Employees
-        <small><a href="#">View all</a></small>
+        <small><a href="#">View all {{ aggregate_stats.headcount }}</a></small>
       </h3>
 
       <h4 class="card-subtitle mb-3">Top earners in {{ entity }}</h4>
@@ -43,14 +43,10 @@
     <div class="card-body">
       <h3 class="card-title mb-4">
         <i class="far fa-building"></i> Departments
+        <small><a href="#">View all {{ entity.departments.count() }}</a></small>
       </h3>
 
-      <h4 class="card-subtitle mb-4">{{ entity }} average department salary distribution</h4>
-      <div id="distribution-chart"></div>
-
-      <div class="clearfix"></div>
-
-      <h4 class="card-subtitle mt-2 mb-3">All {{ entity }} departments</h4>
+      <h4 class="card-subtitle mb-3">Top-spending departments in {{ entity }}</h4>
       <table class="table table-striped table-hover">
         <thead class="bg-warning">
           <tr>
@@ -61,7 +57,7 @@
           </tr>
         </thead>
         <tbody>
-        {% for department in department_salaries %}
+        {% for department in department_salaries[:5] %}
           <tr>
             <td><a href="/employer/{{ department['slug'] }}">{{ department['department'] }}</a></td>
             <td>{{ department['headcount'] }}</td>
@@ -72,6 +68,8 @@
         </tbody>
       </table>
 
+      <h4 class="card-subtitle mt-5 mb-4">Distribution of average salary by department</h4>
+      <div id="distribution-chart"></div>
     </div>
   </div>
 </div>
