@@ -2,8 +2,7 @@ from itertools import chain
 import json
 
 from django.db import connection
-from django.db.models import Avg, Q
-from django.db.models.functions import Length
+from django.db.models import Avg, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -37,6 +36,19 @@ def employer(request, slug):
     else:
         context = get_unit_context(entity)
         return render(request, 'governmental_unit.html', context)
+
+
+def person(request, slug):
+    try:
+        person = Person.objects.prefetch_related('salaries').get(slug=slug)
+
+    except Employer.DoesNotExist:
+        error_page = reverse(error, kwargs={'error_code': 404})
+        return redirect(error_page)
+
+    return render(request, 'person.html', {
+        'entity': person,
+    })
 
 
 def get_unit_context(unit):
@@ -134,13 +146,18 @@ def bin_salary_data(data):
 def entity_lookup(request):
     q = request.GET['term']
 
-    employers = Employer.objects.all()
-    people = Person.objects.all()
+    top_level = Q(parent_id__isnull=True)
+    high_budget = Q(budget__gt=1000000)
+
+    employers = Employer.objects\
+                        .annotate(budget=Sum('position__salary'))\
+                        .filter(top_level | high_budget)
+
+    people = Person.objects.filter(salaries__amount__gt=100000)
 
     if q:
         # Show exacts first
-        employers = employers.filter(name__istartswith=q)\
-                             .order_by(Length('name').asc())[:10]
+        employers = employers.filter(name__istartswith=q)[:10]
 
         last_token = q.split(' ')[-1]
 
@@ -151,18 +168,21 @@ def entity_lookup(request):
     entities = []
 
     for e in chain(employers, people):
-        data = {'label': str(e)}
+        data = {
+            'label': str(e),
+            'value': str(e),
+        }
 
         if isinstance(e, Person):
-            url = '/person/{}'.format(e.id)
+            url = '/person/{slug}'
             category = 'Person'
 
         else:
-            url = '/employer/{}'.format(e.slug)
+            url = '/employer/{slug}'
             category = 'Employer'
 
         data.update({
-            'value': url,
+            'url': url.format(slug=e.slug),
             'category': category,
         })
 

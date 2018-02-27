@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entity|title }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    {% with entity = entity.salaries.first().position.employer %}
+      {% include 'partials/breadcrumbs.html' %}
+    {% endwith %}
+    <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
+  </ol>
+</nav>
+
+<div class="col-md-12">
+  <h2 class="mb-3">
+    <i class="far fa-address-card"></i>
+    {{ entity }}
+    {% with position = entity.salaries.first().position %}
+      <small>{{ position }} at {{ position.employer }}</small>
+    {% endwith %}
+  </h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h3 class="card-title mb-4">
+        <i class="fas fa-briefcase"></i> All positions
+      </h3>
+      {% with salaries = entity.salaries.all(), unit = True %}
+        {% include 'partials/person_table.html' %}
+      {% endwith %}
+    </div>
+  </div>
+</div>
+{% endblock %}

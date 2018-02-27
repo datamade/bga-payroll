@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ entity.name|title }}{% endblock %}
+{% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
-{% include 'partials/breadcrumbs.html' %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    {% include 'partials/breadcrumbs.html' %}
+  </ol>
+</nav>
+
 <div class="col-md-12">
-  <h2 class="md-3"><i class="far fa-building"></i> {{ entity.name|title }}</h2>
+  <h2 class="md-3"><i class="far fa-building"></i> {{ entity }}</h2>
 
   {%
     set aggregate_stats = namespace(
@@ -24,7 +29,7 @@
     <div class="card-body">
       <h3 class="card-title mb-4">
         <i class="fas fa-users"></i> Employees
-        <small><a href="#">View all</a></small>
+        <small><a href="#">View all {{ aggregate_stats.headcount }}</a></small>
       </h3>
 
       <h4 class="card-subtitle mb-3">Top earners in {{ entity }}</h4>
