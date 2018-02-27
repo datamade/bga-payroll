@@ -4,9 +4,9 @@
     <small><a href="#">View all ({{ headcount }})</a></small>
   </h3>
 
-  <h4 class="card-subtitle mb-3">Top earners in {{ object }}</h4>
+  <h4 class="card-subtitle mb-3">Top earners in {{ entity }}</h4>
   {% include 'partials/person_table.html' %}
 
-  <h4 class="card-subtitle mt-5 mb-4">Distribution of {{ object }} employee salaries</h4>
+  <h4 class="card-subtitle mt-5 mb-4">Distribution of {{ entity }} employee salaries</h4>
   <div id="employee-distribution-chart"></div>
 </div>

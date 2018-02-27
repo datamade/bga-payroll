@@ -38,6 +38,7 @@ def person(request, slug):
 class EmployerView(DetailView):
     template_name = 'employer.html'
     model = Employer
+    context_object_name = 'entity'
 
     from_clause = '''
         FROM payroll_salary AS salary

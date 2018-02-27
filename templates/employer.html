@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ object }}{% endblock %}
+{% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
 <nav aria-label="breadcrumb">
@@ -10,7 +10,7 @@
 </nav>
 
 <div class="col-md-12">
-  <h2 class="mb-3"><i class="{% if object.is_department %}far{% else %}fas{% endif %} fa-building"></i> {{ object }}</h2>
+  <h2 class="mb-3"><i class="{% if entity.is_department %}far{% else %}fas{% endif %} fa-building"></i> {{ entity }}</h2>
 
   <div class="row mb-4">
     {% with context = aggregate_stats %}
@@ -22,7 +22,7 @@
     {% include 'partials/employee_card.html' %}
   </div>
 
-  {% if not object.is_department %}
+  {% if not entity.is_department %}
     <div class="card mb-4">
       {% include 'partials/department_card.html' %}
     </div>
@@ -36,7 +36,7 @@
 <script type="text/javascript">
   ChartHelper.make_salary_chart({{ employee_salary_json|safe }}, 'employee');
 
-  {% if not object.is_department %}
+  {% if not entity.is_department %}
   ChartHelper.make_salary_chart({{ department_salary_json|safe }}, 'department');
   {% endif %}
 </script>
