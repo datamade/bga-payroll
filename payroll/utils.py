@@ -1,5 +1,26 @@
 def format_salary(i):
+    '''
+    Strip cents off salary figures.
+    '''
     return "${:,.0f}".format(i)
+
+
+def format_name(word, **kwargs):
+    '''
+    Callback for titlecase lib. Capitalize initials and numeral suffixes.
+    '''
+    if len(word) == 1 or format_numeral(word):
+        return word.upper()
+
+
+def format_numeral(word, **kwargs):
+    '''
+    Callback for titlecase lib. Capitalize numeral suffix.
+    '''
+    numerals = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x']
+
+    if word.lower() in numerals:
+        return word.upper()
 
 
 def format_ballpark_number(i):

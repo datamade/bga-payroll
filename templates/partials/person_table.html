@@ -6,20 +6,18 @@
     {% if unit %}
     <th scope="col">Department</th>
     {% endif %}
-    <th scope="col">Start date</th>
     <th scope="col">Salary</th>
   </tr>
 </thead>
 <tbody>
-{% for salary in salaries %}
+{% for salary in salaries[:5] %}
   <tr>
-    <td><a href="#">{{ salary.person|title }}</a></td>
-    <td>{{ salary.position.title|title }}</td>
+    <td><a href="/person/{{ salary.person.slug }}">{{ salary.person }}</a></td>
+    <td>{{ salary.position }}</td>
     {% if unit %}
     <td><a href="/employer/{{ salary.position.employer.slug }}">{{ salary.position.employer }}</a></td>
     {% endif %}
-    <td>{{ salary.start_date }}</td>
-    <td>{{ "${:,.0f}".format(salary.amount) }}</td>
+    <td>{{ salary.amount|format_salary }}</td>
   </tr>
 {% endfor %}
 </tbody>

@@ -4,6 +4,8 @@ from django.utils.text import slugify
 
 from titlecase import titlecase
 
+from payroll.utils import format_name, format_numeral
+
 
 class SluggedModel(models.Model):
     slug = models.SlugField(max_length=255, unique=True, null=True)
@@ -66,7 +68,7 @@ class Person(SluggedModel):
         name = '{0} {1}'.format(self.first_name, self.last_name)\
                         .lstrip('-')
 
-        return titlecase(name.lower())
+        return titlecase(name.lower(), callback=format_name)
 
 
 class Position(models.Model):
@@ -78,7 +80,7 @@ class Position(models.Model):
         return titlecase(position.lower())
 
     def __str__(self):
-        return titlecase(self.title.lower())
+        return titlecase(self.title.lower(), callback=format_numeral)
 
 
 class Salary(models.Model):
