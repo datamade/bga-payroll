@@ -1,0 +1,12 @@
+<div class="card-body">
+  <h3 class="card-title mb-4">
+    <i class="fas fa-users"></i> Employees
+    <small><a href="#">View all ({{ headcount }})</a></small>
+  </h3>
+
+  <h4 class="card-subtitle mb-3">Top earners in {{ entity }}</h4>
+  {% include 'partials/person_table.html' %}
+
+  <h4 class="card-subtitle mt-5 mb-4">Distribution of {{ entity }} employee salaries</h4>
+  <div id="employee-distribution-chart"></div>
+</div>

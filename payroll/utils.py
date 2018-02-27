@@ -1,8 +1,4 @@
-def format_salary(i):
-    '''
-    Strip cents off salary figures.
-    '''
-    return "${:,.0f}".format(i)
+from titlecase import titlecase
 
 
 def format_name(word, **kwargs):
@@ -21,6 +17,17 @@ def format_numeral(word, **kwargs):
 
     if word.lower() in numerals:
         return word.upper()
+
+
+def titlecase_standalone(entity):
+    return titlecase(entity)
+
+
+def format_salary(i):
+    '''
+    Strip cents off salary figures.
+    '''
+    return "${:,.0f}".format(i)
 
 
 def format_ballpark_number(i):

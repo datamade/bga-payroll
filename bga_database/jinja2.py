@@ -3,7 +3,8 @@ from django.urls import reverse
 
 from jinja2 import Environment
 
-from payroll.utils import format_ballpark_number, format_salary
+from payroll.utils import format_ballpark_number, format_salary, \
+    titlecase_standalone
 
 
 def environment(**options):
@@ -17,6 +18,7 @@ def environment(**options):
     env.filters.update({
         'format_ballpark_number': format_ballpark_number,
         'format_salary': format_salary,
+        'titlecase_standalone': titlecase_standalone,
     })
 
     return env

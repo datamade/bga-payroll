@@ -111,7 +111,7 @@ class Salary(models.Model):
         return self.amount < 1000
 
     @classmethod
-    def of_employer(cls, employer_id):
+    def of_employer(cls, employer_id, n=None):
         '''
         Return Salary objects for given employer.
         '''
@@ -131,6 +131,6 @@ class Salary(models.Model):
         salaries = cls.objects.filter(criterion)\
                               .order_by('-amount')\
                               .select_related('position', 'position__employer', 'position__employer__parent')\
-                              .prefetch_related('person_set')
+                              .prefetch_related('person_set')[:n]
 
         return salaries

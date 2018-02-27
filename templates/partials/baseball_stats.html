@@ -1,18 +1,18 @@
 <div class="col-3">
   <div class="card-body text-center">
-    <h3>{{ context.headcount|format_ballpark_number }}</h3>
+    <h3>{{ headcount|format_ballpark_number }}</h3>
     <small class="text-muted">Employees</small>
   </div>
 </div>
 <div class="col-6">
   <div class="card-body text-center">
-    <h3>${{ context.total_expenditure|format_ballpark_number }}</h3>
+    <h3>${{ total_expenditure|format_ballpark_number }}</h3>
     <small class="text-muted">Total expenditure</small>
   </div>
 </div>
 <div class="col-3">
   <div class="card-body text-center">
-    <h3>{{ context.mean_salary|format_salary }}</h3>
+    <h3>{{ mean_salary|format_salary }}</h3>
     <small class="text-muted">Average salary</small>
   </div>
 </div>

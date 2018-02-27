@@ -1,0 +1,31 @@
+<div class="card-body">
+  <h3 class="card-title mb-4">
+    <i class="far fa-building"></i> Departments
+    <small><a href="#">View all ({{ entity.departments.count() }})</a></small>
+  </h3>
+
+  <h4 class="card-subtitle mb-3">Top-spending departments in {{ entity }}</h4>
+  <table class="table table-striped table-hover">
+    <thead class="bg-warning">
+      <tr>
+        <th scope="col">Department</th>
+        <th scope="col">Number of employees</th>
+        <th scope="col">Average salary</th>
+        <th scope="col">Total expenditure</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for department in department_salaries %}
+      <tr>
+        <td><a href="/employer/{{ department['slug'] }}">{{ department['department']|titlecase_standalone }}</a></td>
+        <td>{{ department['headcount'] }}</td>
+        <td>{{ department['amount']|format_salary }}</td>
+        <td>${{ department['total_budget']|format_ballpark_number }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h4 class="card-subtitle mt-5 mb-4">Distribution of average salary by department</h4>
+  <div id="department-distribution-chart"></div>
+</div>

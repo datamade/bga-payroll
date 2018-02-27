@@ -2,10 +2,11 @@ from itertools import chain
 import json
 
 from django.db import connection
-from django.db.models import Avg, Q, Sum
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.views.generic.detail import DetailView
 
 import numpy as np
 
@@ -21,23 +22,6 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-def employer(request, slug):
-    try:
-        entity = Employer.objects.get(slug=slug)
-
-    except Employer.DoesNotExist:
-        error_page = reverse(error, kwargs={'error_code': 404})
-        return redirect(error_page)
-
-    if entity.is_department or not entity.departments.all():
-        context = get_department_context(entity)
-        return render(request, 'department.html', context)
-
-    else:
-        context = get_unit_context(entity)
-        return render(request, 'governmental_unit.html', context)
-
-
 def person(request, slug):
     try:
         person = Person.objects.prefetch_related('salaries').get(slug=slug)
@@ -51,96 +35,140 @@ def person(request, slug):
     })
 
 
-def get_unit_context(unit):
-    person_salaries = Salary.of_employer(unit.id)[:5]
+class EmployerView(DetailView):
+    template_name = 'employer.html'
+    model = Employer
+    context_object_name = 'entity'
 
-    department_salaries = []
+    from_clause = '''
+        FROM payroll_salary AS salary
+        JOIN payroll_position AS position
+        ON salary.position_id = position.id
+        JOIN payroll_employer AS employer
+        ON position.employer_id = employer.id
+    '''
 
-    with connection.cursor() as cursor:
-        query = '''
-            SELECT
-                e.name,
-                AVG(s.amount) AS average,
-                SUM(s.amount) AS budget,
-                COUNT(*) AS headcount,
-                e.slug AS slug
-            FROM payroll_salary AS s
-            JOIN payroll_position AS p
-            ON s.position_id = p.id
-            JOIN payroll_employer AS e
-            ON p.employer_id = e.id
-            WHERE e.parent_id = {id}
-            OR e.id = {id}
-            GROUP BY e.id, e.name
-            ORDER BY SUM(s.amount) DESC
-        '''.format(id=unit.id)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-        cursor.execute(query)
+        employee_salaries = self.employee_salaries()
+        binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
-        for department, average, budget, headcount, slug in cursor:
-            department_salaries.append({
-                'department': department.title(),
-                'amount': round(average, 2),
-                'total_budget': budget,
-                'headcount': headcount,
-                'slug': slug,
-            })
-
-        query = '''
-            SELECT AVG(s.amount) AS average
-            FROM payroll_salary AS s
-            JOIN payroll_position AS p
-            ON s.position_id = p.id
-            JOIN payroll_employer AS e
-            ON p.employer_id = e.id
-            WHERE e.parent_id = {id}
-            OR e.id = {id}
-        '''.format(id=unit.id)
-
-        cursor.execute(query)
-
-        result, = cursor
-        average_salary, = result
-
-    salary_json = bin_salary_data([d['amount'] for d in department_salaries])
-
-    return {
-        'entity': unit,
-        'salaries': person_salaries,
-        'average_salary': average_salary,
-        'department_salaries': department_salaries,
-        'salary_json': json.dumps(salary_json),
-    }
-
-
-def get_department_context(department):
-    person_salaries = Salary.of_employer(department.id)
-    average_salary = person_salaries.aggregate(Avg('amount'))['amount__avg']
-    salary_json = bin_salary_data([s.amount for s in person_salaries])
-
-    return {
-        'entity': department,
-        'salaries': person_salaries,
-        'average_salary': average_salary,
-        'salary_json': json.dumps(salary_json),
-    }
-
-
-def bin_salary_data(data):
-    values, edges = np.histogram(data, bins=6)
-
-    salary_json = []
-
-    for i, value in enumerate(values):
-        lower, upper = int(edges[i]), int(edges[i + 1])
-
-        salary_json.append({
-            'value': int(value),
-            'lower_edge': format_ballpark_number(lower),
-            'upper_edge': format_ballpark_number(upper),
+        context.update({
+            'salaries': Salary.of_employer(self.object.id, n=5),
+            'mean_salary': self.mean_entity_salary(),
+            'headcount': len(employee_salaries),
+            'total_expenditure': sum(employee_salaries),
+            'employee_salary_json': json.dumps(binned_employee_salaries),
         })
 
-    return salary_json
+        if not self.object.is_department:
+            department_statistics = self.aggregate_department_statistics()
+            department_salaries = [d['amount'] for d in department_statistics]
+            binned_department_salaries = self.bin_salary_data(department_salaries)
+
+            context.update({
+                'department_salaries': department_statistics[:5],
+                'department_salary_json': json.dumps(binned_department_salaries),
+            })
+
+        return context
+
+    @property
+    def where_clause(self):
+        if self.object.is_department:
+            return '''
+                WHERE employer.id = {id}
+            '''.format(id=self.object.id)
+
+        else:
+            return '''
+                WHERE employer.id = {id}
+                OR employer.parent_id = {id}
+            '''.format(id=self.object.id)
+
+    def _make_query(self, query_fmt):
+        return query_fmt.format(
+            from_clause=self.from_clause,
+            where_clause=self.where_clause,
+        )
+
+    def mean_entity_salary(self):
+        query = self._make_query('''
+            SELECT
+                AVG(salary.amount) AS average
+            {from_clause}
+            {where_clause}
+        ''')
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+            result, = cursor
+            mean_salary, = result
+
+        return mean_salary
+
+    def aggregate_department_statistics(self):
+        query = self._make_query('''
+            SELECT
+                employer.name,
+                AVG(salary.amount) AS average,
+                SUM(salary.amount) AS budget,
+                COUNT(*) AS headcount,
+                employer.slug AS slug
+            {from_clause}
+            {where_clause}
+            GROUP BY employer.id, employer.name
+            ORDER BY SUM(salary.amount) DESC
+        ''')
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+            department_salaries = []
+
+            for department, average, budget, headcount, slug in cursor:
+                department_salaries.append({
+                    'department': department,
+                    'amount': average,
+                    'total_budget': budget,
+                    'headcount': headcount,
+                    'slug': slug,
+                })
+
+        return department_salaries
+
+    def employee_salaries(self):
+        query = self._make_query('''
+            SELECT
+                salary.amount
+            {from_clause}
+            {where_clause}
+        ''')
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+            employee_salaries = [row[0] for row in cursor]
+
+        return employee_salaries
+
+    def bin_salary_data(self, data):
+        values, edges = np.histogram(data, bins=6)
+
+        salary_json = []
+
+        for i, value in enumerate(values):
+            lower, upper = int(edges[i]), int(edges[i + 1])
+
+            salary_json.append({
+                'value': int(value),
+                'lower_edge': format_ballpark_number(lower),
+                'upper_edge': format_ballpark_number(upper),
+            })
+
+        return salary_json
 
 
 def entity_lookup(request):
