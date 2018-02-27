@@ -215,16 +215,22 @@ class SearchView(ListView):
     def _get_employer_queryset(self, params):
         condition = Q()
 
+        employers = Employer.objects.all()
+
         if params:
             if params.get('name'):
+                employers = employers.annotate(search_vector=SearchVector('name'))
                 name = Q(search_vector=params.get('name'))
                 condition &= name
 
-        return Employer.objects.annotate(search_vector=SearchVector('name', 'parent__name'))\
-                               .filter(condition)\
-                               .select_related('parent')\
-                               .annotate(budget=Sum('position__salary'))\
-                               .order_by('-budget')
+            if params.get('parent'):
+                parent = Q(parent__slug=params.get('parent'))
+                condition &= parent
+
+        return employers.filter(condition)\
+                        .select_related('parent')\
+                        .annotate(budget=Sum('position__salary'))\
+                        .order_by('-budget')
 
 
 def entity_lookup(request):
