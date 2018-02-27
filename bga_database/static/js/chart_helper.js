@@ -23,7 +23,9 @@ var ChartHelper = {
             return '$' + edges.lower_edge + ' – $' + edges.upper_edge;
         };
 
-        Highcharts.chart('distribution-chart', {
+        var element = entity_type + '-distribution-chart';
+
+        Highcharts.chart(element, {
             title: {
                 text: '', // Done in template
             },
