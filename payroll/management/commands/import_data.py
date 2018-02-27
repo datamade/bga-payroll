@@ -3,7 +3,7 @@ import os
 from django.core.management.base import BaseCommand
 from django.db import connection
 
-from payroll.models import Employer
+from payroll.models import Employer, Person
 
 
 class Command(BaseCommand):
@@ -18,10 +18,28 @@ class Command(BaseCommand):
                             action='store_true',
                             help='Add slugs to the employer, do nothing else.')
 
+        parser.add_argument('--slug_person',
+                            action='store_true',
+                            help='Add slugs to the person, do nothing else.')
+
+        parser.add_argument('--extract_salary',
+                            action='store_true',
+                            help='Extract salaries, do nothing else.')
+
     def handle(self, *args, **kwargs):
         if kwargs.get('slug_employer'):
             print('Slugging employers')
             self._slug_employer()
+            return
+
+        if kwargs.get('slug_person'):
+            print('Slugging people')
+            self._slug_person()
+            return
+
+        if kwargs.get('extract_salary'):
+            print('Extracting salaries')
+            self._insert_salary()
             return
 
         if kwargs.get('skip_raw'):
@@ -50,6 +68,9 @@ class Command(BaseCommand):
 
         print('Extracting people')
         self._insert_person()
+
+        print('Slugging people')
+        self._slug_person()
 
         print('Extracting positions')
         self._insert_position()
@@ -139,6 +160,14 @@ class Command(BaseCommand):
             FROM raw_payroll
         ''')
 
+    def _slug_person(self):
+        '''
+        We override the `save` method to auto-generate a unique slug. So,
+        just call it here. Redux!
+        '''
+        for p in Person.objects.all():
+            p.save()
+
     def _insert_position(self):
         # Cleared by truncating employer table
 
@@ -216,7 +245,7 @@ class Command(BaseCommand):
                 JOIN payroll_position AS position
                 ON position.employer_id = employer.id
             )
-            SELECT DISTINCT ON (employer_id, person_id, position_id, salary, start_date)
+            SELECT DISTINCT ON (position_id, raw.first_name, raw.last_name, raw.start_date, raw.salary)
                 person.id AS person_id,
                 position.position_id,
                 REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
@@ -250,7 +279,7 @@ class Command(BaseCommand):
                 JOIN payroll_position AS position
                 ON position.employer_id = child_employer.id
             )
-            SELECT DISTINCT ON (employer_id, person_id, position_id, salary, raw.start_date)
+            SELECT DISTINCT ON (position_id, raw.first_name, raw.last_name, raw.start_date, raw.salary)
                 person.id AS person_id,
                 position.position_id,
                 REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
