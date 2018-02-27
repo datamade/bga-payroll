@@ -1,6 +1,7 @@
 from itertools import chain
 import json
 
+from django.contrib.postgres.search import SearchVector
 from django.db import connection
 from django.db.models import Q, Sum, Count
 from django.http import JsonResponse
@@ -216,11 +217,11 @@ class SearchView(ListView):
 
         if params:
             if params.get('name'):
-                name = Q(name__iexact=params.get('name'))
-                parent_name = Q(parent__name__iexact=params.get('name'))
-                condition &= name | parent_name
+                name = Q(search_vector=params.get('name'))
+                condition &= name
 
-        return Employer.objects.filter(condition)\
+        return Employer.objects.annotate(search_vector=SearchVector('name', 'parent__name'))\
+                               .filter(condition)\
                                .select_related('parent')\
                                .annotate(budget=Sum('position__salary'))\
                                .order_by('-budget')
