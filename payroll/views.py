@@ -195,8 +195,7 @@ class SearchView(ListView):
             return list(matching_employers) + list(matching_people)
 
     def _get_person_queryset(self, params):
-        # Remove duplicate people. TO-DO: Remove when we've sorted
-        # out the dupes!
+        # Remove duplicate people. TO-DO: Remove when we've sorted out the dupes!
         condition = Q(salaries__isnull=False)
 
         if params:
