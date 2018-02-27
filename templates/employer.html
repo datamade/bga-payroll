@@ -18,15 +18,15 @@
     {% endwith %}
   </div>
 
+  <div class="card mb-4">
+    {% include 'partials/employee_card.html' %}
+  </div>
+
   {% if not entity.is_department %}
     <div class="card mb-4">
       {% include 'partials/department_card.html' %}
     </div>
   {% endif %}
-
-  <div class="card mb-4">
-    {% include 'partials/employee_card.html' %}
-  </div>
 </div>
 {% endblock %}
 

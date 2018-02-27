@@ -6,7 +6,7 @@ from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.views import View
+from django.views.generic.detail import DetailView
 
 import numpy as np
 
@@ -35,7 +35,10 @@ def person(request, slug):
     })
 
 
-class EmployerView(View):
+class EmployerView(DetailView):
+    template_name = 'employer.html'
+    model = Employer
+
     from_clause = '''
         FROM payroll_salary AS salary
         JOIN payroll_position AS position
@@ -44,15 +47,8 @@ class EmployerView(View):
         ON position.employer_id = employer.id
     '''
 
-    def get(self, request, *args, **kwargs):
-        slug = self.kwargs['slug']
-
-        try:
-            entity = Employer.objects.get(slug=slug)
-
-        except Employer.DoesNotExist:
-            error_page = reverse(error, kwargs={'error_code': 404})
-            return redirect(error_page)
+    def get_context_data(self, **kwargs):
+        entity = self.object
 
         self.where_clause = self._make_where_clause(entity)
 
@@ -78,7 +74,7 @@ class EmployerView(View):
                 'department_salary_json': json.dumps(binned_department_salaries),
             })
 
-        return render(request, 'employer.html', context)
+        return context
 
     def _make_where_clause(self, entity):
         if entity.is_department:
