@@ -48,45 +48,43 @@ class EmployerView(DetailView):
     '''
 
     def get_context_data(self, **kwargs):
-        entity = self.object
-
-        self.where_clause = self._make_where_clause(entity)
+        context = super().get_context_data(**kwargs)
 
         employee_salaries = self.employee_salaries()
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
-        context = {
-            'entity': entity,
-            'salaries': Salary.of_employer(entity.id, n=5),
+        context.update({
+            'salaries': Salary.of_employer(self.object.id, n=5),
             'mean_salary': self.mean_entity_salary(),
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
             'employee_salary_json': json.dumps(binned_employee_salaries),
-        }
+        })
 
-        if not entity.is_department:
+        if not self.object.is_department:
             department_statistics = self.aggregate_department_statistics()
             department_salaries = [d['amount'] for d in department_statistics]
             binned_department_salaries = self.bin_salary_data(department_salaries)
 
             context.update({
-                'department_salaries': department_statistics,
+                'department_salaries': department_statistics[:5],
                 'department_salary_json': json.dumps(binned_department_salaries),
             })
 
         return context
 
-    def _make_where_clause(self, entity):
-        if entity.is_department:
+    @property
+    def where_clause(self):
+        if self.object.is_department:
             return '''
                 WHERE employer.id = {id}
-            '''.format(id=entity.id)
+            '''.format(id=self.object.id)
 
         else:
             return '''
                 WHERE employer.id = {id}
                 OR employer.parent_id = {id}
-            '''.format(id=entity.id)
+            '''.format(id=self.object.id)
 
     def _make_query(self, query_fmt):
         return query_fmt.format(
