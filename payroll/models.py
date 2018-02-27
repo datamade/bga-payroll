@@ -2,6 +2,8 @@ from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.utils.text import slugify
 
+from titlecase import titlecase
+
 
 class SluggedModel(models.Model):
     slug = models.SlugField(max_length=255, unique=True, null=True)
@@ -39,11 +41,12 @@ class Employer(SluggedModel):
                                related_name='departments')
 
     def __str__(self):
-        if self.parent:
-            return '{} – {}'.format(self.parent, self.name).title()
+        name = self.name
 
-        else:
-            return self.name.title()
+        if self.parent and self.parent.name.lower() not in self.name.lower():
+            name = '{} {}'.format(self.parent, self.name)
+
+        return titlecase(name.lower())
 
     @property
     def is_department(self):
@@ -60,17 +63,22 @@ class Person(SluggedModel):
     search_vector = SearchVectorField(max_length=255, null=True)
 
     def __str__(self):
-        name = '{0} {1}'.format(self.first_name, self.last_name)
-        return name.lstrip('-').title()
+        name = '{0} {1}'.format(self.first_name, self.last_name)\
+                        .lstrip('-')
+
+        return titlecase(name.lower())
 
 
 class Position(models.Model):
     employer = models.ForeignKey('Employer', on_delete=models.CASCADE)
     title = models.CharField(max_length=255, null=True)
 
+    def __repr__(self):
+        position = '{0} – {1}'.format(self.employer, self.title)
+        return titlecase(position.lower())
+
     def __str__(self):
-        title = '{0} – {1}'.format(self.employer, self.title)
-        return title.title()
+        return titlecase(self.title.lower())
 
 
 class Salary(models.Model):

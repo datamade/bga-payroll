@@ -1,6 +1,7 @@
 Django==2.0.2
 psycopg2==2.7.4
 numpy==1.14.1
+titlecase==0.12.0
 jinja2==2.10
 django-debug-toolbar==1.9.1
 pytest==3.4.1
