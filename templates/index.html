@@ -14,7 +14,7 @@
 
   <p>With the BGA's searchable database of public payrolls across Illinois, you can easily access information relating to the spending of state and local units of government.</p>
 
-  <form id="entity-form" method="get">
+  <form id="entity-form">
     <div class="row">
       <div class="col-10">
         <input type="text" id="entity-lookup" class="form-control form-control-lg" placeholder="Chicago" />
@@ -32,4 +32,10 @@
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
+<script type="text/javascript">
+$('#submit-button').click(function(e) {
+  e.preventDefault();
+  window.location = '/search/?name=' + $('#entity-lookup').val();
+})
+</script>
 {% endblock %}

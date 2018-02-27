@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Search results
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2>Search results</h2>
+        <table class="table table-striped">
+            <thead class="bg-warning">
+                <th span="col">Name</th>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    {% set entity_type = result.__class__.__name__ %}
+                    <tr>
+                        <td><a href="/{{ entity_type|lower }}/{{ result.slug }}/">{{ result }}</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if is_paginated %}
+            <div class="pagination">
+                <span class="page-links">
+                    {% if page_obj.has_previous() %}
+                        <a href="{{ request.path }}?{{ request|query_transform }}{% if request|query_transform %}&{% endif %}page={{ page_obj.previous_page_number() }}">previous</a>
+                    {% endif %}
+                    <span class="page-current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next() %}
+                        <a href="{{ request.path }}?{{ request|query_transform }}{% if request|query_transform %}&{% endif %}page={{ page_obj.next_page_number() }}">next</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

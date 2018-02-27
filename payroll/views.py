@@ -2,11 +2,12 @@ from itertools import chain
 import json
 
 from django.db import connection
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 
 import numpy as np
 
@@ -171,6 +172,61 @@ class EmployerView(DetailView):
         return salary_json
 
 
+class SearchView(ListView):
+    queryset = []
+    template_name = 'search_results.html'
+    context_object_name = 'results'
+    paginate_by = 25
+
+    def get_queryset(self, **kwargs):
+        params = {k: v for k, v in self.request.GET.items() if k != 'page'}
+
+        if params.get('entity_type'):
+            if params.get('entity_type') == 'person':
+                return self._get_person_queryset(params)
+
+            elif params.get('entity_type') == 'employer':
+                return self._get_employer_queryset(params)
+
+        else:
+            matching_employers = self._get_employer_queryset(params)
+            matching_people = self._get_person_queryset(params)
+
+            return list(matching_employers) + list(matching_people)
+
+    def _get_person_queryset(self, params):
+        # Remove duplicate people. TO-DO: Remove when we've sorted
+        # out the dupes!
+        condition = Q(salaries__isnull=False)
+
+        if params:
+            if params.get('name'):
+                name = Q(search_vector=params.get('name'))
+                condition &= name
+
+            if params.get('employer'):
+                child_employer = Q(salaries__position__employer__slug=params.get('employer'))
+                parent_employer = Q(salaries__position__employer__parent__slug=params.get('employer'))
+                condition &= child_employer | parent_employer
+
+        return Person.objects.filter(condition)\
+                             .order_by('-salaries__amount')
+
+    def _get_employer_queryset(self, params):
+        condition = Q()
+
+        if params:
+            if params.get('name'):
+                name = Q(name__iexact=params.get('name'))
+                parent_name = Q(parent__name__iexact=params.get('name'))
+                condition &= name | parent_name
+
+        return Employer.objects.filter(condition)\
+                               .select_related('parent')\
+                               .annotate(budget=Sum('position__salary'))\
+                               .order_by('-budget')
+
+
 def entity_lookup(request):
     q = request.GET['term']
 
@@ -184,7 +240,6 @@ def entity_lookup(request):
     people = Person.objects.filter(salaries__amount__gt=100000)
 
     if q:
-        # Show exacts first
         employers = employers.filter(name__istartswith=q)[:10]
 
         last_token = q.split(' ')[-1]
