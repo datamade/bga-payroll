@@ -1,7 +1,7 @@
 <div class="card-body">
   <h3 class="card-title mb-4">
     <i class="far fa-building"></i> Departments
-    <small><a href="#">View all ({{ entity.departments.count() }})</a></small>
+    <small><a href="/search/?entity_type=employer&parent={{ entity.slug }}">View all ({{ entity.departments.count() }})</a></small>
   </h3>
 
   <h4 class="card-subtitle mb-3">Top-spending departments in {{ entity }}</h4>

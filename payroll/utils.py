@@ -23,6 +23,16 @@ def titlecase_standalone(entity):
     return titlecase(entity)
 
 
+def query_transform(request, drop_keys=['page']):
+    updated = request.GET.copy()
+
+    for k in drop_keys:
+        if k in updated:
+            updated.pop(k)
+
+    return updated.urlencode()
+
+
 def format_salary(i):
     '''
     Strip cents off salary figures.

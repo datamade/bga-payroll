@@ -26,6 +26,7 @@ urlpatterns = [
     path('employer/<str:slug>/', views.EmployerView.as_view(), name='employer'),
     path('person/<str:slug>/', views.person, name='person'),
     path('entity-lookup/', views.entity_lookup, name='entity-lookup'),
+    path('search/', views.SearchView.as_view(), name='search'),
     path('<int:error_code>', views.error, name='error'),
 ]
 
