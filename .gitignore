@@ -109,3 +109,4 @@ payroll/management/commands/2017_payroll.sorted.csv
 /keyrings/live/pubring.gpg~
 /keyrings/live/pubring.kbx~
 /keyrings/live/secring.gpg
+/configs/local_settings.staging.py
