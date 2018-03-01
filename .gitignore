@@ -112,3 +112,5 @@ payroll/management/commands/2017_payroll.sorted.csv
 /configs/local_settings.staging.py
 /configs/bga-payroll.conf.nginx
 /configs/bga-payroll.conf.supervisor
+/scripts/after_install.sh
+/scripts/app_start.sh
