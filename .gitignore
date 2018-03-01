@@ -106,3 +106,11 @@ venv.bak/
 .mypy_cache/
 
 payroll/management/commands/2017_payroll.sorted.csv
+/keyrings/live/pubring.gpg~
+/keyrings/live/pubring.kbx~
+/keyrings/live/secring.gpg
+/configs/local_settings.staging.py
+/configs/bga-payroll.conf.nginx
+/configs/bga-payroll.conf.supervisor
+/scripts/after_install.sh
+/scripts/app_start.sh
