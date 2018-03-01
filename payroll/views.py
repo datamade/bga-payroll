@@ -3,7 +3,7 @@ import json
 
 from django.contrib.postgres.search import SearchVector
 from django.db import connection
-from django.db.models import Q, Sum, Count
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
