@@ -22,6 +22,8 @@ Assuming the user uploads only one agency at a time, these tasks should:
 - Map Positions to existing Positions, insert unmappable Positions
 - Insert salaries
 
+All of the data should be tied to the appropriate SourceFile/s.
+
 We expect People and Positions to be fairly inconsistent over time. Allow the
 user to combine these in some user interface if need be, but don't force them
 to.
