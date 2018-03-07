@@ -10,5 +10,9 @@ class UploadForm(forms.Form):
     - source - raw response file or files (https://docs.djangoproject.com/en/1.11/topics/http/file-uploads/#uploading-multiple-files)
     - reporting_agency - Django autocomplete field for querying existing
     agencies, also allows creation of a new agency, if necessary
+    - year - for standard reporting period, the year
+    - non_standard_reporting_period - checkbox
+    - reporting_period_start - if non-standard reporting period, start date
+    - reporting_period_end - ditto, end date
     '''
     pass
