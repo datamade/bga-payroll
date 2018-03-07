@@ -23,6 +23,7 @@ class SourceFile(models.Model):
     - reporting_agency
     - reporting_period_start (default Jan. 1 of given year)
     - reporting_period_end (default Dec. 31 of given year)
+    - response_date
     - upload - Upload foreign key
 
     Add a SourceFile foreign key to each model. For models whose objects can
