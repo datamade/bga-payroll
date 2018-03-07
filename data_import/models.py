@@ -19,7 +19,9 @@ class SourceFile(models.Model):
 
     Proposed fields:
     - id
-    - filename
+    - file (https://docs.djangoproject.com/en/2.0/ref/models/fields/#django.db.models.FileField.upload_to)
+    - reporting_period_start (default Jan. 1 of given year)
+    - reporting_period_end (default Dec. 31 of given year)
     - upload - Upload foreign key
 
     Add a SourceFile foreign key to each model. For models whose objects can
