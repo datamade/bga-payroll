@@ -15,3 +15,7 @@ DATABASES = {
            'PORT': '5432',
     }
 }
+
+AWS_STORAGE_BUCKET_NAME = '<bucket_name>'
+AWS_ACCESS_KEY_ID = '<key>'
+AWS_SECRET_ACCESS_KEY = '<secret>'

@@ -4,6 +4,9 @@ numpy==1.14.1
 titlecase==0.12.0
 jinja2==2.10
 django-debug-toolbar==1.9.1
+django-storages==1.6.5
 gunicorn==19.7.1
 pytest==3.4.1
+pytest-django==3.1.2
+pytest-mock==1.7.1
 https://github.com/datamade/pytest-flake8/zipball/master

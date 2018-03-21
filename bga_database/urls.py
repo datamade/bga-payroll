@@ -17,17 +17,22 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 
-from payroll import views
+from data_import import views as import_views
+from payroll import views as payroll_views
 
 
 urlpatterns = [
+    # client
+    path('', payroll_views.index, name='home'),
+    path('employer/<str:slug>/', payroll_views.EmployerView.as_view(), name='employer'),
+    path('person/<str:slug>/', payroll_views.person, name='person'),
+    path('entity-lookup/', payroll_views.entity_lookup, name='entity-lookup'),
+    path('search/', payroll_views.SearchView.as_view(), name='search'),
+    path('<int:error_code>', payroll_views.error, name='error'),
+
+    # admin
     path('admin/', admin.site.urls),
-    path('', views.index, name='home'),
-    path('employer/<str:slug>/', views.EmployerView.as_view(), name='employer'),
-    path('person/<str:slug>/', views.person, name='person'),
-    path('entity-lookup/', views.entity_lookup, name='entity-lookup'),
-    path('search/', views.SearchView.as_view(), name='search'),
-    path('<int:error_code>', views.error, name='error'),
+    path('upload-source-file/', import_views.SourceFileHook.as_view(), name='upload-source-file'),
 ]
 
 
