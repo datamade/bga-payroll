@@ -3,7 +3,9 @@ import json
 
 from django.http import HttpResponse
 from django.views import View
+from django.shortcuts import render
 
+from data_import.forms import UploadForm
 from data_import.models import SourceFile, RespondingAgency, Upload
 
 
@@ -45,3 +47,12 @@ class SourceFileHook(View):
             file_metadata[field] = date_object
 
         return file_metadata
+
+
+class StandardizedDataUpload(View):
+    def get(self, request):
+        form = UploadForm()
+        return render(request, 'data_import/upload.html', {'form': form})
+
+    def post(self, request):
+        pass

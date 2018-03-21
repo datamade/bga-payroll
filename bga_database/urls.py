@@ -33,6 +33,7 @@ urlpatterns = [
     # admin
     path('admin/', admin.site.urls),
     path('upload-source-file/', import_views.SourceFileHook.as_view(), name='upload-source-file'),
+    path('upload/', import_views.StandardizedDataUpload.as_view(), name='upload'),
 ]
 
 

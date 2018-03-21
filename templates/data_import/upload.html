@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}
+Upload data
+{% endblock %}
+
+{% block content %}
+<h2>Standardized data upload</h2>
+<form>
+{{ form.as_p() }}
+<button type="submit" class="btn btn-lg btn-primary">Submit!</button>
+</form>
+{% endblock %}
