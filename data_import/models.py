@@ -88,4 +88,3 @@ class SourceFile(models.Model):
         field of this model. Do this in a delayed task, rather than on save.
         '''
         raise NotImplementedError
-

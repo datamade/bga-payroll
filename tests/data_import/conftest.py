@@ -4,8 +4,6 @@ from uuid import uuid4
 from django.core.files import File
 import pytest
 
-from data_import.models import RespondingAgency, SourceFile, Upload
-
 
 @pytest.fixture
 def mock_file(mocker):

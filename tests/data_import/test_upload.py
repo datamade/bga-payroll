@@ -9,7 +9,9 @@ from data_import.models import SourceFile, RespondingAgency, Upload
 @pytest.mark.django_db
 def test_source_file_upload(source_file_upload_blob, client):
     data = {'source_files': json.dumps(source_file_upload_blob)}
+
     rv = client.post(reverse('upload-source-file'), data=data)
+    assert rv.status_code == 200
 
     # TO-DO: Test for more specific info.
 
