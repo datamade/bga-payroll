@@ -18,8 +18,6 @@ class SourceFileHook(View):
         source_files = json.loads(request.POST['source_files'])
 
         for file_metadata in source_files:
-            file_id = file_metadata.pop('google_drive_file_id')  # noqa
-
             agency = file_metadata.pop('responding_agency')
             responding_agency, _ = RespondingAgency.objects.get_or_create(name=agency)
 
@@ -28,7 +26,7 @@ class SourceFileHook(View):
 
             file_metadata = self._hydrate_date_objects(file_metadata)
 
-            source_file = SourceFile.objects.create(**file_metadata)  # noqa
+            SourceFile.objects.create(**file_metadata)
 
         # TO-DO: Kick off delayed task, which iterates over all source files
         # without an attached file and calls SourceFile.download_from_drive
