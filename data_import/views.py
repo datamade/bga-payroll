@@ -53,5 +53,14 @@ class StandardizedDataUpload(FormView):
     success_url = '/upload/'
 
     def form_valid(self, form):
-        # do some stuff
+        s_file = form.cleaned_data['standardized_file'].file
+
+        # TO-DO: Come up with a better (i.e., unique) filename for copies
+
+        with open('a_file.csv', 'w', encoding='utf-8') as s:
+            s.write(s_file.read().decode(form.FILE_ENCODING))
+
+        # TO-DO: Kick off delayed task to write local copy to database
+        # http://initd.org/psycopg/docs/cursor.html#cursor.copy_expert
+
         return super().form_valid(form)

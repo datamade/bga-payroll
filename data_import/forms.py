@@ -10,6 +10,8 @@ class UploadForm(forms.Form):
     '''
     Collect standardized data.
     '''
+    FILE_ENCODING = 'utf-8'
+
     standardized_file = forms.FileField(label='Standardized data file')
     reporting_year = forms.IntegerField(label='Reporting year')
 
@@ -21,6 +23,7 @@ class UploadForm(forms.Form):
 
         except UnicodeDecodeError:
             encoding = self._get_encoding(incoming_file)
+            self.FILE_ENCODING = encoding
             content = chunk.decode(encoding).splitlines()
 
         finally:
