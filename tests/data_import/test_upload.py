@@ -10,7 +10,7 @@ from data_import.forms import UploadForm
 
 @pytest.mark.django_db
 @pytest.mark.source_file
-def test_source_file_upload(source_file_upload_blob, client):
+def test_valid_source_file_upload(source_file_upload_blob, client):
     data = {'source_files': json.dumps(source_file_upload_blob)}
 
     rv = client.post(reverse('upload-source-file'), data=data)
@@ -92,9 +92,9 @@ def test_future_date_raises_exception(standardized_data_upload_blob,
 
 @pytest.mark.django_db
 @pytest.mark.standardized_data
-def test_valid_upload(standardized_data_upload_blob,
-                      standardized_file,
-                      client):
+def test_valid_standardized_data_upload(standardized_data_upload_blob,
+                                        standardized_file,
+                                        client):
 
     # Use the real file, rather than the default mock file
     standardized_data_upload_blob['standardized_file'] = standardized_file
