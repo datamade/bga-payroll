@@ -74,7 +74,6 @@ def test_non_csv_raises_exception(standardized_data_upload_blob,
 @pytest.mark.django_db
 @pytest.mark.standardized_data
 def test_future_date_raises_exception(standardized_data_upload_blob,
-                                      mocker,
                                       client):
 
     ten_years_from_now = datetime.datetime.today().year + 10
