@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 from csvkit.convert import guess_format
 from django import forms
@@ -49,7 +50,14 @@ class UploadForm(forms.Form):
         self._validate_filetype(s_file)
 
         fields = self._get_incoming_fields(s_file)
-
         self._validate_fields(fields)
 
-        return self.cleaned_data['standardized_file']
+        return s_file
+
+    def clean_reporting_year(self):
+        reporting_year = self.cleaned_data['reporting_year']
+
+        if reporting_year > datetime.datetime.today().year:
+            raise forms.ValidationError('Reporting year cannot exceed the current year')
+
+        return reporting_year

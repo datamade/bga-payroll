@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from django.urls import reverse
@@ -35,8 +36,8 @@ def test_source_file_upload(source_file_upload_blob, client):
 @pytest.mark.django_db
 @pytest.mark.standardized_data
 def test_missing_fields_raises_exception(standardized_data_upload_blob,
-                                         client,
-                                         mocker):
+                                         mocker,
+                                         client):
 
     bad_fields = ['not', 'the', 'right', 'fields']
     mock_get_fields = mocker.patch.object(UploadForm, '_get_incoming_fields')
@@ -68,6 +69,25 @@ def test_non_csv_raises_exception(standardized_data_upload_blob,
 
     assert rv.status_code != 302
     assert 'Please upload a CSV' in rv.content.decode('utf-8')
+
+
+@pytest.mark.django_db
+@pytest.mark.standardized_data
+def test_future_date_raises_exception(standardized_data_upload_blob,
+                                      mocker,
+                                      client):
+
+    ten_years_from_now = datetime.datetime.today().year + 10
+    standardized_data_upload_blob['reporting_year'] = ten_years_from_now
+
+    mock_file = standardized_data_upload_blob['standardized_file']
+
+    rv = client.post(reverse('upload'),
+                     data=standardized_data_upload_blob,
+                     files={'standardized_file': mock_file})
+
+    assert rv.status_code != 302
+    assert 'Reporting year cannot exceed the current year' in rv.content.decode('utf-8')
 
 
 @pytest.mark.django_db
