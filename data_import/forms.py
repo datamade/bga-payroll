@@ -1,6 +1,7 @@
 import csv
 import datetime
 
+from cchardet import UniversalDetector
 from csvkit.convert import guess_format
 from django import forms
 
@@ -13,9 +14,36 @@ class UploadForm(forms.Form):
     reporting_year = forms.IntegerField(label='Reporting year')
 
     def _get_incoming_fields(self, incoming_file):
-        content = [line.decode() for line in incoming_file.file.readlines()]
-        fields = csv.DictReader(content).fieldnames
+        chunk = next(incoming_file.chunks())
+
+        try:
+            content = chunk.decode('utf-8').splitlines()
+
+        except UnicodeDecodeError:
+            # TO-DO: Test this!
+            encoding = self._get_encoding(incoming_file)
+            content = chunk.decode(encoding).splitlines()
+
+        finally:
+            reader = csv.reader(content)
+
+        fields = next(reader)
+
         return [self._clean_incoming_field(field) for field in fields]
+
+    def _get_encoding(self, incoming_file):
+        with open(incoming_file, 'rb') as f:
+            detector = UniversalDetector()
+
+            for line in f:
+                detector.feed(line)
+                if detector.done:
+                    break
+
+            detector.close()
+            encoding = detector.result['encoding']
+
+        return encoding
 
     def _clean_incoming_field(self, field):
         return '_'.join(field.strip().lower().split(' '))
@@ -33,8 +61,9 @@ class UploadForm(forms.Form):
             'data_year',
         ]
 
-        if set(incoming_fields) != set(required_fields):
-            missing_fields = ', '.join(set(required_fields) - set(incoming_fields))
+        missing_fields = ', '.join(set(required_fields) - set(incoming_fields))
+
+        if missing_fields:
             message = 'Standardized file missing fields: {}'.format(missing_fields)
             raise forms.ValidationError(message)
 
