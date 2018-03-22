@@ -4,9 +4,11 @@ from django.urls import reverse
 import pytest
 
 from data_import.models import SourceFile, RespondingAgency, Upload
+from data_import.forms import UploadForm
 
 
 @pytest.mark.django_db
+@pytest.mark.source_file
 def test_source_file_upload(source_file_upload_blob, client):
     data = {'source_files': json.dumps(source_file_upload_blob)}
 
@@ -28,3 +30,57 @@ def test_source_file_upload(source_file_upload_blob, client):
 
     assert source_files.count() == 2
     assert all([f.google_drive_file_id for f in source_files])
+
+
+@pytest.mark.django_db
+@pytest.mark.standardized_data
+def test_missing_fields_raises_exception(standardized_data_upload_blob,
+                                         client,
+                                         mocker):
+
+    bad_fields = ['not', 'the', 'right', 'fields']
+    mock_get_fields = mocker.patch.object(UploadForm, '_get_incoming_fields')
+    mock_get_fields.return_value = bad_fields
+
+    mock_file = standardized_data_upload_blob['standardized_file']
+
+    rv = client.post(reverse('upload'),
+                     data=standardized_data_upload_blob,
+                     files={'standardized_file': mock_file})
+
+    assert rv.status_code != 302
+    assert 'Standardized file missing fields:' in rv.content.decode('utf-8')
+
+
+@pytest.mark.django_db
+@pytest.mark.standardized_data
+def test_non_csv_raises_exception(standardized_data_upload_blob,
+                                  client):
+
+    mock_file = standardized_data_upload_blob['standardized_file']
+    mock_file.name = 'not_a_csv.xlsx'
+
+    standardized_data_upload_blob['standardized_file'] = mock_file
+
+    rv = client.post(reverse('upload'),
+                     data=standardized_data_upload_blob,
+                     files={'standardized_file': mock_file})
+
+    assert rv.status_code != 302
+    assert 'Please upload a CSV' in rv.content.decode('utf-8')
+
+
+@pytest.mark.django_db
+@pytest.mark.standardized_data
+def test_valid_upload(standardized_data_upload_blob,
+                      standardized_file,
+                      client):
+
+    # Use the real file, rather than the default mock file
+    standardized_data_upload_blob['standardized_file'] = standardized_file
+
+    rv = client.post(reverse('upload'),
+                     data=standardized_data_upload_blob,
+                     files={'standardized_file': standardized_file})
+
+    assert rv.status_code == 302

@@ -8,18 +8,20 @@ import pytest
 @pytest.fixture
 def mock_file(mocker):
     mock_file = mocker.MagicMock(spec=File)
-    mock_file.name = 'mock_file.xlsx'
+    mock_file.name = 'mock_file.csv'
 
     return mock_file
 
 
 @pytest.fixture
 def standardized_file(request):
-    file = open('fixtures/standardized_data_sample.2016.csv')
+    s_file = open('tests/data_import/fixtures/standardized_data_sample.2016.csv')
 
     @request.addfinalizer
     def close():
-        file.close()
+        s_file.close()
+
+    return s_file
 
 
 @pytest.fixture

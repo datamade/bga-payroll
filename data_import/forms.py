@@ -11,17 +11,15 @@ class UploadForm(forms.Form):
     standardized_file = forms.FileField(label='Standardized data file')
     reporting_year = forms.IntegerField(label='Reporting year')
 
-    def _clean_incoming_fields(self, incoming_fields):
-        def clean(field):
-            return '_'.join(field.strip().lower().split(' '))
-
-        return [clean(field) for field in incoming_fields]
-
-    def _validate_fields(self, incoming_file):
+    def _get_incoming_fields(self, incoming_file):
         content = [line.decode() for line in incoming_file.file.readlines()]
-        reader = csv.DictReader(content)
-        incoming_fields = self._clean_incoming_fields(reader.fieldnames)
+        fields = csv.DictReader(content).fieldnames
+        return [self._clean_incoming_field(field) for field in fields]
 
+    def _clean_incoming_field(self, field):
+        return '_'.join(field.strip().lower().split(' '))
+
+    def _validate_fields(self, incoming_fields):
         required_fields = [
             'responding_agency',
             'employer',
@@ -49,6 +47,9 @@ class UploadForm(forms.Form):
         s_file = self.cleaned_data['standardized_file']
 
         self._validate_filetype(s_file)
-        self._validate_fields(s_file)
+
+        fields = self._get_incoming_fields(s_file)
+
+        self._validate_fields(fields)
 
         return self.cleaned_data['standardized_file']
