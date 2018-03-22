@@ -20,7 +20,6 @@ class UploadForm(forms.Form):
             content = chunk.decode('utf-8').splitlines()
 
         except UnicodeDecodeError:
-            # TO-DO: Test this!
             encoding = self._get_encoding(incoming_file)
             content = chunk.decode(encoding).splitlines()
 
@@ -32,16 +31,15 @@ class UploadForm(forms.Form):
         return [self._clean_incoming_field(field) for field in fields]
 
     def _get_encoding(self, incoming_file):
-        with open(incoming_file, 'rb') as f:
-            detector = UniversalDetector()
+        detector = UniversalDetector()
 
-            for line in f:
-                detector.feed(line)
-                if detector.done:
-                    break
+        for line in incoming_file.readlines():
+            detector.feed(line)
+            if detector.done:
+                break
 
-            detector.close()
-            encoding = detector.result['encoding']
+        detector.close()
+        encoding = detector.result['encoding']
 
         return encoding
 
