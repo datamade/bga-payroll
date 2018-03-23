@@ -53,13 +53,26 @@ class StandardizedDataUpload(FormView):
     success_url = '/upload/'
 
     def form_valid(self, form):
-        # TO-DO: Create an Upload object, and associate it with incoming records
+#        TO-DO: Finish implementing this!
+#        upload = Upload.objects.create()
+#
+#        form.cleaned_data['standardized_file'].name
+#
+#        s_file = {
+#            'standardized_file': form.cleaned_data['standardized_file'].file,
+#            'upload': upload,
+#        }
+#
+#        StandardizedFile.objects.create(**s_file)
 
         s_file = form.cleaned_data['standardized_file'].file
 
-        # TO-DO: Come up with a better (i.e., unique) filename for copies
+        now = datetime.datetime.now().isoformat()
+        reporting_year = form.cleaned_data['reporting_year']
 
-        with open('a_file.csv', 'w', encoding='utf-8') as s:
+        filename = '{now}-{year}.csv'.format(now=now, year=reporting_year)
+
+        with open(filename, 'w', encoding='utf-8') as s:
             s.write(s_file.read().decode(form.FILE_ENCODING))
 
         # TO-DO: Kick off delayed task to write local copy to database

@@ -39,13 +39,13 @@ class RespondingAgency(SluggedModel):
         return self.name
 
 
-def upload_name(instance, filename):
+def source_file_upload_name(instance, filename):
     year = instance.reporting_year
     agency = instance.responding_agency.slug
 
-    return '{year}/payroll/{agency}/{filename}'.format(year=year,
-                                                       agency=agency,
-                                                       filename=filename)
+    return '{year}/payroll/source/{agency}/{filename}'.format(year=year,
+                                                              agency=agency,
+                                                              filename=filename)
 
 
 class SourceFile(models.Model):
@@ -57,14 +57,31 @@ class SourceFile(models.Model):
     a ManyToManyField. As a bonus, the data is connected to Upload/s via its
     related SourceFile/s.
     '''
-    source_file = models.FileField(max_length=1000, upload_to=upload_name, null=True)
-    responding_agency = models.ForeignKey('RespondingAgency', on_delete=models.CASCADE)
+    source_file = models.FileField(
+        max_length=1000,
+        upload_to=source_file_upload_name,
+        null=True
+    )
+    responding_agency = models.ForeignKey(
+        'RespondingAgency',
+        on_delete=models.CASCADE
+    )
     reporting_year = models.IntegerField()
     reporting_period_start_date = models.DateField()
     reporting_period_end_date = models.DateField()
     response_date = models.DateField()
-    upload = models.ForeignKey('Upload', on_delete=models.CASCADE, related_name='files')
+    upload = models.ForeignKey(
+        'Upload',
+        on_delete=models.CASCADE,
+        related_name='source_files'
+    )
     google_drive_file_id = models.CharField(max_length=255)
+    standardized_file = models.ForeignKey(
+        'StandardizedFile',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='source_files'
+    )
 
     def save(self, *args, **kwargs):
         self.reporting_year = self.reporting_period_start_date.year
@@ -88,3 +105,23 @@ class SourceFile(models.Model):
         field of this model. Do this in a delayed task, rather than on save.
         '''
         raise NotImplementedError
+
+
+def standardized_file_upload_name(instance, filename):
+    timestamp, year = filename.split('-')
+
+    return '{year}/payroll/standardized/{timestamp}.csv'.format(year=year,
+                                                                timestamp=timestamp)
+
+
+class StandardizedFile(models.Model):
+    standardized_file = models.FileField(
+        max_length=1000,
+        upload_to=standardized_file_upload_name,
+        null=True
+    )
+    upload = models.ForeignKey(
+        'Upload',
+        on_delete=models.CASCADE,
+        related_name='standardized_files'
+    )
