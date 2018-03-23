@@ -53,6 +53,8 @@ class StandardizedDataUpload(FormView):
     success_url = '/upload/'
 
     def form_valid(self, form):
+        # TO-DO: Create an Upload object, and associate it with incoming records
+
         s_file = form.cleaned_data['standardized_file'].file
 
         # TO-DO: Come up with a better (i.e., unique) filename for copies
