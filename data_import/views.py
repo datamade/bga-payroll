@@ -1,12 +1,14 @@
 import datetime
 import json
 
+from django.core.files import File
 from django.http import HttpResponse
 from django.views import View
 from django.views.generic.edit import FormView
 
 from data_import.forms import UploadForm
-from data_import.models import SourceFile, RespondingAgency, Upload
+from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
+    Upload
 
 
 class SourceFileHook(View):
@@ -53,29 +55,31 @@ class StandardizedDataUpload(FormView):
     success_url = '/upload/'
 
     def form_valid(self, form):
-#        TO-DO: Finish implementing this!
-#        upload = Upload.objects.create()
-#
-#        form.cleaned_data['standardized_file'].name
-#
-#        s_file = {
-#            'standardized_file': form.cleaned_data['standardized_file'].file,
-#            'upload': upload,
-#        }
-#
-#        StandardizedFile.objects.create(**s_file)
+        upload = Upload.objects.create()
 
-        s_file = form.cleaned_data['standardized_file'].file
+        s_file = form.cleaned_data['standardized_file']
 
-        now = datetime.datetime.now().isoformat()
-        reporting_year = form.cleaned_data['reporting_year']
+        unicode_s_file = self._convert_to_utf8(s_file, form.FILE_ENCODING)
 
-        filename = '{now}-{year}.csv'.format(now=now, year=reporting_year)
+        with open(unicode_s_file, 'r') as f:
+            s_file = {
+                'standardized_file': File(f),
+                'upload': upload,
+                'reporting_year': form.cleaned_data['reporting_year'],
+            }
 
-        with open(filename, 'w', encoding='utf-8') as s:
-            s.write(s_file.read().decode(form.FILE_ENCODING))
+            StandardizedFile.objects.create(**s_file)
 
         # TO-DO: Kick off delayed task to write local copy to database
         # http://initd.org/psycopg/docs/cursor.html#cursor.copy_expert
 
         return super().form_valid(form)
+
+    def _convert_to_utf8(self, incoming_file, encoding):
+        filename = '/tmp/{now}-{name}'.format(now=datetime.datetime.now().isoformat(),
+                                              name=incoming_file.name)
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(incoming_file.file.read().decode(encoding))
+
+        return filename
