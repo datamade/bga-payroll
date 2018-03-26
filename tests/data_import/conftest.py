@@ -1,4 +1,5 @@
 import datetime
+import shutil
 from uuid import uuid4
 
 from django.core.files import File
@@ -20,6 +21,15 @@ def standardized_file(request):
     @request.addfinalizer
     def close():
         s_file.close()
+
+        try:
+            # When this fixture is used to test a valid upload, the
+            # file is saved to disk at 2016/payroll/standardized/...
+            # Clean up that file tree.
+            shutil.rmtree('2016')
+
+        except FileNotFoundError:
+            pass
 
     return s_file
 
@@ -53,7 +63,7 @@ def source_file_upload_blob(mock_file):
 def standardized_data_upload_blob(mock_file):
     blob = {
         'standardized_file': mock_file,
-        'reporting_year': 2017,
+        'reporting_year': 2016,
     }
 
     return blob
