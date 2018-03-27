@@ -5,7 +5,7 @@ from django.urls import reverse
 import pytest
 
 from data_import.models import SourceFile, RespondingAgency, Upload
-from data_import.forms import UploadForm
+from data_import.utils import CsvMeta
 
 
 @pytest.mark.django_db
@@ -40,7 +40,7 @@ def test_missing_fields_raises_exception(standardized_data_upload_blob,
                                          client):
 
     bad_fields = ['not', 'the', 'right', 'fields']
-    mock_get_fields = mocker.patch.object(UploadForm, '_get_incoming_fields')
+    mock_get_fields = mocker.patch.object(CsvMeta, 'field_names')
     mock_get_fields.return_value = bad_fields
 
     mock_file = standardized_data_upload_blob['standardized_file']
@@ -92,14 +92,20 @@ def test_future_date_raises_exception(standardized_data_upload_blob,
 @pytest.mark.django_db
 @pytest.mark.standardized_data
 def test_valid_standardized_data_upload(standardized_data_upload_blob,
-                                        standardized_file,
-                                        client):
+                                        real_file,
+                                        client,
+                                        mocker):
 
-    # Use the real file, rather than the default mock file
-    standardized_data_upload_blob['standardized_file'] = standardized_file
+    # Mock our delayed task (which we'll test over in test_tasks)
+    mock_copy = mocker.patch('data_import.views.copy_to_database.delay')
+
+    standardized_data_upload_blob['standardized_file'] = real_file
 
     rv = client.post(reverse('upload'),
                      data=standardized_data_upload_blob,
-                     files={'standardized_file': standardized_file})
+                     files={'standardized_file': real_file})
 
+    # Assert the page redirects, e.g., upload was successful
     assert rv.status_code == 302
+
+    assert mock_copy.call_count == 1
