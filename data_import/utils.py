@@ -4,9 +4,21 @@ from os.path import basename
 
 from cchardet import UniversalDetector
 from csvkit.convert import guess_format
+from django.db.models.fields.files import FieldFile
+
+from data_import.exceptions import OperationNotPermittedOnInstance
 
 
 class CsvMeta(object):
+    '''
+    Utility class for metadata about `incoming_file`, which can be an
+    uploaded data file (django.core.files.uploadedfile.UploadedFile) or
+    a file stored with a model (django.db.models.fields.files.FieldFile).
+
+    When `read` is called, FieldFile instances return strings, while
+    UploadedFile instances return bytes, e.g., UploadedFile contents
+    must be decoded prior to being operated on.
+    '''
     REQUIRED_FIELDS = [
         'responding_agency',
         'employer',
@@ -21,7 +33,13 @@ class CsvMeta(object):
 
     def __init__(self, incoming_file):
         self.file = incoming_file
-        self.chunk = next(incoming_file.chunks())
+
+    @property
+    @functools.lru_cache()
+    def chunk(self):
+        chunk = next(self.file.chunks())
+
+        return chunk
 
     @property
     @functools.lru_cache()
@@ -49,13 +67,16 @@ class CsvMeta(object):
     @functools.lru_cache()
     def field_names(self):
         try:
-            reader = csv.reader(self.chunk.splitlines())
-            fields = next(reader)
+            decoded_chunk = self.chunk.decode('utf-8').splitlines()
 
-        except:  # Can't catch csv.Error, does not inherit from base exception
+        except UnicodeDecodeError:
             decoded_chunk = self.chunk.decode(self.file_encoding).splitlines()
-            reader = csv.reader(decoded_chunk)
-            fields = next(reader)
+
+        except AttributeError:
+            decoded_chunk = self.chunk.splitlines()
+
+        reader = csv.reader(decoded_chunk)
+        fields = next(reader)
 
         return [self._clean_field(field) for field in fields]
 
@@ -63,25 +84,39 @@ class CsvMeta(object):
         return '_'.join(field.strip().lower().split(' '))
 
     def trim_extra_fields(self):
-        infile = self.file.open(mode='r')
-        lines = infile.read()\
-                      .decode(self.file_encoding)\
-                      .splitlines()
+        '''
+        From standardized upload, grab REQUIRED_FIELDS and write them
+        to a UTF-8 temp file for copying to the database.
+        '''
+        if isinstance(self.file, FieldFile):
+            infile = self.file.open(mode='r')
+            lines = infile.read().splitlines()
 
-        reader = csv.DictReader(lines)
-        reader.fieldnames = self.field_names
-        next(reader)
+            reader = csv.DictReader(lines)
 
-        outfile_name = '/tmp/{}'.format(basename(self.file.name))
+            # Downcase and underscore field names, so they will match with
+            # REQUIRED_FIELDS.
 
-        with open(outfile_name, 'w', encoding='utf-8') as outfile:
-            writer = csv.DictWriter(outfile, fieldnames=self.REQUIRED_FIELDS)
-            writer.writeheader()
+            reader.fieldnames = self.field_names
 
-            for row in reader:
-                out_row = {field: row[field] for field in self.REQUIRED_FIELDS}
-                writer.writerow(out_row)
+            # Discard header.
 
-        infile.close()
+            next(reader)
 
-        return outfile_name
+            outfile_name = '/tmp/{}'.format(basename(self.file.name))
+
+            with open(outfile_name, 'w', encoding='utf-8') as outfile:
+                writer = csv.DictWriter(outfile, fieldnames=self.REQUIRED_FIELDS)
+                writer.writeheader()
+
+                for row in reader:
+                    out_row = {field: row[field] for field in self.REQUIRED_FIELDS}
+                    writer.writerow(out_row)
+
+            infile.close()
+
+            return outfile_name
+
+        else:
+            message = 'Cannot alter instance of {}'.format(type(self.file))
+            raise OperationNotPermittedOnInstance(message)

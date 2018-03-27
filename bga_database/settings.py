@@ -116,4 +116,5 @@ STATICFILES_DIRS = (
 
 # Remote storage options
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+if not DEBUG:  # noqa
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
