@@ -118,8 +118,7 @@ def standardized_file_upload_name(instance, filename):
 class StandardizedFile(models.Model):
     standardized_file = models.FileField(
         max_length=1000,
-        upload_to=standardized_file_upload_name,
-        null=True
+        upload_to=standardized_file_upload_name
     )
     reporting_year = models.IntegerField()
     upload = models.ForeignKey(
