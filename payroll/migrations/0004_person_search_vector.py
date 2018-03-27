@@ -16,4 +16,9 @@ class Migration(migrations.Migration):
             name='search_vector',
             field=django.contrib.postgres.search.SearchVectorField(max_length=255, null=True),
         ),
+        migrations.RunSQL('''
+            CREATE TRIGGER person_tsvectorupdate BEFORE INSERT OR UPDATE
+            ON payroll_person FOR EACH ROW EXECUTE PROCEDURE
+            tsvector_update_trigger(search_vector, 'pg_catalog.english', first_name, last_name)
+        '''),
     ]

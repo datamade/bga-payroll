@@ -31,4 +31,5 @@ class Migration(migrations.Migration):
             name='standardized_file',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='source_files', to='data_import.StandardizedFile'),
         ),
+        migrations.RunSQL('CREATE EXTENSION pgcrypto'),
     ]
