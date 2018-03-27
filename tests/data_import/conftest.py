@@ -1,8 +1,12 @@
 import datetime
+import shutil
 from uuid import uuid4
 
 from django.core.files import File
+from django.db import connection
 import pytest
+
+from data_import.models import StandardizedFile, Upload
 
 
 @pytest.fixture
@@ -14,12 +18,21 @@ def mock_file(mocker):
 
 
 @pytest.fixture
-def standardized_file(request):
-    s_file = open('tests/data_import/fixtures/standardized_data_sample.2016.csv')
+def real_file(request):
+    s_file = File(open('tests/data_import/fixtures/standardized_data_sample.2016.csv'))
 
     @request.addfinalizer
     def close():
         s_file.close()
+
+        try:
+            # When this fixture is used to test a valid upload, the
+            # file is saved to disk at 2016/payroll/standardized/...
+            # Clean up that file tree.
+            shutil.rmtree('2016')
+
+        except FileNotFoundError:
+            pass
 
     return s_file
 
@@ -53,7 +66,57 @@ def source_file_upload_blob(mock_file):
 def standardized_data_upload_blob(mock_file):
     blob = {
         'standardized_file': mock_file,
-        'reporting_year': 2017,
+        'reporting_year': 2016,
     }
 
     return blob
+
+
+@pytest.fixture
+@pytest.mark.django_db
+def upload():
+    class UploadFactory():
+        def build(self, **kwargs):
+            data = {}
+            data.update(kwargs)
+
+            return Upload.objects.create(**data)
+
+    return UploadFactory()
+
+
+@pytest.fixture
+@pytest.mark.django_db
+def standardized_file(mock_file, upload):
+    class StandardizedFileFactory():
+        def build(self, **kwargs):
+            data = {
+                'reporting_year': 2016,
+                'standardized_file': mock_file,
+                'upload': upload.build(),
+            }
+            data.update(kwargs)
+
+            return StandardizedFile.objects.create(**data)
+
+    return StandardizedFileFactory()
+
+
+@pytest.fixture
+def raw_table_teardown(request):
+    @request.addfinalizer
+    def drop_table():
+        '''
+        Transactional tests don't clean up data from outside the ORM.
+        Raw tables are named with the associated StandardizedFile ID,
+        but are not formal models, and thus need to be torn down
+        manually.
+        '''
+        drop = '''
+            SELECT 'DROP TABLE ' || tablename || ';'
+            FROM pg_tables
+            WHERE tablename LIKE 'raw_payroll_%'
+        '''
+
+        with connection.cursor() as cursor:
+            cursor.execute(drop)

@@ -6,7 +6,9 @@ from django.views import View
 from django.views.generic.edit import FormView
 
 from data_import.forms import UploadForm
-from data_import.models import SourceFile, RespondingAgency, Upload
+from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
+    Upload
+from data_import.tasks import copy_to_database
 
 
 class SourceFileHook(View):
@@ -53,16 +55,20 @@ class StandardizedDataUpload(FormView):
     success_url = '/upload/'
 
     def form_valid(self, form):
-        # TO-DO: Create an Upload object, and associate it with incoming records
+        upload = Upload.objects.create()
 
-        s_file = form.cleaned_data['standardized_file'].file
+        uploaded_file = form.cleaned_data['standardized_file']
+        now = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+        uploaded_file.name = '{}-{}'.format(now, uploaded_file.name)
 
-        # TO-DO: Come up with a better (i.e., unique) filename for copies
+        s_file_meta = {
+            'standardized_file': uploaded_file,
+            'upload': upload,
+            'reporting_year': form.cleaned_data['reporting_year'],
+        }
 
-        with open('a_file.csv', 'w', encoding='utf-8') as s:
-            s.write(s_file.read().decode(form.FILE_ENCODING))
+        s_file = StandardizedFile.objects.create(**s_file_meta)
 
-        # TO-DO: Kick off delayed task to write local copy to database
-        # http://initd.org/psycopg/docs/cursor.html#cursor.copy_expert
+        copy_to_database.delay(s_file_id=s_file.id)
 
         return super().form_valid(form)

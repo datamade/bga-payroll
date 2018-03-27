@@ -1,5 +1,7 @@
+from os.path import basename
+
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import connection, models
 
 from payroll.models import SluggedModel
 
@@ -39,13 +41,12 @@ class RespondingAgency(SluggedModel):
         return self.name
 
 
-def upload_name(instance, filename):
-    year = instance.reporting_year
-    agency = instance.responding_agency.slug
+def source_file_upload_name(instance, filename):
+    fmt = '{year}/payroll/source/{agency}/{filename}'
 
-    return '{year}/payroll/{agency}/{filename}'.format(year=year,
-                                                       agency=agency,
-                                                       filename=filename)
+    return fmt.format(year=instance.reporting_year,
+                      agency=instance.responding_agency.slug,
+                      filename=filename)
 
 
 class SourceFile(models.Model):
@@ -57,14 +58,31 @@ class SourceFile(models.Model):
     a ManyToManyField. As a bonus, the data is connected to Upload/s via its
     related SourceFile/s.
     '''
-    source_file = models.FileField(max_length=1000, upload_to=upload_name, null=True)
-    responding_agency = models.ForeignKey('RespondingAgency', on_delete=models.CASCADE)
+    source_file = models.FileField(
+        max_length=1000,
+        upload_to=source_file_upload_name,
+        null=True
+    )
+    responding_agency = models.ForeignKey(
+        'RespondingAgency',
+        on_delete=models.CASCADE
+    )
     reporting_year = models.IntegerField()
     reporting_period_start_date = models.DateField()
     reporting_period_end_date = models.DateField()
     response_date = models.DateField()
-    upload = models.ForeignKey('Upload', on_delete=models.CASCADE, related_name='files')
+    upload = models.ForeignKey(
+        'Upload',
+        on_delete=models.CASCADE,
+        related_name='source_files'
+    )
     google_drive_file_id = models.CharField(max_length=255)
+    standardized_file = models.ForeignKey(
+        'StandardizedFile',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='source_files'
+    )
 
     def save(self, *args, **kwargs):
         self.reporting_year = self.reporting_period_start_date.year
@@ -88,3 +106,45 @@ class SourceFile(models.Model):
         field of this model. Do this in a delayed task, rather than on save.
         '''
         raise NotImplementedError
+
+
+def standardized_file_upload_name(instance, filename):
+    fmt = '{year}/payroll/standardized/{filename}'
+
+    return fmt.format(year=instance.reporting_year,
+                      filename=basename(filename))
+
+
+class StandardizedFile(models.Model):
+    standardized_file = models.FileField(
+        max_length=1000,
+        upload_to=standardized_file_upload_name
+    )
+    reporting_year = models.IntegerField()
+    upload = models.ForeignKey(
+        'Upload',
+        on_delete=models.CASCADE,
+        related_name='standardized_files'
+    )
+
+    @property
+    def raw_table_name(self):
+        return 'raw_payroll_{}'.format(self.id)
+
+    def post_delete_handler(self):
+        '''
+        Drop the associated raw table.
+        '''
+        with connection.cursor() as cursor:
+            cursor.execute('DROP TABLE IF EXISTS {}'.format(self.raw_table_name))
+
+
+def post_delete_handler(sender, instance, **kwargs):
+    try:
+        instance.post_delete_handler()
+
+    except AttributeError:  # No custom handler defined.
+        pass
+
+
+models.signals.post_delete.connect(post_delete_handler)
