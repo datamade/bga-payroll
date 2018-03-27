@@ -33,24 +33,12 @@ class CsvMeta(object):
 
     def __init__(self, incoming_file):
         self.file = incoming_file
+        self.chunk = next(self.file.chunks())
+        self.file_type = guess_format(self.file.name.lower())
+        self.file_encoding = self._file_encoding()
+        self.field_names = self._field_names()
 
-    @property
-    @functools.lru_cache()
-    def chunk(self):
-        chunk = next(self.file.chunks())
-
-        return chunk
-
-    @property
-    @functools.lru_cache()
-    def file_type(self):
-        file_type = guess_format(self.file.name.lower())
-
-        return file_type
-
-    @property
-    @functools.lru_cache()
-    def file_encoding(self):
+    def _file_encoding(self):
         detector = UniversalDetector()
 
         for line in self.chunk.splitlines():
@@ -63,9 +51,7 @@ class CsvMeta(object):
 
         return encoding
 
-    @property
-    @functools.lru_cache()
-    def field_names(self):
+    def _field_names(self):
         try:
             decoded_chunk = self.chunk.decode('utf-8').splitlines()
 
@@ -90,7 +76,7 @@ class CsvMeta(object):
         '''
         if isinstance(self.file, FieldFile):
             infile = self.file.open(mode='r')
-            lines = infile.read().splitlines()
+            lines = infile.read().decode(self.file_encoding).splitlines()
 
             reader = csv.DictReader(lines)
 

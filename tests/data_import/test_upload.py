@@ -40,7 +40,7 @@ def test_missing_fields_raises_exception(standardized_data_upload_blob,
                                          client):
 
     bad_fields = ['not', 'the', 'right', 'fields']
-    mock_get_fields = mocker.patch.object(CsvMeta, 'field_names')
+    mock_get_fields = mocker.patch.object(CsvMeta, '_field_names')
     mock_get_fields.return_value = bad_fields
 
     mock_file = standardized_data_upload_blob['standardized_file']
