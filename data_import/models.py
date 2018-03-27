@@ -141,8 +141,11 @@ class StandardizedFile(models.Model):
 
 
 def post_delete_handler(sender, instance, **kwargs):
-    if isinstance(instance, StandardizedFile):
+    try:
         instance.post_delete_handler()
+
+    except AttributeError:  # No custom handler defined.
+        pass
 
 
 models.signals.post_delete.connect(post_delete_handler)

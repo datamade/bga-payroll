@@ -14,10 +14,6 @@ class CsvMeta(object):
     Utility class for metadata about `incoming_file`, which can be an
     uploaded data file (django.core.files.uploadedfile.UploadedFile) or
     a file stored with a model (django.db.models.fields.files.FieldFile).
-
-    When `read` is called, FieldFile instances return strings, while
-    UploadedFile instances return bytes, e.g., UploadedFile contents
-    must be decoded prior to being operated on.
     '''
     REQUIRED_FIELDS = [
         'responding_agency',
@@ -57,9 +53,6 @@ class CsvMeta(object):
 
         except UnicodeDecodeError:
             decoded_chunk = self.chunk.decode(self.file_encoding).splitlines()
-
-        except AttributeError:
-            decoded_chunk = self.chunk.splitlines()
 
         reader = csv.reader(decoded_chunk)
         fields = next(reader)
