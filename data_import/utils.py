@@ -1,5 +1,4 @@
 import csv
-import functools
 from os.path import basename
 
 from cchardet import UniversalDetector

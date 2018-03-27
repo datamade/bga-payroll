@@ -41,19 +41,12 @@ class RespondingAgency(SluggedModel):
         return self.name
 
 
-def upload_name(instance, filename):
-    if isinstance(instance, SourceFile):
-        fmt = '{year}/payroll/source/{agency}/{filename}'
+def source_file_upload_name(instance, filename):
+    fmt = '{year}/payroll/source/{agency}/{filename}'
 
-        return fmt.format(year=instance.reporting_year,
-                          agency=instance.responding_agency.slug,
-                          filename=filename)
-
-    elif isinstance(instance, StandardizedFile):
-        fmt = '{year}/payroll/standardized/{filename}'
-
-        return fmt.format(year=instance.reporting_year,
-                          filename=basename(filename))
+    return fmt.format(year=instance.reporting_year,
+                      agency=instance.responding_agency.slug,
+                      filename=filename)
 
 
 class SourceFile(models.Model):
@@ -67,7 +60,7 @@ class SourceFile(models.Model):
     '''
     source_file = models.FileField(
         max_length=1000,
-        upload_to=upload_name,
+        upload_to=source_file_upload_name,
         null=True
     )
     responding_agency = models.ForeignKey(
@@ -115,10 +108,17 @@ class SourceFile(models.Model):
         raise NotImplementedError
 
 
+def standardized_file_upload_name(instance, filename):
+    fmt = '{year}/payroll/standardized/{filename}'
+
+    return fmt.format(year=instance.reporting_year,
+                      filename=basename(filename))
+
+
 class StandardizedFile(models.Model):
     standardized_file = models.FileField(
         max_length=1000,
-        upload_to=upload_name,
+        upload_to=standardized_file_upload_name,
         null=True
     )
     reporting_year = models.IntegerField()

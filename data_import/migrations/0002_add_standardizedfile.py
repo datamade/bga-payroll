@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='StandardizedFile',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('standardized_file', models.FileField(max_length=1000, null=True, upload_to=data_import.models.upload_name)),
+                ('standardized_file', models.FileField(max_length=1000, null=True, upload_to=data_import.models.standardized_file_upload_name)),
                 ('reporting_year', models.IntegerField()),
                 ('upload', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='standardized_files', to='data_import.Upload')),
             ],

@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
             name='SourceFile',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('source_file', models.FileField(max_length=1000, null=True, upload_to=data_import.models.upload_name)),
+                ('source_file', models.FileField(max_length=1000, null=True, upload_to=data_import.models.source_file_upload_name)),
                 ('reporting_year', models.IntegerField()),
                 ('reporting_period_start_date', models.DateField()),
                 ('reporting_period_end_date', models.DateField()),
