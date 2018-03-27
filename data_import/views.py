@@ -1,3 +1,4 @@
+import csv
 import datetime
 import json
 
@@ -9,6 +10,7 @@ from django.views.generic.edit import FormView
 from data_import.forms import UploadForm
 from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
     Upload
+from data_import.tasks import copy_to_database
 
 
 class SourceFileHook(View):
@@ -57,29 +59,18 @@ class StandardizedDataUpload(FormView):
     def form_valid(self, form):
         upload = Upload.objects.create()
 
-        s_file = form.cleaned_data['standardized_file']
+        uploaded_file = form.cleaned_data['standardized_file']
+        now = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+        uploaded_file.name = '{}-{}'.format(now, uploaded_file.name)
 
-        unicode_s_file = self._convert_to_utf8(s_file, form.FILE_ENCODING)
+        s_file_meta = {
+            'standardized_file': uploaded_file,
+            'upload': upload,
+            'reporting_year': form.cleaned_data['reporting_year'],
+        }
 
-        with open(unicode_s_file, 'r') as f:
-            s_file = {
-                'standardized_file': File(f),
-                'upload': upload,
-                'reporting_year': form.cleaned_data['reporting_year'],
-            }
+        s_file = StandardizedFile.objects.create(**s_file_meta)
 
-            StandardizedFile.objects.create(**s_file)
-
-        # TO-DO: Kick off delayed task to write local copy to database
-        # http://initd.org/psycopg/docs/cursor.html#cursor.copy_expert
+        copy_to_database.delay(s_file_id=s_file.id)
 
         return super().form_valid(form)
-
-    def _convert_to_utf8(self, incoming_file, encoding):
-        filename = '/tmp/{now}-{name}'.format(now=datetime.datetime.now().isoformat(),
-                                              name=incoming_file.name)
-
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(incoming_file.file.read().decode(encoding))
-
-        return filename
