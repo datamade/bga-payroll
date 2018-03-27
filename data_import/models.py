@@ -1,7 +1,7 @@
 from os.path import basename
 
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import connection, models
 
 from payroll.models import SluggedModel
 
@@ -54,6 +54,7 @@ def upload_name(instance, filename):
 
         return fmt.format(year=instance.reporting_year,
                           filename=basename(filename))
+
 
 class SourceFile(models.Model):
     '''
@@ -126,3 +127,22 @@ class StandardizedFile(models.Model):
         on_delete=models.CASCADE,
         related_name='standardized_files'
     )
+
+    @property
+    def raw_table_name(self):
+        return 'raw_payroll_{}'.format(self.id)
+
+    def post_delete_handler(self):
+        '''
+        Drop the associated raw table.
+        '''
+        with connection.cursor() as cursor:
+            cursor.execute('DROP TABLE IF EXISTS {}'.format(self.raw_table_name))
+
+
+def post_delete_handler(sender, instance, **kwargs):
+    if isinstance(instance, StandardizedFile):
+        instance.post_delete_handler()
+
+
+models.signals.post_delete.connect(post_delete_handler)

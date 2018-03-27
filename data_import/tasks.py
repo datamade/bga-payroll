@@ -1,7 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
 from celery import shared_task
-from django.core.files import File
 from django.db import connection
 
 from data_import.models import StandardizedFile
@@ -32,7 +31,7 @@ def create_raw_table(table_name):
 def copy_to_database(*, s_file_id):
     s_file = StandardizedFile.objects.get(id=s_file_id)
 
-    table_name = 'raw_payroll_{}'.format(s_file.id)
+    table_name = s_file.raw_table_name
     create_raw_table(table_name)
 
     meta = CsvMeta(s_file.standardized_file)

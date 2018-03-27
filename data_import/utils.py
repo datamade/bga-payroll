@@ -1,11 +1,9 @@
 import csv
-import datetime
 import functools
 from os.path import basename
 
 from cchardet import UniversalDetector
 from csvkit.convert import guess_format
-from django.core.files.uploadedfile import UploadedFile
 
 
 class CsvMeta(object):
@@ -21,11 +19,9 @@ class CsvMeta(object):
         'data_year',
     ]
 
-
     def __init__(self, incoming_file):
         self.file = incoming_file
         self.chunk = next(incoming_file.chunks())
-
 
     @property
     @functools.lru_cache()
@@ -33,7 +29,6 @@ class CsvMeta(object):
         file_type = guess_format(self.file.name.lower())
 
         return file_type
-
 
     @property
     @functools.lru_cache()
@@ -50,7 +45,6 @@ class CsvMeta(object):
 
         return encoding
 
-
     @property
     @functools.lru_cache()
     def field_names(self):
@@ -58,17 +52,15 @@ class CsvMeta(object):
             reader = csv.reader(self.chunk.splitlines())
             fields = next(reader)
 
-        except:  # Can't catch csv.Error, does not inherit from base class
+        except:  # Can't catch csv.Error, does not inherit from base exception
             decoded_chunk = self.chunk.decode(self.file_encoding).splitlines()
             reader = csv.reader(decoded_chunk)
             fields = next(reader)
 
         return [self._clean_field(field) for field in fields]
 
-
     def _clean_field(self, field):
         return '_'.join(field.strip().lower().split(' '))
-
 
     def trim_extra_fields(self):
         infile = self.file.open(mode='r')

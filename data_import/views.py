@@ -1,8 +1,6 @@
-import csv
 import datetime
 import json
 
-from django.core.files import File
 from django.http import HttpResponse
 from django.views import View
 from django.views.generic.edit import FormView

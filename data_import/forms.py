@@ -1,4 +1,3 @@
-import csv
 import datetime
 
 from django import forms
@@ -27,10 +26,10 @@ class UploadForm(forms.Form):
     def clean_standardized_file(self):
         s_file = self.cleaned_data['standardized_file']
 
-        self.meta = CsvMeta(s_file)
+        meta = CsvMeta(s_file)
 
-        self._validate_filetype(self.meta.file_type)
-        self._validate_fields(self.meta.field_names)
+        self._validate_filetype(meta.file_type)
+        self._validate_fields(meta.field_names)
 
         return s_file
 
