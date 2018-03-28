@@ -4,27 +4,25 @@ from celery import shared_task
 from django.db import connection
 
 from data_import.models import StandardizedFile
-from data_import.utils import CsvMeta
+from data_import.utils.csv_meta import CsvMeta
+from data_import.utils.import_utility import ImportUtility
 
 
 def create_raw_table(table_name):
-    create = '''
-        CREATE TABLE "{}" (
-            record_id UUID DEFAULT gen_random_uuid(),
-            responding_agency VARCHAR,
-            employer VARCHAR,
-            last_name VARCHAR,
-            first_name VARCHAR,
-            title VARCHAR,
-            department VARCHAR,
-            salary VARCHAR,
-            date_started VARCHAR,
-            data_year INT
-        )
-    '''.format(table_name)
+    columns = '''
+        record_id UUID DEFAULT gen_random_uuid(),
+        responding_agency VARCHAR,
+        employer VARCHAR,
+        last_name VARCHAR,
+        first_name VARCHAR,
+        title VARCHAR,
+        department VARCHAR,
+        salary VARCHAR,
+        date_started VARCHAR,
+        data_year INT
+    '''
 
-    with connection.cursor() as cursor:
-        cursor.execute(create)
+    ImportUtility._create_table(table_name, columns)
 
 
 @shared_task

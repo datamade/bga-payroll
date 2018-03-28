@@ -2,7 +2,7 @@ from django.core.files.uploadedfile import UploadedFile
 import pytest
 
 from data_import.exceptions import OperationNotPermittedOnInstance
-from data_import.utils import CsvMeta
+from data_import.utils.csv_meta import CsvMeta
 
 
 def test_alter_uploadedfile_raises_exception(mocker):

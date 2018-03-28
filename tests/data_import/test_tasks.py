@@ -2,7 +2,7 @@ from django.db import connection
 import pytest
 
 from data_import.tasks import copy_to_database
-from data_import.utils import CsvMeta
+from data_import.utils.csv_meta import CsvMeta
 
 
 @pytest.mark.django_db(transaction=True)
