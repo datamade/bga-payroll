@@ -19,6 +19,7 @@ class ImportUtility(object):
         self.select_raw_employer()
         self.select_raw_position()
         self.insert_employer()
+        self.insert_position()
 
     def select_raw_employer(self):
         query = '''
@@ -84,7 +85,7 @@ class ImportUtility(object):
               JOIN payroll_employer AS parent
               ON child.parent_name = parent.name
               WHERE parent.parent_id IS NULL
-              AND child.parent_name IS NOT NULL
+              AND child.employer_name IS NOT NULL
         '''.format(self.raw_employer_table)
 
         with connection.cursor() as cursor:
@@ -92,28 +93,46 @@ class ImportUtility(object):
             cursor.execute(insert_children)
 
     def insert_position(self):
-        pass
+        '''
+        Get names, IDs, and (if applicable) parents from the
+        employer table, and join to the raw table to select a list
+        of positions, e.g., distinct employer / title combinations.
+        '''
+        insert = '''
+            INSERT INTO payroll_position (employer_id, title)
+            WITH employer_ids AS (
+              SELECT
+                child.id AS employer_id,
+                child.name AS employer_name,
+                parent.name AS parent_name
+              FROM payroll_employer AS child
+              JOIN payroll_employer AS parent
+              ON child.parent_id = parent.id
+              UNION
+              SELECT
+                id,
+                name AS employer_name,
+                null AS parent_name
+              FROM payroll_employer
+              WHERE parent_id IS NULL
+            )
+            SELECT DISTINCT ON (employer, department, title)
+              employer_id,
+              title
+            FROM {} AS raw
+            JOIN employer_ids AS emp
+            ON COALESCE(raw.department, raw.employer) = emp.employer_name
+            AND CASE WHEN raw.department IS NOT NULL THEN raw.employer
+                ELSE 'No parent'
+                END = CASE WHEN raw.department IS NOT NULL THEN emp.parent_name
+                ELSE 'No parent'
+                END
+        '''.format(self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
 
     def insert_salary(self):
-        '''
-        Select employer id, employer name, and parent name
-        from employer table (for joining to raw table):
-
-        SELECT
-          child.id AS employer_id,
-          child.name AS employer_name,
-          parent.name AS parent_name
-        FROM payroll_employer AS child
-        JOIN payroll_employer AS parent
-        ON child.parent_id = parent.id
-        UNION
-        SELECT
-          id,
-          name AS employer_name,
-          null AS parent_name
-        FROM payroll_employer
-        WHERE parent_id IS NULL
-        '''
         pass
 
     def insert_person(self):
