@@ -5,7 +5,6 @@ from django.db import connection
 
 from data_import.models import StandardizedFile
 from data_import.utils.csv_meta import CsvMeta
-from data_import.utils.import_utility import ImportUtility
 
 
 def create_raw_table(table_name):
@@ -22,7 +21,10 @@ def create_raw_table(table_name):
         data_year INT
     '''
 
-    ImportUtility._create_table(table_name, columns)
+    create = 'CREATE TABLE {} ({})'.format(table_name, columns)
+
+    with connection.cursor() as cursor:
+        cursor.execute(create)
 
 
 @shared_task
