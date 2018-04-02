@@ -136,8 +136,35 @@ class ImportUtility(object):
         with connection.cursor() as cursor:
             cursor.execute(select)
 
-    def select_raw_person(self):
-        pass
-
     def insert_person(self):
-        pass
+        '''
+        Default to not collapsing people within a year. Insert
+        first and last name from raw_payroll, and select record_id
+        and payroll_person.id into an intermediate table to create
+        salary relationship.
+        '''
+        insert = '''
+            WITH raw_ordered AS (
+              SELECT
+                record_id,
+                first_name,
+                last_name
+              FROM {raw_payroll}
+              ORDER BY last_name, first_name
+            ), created_people AS (
+              INSERT INTO payroll_person (first_name, last_name)
+                SELECT
+                  first_name,
+                  last_name
+                FROM raw_ordered
+              RETURNING id
+            )
+            SELECT
+              (SELECT record_id FROM raw_ordered),
+              (SELECT id FROM created_people) AS person_id
+            INTO {raw_person}
+        '''.format(raw_payroll=self.raw_payroll_table,
+                   raw_person=self.raw_person_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
