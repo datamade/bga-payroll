@@ -1,4 +1,5 @@
 from django.core.files.uploadedfile import UploadedFile
+from django.db import connection
 import pytest
 
 from data_import.exceptions import OperationNotPermittedOnInstance
@@ -35,4 +36,19 @@ def test_import_utility(standardized_file,
     imp = ImportUtility(s_file.id)
     imp.import_new()
 
-    # test some stuff
+    with connection.cursor() as cursor:
+        cursor.execute('''
+            SELECT
+              (SELECT COUNT(*) FROM {raw_payroll}) AS raw_count,
+              (SELECT COUNT(*) FROM {raw_salary}) AS generated_count
+        '''.format(raw_payroll=imp.raw_payroll_table,
+                   raw_salary=imp.raw_salary_table))
+
+        result, = cursor
+        raw_count, generated_count = result
+
+        # Test we make a salary item for each record.
+
+        assert raw_count == generated_count
+
+    # test some other stuff
