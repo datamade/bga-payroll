@@ -5,7 +5,7 @@ from django.urls import reverse
 import pytest
 
 from data_import.models import SourceFile, RespondingAgency, Upload
-from data_import.utils.csv_meta import CsvMeta
+from data_import.utils import CsvMeta
 
 
 @pytest.mark.django_db
