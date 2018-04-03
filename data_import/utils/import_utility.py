@@ -4,22 +4,21 @@ from django.db import connection
 class ImportUtility(object):
 
     def __init__(self, s_file_id):
-        self.s_file_id = s_file_id
+        self.raw_payroll_table = 'raw_payroll_{}'.format(s_file_id)
+        self.raw_position_table = 'raw_position_{}'.format(s_file_id)
+        self.raw_salary_table = 'raw_salary_{}'.format(s_file_id)
 
-        def make_table_name(table_name):
-            return 'raw_{0}_{1}'.format(table_name, self.s_file_id)
-
-        self.raw_payroll_table = make_table_name('payroll')
-        self.raw_employer_table = make_table_name('employer')
-        self.raw_position_table = make_table_name('position')
-        self.raw_salary_table = make_table_name('salary')
-        self.raw_person_table = make_table_name('person')
+        self.salary_lookup_table = 'salary_lookup_{}'.format(s_file_id)
+        self.person_lookup_table = 'person_lookup_{}'.format(s_file_id)
 
     def import_new(self):
         self.insert_employer()
         self.select_raw_position()
         self.insert_position()
         self.select_raw_salary()
+        self.insert_salary()
+        self.insert_person()
+        self.link_person_salary()
 
     def insert_employer(self):
         '''
@@ -136,6 +135,32 @@ class ImportUtility(object):
         with connection.cursor() as cursor:
             cursor.execute(select)
 
+    def insert_salary(self):
+        insert = '''
+            WITH raw_ordered AS (
+              SELECT *
+              FROM {raw_salary}
+              ORDER BY salary DESC
+            ), created_people AS (
+              INSERT INTO payroll_salary (amount, start_date, vintage, position_id)
+                SELECT
+                  REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
+                  NULLIF(TRIM(date_started), '')::DATE,
+                  data_year,
+                  position_id
+                FROM raw_ordered
+              RETURNING id
+            )
+            SELECT
+              (SELECT record_id FROM raw_ordered),
+              (SELECT id FROM created_people) AS salary_id
+            INTO {salary_lookup}
+        '''.format(raw_salary=self.raw_salary_table,
+                   salary_lookup=self.salary_lookup_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
+
     def insert_person(self):
         '''
         Default to not collapsing people within a year. Insert
@@ -162,9 +187,23 @@ class ImportUtility(object):
             SELECT
               (SELECT record_id FROM raw_ordered),
               (SELECT id FROM created_people) AS person_id
-            INTO {raw_person}
+            INTO {person_lookup}
         '''.format(raw_payroll=self.raw_payroll_table,
-                   raw_person=self.raw_person_table)
+                   person_lookup=self.person_lookup_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
+
+    def link_person_salary(self):
+        insert = '''
+            INSERT INTO payroll_person_salaries (person_id, salary_id)
+              SELECT
+                person_id,
+                salary_id
+              FROM {person_lookup}
+              JOIN {salary_lookup}
+              USING (record_id)
+        '''
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
