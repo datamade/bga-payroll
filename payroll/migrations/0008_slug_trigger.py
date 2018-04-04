@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('data_import', '0002_add_standardizedfile'),
+        ('payroll', '0007_add_vintage'),
     ]
 
     operations = [
