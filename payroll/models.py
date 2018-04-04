@@ -7,6 +7,13 @@ from titlecase import titlecase
 from payroll.utils import format_name, format_numeral
 
 
+class VintagedModel(models.Model):
+    vintage = models.PositiveIntegerField()
+
+    class Meta:
+        abstract = True
+
+
 class SluggedModel(models.Model):
     slug = models.SlugField(max_length=255, unique=True, null=True)
 
@@ -35,7 +42,7 @@ class SluggedModel(models.Model):
         abstract = True
 
 
-class Employer(SluggedModel):
+class Employer(SluggedModel, VintagedModel):
     name = models.CharField(max_length=255)
     parent = models.ForeignKey('self',
                                null=True,
@@ -58,7 +65,7 @@ class Employer(SluggedModel):
         return bool(self.parent)
 
 
-class Person(SluggedModel):
+class Person(SluggedModel, VintagedModel):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     salaries = models.ManyToManyField('Salary')
@@ -71,7 +78,7 @@ class Person(SluggedModel):
         return titlecase(name.lower(), callback=format_name)
 
 
-class Position(models.Model):
+class Position(VintagedModel):
     employer = models.ForeignKey('Employer', on_delete=models.CASCADE)
     title = models.CharField(max_length=255, null=True)
 
@@ -83,11 +90,10 @@ class Position(models.Model):
         return titlecase(self.title.lower(), callback=format_numeral)
 
 
-class Salary(models.Model):
+class Salary(VintagedModel):
     position = models.ForeignKey('Position', on_delete=models.CASCADE)
     amount = models.FloatField()
     start_date = models.DateField(null=True)
-    vintage = models.IntegerField()
 
     def __str__(self):
         return '{0} {1}'.format(self.amount, self.position)

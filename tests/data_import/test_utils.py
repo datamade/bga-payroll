@@ -37,6 +37,12 @@ def test_import_utility(standardized_file,
     imp = ImportUtility(s_file.id)
 
     with connection.cursor() as cursor:
+        # Do some validation on the individual model tables, so we have a
+        # clue where things went wrong, when making changes to the queries.
+        # (If we check that the generated data matches the source data first,
+        # we'll know if it doesn't match, but we won't know where to start
+        # looking for the culprit.)
+
         validate_employer = '''
             WITH parents AS (
               SELECT DISTINCT employer
@@ -58,8 +64,6 @@ def test_import_utility(standardized_file,
 
         assert raw_count == generated_count
 
-        # TO-DO: Spotcheck parent/child relationship
-
         validate_position = '''
             WITH distinct_positions AS (
               SELECT DISTINCT ON (employer, department, title) *
@@ -77,8 +81,6 @@ def test_import_utility(standardized_file,
 
         assert raw_count == generated_count
 
-        # TO-DO: Spotcheck a couple of positions (null department, null title)
-
         validate_salary = '''
             SELECT
               (SELECT COUNT(*) FROM {raw_payroll}) AS raw_count,
@@ -93,4 +95,61 @@ def test_import_utility(standardized_file,
 
         assert raw_count == generated_count
 
-        # TO-DO: Spotcheck a couple of linked person / salaries
+        # Reconstruct the source data from the data model tables, and check
+        # that it fully overlaps with the raw source (with salary and start
+        # date transformed, for matching purposes). The following query will
+        # return rows that occur in one select, but not the other, e.g., it
+        # should return no rows for a full overlap.
+        #
+        # See https://stackoverflow.com/questions/5727882/check-if-two-selects-are-equivalent
+
+        reconstruct = '''
+            WITH reconstructed AS (
+              SELECT
+                CASE
+                  WHEN emp.parent_id IS NULL THEN emp.name
+                  ELSE parent.name
+                END AS employer,
+                CASE
+                  WHEN emp.parent_id IS NOT NULL THEN emp.name
+                  ELSE NULL
+                END AS department,
+                pos.title,
+                per.first_name,
+                per.last_name,
+                sal.amount AS salary,
+                sal.start_date AS date_started
+              FROM payroll_person AS per
+              JOIN payroll_person_salaries AS ps
+              ON per.id = ps.person_id
+              JOIN payroll_salary AS sal
+              ON ps.salary_id = sal.id
+              JOIN payroll_position AS pos
+              ON sal.position_id = pos.id
+              JOIN payroll_employer AS emp
+              ON pos.employer_id = emp.id
+              LEFT JOIN payroll_employer AS parent
+              ON emp.parent_id = parent.id
+            ), raw AS (
+              SELECT
+                employer,
+                department,
+                title,
+                first_name,
+                last_name,
+                salary::NUMERIC,
+                NULLIF(date_started, '')::DATE
+              FROM {raw_payroll}
+            )
+            SELECT * FROM raw
+            EXCEPT
+            SELECT * FROM reconstructed
+            UNION ALL
+            SELECT * FROM reconstructed
+            EXCEPT
+            SELECT * FROM raw
+        '''.format(raw_payroll=imp.raw_payroll_table)
+
+        cursor.execute(reconstruct)
+
+        assert not cursor.fetchone()
