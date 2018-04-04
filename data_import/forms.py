@@ -2,7 +2,7 @@ import datetime
 
 from django import forms
 
-from data_import.utils.csv_meta import CsvMeta
+from data_import.utils import CsvMeta
 
 
 class UploadForm(forms.Form):
