@@ -10,6 +10,8 @@ class ImportUtility(object):
         self.raw_person_table = 'raw_person_{}'.format(s_file_id)
 
     def import_new(self):
+        self.insert_responding_agency()
+
         self.insert_employer()
 
         self.select_raw_position()
@@ -22,6 +24,20 @@ class ImportUtility(object):
         self.insert_person()
 
         self.link_person_salary()
+
+    def insert_responding_agency(self):
+        insert = '''
+            INSERT INTO data_import_respondingagency (name)
+              SELECT
+                DISTINCT responding_agency
+              FROM {} AS raw
+              LEFT JOIN data_import_respondingagency AS existing
+              ON raw.responding_agency = existing.name
+              WHERE existing.name IS NULL
+        '''.format(self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
 
     def insert_employer(self):
         '''
