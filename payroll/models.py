@@ -17,27 +17,6 @@ class VintagedModel(models.Model):
 class SluggedModel(models.Model):
     slug = models.SlugField(max_length=255, unique=True, null=True)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = self._make_unique_slug()
-
-        super().save()
-
-    def _make_base_slug(self):
-        return slugify(str(self))
-
-    def _make_unique_slug(self):
-        slug = self._make_base_slug()
-
-        i = 1
-        unique_slug = slug
-
-        while type(self).objects.filter(slug=unique_slug).exists():
-            unique_slug = '{0}-{1}'.format(slug, str(i))
-            i += 1
-
-        return unique_slug
-
     class Meta:
         abstract = True
 
