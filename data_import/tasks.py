@@ -4,7 +4,7 @@ from celery import shared_task
 from django.db import connection
 
 from data_import.models import StandardizedFile
-from data_import.utils.csv_meta import CsvMeta
+from data_import.utils import CsvMeta, ImportUtility
 
 
 def create_raw_table(table_name):
@@ -35,6 +35,7 @@ def copy_to_database(*, s_file_id):
     create_raw_table(table_name)
 
     meta = CsvMeta(s_file.standardized_file)
+
     formatted_data_file = meta.trim_extra_fields()
 
     with open(formatted_data_file, 'r', encoding='utf-8') as f:
@@ -46,4 +47,7 @@ def copy_to_database(*, s_file_id):
 
             cursor.copy_expert(copy, f)
 
-    return 'copied {} to table {}'.format(formatted_data_file, table_name)
+    imp = ImportUtility(s_file_id)
+    imp.populate_models_from_raw_data()
+
+    return 'Imported {} to database'.format(formatted_data_file, table_name)

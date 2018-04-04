@@ -2,15 +2,18 @@ from django.db import connection
 import pytest
 
 from data_import.tasks import copy_to_database
-from data_import.utils.csv_meta import CsvMeta
+from data_import.utils import CsvMeta
 
 
 @pytest.mark.django_db(transaction=True)
 def test_copy_to_database(standardized_file,
                           real_file,
-                          raw_table_teardown):
+                          raw_table_teardown,
+                          mocker):
 
     s_file = standardized_file.build(standardized_file=real_file)
+
+    mock_pop_models = mocker.patch('data_import.tasks.ImportUtility.populate_models_from_raw_data')
 
     copy_to_database(s_file_id=s_file.id)
 
@@ -49,3 +52,5 @@ def test_copy_to_database(standardized_file,
         columns = [row[0] for row in cursor]
 
         assert set(columns) == set(CsvMeta.REQUIRED_FIELDS)
+
+    assert mock_pop_models.call_count == 1

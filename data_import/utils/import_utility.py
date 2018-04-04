@@ -9,7 +9,7 @@ class ImportUtility(object):
         self.raw_salary_table = 'raw_salary_{}'.format(s_file_id)
         self.raw_person_table = 'raw_person_{}'.format(s_file_id)
 
-    def import_new(self):
+    def populate_models_from_raw_data(self):
         self.insert_responding_agency()
 
         self.insert_employer()
@@ -100,7 +100,7 @@ class ImportUtility(object):
                 LEFT JOIN payroll_employer AS parent
                 ON child.parent_id = parent.id
               )
-              SELECT DISTINCT ON (employer, department, title)
+              SELECT
                 employer_id,
                 COALESCE(title, 'EMPLOYEE')
               FROM {} AS raw
