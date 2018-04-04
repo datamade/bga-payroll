@@ -1,6 +1,5 @@
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
-from django.utils.text import slugify
 
 from titlecase import titlecase
 
