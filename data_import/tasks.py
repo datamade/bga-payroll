@@ -47,6 +47,9 @@ def copy_to_database(*, s_file_id):
 
             cursor.copy_expert(copy, f)
 
+            cursor.execute('CREATE INDEX ON {} (employer)'.format(table_name))
+            cursor.execute('CREATE INDEX ON {} (department)'.format(table_name))
+
     imp = ImportUtility(s_file_id)
     imp.populate_models_from_raw_data()
 
