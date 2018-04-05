@@ -14,7 +14,6 @@ class ImportUtility(object):
 
         self.insert_employer()
 
-        self.select_raw_position()
         self.insert_position()
 
         self.select_raw_salary()
@@ -75,24 +74,12 @@ class ImportUtility(object):
             cursor.execute(insert_parents)
             cursor.execute(insert_children)
 
-    def select_raw_position(self):
-        select = '''
-            SELECT DISTINCT ON (employer, department, title)
-              COALESCE(department, employer) AS employer_name,
-              CASE WHEN department IS NULL THEN NULL
-                ELSE employer
-              END AS parent_name,
-              title,
-              data_year
-            INTO {raw_position}
-            FROM {raw_payroll}
-        '''.format(raw_position=self.raw_position_table,
-                   raw_payroll=self.raw_payroll_table)
-
-        with connection.cursor() as cursor:
-            cursor.execute(select)
-
     def insert_position(self):
+        '''
+        n.b., There is a unique index on payroll_position
+        (employer_id, title), so duplicate insertions are
+        no'oped with ON CONFLICT DO NOTHING.
+        '''
         insert = '''
             INSERT INTO payroll_position (employer_id, title, vintage)
               WITH employer_ids AS (
@@ -110,14 +97,18 @@ class ImportUtility(object):
                 data_year
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
-              ON COALESCE(raw.department, raw.employer) = existing.employer_name
-              AND CASE
-                  WHEN raw.department IS NULL THEN ''
-                  ELSE raw.employer
-                END = CASE
-                  WHEN raw.department IS NULL THEN ''
-                  ELSE existing.parent_name
-                END
+              ON raw.department = existing.employer_name
+              AND raw.employer = existing.parent_name
+              WHERE raw.department IS NOT NULL
+              UNION
+              SELECT
+                employer_id,
+                COALESCE(title, 'EMPLOYEE'),
+                data_year
+              FROM {raw_payroll} AS raw
+              JOIN employer_ids AS existing
+              ON raw.employer = existing.employer_name
+              WHERE raw.department IS NULL
             ON CONFLICT DO NOTHING
         '''.format(raw_payroll=self.raw_payroll_table)
 
@@ -126,7 +117,7 @@ class ImportUtility(object):
 
     def select_raw_salary(self):
         select = '''
-            WITH named_positions AS (
+            WITH position_ids AS (
               SELECT
                 pos.id AS position_id,
                 pos.title AS position_title,
@@ -138,26 +129,35 @@ class ImportUtility(object):
               ON pos.employer_id = emp.id
               LEFT JOIN payroll_employer AS parent
               ON emp.parent_id = parent.id
+            ), raw_salary AS (
+              SELECT
+                record_id,
+                position_id,
+                salary,
+                date_started,
+                data_year,
+                nextval('payroll_salary_id_seq') AS salary_id
+              FROM {raw_payroll} AS raw
+              JOIN position_ids AS existing
+              ON raw.department = existing.employer_name
+              AND raw.employer = existing.parent_name
+              AND raw.title = existing.position_title
+              WHERE raw.department IS NOT NULL
+              UNION
+              SELECT
+                record_id,
+                position_id,
+                salary,
+                date_started,
+                data_year,
+                nextval('payroll_salary_id_seq') AS salary_id
+              FROM {raw_payroll} AS raw
+              JOIN position_ids AS existing
+              ON raw.employer = existing.employer_name
+              AND raw.title = existing.position_title
+              WHERE raw.department IS NULL
             )
-            SELECT
-              record_id,
-              position_id,
-              salary,
-              date_started,
-              data_year,
-              nextval('payroll_salary_id_seq') AS salary_id
-            INTO {raw_salary}
-            FROM {raw_payroll} AS raw
-            JOIN named_positions AS existing
-            ON COALESCE(raw.title, 'EMPLOYEE') = existing.position_title
-            AND COALESCE(raw.department, raw.employer) = existing.employer_name
-            AND CASE
-                WHEN raw.department IS NULL THEN ''
-                ELSE raw.employer
-              END = CASE
-                WHEN raw.department IS NULL THEN ''
-                ELSE existing.parent_name
-              END
+            SELECT * INTO {raw_salary} FROM raw_salary
         '''.format(raw_salary=self.raw_salary_table,
                    raw_payroll=self.raw_payroll_table)
 
