@@ -97,18 +97,14 @@ class ImportUtility(object):
                 data_year
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
-              ON raw.department = existing.employer_name
-              AND raw.employer = existing.parent_name
-              WHERE raw.department IS NOT NULL
-              UNION
-              SELECT
-                employer_id,
-                COALESCE(title, 'EMPLOYEE'),
-                data_year
-              FROM {raw_payroll} AS raw
-              JOIN employer_ids AS existing
-              ON raw.employer = existing.employer_name
-              WHERE raw.department IS NULL
+              ON (
+                raw.department = existing.employer_name
+                AND raw.employer = existing.parent_name
+                AND raw.department IS NOT NULL
+              ) OR (
+                raw.employer = existing.employer_name
+                AND raw.department IS NULL
+              )
             ON CONFLICT DO NOTHING
         '''.format(raw_payroll=self.raw_payroll_table)
 
@@ -139,23 +135,16 @@ class ImportUtility(object):
                 nextval('payroll_salary_id_seq') AS salary_id
               FROM {raw_payroll} AS raw
               JOIN position_ids AS existing
-              ON raw.department = existing.employer_name
-              AND raw.employer = existing.parent_name
-              AND raw.title = existing.position_title
-              WHERE raw.department IS NOT NULL
-              UNION
-              SELECT
-                record_id,
-                position_id,
-                salary,
-                date_started,
-                data_year,
-                nextval('payroll_salary_id_seq') AS salary_id
-              FROM {raw_payroll} AS raw
-              JOIN position_ids AS existing
-              ON raw.employer = existing.employer_name
-              AND raw.title = existing.position_title
-              WHERE raw.department IS NULL
+              ON (
+                raw.department = existing.employer_name
+                AND raw.employer = existing.parent_name
+                AND raw.title = existing.position_title
+                AND raw.department IS NOT NULL
+              ) OR (
+                raw.employer = existing.employer_name
+                AND raw.title = existing.position_title
+                AND raw.department IS NULL
+              )
             )
             SELECT * INTO {raw_salary} FROM raw_salary
         '''.format(raw_salary=self.raw_salary_table,
