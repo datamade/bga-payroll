@@ -175,7 +175,7 @@ class ImportUtility(object):
             INSERT INTO payroll_salary (id, amount, start_date, vintage_id, position_id)
               SELECT
                 salary_id,
-                REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
+                REGEXP_REPLACE(salary, '[^0-9.]', '', 'g')::NUMERIC,
                 NULLIF(TRIM(date_started), '')::DATE,
                 {vintage},
                 position_id
