@@ -65,7 +65,7 @@ class Position(VintagedModel):
 
 class Salary(VintagedModel):
     position = models.ForeignKey('Position', on_delete=models.CASCADE)
-    amount = models.FloatField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField(null=True)
 
     def __str__(self):
