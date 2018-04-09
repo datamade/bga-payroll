@@ -137,7 +137,18 @@ class ImportUtility(object):
                 salary,
                 date_started,
                 {vintage},
-                nextval('payroll_salary_id_seq') AS salary_id
+                NEXTVAL('payroll_salary_id_seq') AS salary_id
+                /* payroll_person_salaries is a lookup table associating
+                a Person and a Salary via their respective IDs.
+
+                We store the next value in the Salary ID sequence with the
+                record_id from the source, then perform the payroll_salary
+                insert, so we know which Salary goes with which raw record.
+
+                We'll do the same for Person, such that we can join the
+                resulting raw_salary and raw_person tables on record_id,
+                to insert the associated Person and Salary IDs
+                into payroll_person_salary. */
               FROM {raw_payroll} AS raw
               JOIN position_ids AS existing
               ON (
@@ -182,7 +193,18 @@ class ImportUtility(object):
               first_name,
               last_name,
               {vintage},
-              nextval('payroll_person_id_seq') AS person_id
+              NEXTVAL('payroll_person_id_seq') AS person_id
+              /* payroll_person_salaries is a lookup table associating
+              a Person and a Salary via their respective IDs.
+
+              We store the next value in the Person ID sequence with the
+              record_id from the source, then perform the payroll_person
+              insert, so we know which Person goes with which raw record.
+
+              We'll do the same for Salary, such that we can join the
+              resulting raw_salary and raw_person tables on record_id,
+              to insert the associated Person and Salary IDs
+              into payroll_person_salary. */
             INTO {raw_person}
             FROM {raw_payroll}
         '''.format(vintage=self.vintage,
