@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('payroll', '0007_add_vintage'),
+        ('payroll', '0006_unique_index'),
     ]
 
     operations = [
@@ -26,14 +26,14 @@ class Migration(migrations.Migration):
                     ) || '-' || left(gen_random_uuid()::varchar, 8);
                 END
             $$ LANGUAGE plpgsql
-        '''),
+        ''', reverse_sql='DROP FUNCTION slugify CASCADE'),
         migrations.RunSQL('''
             CREATE FUNCTION person_slug_trigger() RETURNS trigger AS '
                 BEGIN
                   NEW.slug := slugify(CONCAT_WS('' '', TRIM(NEW.first_name), TRIM(NEW.last_name)));
                   RETURN NEW;
                 END' LANGUAGE 'plpgsql'
-        '''),
+        ''', reverse_sql='DROP FUNCTION person_slug_trigger CASCADE'),
         migrations.RunSQL('''
             CREATE FUNCTION employer_slug_trigger() RETURNS trigger AS '
                 DECLARE
@@ -55,15 +55,15 @@ class Migration(migrations.Migration):
 
                   RETURN NEW;
                 END' LANGUAGE 'plpgsql'
-        '''),
+        ''', reverse_sql='DROP FUNCTION employer_slug_trigger CASCADE'),
         migrations.RunSQL('''
             CREATE TRIGGER person_slug BEFORE INSERT OR UPDATE
             ON payroll_person FOR EACH ROW EXECUTE PROCEDURE
             person_slug_trigger()
-        '''),
+        ''', reverse_sql='DROP TRIGGER person_slug ON payroll_person'),
         migrations.RunSQL('''
             CREATE TRIGGER employer_slug BEFORE INSERT OR UPDATE
             ON payroll_employer FOR EACH ROW EXECUTE PROCEDURE
             employer_slug_trigger()
-        '''),
+        ''', reverse_sql='DROP TRIGGER employer_slug ON payroll_employer'),
     ]

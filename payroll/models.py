@@ -3,18 +3,13 @@ from django.db import models
 
 from titlecase import titlecase
 
+from bga_database.base_models import SluggedModel
+from data_import.models import Upload
 from payroll.utils import format_name, format_numeral
 
 
 class VintagedModel(models.Model):
-    vintage = models.PositiveIntegerField()
-
-    class Meta:
-        abstract = True
-
-
-class SluggedModel(models.Model):
-    slug = models.SlugField(max_length=255, unique=True, null=True)
+    vintage = models.ForeignKey(Upload, on_delete=models.CASCADE)
 
     class Meta:
         abstract = True

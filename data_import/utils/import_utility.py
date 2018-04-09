@@ -3,7 +3,8 @@ from django.db import connection
 
 class ImportUtility(object):
 
-    def __init__(self, s_file_id):
+    def __init__(self, s_file_id, upload_id):
+        self.vintage = upload_id
         self.raw_payroll_table = 'raw_payroll_{}'.format(s_file_id)
         self.raw_position_table = 'raw_position_{}'.format(s_file_id)
         self.raw_salary_table = 'raw_salary_{}'.format(s_file_id)
@@ -47,28 +48,30 @@ class ImportUtility(object):
         parents. TO-DO: Explain this in better English!
         '''
         insert_parents = '''
-            INSERT INTO payroll_employer (name, vintage)
+            INSERT INTO payroll_employer (name, vintage_id)
               SELECT
                 DISTINCT employer,
-                data_year
-              FROM {} AS raw
+                {vintage}
+              FROM {raw_payroll} AS raw
               LEFT JOIN payroll_employer AS existing
               ON raw.employer = existing.name
               WHERE existing.name IS NULL
-        '''.format(self.raw_payroll_table)
+        '''.format(vintage=self.vintage,
+                   raw_payroll=self.raw_payroll_table)
 
         insert_children = '''
-            INSERT INTO payroll_employer (name, parent_id, vintage)
+            INSERT INTO payroll_employer (name, parent_id, vintage_id)
               SELECT DISTINCT ON (employer, department)
                 department AS employer_name,
                 parent.id AS parent_id,
-                data_year
+                {vintage}
               FROM {raw_payroll} AS raw
               JOIN payroll_employer AS parent
               ON raw.employer = parent.name
               WHERE department IS NOT NULL
             ON CONFLICT DO NOTHING
-        '''.format(raw_payroll=self.raw_payroll_table)
+        '''.format(vintage=self.vintage,
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert_parents)
@@ -81,7 +84,7 @@ class ImportUtility(object):
         no'oped with ON CONFLICT DO NOTHING.
         '''
         insert = '''
-            INSERT INTO payroll_position (employer_id, title, vintage)
+            INSERT INTO payroll_position (employer_id, title, vintage_id)
               WITH employer_ids AS (
                 SELECT
                   child.id AS employer_id,
@@ -94,7 +97,7 @@ class ImportUtility(object):
               SELECT
                 employer_id,
                 COALESCE(title, 'EMPLOYEE'),
-                data_year
+                {vintage}
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
               ON (
@@ -106,12 +109,14 @@ class ImportUtility(object):
                 AND raw.department IS NULL
               )
             ON CONFLICT DO NOTHING
-        '''.format(raw_payroll=self.raw_payroll_table)
+        '''.format(vintage=self.vintage,
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
     def select_raw_salary(self):
+        # TO-DO: Document use of nextval here and in person select.
         select = '''
             WITH position_ids AS (
               SELECT
@@ -131,7 +136,7 @@ class ImportUtility(object):
                 position_id,
                 salary,
                 date_started,
-                data_year,
+                {vintage},
                 nextval('payroll_salary_id_seq') AS salary_id
               FROM {raw_payroll} AS raw
               JOIN position_ids AS existing
@@ -147,23 +152,25 @@ class ImportUtility(object):
               )
             )
             SELECT * INTO {raw_salary} FROM raw_salary
-        '''.format(raw_salary=self.raw_salary_table,
-                   raw_payroll=self.raw_payroll_table)
+        '''.format(vintage=self.vintage,
+                   raw_payroll=self.raw_payroll_table,
+                   raw_salary=self.raw_salary_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
 
     def insert_salary(self):
         insert = '''
-            INSERT INTO payroll_salary (id, amount, start_date, vintage, position_id)
+            INSERT INTO payroll_salary (id, amount, start_date, vintage_id, position_id)
               SELECT
                 salary_id,
                 REGEXP_REPLACE(salary, '[^0-9,.]', '', 'g')::NUMERIC,
                 NULLIF(TRIM(date_started), '')::DATE,
-                data_year,
+                {vintage},
                 position_id
               FROM {raw_salary}
-        '''.format(raw_salary=self.raw_salary_table)
+        '''.format(vintage=self.vintage,
+                   raw_salary=self.raw_salary_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
@@ -174,11 +181,12 @@ class ImportUtility(object):
               record_id,
               first_name,
               last_name,
-              data_year,
+              {vintage},
               nextval('payroll_person_id_seq') AS person_id
             INTO {raw_person}
             FROM {raw_payroll}
-        '''.format(raw_person=self.raw_person_table,
+        '''.format(vintage=self.vintage,
+                   raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
@@ -186,14 +194,15 @@ class ImportUtility(object):
 
     def insert_person(self):
         insert = '''
-            INSERT INTO payroll_person (id, first_name, last_name, vintage)
+            INSERT INTO payroll_person (id, first_name, last_name, vintage_id)
               SELECT
                 person_id,
                 first_name,
                 last_name,
-                data_year
+                {vintage}
               FROM {raw_person}
-        '''.format(raw_person=self.raw_person_table)
+        '''.format(vintage=self.vintage,
+                   raw_person=self.raw_person_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)

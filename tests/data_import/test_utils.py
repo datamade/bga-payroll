@@ -34,7 +34,7 @@ def test_import_utility(standardized_file,
 
     copy_to_database(s_file_id=s_file.id)
 
-    imp = ImportUtility(s_file.id)
+    imp = ImportUtility(s_file.id, s_file.upload.id)
 
     with connection.cursor() as cursor:
         # Do some validation on the individual model tables, so we have a
