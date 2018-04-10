@@ -3,7 +3,7 @@ from os.path import basename
 from django.contrib.auth import get_user_model
 from django.db import connection, models
 
-from payroll.models import SluggedModel
+from bga_database.base_models import SluggedModel
 
 
 def set_deleted_user():
