@@ -41,14 +41,20 @@ class Employer(SluggedModel, VintagedModel):
 class Person(SluggedModel, VintagedModel):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
-    salaries = models.ManyToManyField('Salary')
     search_vector = SearchVectorField(max_length=255, null=True)
+    jobs = models.ManyToManyField('Job')
 
     def __str__(self):
         name = '{0} {1}'.format(self.first_name, self.last_name)\
                         .lstrip('-')
 
         return titlecase(name.lower(), callback=format_name)
+
+
+class Job(VintagedModel):
+    start_date = models.DateField(null=True)
+    position = models.ForeignKey('Position', on_delete=models.CASCADE)
+    salaries = models.ManyToManyField('Salary')
 
 
 class Position(VintagedModel):
@@ -64,9 +70,7 @@ class Position(VintagedModel):
 
 
 class Salary(VintagedModel):
-    position = models.ForeignKey('Position', on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    start_date = models.DateField(null=True)
 
     def __str__(self):
         return '{0} {1}'.format(self.amount, self.position)
