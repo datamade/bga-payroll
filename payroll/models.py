@@ -42,7 +42,6 @@ class Person(SluggedModel, VintagedModel):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     search_vector = SearchVectorField(max_length=255, null=True)
-    jobs = models.ManyToManyField('Job')
 
     def __str__(self):
         name = '{0} {1}'.format(self.first_name, self.last_name)\
@@ -52,6 +51,7 @@ class Person(SluggedModel, VintagedModel):
 
 
 class Job(VintagedModel):
+    person = models.ForeignKey('Person', related_name='jobs', on_delete=models.CASCADE)
     start_date = models.DateField(null=True)
     position = models.ForeignKey('Position', on_delete=models.CASCADE)
     salaries = models.ManyToManyField('Salary')
