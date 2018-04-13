@@ -81,14 +81,14 @@ def test_import_utility(standardized_file,
 
         assert raw_count == generated_count
 
-        validate_salary = '''
+        validate_job = '''
             SELECT
               (SELECT COUNT(*) FROM {raw_payroll}) AS raw_count,
-              (SELECT COUNT(*) FROM {raw_salary}) AS generated_count
+              (SELECT COUNT(*) FROM {raw_job}) AS generated_count
         '''.format(raw_payroll=imp.raw_payroll_table,
-                   raw_salary=imp.raw_salary_table)
+                   raw_job=imp.raw_job_table)
 
-        cursor.execute(validate_salary)
+        cursor.execute(validate_job)
 
         result, = cursor
         raw_count, generated_count = result
@@ -118,14 +118,14 @@ def test_import_utility(standardized_file,
                 per.first_name,
                 per.last_name,
                 sal.amount AS salary,
-                sal.start_date AS date_started
+                job.start_date AS date_started
               FROM payroll_person AS per
-              JOIN payroll_person_salaries AS ps
-              ON per.id = ps.person_id
+              JOIN payroll_job AS job
+              ON job.person_id = per.id
               JOIN payroll_salary AS sal
-              ON ps.salary_id = sal.id
+              ON sal.job_id = job.id
               JOIN payroll_position AS pos
-              ON sal.position_id = pos.id
+              ON pos.id = job.position_id
               JOIN payroll_employer AS emp
               ON pos.employer_id = emp.id
               LEFT JOIN payroll_employer AS parent

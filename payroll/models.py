@@ -54,8 +54,35 @@ class Job(VintagedModel):
     person = models.ForeignKey('Person',
                                related_name='jobs',
                                on_delete=models.CASCADE)
-    start_date = models.DateField(null=True)
     position = models.ForeignKey('Position', on_delete=models.CASCADE)
+    start_date = models.DateField(null=True)
+
+    @classmethod
+    def of_employer(cls, employer_id, n=None):
+        '''
+        Return Job objects for given employer.
+
+        TO-DO: Add a year filter.
+        '''
+        employer = models.Q(position__employer_id=employer_id)
+        parent_employer = models.Q(position__employer__parent_id=employer_id)
+
+        # Return only jobs of the given employer, if that employer is a
+        # department. Otherwise, return jobs of the given employer, as
+        # well as its child employers.
+
+        if Employer.objects.select_related('parent').get(id=employer_id).is_department:
+            criterion = employer
+
+        else:
+            criterion = employer | parent_employer
+
+        jobs = cls.objects.filter(criterion)\
+                          .order_by('-amount')\
+                          .select_related('position', 'position__employer', 'position__employer__parent')\
+                          .prefetch_related('person_set')[:n]
+
+        return jobs
 
 
 class Position(VintagedModel):
@@ -71,6 +98,17 @@ class Position(VintagedModel):
 
 
 class Salary(VintagedModel):
+    '''
+    The Salary object is a representation of prospective, annual salary. The
+    provided amount is not a measure of actual pay, i.e., it does not include
+    additional income, such as overtime or bonus pay. The provided amount is
+    instead the amount an employer anticipates paying an employee for a given
+    calendar (not fiscal) year.
+
+    While most salary amounts represent an annual rate, some salaries are
+    reported at hourly or per-appearance rates. This can be inferred, but is
+    not explicitly specified in the source data.
+    '''
     job = models.ForeignKey('Job',
                             related_name='salaries',
                             on_delete=models.CASCADE)
@@ -80,15 +118,6 @@ class Salary(VintagedModel):
         return '{0} {1}'.format(self.amount, self.position)
 
     @property
-    def person(self):
-        # Force Django to use the cached person objects, if they exist
-        if hasattr(self, '_prefetched_objects_cache') and 'person' in self._prefetched_objects_cache:
-            return self._prefetched_objects_cache['person'][0]
-
-        else:
-            return self.person_set.get()
-
-    @property
     def is_wage(self):
         '''
         Some salary data is hourly, or per appearance. This isn't explicit in
@@ -96,28 +125,3 @@ class Salary(VintagedModel):
         salary amount is less than 1000, False otherwise.
         '''
         return self.amount < 1000
-
-    @classmethod
-    def of_employer(cls, employer_id, n=None):
-        '''
-        Return Salary objects for given employer.
-        '''
-        employer = models.Q(position__employer_id=employer_id)
-        parent_employer = models.Q(position__employer__parent_id=employer_id)
-
-        # Return only salaries of the given employer, if that employer is a
-        # department. Otherwise, return salaries of the given employer, as
-        # well as its child employers.
-
-        if Employer.objects.select_related('parent').get(id=employer_id).is_department:
-            criterion = employer
-
-        else:
-            criterion = employer | parent_employer
-
-        salaries = cls.objects.filter(criterion)\
-                              .order_by('-amount')\
-                              .select_related('position', 'position__employer', 'position__employer__parent')\
-                              .prefetch_related('person_set')[:n]
-
-        return salaries
