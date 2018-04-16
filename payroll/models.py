@@ -66,8 +66,6 @@ class Job(VintagedModel):
     def of_employer(cls, employer_id, n=None):
         '''
         Return Job objects for given employer.
-
-        TO-DO: Add a year filter.
         '''
         employer = models.Q(position__employer_id=employer_id)
         parent_employer = models.Q(position__employer__parent_id=employer_id)
