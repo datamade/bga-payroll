@@ -7,7 +7,7 @@ class ImportUtility(object):
         self.vintage = upload_id
         self.raw_payroll_table = 'raw_payroll_{}'.format(s_file_id)
         self.raw_position_table = 'raw_position_{}'.format(s_file_id)
-        self.raw_salary_table = 'raw_salary_{}'.format(s_file_id)
+        self.raw_job_table = 'raw_job_{}'.format(s_file_id)
         self.raw_person_table = 'raw_person_{}'.format(s_file_id)
 
     def populate_models_from_raw_data(self):
@@ -17,13 +17,13 @@ class ImportUtility(object):
 
         self.insert_position()
 
-        self.select_raw_salary()
-        self.insert_salary()
-
         self.select_raw_person()
         self.insert_person()
 
-        self.link_person_salary()
+        self.select_raw_job()
+        self.insert_job()
+
+        self.insert_salary()
 
     def insert_responding_agency(self):
         insert = '''
@@ -115,77 +115,6 @@ class ImportUtility(object):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
-    def select_raw_salary(self):
-        # TO-DO: Document use of nextval here and in person select.
-        select = '''
-            WITH position_ids AS (
-              SELECT
-                pos.id AS position_id,
-                pos.title AS position_title,
-                emp.id AS employer_id,
-                emp.name AS employer_name,
-                parent.name AS parent_name
-              FROM payroll_position AS pos
-              JOIN payroll_employer AS emp
-              ON pos.employer_id = emp.id
-              LEFT JOIN payroll_employer AS parent
-              ON emp.parent_id = parent.id
-            ), raw_salary AS (
-              SELECT
-                record_id,
-                position_id,
-                salary,
-                date_started,
-                {vintage},
-                NEXTVAL('payroll_salary_id_seq') AS salary_id
-                /* payroll_person_salaries is a lookup table associating
-                a Person and a Salary via their respective IDs.
-
-                We store the next value in the Salary ID sequence with the
-                record_id from the source, then perform the payroll_salary
-                insert, so we know which Salary goes with which raw record.
-
-                We'll do the same for Person, such that we can join the
-                resulting raw_salary and raw_person tables on record_id,
-                to insert the associated Person and Salary IDs
-                into payroll_person_salary. */
-              FROM {raw_payroll} AS raw
-              JOIN position_ids AS existing
-              ON (
-                raw.department = existing.employer_name
-                AND raw.employer = existing.parent_name
-                AND raw.title = existing.position_title
-                AND raw.department IS NOT NULL
-              ) OR (
-                raw.employer = existing.employer_name
-                AND raw.title = existing.position_title
-                AND raw.department IS NULL
-              )
-            )
-            SELECT * INTO {raw_salary} FROM raw_salary
-        '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   raw_salary=self.raw_salary_table)
-
-        with connection.cursor() as cursor:
-            cursor.execute(select)
-
-    def insert_salary(self):
-        insert = '''
-            INSERT INTO payroll_salary (id, amount, start_date, vintage_id, position_id)
-              SELECT
-                salary_id,
-                REGEXP_REPLACE(salary, '[^0-9.]', '', 'g')::NUMERIC,
-                NULLIF(TRIM(date_started), '')::DATE,
-                {vintage},
-                position_id
-              FROM {raw_salary}
-        '''.format(vintage=self.vintage,
-                   raw_salary=self.raw_salary_table)
-
-        with connection.cursor() as cursor:
-            cursor.execute(insert)
-
     def select_raw_person(self):
         select = '''
             SELECT
@@ -194,17 +123,11 @@ class ImportUtility(object):
               last_name,
               {vintage},
               NEXTVAL('payroll_person_id_seq') AS person_id
-              /* payroll_person_salaries is a lookup table associating
-              a Person and a Salary via their respective IDs.
-
-              We store the next value in the Person ID sequence with the
-              record_id from the source, then perform the payroll_person
-              insert, so we know which Person goes with which raw record.
-
-              We'll do the same for Salary, such that we can join the
-              resulting raw_salary and raw_person tables on record_id,
-              to insert the associated Person and Salary IDs
-              into payroll_person_salary. */
+              /* payroll_person does not have a uniquely identifying
+              set of fields for performing joins. Instead, create an
+              intermediate table with the unique record_id from the raw
+              data and the corresponding Person ID, selected here, for
+              use in a later join to create the Job table. */
             INTO {raw_person}
             FROM {raw_payroll}
         '''.format(vintage=self.vintage,
@@ -229,17 +152,88 @@ class ImportUtility(object):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
-    def link_person_salary(self):
-        insert = '''
-            INSERT INTO payroll_person_salaries (person_id, salary_id)
+    def select_raw_job(self):
+        select = '''
+            WITH employer_ids AS (
               SELECT
+                child.id AS employer_id,
+                child.name AS employer_name,
+                parent.name AS parent_name
+              FROM payroll_employer AS child
+              LEFT JOIN payroll_employer AS parent
+              ON child.parent_id = parent.id
+            ), position_ids AS (
+              SELECT
+                record_id,
+                pos.id AS position_id
+              FROM {raw_payroll} AS raw
+              JOIN employer_ids AS employer
+              ON (
+                raw.department = employer.employer_name
+                AND raw.employer = employer.parent_name
+                AND raw.department IS NOT NULL
+              ) OR (
+                raw.employer = employer.employer_name
+                AND raw.department IS NULL
+              )
+              JOIN payroll_position AS pos
+              ON pos.employer_id = employer.employer_id
+              AND pos.title = raw.title
+            )
+            SELECT
+              record_id,
+              person_id,
+              position_id,
+              NULLIF(TRIM(date_started), '')::DATE AS start_date,
+              NEXTVAL('payroll_job_id_seq') AS job_id
+              /* payroll_job does not have a uniquely identifying
+              set of fields for performing joins. Instead, create an
+              intermediate table with the unique record_id from the raw
+              data and the corresponding Job ID, selected here, for
+              use in a later join to create the Salary table. */
+            INTO {raw_job}
+            FROM {raw_person}
+            JOIN position_ids
+            USING (record_id)
+            JOIN {raw_payroll}
+            USING (record_id)
+        '''.format(raw_job=self.raw_job_table,
+                   raw_person=self.raw_person_table,
+                   raw_payroll=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+    def insert_job(self):
+        insert = '''
+            INSERT INTO payroll_job (id, person_id, position_id, start_date, vintage_id)
+              SELECT
+                job_id,
                 person_id,
-                salary_id
-              FROM {raw_person}
-              JOIN {raw_salary}
+                position_id,
+                start_date,
+                {vintage}
+              FROM {raw_job}
+            ON CONFLICT DO NOTHING
+        '''.format(vintage=self.vintage,
+                   raw_job=self.raw_job_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
+
+    def insert_salary(self):
+        insert = '''
+            INSERT INTO payroll_salary (job_id, amount, vintage_id)
+              SELECT
+                raw_job.job_id,
+                REGEXP_REPLACE(salary, '[^0-9.]', '', 'g')::NUMERIC,
+                {vintage}
+              FROM {raw_payroll}
+              JOIN {raw_job} AS raw_job
               USING (record_id)
-        '''.format(raw_person=self.raw_person_table,
-                   raw_salary=self.raw_salary_table)
+        '''.format(vintage=self.vintage,
+                   raw_payroll=self.raw_payroll_table,
+                   raw_job=self.raw_job_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
