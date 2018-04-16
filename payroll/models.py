@@ -4,7 +4,9 @@ from django.db import models
 from titlecase import titlecase
 
 from bga_database.base_models import SluggedModel
+
 from data_import.models import Upload
+
 from payroll.utils import format_name, format_numeral
 
 
@@ -57,6 +59,9 @@ class Job(VintagedModel):
     position = models.ForeignKey('Position', on_delete=models.CASCADE)
     start_date = models.DateField(null=True)
 
+    def __str__(self):
+        return '{0} – {1}'.format(self.person, self.position)
+
     @classmethod
     def of_employer(cls, employer_id, n=None):
         '''
@@ -78,9 +83,9 @@ class Job(VintagedModel):
             criterion = employer | parent_employer
 
         jobs = cls.objects.filter(criterion)\
-                          .order_by('-amount')\
-                          .select_related('position', 'position__employer', 'position__employer__parent')\
-                          .prefetch_related('person_set')[:n]
+                          .order_by('-salaries__amount')\
+                          .select_related('person', 'position', 'position__employer', 'position__employer__parent')\
+                          .prefetch_related('salaries')[:n]
 
         return jobs
 
@@ -90,7 +95,7 @@ class Position(VintagedModel):
     title = models.CharField(max_length=255, null=True)
 
     def __repr__(self):
-        position = '{0} – {1}'.format(self.employer, self.title)
+        position = '{0} {1}'.format(self.employer, self.title)
         return titlecase(position.lower())
 
     def __str__(self):
@@ -115,7 +120,7 @@ class Salary(VintagedModel):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return '{0} {1}'.format(self.amount, self.position)
+        return '{0} {1}'.format(self.amount, self.job)
 
     @property
     def is_wage(self):

@@ -12,7 +12,7 @@ from django.views.generic.list import ListView
 
 import numpy as np
 
-from payroll.models import Employer, Salary, Person
+from payroll.models import Employer, Job, Person
 from payroll.utils import format_ballpark_number
 
 
@@ -26,7 +26,7 @@ def error(request, error_code):
 
 def person(request, slug):
     try:
-        person = Person.objects.prefetch_related('salaries').get(slug=slug)
+        person = Person.objects.get(slug=slug)
 
     except Employer.DoesNotExist:
         error_page = reverse(error, kwargs={'error_code': 404})
@@ -43,9 +43,11 @@ class EmployerView(DetailView):
     context_object_name = 'entity'
 
     from_clause = '''
-        FROM payroll_salary AS salary
+        FROM payroll_job AS job
+        JOIN payroll_salary AS salary
+        ON salary.job_id = job.id
         JOIN payroll_position AS position
-        ON salary.position_id = position.id
+        ON job.position_id = position.id
         JOIN payroll_employer AS employer
         ON position.employer_id = employer.id
     '''
@@ -57,7 +59,7 @@ class EmployerView(DetailView):
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
         context.update({
-            'salaries': Salary.of_employer(self.object.id, n=5),
+            'jobs': Job.of_employer(self.object.id, n=5),
             'mean_salary': self.mean_entity_salary(),
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
@@ -157,7 +159,8 @@ class EmployerView(DetailView):
         return employee_salaries
 
     def bin_salary_data(self, data):
-        values, edges = np.histogram(data, bins=6)
+        float_data = np.asarray(data, dtype='float')
+        values, edges = np.histogram(float_data, bins=6)
 
         salary_json = []
 
@@ -196,8 +199,7 @@ class SearchView(ListView):
             return list(matching_employers) + list(matching_people)
 
     def _get_person_queryset(self, params):
-        # Remove duplicate people. TO-DO: Remove when we've sorted out the dupes!
-        condition = Q(salaries__isnull=False)
+        condition = Q()
 
         if params:
             if params.get('name'):
@@ -205,12 +207,12 @@ class SearchView(ListView):
                 condition &= name
 
             if params.get('employer'):
-                child_employer = Q(salaries__position__employer__slug=params.get('employer'))
-                parent_employer = Q(salaries__position__employer__parent__slug=params.get('employer'))
+                child_employer = Q(jobs__position__employer__slug=params.get('employer'))
+                parent_employer = Q(jobs__position__employer__parent__slug=params.get('employer'))
                 condition &= child_employer | parent_employer
 
         return Person.objects.filter(condition)\
-                             .order_by('-salaries__amount')
+                             .order_by('-jobs__salaries__amount')
 
     def _get_employer_queryset(self, params):
         condition = Q()
@@ -223,13 +225,17 @@ class SearchView(ListView):
                 name = Q(search_vector=params.get('name'))
                 condition &= name
 
+            if params.get('employer'):
+                name = Q(slug=params.get('employer'))
+                condition &= name
+
             if params.get('parent'):
                 parent = Q(parent__slug=params.get('parent'))
                 condition &= parent
 
         return employers.filter(condition)\
                         .select_related('parent')\
-                        .annotate(budget=Sum('position__salary'))\
+                        .annotate(budget=Sum('position__job__salaries__amount'))\
                         .order_by('-budget')
 
 
@@ -240,10 +246,10 @@ def entity_lookup(request):
     high_budget = Q(budget__gt=1000000)
 
     employers = Employer.objects\
-                        .annotate(budget=Sum('position__salary'))\
+                        .annotate(budget=Sum('position__job__salaries__amount'))\
                         .filter(top_level | high_budget)
 
-    people = Person.objects.filter(salaries__amount__gt=100000)
+    people = Person.objects.filter(jobs__salaries__amount__gt=100000)
 
     if q:
         employers = employers.filter(name__istartswith=q)[:10]
