@@ -23,7 +23,6 @@ def test_alter_uploadedfile_raises_exception(mocker):
     assert 'Cannot alter instance' in str(err)
 
 
-@pytest.mark.dev
 @pytest.mark.django_db(transaction=True)
 def test_import_utility(standardized_file,
                         real_file,
