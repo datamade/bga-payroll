@@ -123,7 +123,11 @@ class ImportUtility(object):
               last_name,
               {vintage},
               NEXTVAL('payroll_person_id_seq') AS person_id
-              /* TO-DO: Revise comment. */
+              /* payroll_person does not have a uniquely identifying
+              set of fields for performing joins. Instead, create an
+              intermediate table with the unique record_id from the raw
+              data and the corresponding Person ID, selected here, for
+              use in a later join to create the Job table. */
             INTO {raw_person}
             FROM {raw_payroll}
         '''.format(vintage=self.vintage,
@@ -182,7 +186,11 @@ class ImportUtility(object):
               position_id,
               NULLIF(TRIM(date_started), '')::DATE AS start_date,
               NEXTVAL('payroll_job_id_seq') AS job_id
-              /* TO-DO: Write comment. */
+              /* payroll_job does not have a uniquely identifying
+              set of fields for performing joins. Instead, create an
+              intermediate table with the unique record_id from the raw
+              data and the corresponding Job ID, selected here, for
+              use in a later join to create the Salary table. */
             INTO {raw_job}
             FROM {raw_person}
             JOIN position_ids
