@@ -41,7 +41,6 @@ def test_child_employer(client,
     assert rv.status_code == 200
 
 
-@pytest.mark.dev
 @pytest.mark.django_db(transaction=True)
 def test_person(salary, client, transactional_db):
     salary.build()
