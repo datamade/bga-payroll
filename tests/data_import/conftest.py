@@ -6,7 +6,7 @@ from django.core.files import File
 from django.db import connection
 import pytest
 
-from data_import.models import StandardizedFile, Upload
+from data_import.models import StandardizedFile
 
 
 @pytest.fixture
@@ -70,19 +70,6 @@ def standardized_data_upload_blob(mock_file):
     }
 
     return blob
-
-
-@pytest.fixture
-@pytest.mark.django_db
-def upload():
-    class UploadFactory():
-        def build(self, **kwargs):
-            data = {}
-            data.update(kwargs)
-
-            return Upload.objects.create(**data)
-
-    return UploadFactory()
 
 
 @pytest.fixture
