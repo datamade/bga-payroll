@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}
+Uploads
+{% endblock %}
+
+{% block content %}
+<table class="table table-striped table-hover">
+  <thead class="bg-warning">
+    <tr>
+      <th scope="col">Reporting Year</th>
+      <th scope="col">Upload</th>
+      <th scope="col">Status</th>
+      <th scope="col">Next step</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for upload in uploads %}
+      {% with s_file = upload.standardized_file.get() %}
+        <tr>
+          <td>{{ s_file.reporting_year }}</td>
+          <td>{{ upload.created_at.isoformat() }}</td>
+          <td>{{ s_file.status.title() }}</td>
+          <td>
+            {% if s_file.status == 'uploaded' %}
+              <a href="#">
+                Resume import &raquo;
+              </a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endwith %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}

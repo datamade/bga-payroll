@@ -13,7 +13,7 @@ def test_copy_to_database(standardized_file,
 
     s_file = standardized_file.build(standardized_file=real_file)
 
-    mock_pop_models = mocker.patch('data_import.tasks.ImportUtility.populate_models_from_raw_data')
+    mock_insert_agency = mocker.patch('data_import.tasks.insert_responding_agency')
 
     copy_to_database(s_file_id=s_file.id)
 
@@ -53,4 +53,4 @@ def test_copy_to_database(standardized_file,
 
         assert set(columns) == set(CsvMeta.REQUIRED_FIELDS)
 
-    assert mock_pop_models.call_count == 1
+    assert mock_insert_agency.call_count == 1

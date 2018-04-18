@@ -24,16 +24,18 @@ def test_alter_uploadedfile_raises_exception(mocker):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_import_utility(standardized_file,
-                        real_file,
-                        transactional_db,
-                        raw_table_teardown):
+def test_import_utility_init(standardized_file,
+                             real_file,
+                             transactional_db,
+                             raw_table_teardown,
+                             mocker):
 
     s_file = standardized_file.build(standardized_file=real_file)
 
     copy_to_database(s_file_id=s_file.id)
 
-    imp = ImportUtility(s_file.id)
+    imp = ImportUtility(s_file.id, init=True)
+    imp.populate_models_from_raw_data()
 
     with connection.cursor() as cursor:
         # Do some validation on the individual model tables, so we have a

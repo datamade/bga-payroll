@@ -74,7 +74,7 @@ class SourceFile(models.Model):
     upload = models.ForeignKey(
         'Upload',
         on_delete=models.CASCADE,
-        related_name='source_files'
+        related_name='source_file'
     )
     google_drive_file_id = models.CharField(max_length=255)
     standardized_file = models.ForeignKey(
@@ -116,6 +116,10 @@ def standardized_file_upload_name(instance, filename):
 
 
 class StandardizedFile(models.Model):
+    STATUS_CHOICES = [
+        ('uploaded', 'Uploaded'),
+        ('imported', 'Imported'),
+    ]
     standardized_file = models.FileField(
         max_length=1000,
         upload_to=standardized_file_upload_name
@@ -124,8 +128,9 @@ class StandardizedFile(models.Model):
     upload = models.ForeignKey(
         'Upload',
         on_delete=models.CASCADE,
-        related_name='standardized_files'
+        related_name='standardized_file'
     )
+    status = models.CharField(choices=STATUS_CHOICES, null=True, max_length=10)
 
     @property
     def raw_table_name(self):

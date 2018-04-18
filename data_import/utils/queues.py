@@ -32,12 +32,14 @@ class RespondingAgencyQueue(Queue):
         name VARCHAR
     '''
 
+
 class EmployerQueue(Queue):
     table_name_fmt = 'employer_queue_{}'
     columns = '''
         name VARCHAR,
         parent VARCHAR NULL
     '''
+
 
 class SalaryQueue(Queue):
     table_name_fmt = 'salary_queue_{}'

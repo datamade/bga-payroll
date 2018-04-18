@@ -3,6 +3,7 @@ import json
 
 from django.http import HttpResponse
 from django.views import View
+from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
 from data_import.forms import UploadForm
@@ -52,7 +53,7 @@ class SourceFileHook(View):
 class StandardizedDataUpload(FormView):
     template_name = 'data_import/upload.html'
     form_class = UploadForm
-    success_url = '/upload/'
+    success_url = 'upload-success/'
 
     def form_valid(self, form):
         upload = Upload.objects.create()
@@ -72,3 +73,16 @@ class StandardizedDataUpload(FormView):
         copy_to_database.delay(s_file_id=s_file.id)
 
         return super().form_valid(form)
+
+
+class Uploads(ListView):
+    '''
+    Index of data import. Display a list of standardized uploads,
+    their statuses, and next steps.
+    '''
+    template_name = 'data_import/index.html'
+    model = Upload
+    context_object_name = 'uploads'
+
+    def get_queryset(self):
+        return Upload.objects.filter(standardized_file__isnull=False)

@@ -50,13 +50,13 @@ def copy_to_database(*, s_file_id):
             cursor.execute('CREATE INDEX ON {} (employer)'.format(table_name))
             cursor.execute('CREATE INDEX ON {} (department)'.format(table_name))
 
-    insert_responding_agency(s_file_id)
+    insert_responding_agency(s_file_id=s_file_id)
 
     return 'Dumped {} to database'.format(formatted_data_file, table_name)
 
 
 @shared_task
-def insert_responding_agency(*, s_file_id)
+def insert_responding_agency(*, s_file_id):
     imp = ImportUtility(s_file_id)
     imp.insert_responding_agency()
 
