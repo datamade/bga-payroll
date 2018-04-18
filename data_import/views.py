@@ -83,6 +83,7 @@ class Uploads(ListView):
     template_name = 'data_import/index.html'
     model = Upload
     context_object_name = 'uploads'
+    paginate_by = 25
 
     def get_queryset(self):
         return Upload.objects.filter(standardized_file__isnull=False)
