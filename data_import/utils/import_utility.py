@@ -1,10 +1,19 @@
 from django.db import connection
 
+from data_import.models import StandardizedFile
+from data_import.utils.queues import RespondingAgencyQueue
+
 
 class ImportUtility(object):
 
-    def __init__(self, s_file_id, upload_id):
-        self.vintage = upload_id
+    def __init__(self, s_file_id, init=False):
+        self.s_file_id = s_file_id
+        self.init = init
+
+        s_file = StandardizedFile.objects.get(id=s_file_id)
+
+        self.vintage = s_file.upload.id
+
         self.raw_payroll_table = 'raw_payroll_{}'.format(s_file_id)
         self.raw_position_table = 'raw_position_{}'.format(s_file_id)
         self.raw_job_table = 'raw_job_{}'.format(s_file_id)
@@ -26,15 +35,34 @@ class ImportUtility(object):
         self.insert_salary()
 
     def insert_responding_agency(self):
-        insert = '''
-            INSERT INTO data_import_respondingagency (name)
-              SELECT
-                DISTINCT responding_agency
-              FROM {} AS raw
-              LEFT JOIN data_import_respondingagency AS existing
-              ON raw.responding_agency = existing.name
-              WHERE existing.name IS NULL
-        '''.format(self.raw_payroll_table)
+        if not self.init:
+            q = RespondingAgencyQueue(self.s_file_id)
+            q.initialize()
+
+            insert = '''
+                WITH unseen AS (
+                  SELECT
+                    DISTINCT responding_agency
+                  FROM {raw} AS raw
+                  LEFT JOIN data_import_respondingagency AS existing
+                  ON raw.responding_agency = existing.name
+                  WHERE existing.name IS NULL
+                )
+                INSERT INTO {review} (name)
+                  SELECT * FROM unseen
+            '''.format(raw=self.raw_payroll_table,
+                       review=q.table_name)
+
+        else:
+            insert = '''
+                INSERT INTO data_import_respondingagency (name)
+                  SELECT
+                    DISTINCT responding_agency
+                  FROM {} AS raw
+                  LEFT JOIN data_import_respondingagency AS existing
+                  ON raw.responding_agency = existing.name
+                  WHERE existing.name IS NULL
+            '''.format(self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)

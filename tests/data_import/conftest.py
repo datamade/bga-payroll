@@ -7,6 +7,7 @@ from django.db import connection
 import pytest
 
 from data_import.models import StandardizedFile
+from data_import.tasks import copy_to_database
 
 
 @pytest.fixture
@@ -107,3 +108,16 @@ def raw_table_teardown(request):
 
         with connection.cursor() as cursor:
             cursor.execute(drop)
+
+
+@pytest.fixture
+@pytest.mark.django_db(transaction=True)
+def review_setup(transactional_db,
+                 standardized_file,
+                 real_file):
+
+    s_file = standardized_file.build(standardized_file=real_file)
+
+    copy_to_database(s_file_id=s_file.id)
+
+    return s_file
