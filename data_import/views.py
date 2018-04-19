@@ -98,16 +98,19 @@ class Review(ListView):
 
 
 class RespondingAgencyReview(Review):
+    @property
+    def q(self):
+        return RespondingAgencyQueue(self.request.GET['s_file_id'])
+
     def get_queryset(self, **kwargs):
+        # TO-DO: Move to dispatch method.
         s_file_id = self.request.GET['s_file_id']
 
         if s_file_id:
-            q = RespondingAgencyQueue(s_file_id)
-
             with connection.cursor() as cursor:
                 cursor.execute('''
                     SELECT * FROM {}
-                '''.format(q.table_name))
+                '''.format(self.q.table_name))
 
                 return [row for row in cursor]
 
@@ -126,6 +129,8 @@ class RespondingAgencyReview(Review):
 
 
 def match(request):
+    # TO-DO: Move to RespondingAgencyReview class, and direct
+    # traffic via dispatch method.
     s_file_id = request.GET['s_file_id']
     enqueued = request.GET['enqueued']
     existing = request.GET['existing']
@@ -148,6 +153,7 @@ def match(request):
 
 
 def review_entity_lookup(request, entity_type):
+    # TO-DO: Generalize for other entities.
     q = request.GET['term']
 
     entities = []
