@@ -22,15 +22,20 @@ class Queue(object):
         except ProgrammingError:
             raise  # TO-DO: Custom exception?
 
-    def flush(self):
-        pass
-
 
 class RespondingAgencyQueue(Queue):
     table_name_fmt = 'respondingagency_queue_{}'
     columns = '''
         name VARCHAR
     '''
+
+    def remove(self, entity):
+        with connection.cursor() as cursor:
+            delete = '''
+                DELETE FROM {0} WHERE name = '{1}'
+            '''.format(self.table_name, entity)
+
+            cursor.execute(delete)
 
 
 class EmployerQueue(Queue):
