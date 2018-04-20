@@ -58,7 +58,6 @@ class RespondingAgencyQueue(Queue):
 
             cursor.execute(update)
 
-
     def flush(self):
         with connection.cursor() as cursor:
             update = '''
@@ -77,6 +76,7 @@ class RespondingAgencyQueue(Queue):
             '''.format(queue=self.table_name)
 
             cursor.execute(update)
+            cursor.execute(insert)
 
 
 class EmployerQueue(Queue):
