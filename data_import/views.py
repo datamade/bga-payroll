@@ -90,7 +90,8 @@ class Uploads(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        return Upload.objects.filter(standardized_file__isnull=False)
+        return Upload.objects.filter(standardized_file__isnull=False)\
+                             .order_by('-created_at')
 
 
 class Review(ListView):
