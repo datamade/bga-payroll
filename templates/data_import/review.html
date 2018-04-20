@@ -19,7 +19,7 @@ Review
     <tbody>
       {% for item in items %}
           <tr>
-            {% for field in item %}
+            {% for field in item[:display_slice] %}
               <td class="align-middle">{{ field }}</td>
             {% endfor %}
             <td class="align-middle">
@@ -76,8 +76,8 @@ Review
   $('#btn-match-submit').click(function submit_match(){
     var params = $.param({
         's_file_id': {{ request.GET['s_file_id'] }},
-        'enqueued': $('#selected-entity').text(),
-        'existing': input.val(),
+        'unseen': $('#selected-entity').text(),
+        'match': input.val(),
     })
 
     $.get(

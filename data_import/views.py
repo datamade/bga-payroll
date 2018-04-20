@@ -109,7 +109,9 @@ class RespondingAgencyReview(Review):
         if s_file_id:
             with connection.cursor() as cursor:
                 cursor.execute('''
-                    SELECT * FROM {}
+                    SELECT *
+                    FROM {}
+                    WHERE processed = FALSE
                 '''.format(self.q.table_name))
 
                 return [row for row in cursor]
@@ -123,6 +125,7 @@ class RespondingAgencyReview(Review):
         context.update({
             'entity': 'responding agency',
             'entities': 'responding agencies',
+            'display_slice': 1,
         })
 
         return context
@@ -132,22 +135,11 @@ def match(request):
     # TO-DO: Move to RespondingAgencyReview class, and direct
     # traffic via dispatch method.
     s_file_id = request.GET['s_file_id']
-    enqueued = request.GET['enqueued']
-    existing = request.GET['existing']
-
-    with connection.cursor() as cursor:
-        update = '''
-            UPDATE {raw_table}
-              SET responding_agency = '{existing}'
-              WHERE responding_agency = '{enqueued}'
-        '''.format(raw_table='raw_payroll_{}'.format(s_file_id),
-                   existing=existing,
-                   enqueued=enqueued)
-
-        cursor.execute(update)
+    unseen = request.GET['unseen']
+    match = request.GET['match']
 
     q = RespondingAgencyQueue(s_file_id)
-    q.remove(enqueued)
+    q.process(unseen, match)
 
     return JsonResponse({'status_code': 200})
 

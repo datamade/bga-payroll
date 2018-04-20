@@ -1,12 +1,15 @@
 from django.db import connection
 
 from data_import.models import StandardizedFile
+from data_import.utils.table_names import TableNamesMixin
 from data_import.utils.queues import RespondingAgencyQueue
 
 
-class ImportUtility(object):
+class ImportUtility(TableNamesMixin):
 
     def __init__(self, s_file_id, init=False):
+        super().__init__(s_file_id)
+
         self.s_file_id = s_file_id
         self.init = init
 
@@ -14,10 +17,6 @@ class ImportUtility(object):
 
         self.vintage = s_file.upload.id
 
-        self.raw_payroll_table = 'raw_payroll_{}'.format(s_file_id)
-        self.raw_position_table = 'raw_position_{}'.format(s_file_id)
-        self.raw_job_table = 'raw_job_{}'.format(s_file_id)
-        self.raw_person_table = 'raw_person_{}'.format(s_file_id)
 
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
