@@ -172,7 +172,7 @@ def review_entity_lookup(request, entity_type):
 
     entities = []
 
-    for e in RespondingAgency.objects.filter(name__istartswith=q):
+    for e in model_obj.objects.filter(name__istartswith=q):
         data = {
             'label': str(e),
             'value': str(e),

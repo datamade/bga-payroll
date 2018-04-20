@@ -37,7 +37,7 @@ class RespondingAgencyQueue(Queue):
 
     def process(self, unseen, match):
         with connection.cursor() as cursor:
-            delete = '''
+            update = '''
                 UPDATE {0} SET
                   match = '{1}',
                   processed = TRUE
@@ -46,7 +46,7 @@ class RespondingAgencyQueue(Queue):
                        match,
                        unseen)
 
-            cursor.execute(delete)
+            cursor.execute(update)
 
     def flush(self):
         with connection.cursor() as cursor:
@@ -57,6 +57,8 @@ class RespondingAgencyQueue(Queue):
                 WHERE raw.responding_agency = q.name
             '''.format(raw_payroll=self.raw_payroll_table,
                        queue=self.table_name)
+
+            cursor.execute(update)
 
 
 class EmployerQueue(Queue):

@@ -17,7 +17,6 @@ class ImportUtility(TableNamesMixin):
 
         self.vintage = s_file.upload.id
 
-
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
 
