@@ -39,7 +39,8 @@ urlpatterns = [
     path('data-import/upload-standardized-file/', import_views.StandardizedDataUpload.as_view(), name='upload-standardized-file'),
     path('data-import/review/responding-agency/<int:s_file_id>', import_views.RespondingAgencyReview.as_view(), name='review-responding-agency'),
     path('data-import/lookup/<str:entity_type>/', import_views.review_entity_lookup, name='review-entity-lookup'),
-    path('data-import/match/', import_views.match, name='match-entity'),
+    path('data-import/match/', import_views.review, name='match-entity'),
+    path('data-import/add/', import_views.review, name='add-entity'),
 ]
 
 

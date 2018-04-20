@@ -143,11 +143,18 @@ class RespondingAgencyReview(Review):
         return context
 
 
-def match(request):
+def review(request):
+    '''
+    Both /match/ and /add/ resolve here.
+    '''
     entity_type = request.GET['entity_type']
     s_file_id = request.GET['s_file_id']
     unseen = request.GET['unseen']
-    match = request.GET['match']
+    match = request.GET.get('match')  # None if adding
+
+    if 'match' in request.build_absolute_uri('?'):
+        # If we're matching, assert a match came through
+        assert match
 
     q_map = {
         'responding-agency': RespondingAgencyQueue,

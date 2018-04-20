@@ -37,16 +37,27 @@ class RespondingAgencyQueue(Queue):
 
     def process(self, unseen, match):
         with connection.cursor() as cursor:
-            update = '''
-                UPDATE {0} SET
-                  match = '{1}',
-                  processed = TRUE
-                WHERE name = '{2}'
-            '''.format(self.table_name,
-                       match,
-                       unseen)
+            if match:
+                update = '''
+                    UPDATE {0} SET
+                      match = '{1}',
+                      processed = TRUE
+                    WHERE name = '{2}'
+                '''.format(self.table_name,
+                           match,
+                           unseen)
+
+            else:
+                update = '''
+                    UPDATE {0} SET
+                      processed = TRUE
+                    WHERE name = '{2}'
+                '''.format(self.table_name,
+                           match,
+                           unseen)
 
             cursor.execute(update)
+
 
     def flush(self):
         with connection.cursor() as cursor:
@@ -55,8 +66,15 @@ class RespondingAgencyQueue(Queue):
                   responding_agency = match
                 FROM {queue} AS q
                 WHERE raw.responding_agency = q.name
+                  AND match IS NOT NULL
             '''.format(raw_payroll=self.raw_payroll_table,
                        queue=self.table_name)
+
+            insert = '''
+                INSERT INTO data_import_reportingagency (name)
+                  SELECT name FROM {queue}
+                  WHERE match IS NULL
+            '''.format(queue=self.table_name)
 
             cursor.execute(update)
 
