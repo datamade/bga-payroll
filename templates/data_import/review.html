@@ -75,7 +75,8 @@ Review
 
   $('#btn-match-submit').click(function submit_match(){
     var params = $.param({
-        's_file_id': {{ request.GET['s_file_id'] }},
+        's_file_id': {{ s_file_id }},
+        'entity_type': input.attr('data-entity-type'),
         'unseen': $('#selected-entity').text(),
         'match': input.val(),
     })

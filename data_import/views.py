@@ -3,6 +3,8 @@ import json
 
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.views import View
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
@@ -96,28 +98,37 @@ class Review(ListView):
     paginate_by = 25
     context_object_name = 'items'
 
+    def dispatch(self, request, *args, **kwargs):
+        '''
+        If there are no more items to review, flush the matched
+        data to the raw_payroll table, and redirect to the index.
+
+        Otherwise, show the review.
+        '''
+        if self.get_queryset(**kwargs):
+            return super().dispatch(request, *args, **kwargs)
+
+        else:
+            self.q.flush()
+
+        return redirect(reverse('data-import'))
+
 
 class RespondingAgencyReview(Review):
     @property
     def q(self):
-        return RespondingAgencyQueue(self.request.GET['s_file_id'])
+        return RespondingAgencyQueue(self.kwargs['s_file_id'])
 
     def get_queryset(self, **kwargs):
-        # TO-DO: Move to dispatch method.
-        s_file_id = self.request.GET['s_file_id']
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT *
+                FROM {}
+                WHERE processed = FALSE
+                ORDER BY name
+            '''.format(self.q.table_name))
 
-        if s_file_id:
-            with connection.cursor() as cursor:
-                cursor.execute('''
-                    SELECT *
-                    FROM {}
-                    WHERE processed = FALSE
-                '''.format(self.q.table_name))
-
-                return [row for row in cursor]
-
-        else:
-            return []  # TO-DO: Redirect.
+            return [row for row in cursor]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -126,27 +137,38 @@ class RespondingAgencyReview(Review):
             'entity': 'responding agency',
             'entities': 'responding agencies',
             'display_slice': 1,
+            's_file_id': self.kwargs['s_file_id'],
         })
 
         return context
 
 
 def match(request):
-    # TO-DO: Move to RespondingAgencyReview class, and direct
-    # traffic via dispatch method.
+    entity_type = request.GET['entity_type']
     s_file_id = request.GET['s_file_id']
     unseen = request.GET['unseen']
     match = request.GET['match']
 
-    q = RespondingAgencyQueue(s_file_id)
+    q_map = {
+        'responding-agency': RespondingAgencyQueue,
+    }
+
+    q_obj = q_map[entity_type]
+
+    q = q_obj(s_file_id)
     q.process(unseen, match)
 
     return JsonResponse({'status_code': 200})
 
 
 def review_entity_lookup(request, entity_type):
-    # TO-DO: Generalize for other entities.
     q = request.GET['term']
+
+    model_map = {
+        'responding-agency': RespondingAgency,
+    }
+
+    model_obj = model_map[entity_type]
 
     entities = []
 
