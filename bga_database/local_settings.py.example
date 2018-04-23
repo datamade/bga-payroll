@@ -7,12 +7,12 @@ INTERNAL_IPS = ['127.0.0.1']
 
 DATABASES = {
     'default': {
-           'ENGINE': 'django.db.backends.postgresql',
-           'NAME': 'bga_payroll',
-           'USER': '',
-           'PASSWORD': '',
-           'HOST': 'localhost',
-           'PORT': '5432',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'bga_payroll',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
