@@ -24,6 +24,9 @@ services:
 addons:
   postgresql: '9.6'
 
+before_script:
+- cp bga_database/local_settings.py.example bga_database/local_settings.py
+
 script:
 - pytest
 - jshint bga_database/static/js/*.js
