@@ -58,6 +58,22 @@ def copy_to_database(*, s_file_id):
 @shared_task
 def insert_responding_agency(*, s_file_id):
     imp = ImportUtility(s_file_id)
-    imp.insert_responding_agency()
+    imp.select_unseen_responding_agencies()
 
     return 'Inserted responding agencies'
+
+
+@shared_task
+def insert_employer(*, s_file_id):
+    imp = ImportUtility(s_file_id)
+    imp.insert_employer()
+
+    return 'Inserted employers'
+
+
+@shared_task
+def insert_salary(*, s_file_id):
+    imp = ImportUtility(s_file_id)
+    imp.insert_salary()
+
+    return 'Inserted salaries'

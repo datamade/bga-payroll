@@ -32,35 +32,34 @@ class ImportUtility(TableNamesMixin):
 
         self.insert_salary()
 
+    def select_unseen_responding_agency(self):
+        q = RespondingAgencyQueue()
+
+        select = '''
+            SELECT
+              DISTINCT responding_agency
+            FROM {raw} AS raw
+            LEFT JOIN data_import_respondingagency AS existing
+            ON raw.responding_agency = existing.name
+            WHERE existing.name IS NULL
+        '''.format(raw=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for agency in cursor:
+                q.add({'name': agency[0]})
+
     def insert_responding_agency(self):
-        if not self.init:
-            q = RespondingAgencyQueue(self.s_file_id)
-            q.initialize()
-
-            insert = '''
-                WITH unseen AS (
-                  SELECT
-                    DISTINCT responding_agency
-                  FROM {raw} AS raw
-                  LEFT JOIN data_import_respondingagency AS existing
-                  ON raw.responding_agency = existing.name
-                  WHERE existing.name IS NULL
-                )
-                INSERT INTO {review} (name)
-                  SELECT * FROM unseen
-            '''.format(raw=self.raw_payroll_table,
-                       review=q.table_name)
-
-        else:
-            insert = '''
-                INSERT INTO data_import_respondingagency (name)
-                  SELECT
-                    DISTINCT responding_agency
-                  FROM {} AS raw
-                  LEFT JOIN data_import_respondingagency AS existing
-                  ON raw.responding_agency = existing.name
-                  WHERE existing.name IS NULL
-            '''.format(self.raw_payroll_table)
+        insert = '''
+            INSERT INTO data_import_respondingagency (name)
+              SELECT
+                DISTINCT responding_agency
+              FROM {} AS raw
+              LEFT JOIN data_import_respondingagency AS existing
+              ON raw.responding_agency = existing.name
+              WHERE existing.name IS NULL
+        '''.format(self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)

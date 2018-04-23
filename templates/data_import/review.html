@@ -11,27 +11,25 @@ Review
 {% block content %}
 
 <div class="col-md-10 offset-md-1">
-  <p class="lead">We found <strong>{{ items|length }}</strong> unmatched {{ entities }}.</p>
+  <p class="lead">We found <strong>{{ remaining }}</strong> unmatched {{ entities }}.</p>
 
   <p>Click <span class="badge badge-dark">Match</span> to select an existing {{ entity }} or <span class="badge badge-success">Add</span> to create a new {{ entity }} in the database.</p>
 
   <table class="table table-striped table-hover">
     <tbody>
-      {% for item in items %}
-          <tr>
-            {% for field in item[:display_slice] %}
-              <td class="align-middle">{{ field }}</td>
-            {% endfor %}
-            <td class="align-middle">
-              <a class="btn btn-sm btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ item[0] }}">Match</a>
-            </td>
-            <td class="align-middle">
-              <a class="btn btn-sm btn-success text-light btn-add" data-entity="{{ item[0] }}">Add</a>
-            </td>
-          </tr>
+      {% for key in item.keys() if key != 'id' %}
+        <tr>
+          <td><strong>{{ key }}</strong></td>
+          <td>{{ item[key] }}</td>
+        </tr>
       {% endfor %}
     </tbody>
   </table>
+
+  <div class="float-right">
+    <a class="btn btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ item['name'] }}">Match</a>
+    <a class="btn btn-success text-light btn-add" data-entity="{{ item['name'] }}">Add</a>
+  </div>
 </div>
 
 <div class="modal fade" id="matchModal" tabindex="-1" role="dialog" aria-labelledby="matchModalLabel" aria-hidden="true">
@@ -46,7 +44,7 @@ Review
       <div class="modal-body ui-front">
         <p>Select matching {{ entity }} for <strong id="selected-entity"></strong>.</p>
 
-        <input type="text" class="form-control" id="autocomplete" data-entity-type="{{ entity.replace(' ', '-')}}">
+        <input type="text" class="form-control" id="autocomplete" data-entity-type="{{ entity.replace(' ', '-') }}">
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-link" data-dismiss="modal">Cancel</button>
@@ -61,7 +59,23 @@ Review
 
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 <script type="text/javascript">
+  // Boilerplate CSRF acquisition from https://docs.djangoproject.com/en/dev/ref/csrf/
+  var csrftoken = Cookies.get('csrftoken');
+
+  function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+  }
+  $.ajaxSetup({
+      beforeSend: function(xhr, settings) {
+          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+          }
+      }
+  });
+
   $('.btn-match').click(function fill_modal() {
       var entity = $(this).attr('data-entity');
       $('#selected-entity').text(entity);
@@ -70,14 +84,15 @@ Review
   $('.btn-add').click(function submit_add() {
       var entity = $(this).attr('data-entity');
 
-      var params = $.param({
+      var params = {
           's_file_id': {{ s_file_id }},
           'entity_type': input.attr('data-entity-type'),
-          'unseen': entity,
-      })
+          'unseen': {{ item|safe }},
+      }
 
-      $.get(
-          '/data-import/add/?' + params,
+      $.post(
+          '/data-import/add/',
+          data={'data': JSON.stringify(params)},
           success=function reload(resp){
               location.reload();
           },
@@ -91,19 +106,20 @@ Review
   });
 
   $('#btn-match-submit').click(function submit_match(){
-    var params = $.param({
-        's_file_id': {{ s_file_id }},
-        'entity_type': input.attr('data-entity-type'),
-        'unseen': $('#selected-entity').text(),
-        'match': input.val(),
-    })
+      var params = {
+          's_file_id': {{ s_file_id }},
+          'entity_type': input.attr('data-entity-type'),
+          'unseen': {{ item|safe }},
+          'match': input.val(),
+      }
 
-    $.get(
-        '/data-import/match/?' + params,
-        success=function reload(resp){
-            location.reload();
-        },
-    );
+      $.post(
+          '/data-import/match/',
+          data={'data': JSON.stringify(params)},
+          success=function reload(resp){
+              location.reload();
+          },
+      );
   });
 </script>
 {% endblock %}

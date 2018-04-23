@@ -6,7 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView
 from django.views.generic.edit import FormView
 
 from data_import.forms import UploadForm
@@ -94,10 +94,9 @@ class Uploads(ListView):
                              .order_by('-created_at')
 
 
-class Review(ListView):
+class Review(DetailView):
     template_name = 'data_import/review.html'
-    paginate_by = 25
-    context_object_name = 'items'
+    context_object_name = 'item'
 
     def dispatch(self, request, *args, **kwargs):
         '''
@@ -106,11 +105,8 @@ class Review(ListView):
 
         Otherwise, show the review.
         '''
-        if self.get_queryset(**kwargs):
+        if self.get_object(**kwargs):
             return super().dispatch(request, *args, **kwargs)
-
-        else:
-            self.q.flush()
 
         return redirect(reverse('data-import'))
 
@@ -120,16 +116,15 @@ class RespondingAgencyReview(Review):
     def q(self):
         return RespondingAgencyQueue(self.kwargs['s_file_id'])
 
-    def get_queryset(self, **kwargs):
-        with connection.cursor() as cursor:
-            cursor.execute('''
-                SELECT *
-                FROM {}
-                WHERE processed = FALSE
-                ORDER BY name
-            '''.format(self.q.table_name))
+    def get_object(self, **kwargs):
+        item_id, item = self.q.checkout()
 
-            return [row for row in cursor]
+        if item:
+            item['id'] = item_id.decode('utf-8')
+            return item
+
+        else:
+            return None
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -137,8 +132,8 @@ class RespondingAgencyReview(Review):
         context.update({
             'entity': 'responding agency',
             'entities': 'responding agencies',
-            'display_slice': 1,
             's_file_id': self.kwargs['s_file_id'],
+            'remaining': self.q.remaining,
         })
 
         return context
@@ -148,10 +143,12 @@ def review(request):
     '''
     Both /match/ and /add/ resolve here.
     '''
-    entity_type = request.GET['entity_type']
-    s_file_id = request.GET['s_file_id']
-    unseen = request.GET['unseen']
-    match = request.GET.get('match')  # None if adding
+    data = json.loads(request.POST['data'])
+
+    entity_type = data['entity_type']
+    s_file_id = data['s_file_id']
+    unseen = data['unseen']
+    match = data.get('match')  # None if adding
 
     if 'match' in request.build_absolute_uri('?'):
         # If we're matching, assert a match came through
@@ -164,7 +161,8 @@ def review(request):
     q_obj = q_map[entity_type]
 
     q = q_obj(s_file_id)
-    q.process(unseen, match)
+
+    q.remove(unseen, match)
 
     return JsonResponse({'status_code': 200})
 
