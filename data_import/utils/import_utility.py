@@ -33,7 +33,7 @@ class ImportUtility(TableNamesMixin):
         self.insert_salary()
 
     def select_unseen_responding_agency(self):
-        q = RespondingAgencyQueue()
+        q = RespondingAgencyQueue(self.s_file_id)
 
         select = '''
             SELECT

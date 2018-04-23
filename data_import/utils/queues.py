@@ -1,7 +1,6 @@
 import pickle
 
 from django.db import connection
-from django.db.utils import ProgrammingError
 
 from saferedisqueue import SafeRedisQueue
 
@@ -72,6 +71,8 @@ class ReviewQueue(TableNamesMixin):
         If an operation fails, put the given item back in
         the queue.
         '''
+        uid = item.pop('id')
+
         return self.__q.fail(uid)
 
 

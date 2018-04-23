@@ -1,7 +1,6 @@
 import datetime
 import json
 
-from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse

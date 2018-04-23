@@ -58,7 +58,7 @@ def copy_to_database(*, s_file_id):
 @shared_task
 def insert_responding_agency(*, s_file_id):
     imp = ImportUtility(s_file_id)
-    imp.select_unseen_responding_agencies()
+    imp.select_unseen_responding_agency()
 
     return 'Inserted responding agencies'
 
