@@ -6,6 +6,10 @@ from django.db import connection
 from data_import.utils import CsvMeta, ImportUtility
 
 
+# TO-DO: Abstract some stuff (imports, i.e.) into a base class:
+# https://blog.balthazar-rouberol.com/celery-best-practices
+# https://celery.readthedocs.io/en/latest/userguide/tasks.html?highlight=context#task-inheritance
+
 @shared_task
 def copy_to_database(*, s_file_id):
     from data_import.models import StandardizedFile
@@ -46,6 +50,9 @@ def copy_to_database(*, s_file_id):
 
             cursor.execute('CREATE INDEX ON {} (employer)'.format(table_name))
             cursor.execute('CREATE INDEX ON {} (department)'.format(table_name))
+
+    s_file.status = 'copied'
+    s_file.save()
 
     return 'Copied {} to database'.format(formatted_data_file)
 

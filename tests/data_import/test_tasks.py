@@ -50,3 +50,7 @@ def test_copy_to_database(standardized_file,
         columns = [row[0] for row in cursor]
 
         assert set(columns) == set(CsvMeta.REQUIRED_FIELDS)
+
+    s_file.refresh_from_db()
+
+    assert s_file.status == 'copied'

@@ -72,7 +72,6 @@ class StandardizedDataUpload(FormView):
 
         s_file = StandardizedFile.objects.create(**s_file_meta)
         s_file.copy_to_database()
-        s_file.save()
 
         return super().form_valid(form)
 
