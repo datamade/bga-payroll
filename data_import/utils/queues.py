@@ -5,7 +5,6 @@ from django.db import connection
 from saferedisqueue import SafeRedisQueue
 
 from bga_database.settings import REDIS_URL
-from data_import.models import RespondingAgency
 from data_import.utils.table_names import TableNamesMixin
 
 
@@ -75,6 +74,7 @@ class RespondingAgencyQueue(ReviewQueue):
                 cursor.execute(update)
 
         else:
+            from data_import.models import RespondingAgency
             RespondingAgency.objects.create(**item)
 
         self.remove(uid)

@@ -13,8 +13,6 @@ def test_copy_to_database(standardized_file,
 
     s_file = standardized_file.build(standardized_file=real_file)
 
-    mock_insert_agency = mocker.patch('data_import.tasks.insert_responding_agency')
-
     copy_to_database(s_file_id=s_file.id)
 
     with connection.cursor() as cursor:
@@ -52,5 +50,3 @@ def test_copy_to_database(standardized_file,
         columns = [row[0] for row in cursor]
 
         assert set(columns) == set(CsvMeta.REQUIRED_FIELDS)
-
-    assert mock_insert_agency.call_count == 1

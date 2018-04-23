@@ -1,9 +1,10 @@
 from django.db import connection
 
-from data_import.models import StandardizedFile
 from data_import.utils.table_names import TableNamesMixin
 from data_import.utils.queues import RespondingAgencyQueue
 
+
+# TO-DO: Return select / insert counts for logging
 
 class ImportUtility(TableNamesMixin):
 
@@ -13,6 +14,7 @@ class ImportUtility(TableNamesMixin):
         self.s_file_id = s_file_id
         self.init = init
 
+        from data_import.models import StandardizedFile
         s_file = StandardizedFile.objects.get(id=s_file_id)
 
         self.vintage = s_file.upload.id

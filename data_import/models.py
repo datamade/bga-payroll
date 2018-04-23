@@ -3,7 +3,12 @@ from os.path import basename
 from django.contrib.auth import get_user_model
 from django.db import connection, models
 
+from django_fsm import FSMField, transition
+
 from bga_database.base_models import SluggedModel
+from data_import.tasks import copy_to_database, select_unseen_responding_agency, \
+    insert_responding_agency, select_unseen_employer, insert_employer, \
+    select_invalid_salary, insert_salary
 
 
 def set_deleted_user():
@@ -116,10 +121,14 @@ def standardized_file_upload_name(instance, filename):
 
 
 class StandardizedFile(models.Model):
-    STATUS_CHOICES = [
-        ('uploaded', 'Uploaded'),
-        ('imported', 'Imported'),
-    ]
+    class State:
+        UPLOADED = 'uploaded'
+        COPIED = 'copied to database'
+        RA_PENDING = 'responding agency unmatched'
+        EMP_PENDING = 'employer unmatched'
+        SAL_PENDING = 'salary unvalidated'
+        COMPLETE = 'complete'
+
     standardized_file = models.FileField(
         max_length=1000,
         upload_to=standardized_file_upload_name
@@ -130,7 +139,7 @@ class StandardizedFile(models.Model):
         on_delete=models.CASCADE,
         related_name='standardized_file'
     )
-    status = models.CharField(choices=STATUS_CHOICES, null=True, max_length=10)
+    status = FSMField(default=State.UPLOADED)
 
     @property
     def raw_table_name(self):
@@ -142,6 +151,38 @@ class StandardizedFile(models.Model):
         '''
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE IF EXISTS {}'.format(self.raw_table_name))
+
+    @transition(field=status,
+                source=State.UPLOADED,
+                target=State.COPIED)
+    def copy_to_database(self):
+        copy_to_database.delay(s_file_id=self.id)
+
+    @transition(field=status,
+                source=State.COPIED,
+                target=State.RA_PENDING)
+    def select_unseen_responding_agency(self):
+        select_unseen_responding_agency.delay(s_file_id=self.id)
+
+    @transition(field=status,
+                source=State.RA_PENDING,
+                target=State.EMP_PENDING)
+    def select_unseen_employer(self):
+        insert_responding_agency.delay(s_file_id=self.id)
+        select_unseen_employer.delay(s_file_id=self.id)
+
+    @transition(field=status,
+                source=State.EMP_PENDING,
+                target=State.SAL_PENDING)
+    def select_invalid_salary(self):
+        insert_employer.delay(s_file_id=self.id)
+        select_invalid_salary.delay(s_file_id=self.id)
+
+    @transition(field=status,
+                source=State.SAL_PENDING,
+                target=State.COMPLETE)
+    def insert_salary(self):
+        insert_salary.delay(s_file_id=self.id)
 
 
 def post_delete_handler(sender, instance, **kwargs):

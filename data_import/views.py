@@ -11,7 +11,6 @@ from django.views.generic.edit import FormView
 from data_import.forms import UploadForm
 from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
     Upload
-from data_import.tasks import copy_to_database
 from data_import.utils import RespondingAgencyQueue
 
 
@@ -72,8 +71,8 @@ class StandardizedDataUpload(FormView):
         }
 
         s_file = StandardizedFile.objects.create(**s_file_meta)
-
-        copy_to_database.delay(s_file_id=s_file.id)
+        s_file.copy_to_database()
+        s_file.save()
 
         return super().form_valid(form)
 

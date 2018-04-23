@@ -97,7 +97,7 @@ def test_valid_standardized_data_upload(standardized_data_upload_blob,
                                         mocker):
 
     # Mock our delayed task (which we'll test over in test_tasks)
-    mock_copy = mocker.patch('data_import.views.copy_to_database.delay')
+    mock_copy = mocker.patch('data_import.views.StandardizedFile.copy_to_database')
 
     standardized_data_upload_blob['standardized_file'] = real_file
 
