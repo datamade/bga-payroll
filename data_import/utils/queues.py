@@ -15,7 +15,8 @@ class ReviewQueue(TableNamesMixin):
 
         self.__q = SafeRedisQueue(url=REDIS_URL,
                                   name=self.q_name,
-                                  autoclean_interval=600)
+                                  autoclean_interval=300,
+                                  serializer=pickle)
 
     @property
     def remaining(self):
@@ -25,9 +26,6 @@ class ReviewQueue(TableNamesMixin):
         '''
         Add an item to the queue, for the first time.
         '''
-        if type(item) == dict:
-            item = pickle.dumps(item)
-
         return self.__q.put(item)
 
     def checkout(self, timeout=3):
@@ -35,17 +33,34 @@ class ReviewQueue(TableNamesMixin):
         Get an item from the queue. If there are no items,
         block for three seconds, then return.
         '''
-        uid, item = self.__q.get(timeout=timeout)
+        return self.__q.get(timeout=timeout)
 
-        if type(item) == bytes:
-            item = pickle.loads(item)
-
-        return uid, item
-
-    def remove(self, item, match=None):
+    def remove(self, uid):
         '''
-        If an operation succeeds, remove the given item
-        from the queue.
+        Remove the given item from the queue.
+        '''
+        return self.__q.ack(uid)
+
+    def replace(self, item):
+        '''
+        If an operation fails, put the given item back in
+        the queue.
+        '''
+        uid = item.pop('id')
+
+        return self.__q.fail(uid)
+
+
+class RespondingAgencyQueue(ReviewQueue):
+    q_name = 'responding_agency_queue'
+
+    def process(self, item, match=None):
+        '''
+        Given an item, and (optionally) a match, handle review
+        decision, then remove the item from the queue.
+
+        :item is a dictionary, where 'id' is the uid of the
+        enqueued item.
         '''
         uid = item.pop('id')
 
@@ -64,20 +79,7 @@ class ReviewQueue(TableNamesMixin):
         else:
             RespondingAgency.objects.create(**item)
 
-        return self.__q.ack(uid)
-
-    def replace(self, item):
-        '''
-        If an operation fails, put the given item back in
-        the queue.
-        '''
-        uid = item.pop('id')
-
-        return self.__q.fail(uid)
-
-
-class RespondingAgencyQueue(ReviewQueue):
-    q_name = 'responding_agency_queue'
+        self.remove(uid)
 
 
 class EmployerQueue(ReviewQueue):

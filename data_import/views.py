@@ -161,7 +161,7 @@ def review(request):
 
     q = q_obj(s_file_id)
 
-    q.remove(unseen, match)
+    q.process(unseen, match)
 
     return JsonResponse({'status_code': 200})
 
