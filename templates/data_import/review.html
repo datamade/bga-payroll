@@ -17,18 +17,18 @@ Review
 
   <table class="table table-striped table-hover">
     <tbody>
-      {% for key in item.keys() if key != 'id' %}
+      {% for key in object.keys() if key != 'id' %}
         <tr>
           <td><strong>{{ key }}</strong></td>
-          <td>{{ item[key] }}</td>
+          <td>{{ object[key] }}</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
 
   <div class="float-right">
-    <a class="btn btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ item['name'] }}">Match</a>
-    <a class="btn btn-success text-light btn-add" data-entity="{{ item['name'] }}">Add</a>
+    <a class="btn btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ object['name'] }}">Match</a>
+    <a class="btn btn-success text-light btn-add" data-entity="{{ object['name'] }}">Add</a>
   </div>
 </div>
 
@@ -87,7 +87,7 @@ Review
       var params = {
           's_file_id': {{ s_file_id }},
           'entity_type': input.attr('data-entity-type'),
-          'unseen': {{ item|safe }},
+          'unseen': {{ object|safe }},
       }
 
       $.post(
@@ -109,7 +109,7 @@ Review
       var params = {
           's_file_id': {{ s_file_id }},
           'entity_type': input.attr('data-entity-type'),
-          'unseen': {{ item|safe }},
+          'unseen': {{ object|safe }},
           'match': input.val(),
       }
 

@@ -41,13 +41,11 @@ class ReviewQueue(TableNamesMixin):
         '''
         return self.__q.ack(uid)
 
-    def replace(self, item):
+    def replace(self, uid):
         '''
         If an operation fails, put the given item back in
         the queue.
         '''
-        uid = item.pop('id')
-
         return self.__q.fail(uid)
 
 
@@ -68,8 +66,8 @@ class RespondingAgencyQueue(ReviewQueue):
             with connection.cursor() as cursor:
                 update = '''
                     UPDATE {raw_payroll}
-                      SET responding_agency = {match}
-                      WHERE responding_agency = {unseen}
+                      SET responding_agency = '{match}'
+                      WHERE responding_agency = '{unseen}'
                 '''.format(raw_payroll=self.raw_payroll_table,
                            match=match,
                            unseen=item['name'])

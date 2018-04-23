@@ -95,7 +95,6 @@ class Uploads(ListView):
 
 class Review(DetailView):
     template_name = 'data_import/review.html'
-    context_object_name = 'item'
 
     def dispatch(self, request, *args, **kwargs):
         '''
@@ -104,7 +103,7 @@ class Review(DetailView):
 
         Otherwise, show the review.
         '''
-        if self.get_object():
+        if self.q.remaining > 0:
             return super().dispatch(request, *args, **kwargs)
 
         return redirect(reverse('data-import'))
