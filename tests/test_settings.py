@@ -41,6 +41,8 @@ DATABASES = {
     }
 }
 
+REDIS_URL = 'redis://localhost:6739/0'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
