@@ -104,7 +104,7 @@ class Review(DetailView):
 
         Otherwise, show the review.
         '''
-        if self.get_object(**kwargs):
+        if self.get_object():
             return super().dispatch(request, *args, **kwargs)
 
         return redirect(reverse('data-import'))
@@ -115,7 +115,7 @@ class RespondingAgencyReview(Review):
     def q(self):
         return RespondingAgencyQueue(self.kwargs['s_file_id'])
 
-    def get_object(self, **kwargs):
+    def get_object(self):
         item_id, item = self.q.checkout()
 
         if item:
@@ -123,7 +123,7 @@ class RespondingAgencyReview(Review):
             return item
 
         else:
-            return None
+            return {}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
