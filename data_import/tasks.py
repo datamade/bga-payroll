@@ -1,22 +1,50 @@
 from __future__ import absolute_import, unicode_literals
 
-from celery import shared_task
+from celery import shared_task, Task
+from celery.signals import task_prerun
 from django.db import connection
 
 from data_import.utils import CsvMeta, ImportUtility
 
 
-# TO-DO: Abstract some stuff (imports, i.e.) into a base class:
-# https://blog.balthazar-rouberol.com/celery-best-practices
-# https://celery.readthedocs.io/en/latest/userguide/tasks.html?highlight=context#task-inheritance
+class DataImportTask(Task):
+    def setup(self, s_file_id):
+        '''
+        Extending init breaks test discovery in Django. Instead,
+        define a setup method that sets common attributes for tasks.
+        '''
+        from data_import.models import StandardizedFile
 
-@shared_task
-def copy_to_database(*, s_file_id):
-    from data_import.models import StandardizedFile
+        self.s_file = StandardizedFile.objects.get(id=s_file_id)
+        self.import_utility = ImportUtility(s_file_id)
 
-    s_file = StandardizedFile.objects.get(id=s_file_id)
+    def update_status(self, status):
+        self.s_file.status = status
+        self.s_file.save()
 
-    table_name = s_file.raw_table_name
+
+@task_prerun.connect()
+def task_prerun(sender=DataImportTask, *args, **kwargs):
+    '''
+    In lieu of an extended init on the custom Task object,
+    hook into the task_prerun signal. This is fired before
+    all tasks are run.
+    '''
+    s_file_id = kwargs['kwargs']['s_file_id']
+
+    if s_file_id:
+        sender.setup(s_file_id)
+
+
+@shared_task(bind=True, base=DataImportTask)
+def copy_to_database(self, *, s_file_id):
+    '''
+    Define a task method, and bind it to the base task.
+    The setup method of the base task will be fired before
+    the code in this task method, e.g, self.s_file and
+    self.import_utility have been defined.
+    '''
+    table_name = self.s_file.raw_table_name
 
     columns = '''
         record_id UUID DEFAULT gen_random_uuid(),
@@ -36,7 +64,7 @@ def copy_to_database(*, s_file_id):
     with connection.cursor() as cursor:
         cursor.execute(create)
 
-    meta = CsvMeta(s_file.standardized_file)
+    meta = CsvMeta(self.s_file.standardized_file)
     formatted_data_file = meta.trim_extra_fields()
 
     with open(formatted_data_file, 'r', encoding='utf-8') as f:
@@ -51,64 +79,76 @@ def copy_to_database(*, s_file_id):
             cursor.execute('CREATE INDEX ON {} (employer)'.format(table_name))
             cursor.execute('CREATE INDEX ON {} (department)'.format(table_name))
 
-    s_file.status = 'copied'
-    s_file.save()
+    self.update_status('copied to database')
 
     return 'Copied {} to database'.format(formatted_data_file)
 
 
-@shared_task
-def select_unseen_responding_agency(*, s_file_id):
-    imp = ImportUtility(s_file_id)
-    imp.select_unseen_responding_agency()
+@shared_task(bind=True, base=DataImportTask)
+def select_unseen_responding_agency(self, s_file_id):
+    self.setup(s_file_id)
+
+    self.import_utility.select_unseen_responding_agency()
+
+    self.update_status('responding agency unmatched')
 
     return 'Selected responding agencies'
 
 
-@shared_task
-def insert_responding_agency(*, s_file_id):
-    imp = ImportUtility(s_file_id)
-    imp.insert_responding_agency()
+@shared_task(bind=True, base=DataImportTask)
+def insert_responding_agency(self, s_file_id):
+    self.setup(s_file_id)
+
+    self.import_utility.insert_responding_agency()
 
     return 'Inserted responding agencies'
 
 
-@shared_task
-def select_unseen_employer(*, s_file_id):
-    imp = ImportUtility(s_file_id)
-    imp.select_unseen_employer()
+@shared_task(bind=True, base=DataImportTask)
+def select_unseen_employer(self, s_file_id):
+    self.setup(s_file_id)
+
+    self.import_utility.select_unseen_employer()
+
+    self.update_status('employer unmatched')
 
     return 'Selected employers'
 
 
-@shared_task
-def insert_employer(*, s_file_id):
-    imp = ImportUtility(s_file_id)
-    imp.insert_employer()
+@shared_task(bind=True, base=DataImportTask)
+def insert_employer(self, s_file_id):
+    self.setup(s_file_id)
+
+    self.import_utility.insert_employer()
 
     return 'Inserted employers'
 
 
-@shared_task
-def select_invalid_salary(*, s_file_id):
-    imp = ImportUtility(s_file_id)
+@shared_task(bind=True, base=DataImportTask)
+def select_invalid_salary(self, s_file_id):
+    self.setup(s_file_id)
 
-    imp.insert_position()
+    self.import_utility.insert_position()
 
-    imp.select_raw_person()
-    imp.insert_person()
+    self.import_utility.select_raw_person()
+    self.import_utility.insert_person()
 
-    imp.select_raw_job()
-    imp.insert_job()
+    self.import_utility.select_raw_job()
+    self.import_utility.insert_job()
+
+    self.update_status('salary unvalidated')
 
     # TO-DO: Select salary for review
 
     return 'Selected salaries'
 
 
-@shared_task
-def insert_salary(*, s_file_id):
-    imp = ImportUtility(s_file_id)
-    imp.insert_salary()
+@shared_task(bind=True, base=DataImportTask)
+def insert_salary(self, s_file_id):
+    self.setup(s_file_id)
+
+    self.import_utility.insert_salary()
+
+    self.update_status('complete')
 
     return 'Inserted salaries'

@@ -5,15 +5,21 @@ from data_import.tasks import copy_to_database
 from data_import.utils import CsvMeta
 
 
+@pytest.mark.celery
 @pytest.mark.django_db(transaction=True)
 def test_copy_to_database(standardized_file,
                           real_file,
                           raw_table_teardown,
-                          mocker):
+                          mocker,
+                          celery_worker,
+                          transactional_db):
 
     s_file = standardized_file.build(standardized_file=real_file)
 
-    copy_to_database(s_file_id=s_file.id)
+    work = copy_to_database.delay(s_file_id=s_file.id)
+    work.get()
+
+    assert work.successful()
 
     with connection.cursor() as cursor:
         cursor.execute('''
@@ -53,4 +59,4 @@ def test_copy_to_database(standardized_file,
 
     s_file.refresh_from_db()
 
-    assert s_file.status == 'copied'
+    assert s_file.status == 'copied to database'
