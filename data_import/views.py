@@ -104,13 +104,21 @@ class Review(DetailView):
         if self.q.remaining > 0:
             return super().dispatch(request, *args, **kwargs)
 
-        return redirect(reverse('data-import'))
+        else:
+            self.finish_review_step()
+            return redirect(reverse('data-import'))
 
 
 class RespondingAgencyReview(Review):
     @property
     def q(self):
         return RespondingAgencyQueue(self.kwargs['s_file_id'])
+
+    def finish_review_step(self):
+        s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
+
+        if not s_file.processing:
+            s_file.select_unseen_employer()
 
     def get_object(self):
         item_id, item = self.q.checkout()

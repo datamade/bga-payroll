@@ -66,6 +66,9 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
+    def select_unseen_employer(self):
+        pass
+
     def insert_employer(self):
         '''
         Insert parents that do not already exist, then insert
