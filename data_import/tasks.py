@@ -8,7 +8,7 @@ from data_import.utils import CsvMeta, ImportUtility
 
 
 class DataImportTask(Task):
-    def setup(self, s_file_id):
+    def setup(self, *, s_file_id):
         '''
         The __init__ method of the Task class is only called once
         per process, which means it cannot be used to generate
@@ -61,7 +61,7 @@ def init_task(*args, **kwargs):
         # Each task method must receive an s_file_id keyword-only
         # argument, hence we can assume its existence.
         s_file_id = kwargs['kwargs']['s_file_id']
-        sender.setup(s_file_id)
+        sender.setup(s_file_id=s_file_id)
 
 
 @shared_task(bind=True, base=DataImportTask)
@@ -113,9 +113,7 @@ def copy_to_database(self, *, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
-def select_unseen_responding_agency(self, s_file_id):
-    self.setup(s_file_id)
-
+def select_unseen_responding_agency(self, *, s_file_id):
     self.import_utility.select_unseen_responding_agency()
 
     self.update_status('responding agency unmatched')
@@ -124,18 +122,14 @@ def select_unseen_responding_agency(self, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
-def insert_responding_agency(self, s_file_id):
-    self.setup(s_file_id)
-
+def insert_responding_agency(self, *, s_file_id):
     self.import_utility.insert_responding_agency()
 
     return 'Inserted responding agencies'
 
 
 @shared_task(bind=True, base=DataImportTask)
-def select_unseen_employer(self, s_file_id):
-    self.setup(s_file_id)
-
+def select_unseen_employer(self, *, s_file_id):
     self.import_utility.select_unseen_employer()
 
     self.update_status('employer unmatched')
@@ -144,18 +138,14 @@ def select_unseen_employer(self, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
-def insert_employer(self, s_file_id):
-    self.setup(s_file_id)
-
+def insert_employer(self, *, s_file_id):
     self.import_utility.insert_employer()
 
     return 'Inserted employers'
 
 
 @shared_task(bind=True, base=DataImportTask)
-def select_invalid_salary(self, s_file_id):
-    self.setup(s_file_id)
-
+def select_invalid_salary(self, *, s_file_id):
     self.import_utility.insert_position()
 
     self.import_utility.select_raw_person()
@@ -172,9 +162,7 @@ def select_invalid_salary(self, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
-def insert_salary(self, s_file_id):
-    self.setup(s_file_id)
-
+def insert_salary(self, *, s_file_id):
     self.import_utility.insert_salary()
 
     self.update_status('complete')

@@ -114,10 +114,12 @@ def raw_table_teardown(request):
 @pytest.mark.django_db(transaction=True)
 def review_setup(transactional_db,
                  standardized_file,
-                 real_file):
+                 real_file,
+                 celery_worker):
 
     s_file = standardized_file.build(standardized_file=real_file)
 
-    copy_to_database(s_file_id=s_file.id)
+    work = copy_to_database.delay(s_file_id=s_file.id)
+    work.get()
 
     return s_file

@@ -28,11 +28,13 @@ def test_import_utility_init(standardized_file,
                              real_file,
                              transactional_db,
                              raw_table_teardown,
-                             mocker):
+                             mocker,
+                             celery_worker):
 
     s_file = standardized_file.build(standardized_file=real_file)
 
-    copy_to_database(s_file_id=s_file.id)
+    work = copy_to_database.delay(s_file_id=s_file.id)
+    work.get()
 
     imp = ImportUtility(s_file.id, init=True)
     imp.populate_models_from_raw_data()
