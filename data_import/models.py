@@ -1,8 +1,8 @@
 from os.path import basename
 
+from celery.task.control import inspect
 from django.contrib.auth import get_user_model
 from django.db import connection, models
-
 from django_fsm import FSMField, transition
 
 from bga_database.base_models import SluggedModel
@@ -152,8 +152,6 @@ class StandardizedFile(models.Model):
         at hand. If there is active work, or work on the queue,
         return True. Otherwise, return False.
         '''
-        from celery.task.control import inspect
-
         i = inspect()
 
         active = i.active()
