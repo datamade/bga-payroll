@@ -170,6 +170,10 @@ class StandardizedFile(models.Model):
 
         return False
 
+    @property
+    def review_step(self):
+        return '-'.join(self.status.split(' ')[:-1])
+
     def post_delete_handler(self):
         '''
         Drop the associated raw table.

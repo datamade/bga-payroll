@@ -83,6 +83,34 @@ class RespondingAgencyQueue(ReviewQueue):
 class EmployerQueue(ReviewQueue):
     q_name = 'employer_queue'
 
+    def process(self, item, match=None):
+        '''
+        Given an item, and (optionally) a match, handle review
+        decision, then remove the item from the queue.
+
+        :item is a dictionary, where 'id' is the uid of the
+        enqueued item.
+        '''
+        uid = item.pop('id')
+
+        if match:
+            with connection.cursor() as cursor:
+                update = '''
+                    UPDATE {raw_payroll}
+                      SET employer = '{match}'
+                      WHERE employer = '{unseen}'
+                '''.format(raw_payroll=self.raw_payroll_table,
+                           match=match,
+                           unseen=item['name'])
+
+                cursor.execute(update)
+
+        else:
+            from data_import.models import Employer
+            Employer.objects.create(**item)
+
+        self.remove(uid)
+
 
 class SalaryQueue(ReviewQueue):
     q_name = 'salary_queue'

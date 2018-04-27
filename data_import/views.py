@@ -108,6 +108,16 @@ class Review(DetailView):
             self.finish_review_step()
             return redirect(reverse('data-import'))
 
+    def get_object(self):
+        item_id, item = self.q.checkout()
+
+        if item:
+            item['id'] = item_id.decode('utf-8')
+            return item
+
+        else:
+            return {}
+
 
 class RespondingAgencyReview(Review):
     @property
@@ -120,22 +130,36 @@ class RespondingAgencyReview(Review):
         if not s_file.processing:
             s_file.select_unseen_employer()
 
-    def get_object(self):
-        item_id, item = self.q.checkout()
-
-        if item:
-            item['id'] = item_id.decode('utf-8')
-            return item
-
-        else:
-            return {}
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         context.update({
             'entity': 'responding agency',
             'entities': 'responding agencies',
+            's_file_id': self.kwargs['s_file_id'],
+            'remaining': self.q.remaining,
+        })
+
+        return context
+
+
+class EmployerReview(Review):
+    @property
+    def q(self):
+        return EmployerQueue(self.kwargs['s_file_id'])
+
+    def finish_review_step(self):
+        s_file = Employer.objects.get(id=self.kwargs['s_file_id'])
+
+        if not s_file.processing:
+            s_file.select_invalid_salary()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context.update({
+            'entity': 'employer',
+            'entities': 'employers',
             's_file_id': self.kwargs['s_file_id'],
             'remaining': self.q.remaining,
         })
