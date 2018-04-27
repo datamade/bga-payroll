@@ -67,7 +67,38 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_unseen_employer(self):
-        pass
+        q = EmployerQueue(self.s_file_id)
+
+        select = '''
+              WITH employers AS (
+                SELECT
+                  child.name AS employer_name,
+                  parent.name AS parent_name
+                FROM payroll_employer AS child
+                LEFT JOIN payroll_employer AS parent
+                ON child.parent_id = parent.id
+              )
+              SELECT DISTINCT ON (employer, department)
+                employer,
+                department
+              FROM {raw_payroll} AS raw
+              LEFT JOIN employers AS existing
+              ON (
+                raw.employer = existing.employer_name
+                AND raw.department IS null
+              ) OR (
+                raw.department = existing.employer_name
+                AND raw.employer = existing.parent_name
+                AND raw.department IS NOT null
+              )
+              WHERE existing.employer_name IS NULL
+        '''.format(raw=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for agency in cursor:
+                q.add({'name': agency[0]})
 
     def insert_employer(self):
         '''
