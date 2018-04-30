@@ -1,7 +1,7 @@
 from django.db import connection
 
 from data_import.utils.table_names import TableNamesMixin
-from data_import.utils.queues import RespondingAgencyQueue
+from data_import.utils.queues import EmployerQueue, RespondingAgencyQueue
 
 
 # TO-DO: Return select / insert counts for logging
@@ -22,7 +22,8 @@ class ImportUtility(TableNamesMixin):
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
 
-        self.insert_employer()
+        self.insert_parent_employer()
+        self.insert_child_employer()
 
         self.insert_position()
 
@@ -66,60 +67,93 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
-    def select_unseen_employer(self):
+    def select_unseen_parent_employer(self):
+        '''
+        Select all parent employers we have not yet seen, regardless
+        of whether they directly employ people (department is null) or
+        not (department is not null). Do this, in order to avoid the
+        user having to review every department of a parent employer
+        that can be matched to an existing department.
+        '''
         q = EmployerQueue(self.s_file_id)
 
         select = '''
-              WITH employers AS (
-                SELECT
-                  child.name AS employer_name,
-                  parent.name AS parent_name
-                FROM payroll_employer AS child
-                LEFT JOIN payroll_employer AS parent
-                ON child.parent_id = parent.id
-              )
-              SELECT DISTINCT ON (employer, department)
-                employer,
-                department
-              FROM {raw_payroll} AS raw
-              LEFT JOIN employers AS existing
-              ON (
-                raw.employer = existing.employer_name
-                AND raw.department IS null
-              ) OR (
-                raw.department = existing.employer_name
-                AND raw.employer = existing.parent_name
-                AND raw.department IS NOT null
-              )
-              WHERE existing.employer_name IS NULL
+            SELECT DISTINCT employer
+            FROM {raw_payroll} AS raw
+            LEFT JOIN payroll_employer AS existing
+            ON (
+              raw.employer = existing.name
+              AND existing.parent_id IS NULL
+            )
+            WHERE existing.name IS NULL
         '''.format(raw=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
 
-            for agency in cursor:
-                q.add({'name': agency[0]})
+            for employer in cursor:
+                q.add({'name': employer[0]})
 
-    def insert_employer(self):
-        '''
-        Insert parents that do not already exist, then insert
-        departments, no-op'ing on duplicates via the unique index
-        on payroll_employer name / parent ID. The uniqueness of
-        everything else is predicated on the uniqueness of the
-        parents. TO-DO: Explain this in better English!
-        '''
+    def insert_parent_employer(self):
         insert_parents = '''
             INSERT INTO payroll_employer (name, vintage_id)
               SELECT
                 DISTINCT employer,
                 {vintage}
               FROM {raw_payroll} AS raw
-              LEFT JOIN payroll_employer AS existing
-              ON raw.employer = existing.name
-              WHERE existing.name IS NULL
+            ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 
+        with connection.cursor() as cursor:
+            cursor.execute(insert_parents)
+
+    def select_unseen_child_employer(self):
+        '''
+        If the parent is new as of this vintage, don't force the
+        user to review children, because we won't have seen any of
+        them.
+        '''
+        q = EmployerQueue(self.s_file_id)
+
+        select = '''
+            WITH employers AS (
+              SELECT
+                child.name AS employer_name,
+                parent.name AS parent_name,
+                parent.vintage_id AS parent_vintage
+              FROM payroll_employer AS child
+              LEFT JOIN payroll_employer AS parent
+              ON child.parent_id = parent.id
+              JOIN data_import_upload AS upload
+              ON parent.vintage_id = upload.id
+            )
+            SELECT DISTINCT ON (employer, department)
+              employer,
+              department
+            FROM {raw_payroll} AS raw
+            LEFT JOIN employers AS existing
+            ON (
+              raw.department = existing.employer_name
+              AND raw.employer = existing.parent_name
+              AND raw.department IS NOT NULL
+              AND existing.parent_vintage != {vintage}
+            )
+            WHERE existing.employer_name IS NULL
+        '''.format(raw_payroll=self.raw_payroll_table,
+                   vintage=self.vintage)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for employer in cursor:
+                parent, department = employer
+                q.add({
+                    'name': department,
+                    'parent': parent,
+                })
+
+    def insert_child_employer(self):
         insert_children = '''
             INSERT INTO payroll_employer (name, parent_id, vintage_id)
               SELECT DISTINCT ON (employer, department)
@@ -135,7 +169,6 @@ class ImportUtility(TableNamesMixin):
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
-            cursor.execute(insert_parents)
             cursor.execute(insert_children)
 
     def insert_position(self):

@@ -11,7 +11,7 @@ from django.views.generic.edit import FormView
 from data_import.forms import UploadForm
 from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
     Upload
-from data_import.utils import RespondingAgencyQueue
+from data_import.utils import EmployerQueue, RespondingAgencyQueue
 
 
 class SourceFileHook(View):
@@ -149,7 +149,7 @@ class EmployerReview(Review):
         return EmployerQueue(self.kwargs['s_file_id'])
 
     def finish_review_step(self):
-        s_file = Employer.objects.get(id=self.kwargs['s_file_id'])
+        s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
 
         if not s_file.processing:
             s_file.select_invalid_salary()
