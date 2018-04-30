@@ -6,7 +6,7 @@ from django.core.files import File
 from django.db import connection
 import pytest
 
-from data_import.models import StandardizedFile
+from data_import.models import RespondingAgency, StandardizedFile
 from data_import.tasks import copy_to_database
 
 
@@ -88,6 +88,31 @@ def standardized_file(mock_file, upload):
             return StandardizedFile.objects.create(**data)
 
     return StandardizedFileFactory()
+
+
+@pytest.fixture
+@pytest.mark.django_db(transaction=True)
+def responding_agency(transactional_db):
+    class RespondingAgencyFactory():
+        def build(self, **kwargs):
+            data = {
+                'name': 'ACORN LIBRARY DISTRICT',
+            }
+            data.update(kwargs)
+
+            return RespondingAgency.objects.create(**data)
+
+    return RespondingAgencyFactory()
+
+
+@pytest.fixture
+def queue_teardown(request):
+    @request.addfinalizer
+    def delete_queue():
+        from data_import.utils.queues import EmployerQueue
+
+        q = EmployerQueue(0)
+        q.flush()
 
 
 @pytest.fixture

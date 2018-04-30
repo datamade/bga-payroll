@@ -47,6 +47,9 @@ class ReviewQueue(TableNamesMixin):
         '''
         return self.__q.fail(uid)
 
+    def flush(self):
+        return self.__q._redis.flushdb()
+
 
 class RespondingAgencyQueue(ReviewQueue):
     q_name = 'responding_agency_queue'
