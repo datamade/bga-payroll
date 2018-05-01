@@ -43,7 +43,7 @@ class ImportUtility(TableNamesMixin):
               DISTINCT responding_agency
             FROM {raw} AS raw
             LEFT JOIN data_import_respondingagency AS existing
-            ON raw.responding_agency = existing.name
+            ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
             WHERE existing.name IS NULL
         '''.format(raw=self.raw_payroll_table)
 
@@ -60,7 +60,7 @@ class ImportUtility(TableNamesMixin):
                 DISTINCT responding_agency
               FROM {} AS raw
               LEFT JOIN data_import_respondingagency AS existing
-              ON raw.responding_agency = existing.name
+              ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
               WHERE existing.name IS NULL
         '''.format(self.raw_payroll_table)
 
@@ -82,7 +82,7 @@ class ImportUtility(TableNamesMixin):
             FROM {raw_payroll} AS raw
             LEFT JOIN payroll_employer AS existing
             ON (
-              raw.employer = existing.name
+              TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
               AND existing.parent_id IS NULL
             )
             WHERE existing.name IS NULL
@@ -134,8 +134,8 @@ class ImportUtility(TableNamesMixin):
             FROM {raw_payroll} AS raw
             LEFT JOIN employers AS existing
             ON (
-              raw.department = existing.employer_name
-              AND raw.employer = existing.parent_name
+              TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
+              AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
               AND raw.department IS NOT NULL
               AND existing.parent_vintage != {vintage}
             )
@@ -162,7 +162,7 @@ class ImportUtility(TableNamesMixin):
                 {vintage}
               FROM {raw_payroll} AS raw
               JOIN payroll_employer AS parent
-              ON raw.employer = parent.name
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(parent.name))
               WHERE department IS NOT NULL
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
@@ -195,11 +195,11 @@ class ImportUtility(TableNamesMixin):
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
               ON (
-                raw.department = existing.employer_name
-                AND raw.employer = existing.parent_name
+                TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
+                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
                 AND raw.department IS NOT NULL
               ) OR (
-                raw.employer = existing.employer_name
+                TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.employer_name))
                 AND raw.department IS NULL
               )
             ON CONFLICT DO NOTHING
