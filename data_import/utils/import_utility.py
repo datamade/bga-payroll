@@ -76,7 +76,7 @@ class ImportUtility(TableNamesMixin):
         user having to review every department of a parent employer
         that can be matched to an existing department.
         '''
-        q = EmployerQueue(self.s_file_id)
+        q = ParentEmployerQueue(self.s_file_id)
 
         select = '''
             SELECT DISTINCT employer
@@ -115,7 +115,7 @@ class ImportUtility(TableNamesMixin):
         user to review children, because we won't have seen any of
         them.
         '''
-        q = EmployerQueue(self.s_file_id)
+        q = ChildEmployerQueue(self.s_file_id)
 
         select = '''
             WITH employers AS (

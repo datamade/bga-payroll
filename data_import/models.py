@@ -1,6 +1,5 @@
 from os.path import basename
 
-from celery.task.control import inspect
 from django.contrib.auth import get_user_model
 from django.db import connection, models
 from django_fsm import FSMField, transition
