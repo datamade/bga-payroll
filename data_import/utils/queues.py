@@ -83,8 +83,8 @@ class RespondingAgencyQueue(ReviewQueue):
         self.remove(uid)
 
 
-class EmployerQueue(ReviewQueue):
-    q_name = 'employer_queue'
+class ParentEmployerQueue(ReviewQueue):
+    q_name = 'parent_employer_queue'
 
     def process(self, item, match=None):
         '''
@@ -109,8 +109,46 @@ class EmployerQueue(ReviewQueue):
                 cursor.execute(update)
 
         else:
-            from data_import.models import Employer
+            from payroll.models import Employer
             Employer.objects.create(**item)
+
+        self.remove(uid)
+
+
+class ChildEmployerQueue(ReviewQueue):
+    q_name = 'child_employer_queue'
+
+    def process(self, item, match=None):
+        '''
+        Given an item, and (optionally) a match, handle review
+        decision, then remove the item from the queue.
+
+        :item is a dictionary, where 'id' is the uid of the
+        enqueued item.
+        '''
+        uid = item.pop('id')
+
+        if match:
+            with connection.cursor() as cursor:
+                update = '''
+                    UPDATE {raw_payroll}
+                      SET department = '{match}'
+                      WHERE department = '{unseen_employer}'
+                      AND employer = '{unseen_parent}'
+                '''.format(raw_payroll=self.raw_payroll_table,
+                           match=match,
+                           unseen_employer=item['name'],
+                           unseen_parent=item['parent'])
+
+                cursor.execute(update)
+
+        else:
+            from payroll.models import Employer
+
+            parent = Employer.objects.get(parent_id__isnull=True,
+                                          name__ieq=item['parent'])
+
+            Employer.objects.create(name=item['name'], parent=parent)
 
         self.remove(uid)
 

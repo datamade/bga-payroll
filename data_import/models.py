@@ -7,8 +7,9 @@ from django_fsm import FSMField, transition
 
 from bga_database.base_models import SluggedModel
 from data_import.tasks import copy_to_database, select_unseen_responding_agency, \
-    insert_responding_agency, select_unseen_employer, insert_employer, \
-    select_invalid_salary, insert_salary
+    insert_responding_agency, select_unseen_parent_employer, insert_parent_employer, \
+    select_unseen_child_employer, insert_child_employer, select_invalid_salary, \
+    insert_salary
 
 
 def set_deleted_user():
@@ -125,7 +126,8 @@ class StandardizedFile(models.Model):
         UPLOADED = 'uploaded'
         COPIED = 'copied to database'
         RA_PENDING = 'responding agency unmatched'
-        EMP_PENDING = 'employer unmatched'
+        P_EMP_PENDING = 'parent employer unmatched'
+        C_EMP_PENDING = 'child employer unmatched'
         SAL_PENDING = 'salary unvalidated'
         COMPLETE = 'complete'
 
@@ -148,26 +150,9 @@ class StandardizedFile(models.Model):
     @property
     def processing(self):
         '''
-        Inspect the queue for work related to the StandardizedFile
-        at hand. If there is active work, or work on the queue,
-        return True. Otherwise, return False.
+        TO-DO: Find a less expensive way to check whether an instance
+        is processing.
         '''
-        i = inspect()
-
-        active = i.active()
-
-        for worker, tasks in active.items():
-            for task in tasks:
-                if task['kwargs'].get('s_file_id') == self.id:
-                    return True
-
-        enqueued = i.reserved()
-
-        for worker, tasks in enqueued.items():
-            for task in tasks:
-                if task['kwargs'].get('s_file_id') == self.id:
-                    return True
-
         return False
 
     @property
@@ -195,16 +180,23 @@ class StandardizedFile(models.Model):
 
     @transition(field=status,
                 source=State.RA_PENDING,
-                target=State.EMP_PENDING)
-    def select_unseen_employer(self):
+                target=State.P_EMP_PENDING)
+    def select_unseen_parent_employer(self):
         insert_responding_agency.delay(s_file_id=self.id)
-        select_unseen_employer.delay(s_file_id=self.id)
+        select_unseen_parent_employer.delay(s_file_id=self.id)
 
     @transition(field=status,
-                source=State.EMP_PENDING,
+                source=State.P_EMP_PENDING,
+                target=State.C_EMP_PENDING)
+    def select_unseen_child_employer(self):
+        insert_parent_employer.delay(s_file_id=self.id)
+        select_unseen_child_employer.delay(s_file_id=self.id)
+
+    @transition(field=status,
+                source=State.C_EMP_PENDING,
                 target=State.SAL_PENDING)
     def select_invalid_salary(self):
-        insert_employer.delay(s_file_id=self.id)
+        insert_child_employer.delay(s_file_id=self.id)
         select_invalid_salary.delay(s_file_id=self.id)
 
     @transition(field=status,

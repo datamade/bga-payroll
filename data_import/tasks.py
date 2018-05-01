@@ -129,19 +129,35 @@ def insert_responding_agency(self, *, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
-def select_unseen_employer(self, *, s_file_id):
-    self.import_utility.select_unseen_employer()
+def select_unseen_parent_employer(self, *, s_file_id):
+    self.import_utility.select_unseen_parent_employer()
 
-    self.update_status('employer unmatched')
+    self.update_status('parent employer unmatched')
 
     return 'Selected employers'
 
 
 @shared_task(bind=True, base=DataImportTask)
-def insert_employer(self, *, s_file_id):
-    self.import_utility.insert_employer()
+def insert_parent_employer(self, *, s_file_id):
+    self.import_utility.insert_parent_employer()
 
-    return 'Inserted employers'
+    return 'Inserted parent employers'
+
+
+@shared_task(bind=True, base=DataImportTask)
+def select_unseen_child_employer(self, *, s_file_id):
+    self.import_utility.select_unseen_child_employer()
+
+    self.update_status('child employer unmatched')
+
+    return 'Selected employers'
+
+
+@shared_task(bind=True, base=DataImportTask)
+def insert_child_employer(self, *, s_file_id):
+    self.import_utility.insert_child_employer()
+
+    return 'Inserted child employers'
 
 
 @shared_task(bind=True, base=DataImportTask)

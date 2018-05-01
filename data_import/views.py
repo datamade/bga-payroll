@@ -11,7 +11,10 @@ from django.views.generic.edit import FormView
 from data_import.forms import UploadForm
 from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
     Upload
-from data_import.utils import EmployerQueue, RespondingAgencyQueue
+from data_import.utils import ChildEmployerQueue, ParentEmployerQueue, \
+    RespondingAgencyQueue
+
+from payroll.models import Employer
 
 
 class SourceFileHook(View):
@@ -118,53 +121,53 @@ class Review(DetailView):
         else:
             return {}
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context.update({
+            'entity': self.entity,
+            'entities': self.entities,
+            's_file_id': self.kwargs['s_file_id'],
+            'remaining': self.q.remaining,
+        })
+
+        return context
+
+    def finish_review_step(self):
+        s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
+
+        if not s_file.processing:
+            getattr(s_file, self.transition)()
+
 
 class RespondingAgencyReview(Review):
+    transition = 'select_unseen_parent_employer'
+    entity = 'responding agency'
+    entities = 'responding agencies'
+
     @property
     def q(self):
         return RespondingAgencyQueue(self.kwargs['s_file_id'])
 
-    def finish_review_step(self):
-        s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
 
-        if not s_file.processing:
-            s_file.select_unseen_employer()
+class ParentEmployerReview(Review):
+    transition = 'select_unseen_child_employer'
+    entity = 'parent employer'
+    entities = 'parent employers'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        context.update({
-            'entity': 'responding agency',
-            'entities': 'responding agencies',
-            's_file_id': self.kwargs['s_file_id'],
-            'remaining': self.q.remaining,
-        })
-
-        return context
-
-
-class EmployerReview(Review):
     @property
     def q(self):
-        return EmployerQueue(self.kwargs['s_file_id'])
+        return ParentEmployerQueue(self.kwargs['s_file_id'])
 
-    def finish_review_step(self):
-        s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
 
-        if not s_file.processing:
-            s_file.select_invalid_salary()
+class ChildEmployerReview(Review):
+    transition = 'select_invalid_salary'
+    entity = 'child employer'
+    entities = 'child employers'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        context.update({
-            'entity': 'employer',
-            'entities': 'employers',
-            's_file_id': self.kwargs['s_file_id'],
-            'remaining': self.q.remaining,
-        })
-
-        return context
+    @property
+    def q(self):
+        return ChildEmployerQueue(self.kwargs['s_file_id'])
 
 
 def review(request):
@@ -184,6 +187,8 @@ def review(request):
 
     q_map = {
         'responding-agency': RespondingAgencyQueue,
+        'parent-employer': ParentEmployerQueue,
+        'child-employer': ChildEmployerQueue,
     }
 
     q_obj = q_map[entity_type]
@@ -198,15 +203,17 @@ def review(request):
 def review_entity_lookup(request, entity_type):
     q = request.GET['term']
 
-    model_map = {
-        'responding-agency': RespondingAgency,
+    queryset_map = {
+        'responding-agency': RespondingAgency.objects,
+        'parent-employer': Employer.objects.filter(parent_id__isnull=True),
+        'child-employer': Employer.objects.filter(parent_id__isnull=False),
     }
 
-    model_obj = model_map[entity_type]
+    queryset = queryset_map[entity_type]
 
     entities = []
 
-    for e in model_obj.objects.filter(name__istartswith=q):
+    for e in queryset.filter(name__istartswith=q):
         data = {
             'label': str(e),
             'value': str(e),

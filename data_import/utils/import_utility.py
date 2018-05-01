@@ -1,7 +1,8 @@
 from django.db import connection
 
 from data_import.utils.table_names import TableNamesMixin
-from data_import.utils.queues import EmployerQueue, RespondingAgencyQueue
+from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
+    RespondingAgencyQueue
 
 
 # TO-DO: Return select / insert counts for logging
@@ -86,7 +87,7 @@ class ImportUtility(TableNamesMixin):
               AND existing.parent_id IS NULL
             )
             WHERE existing.name IS NULL
-        '''.format(raw=self.raw_payroll_table)
+        '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
