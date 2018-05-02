@@ -1,25 +1,14 @@
 from django.db import connection
 import pytest
 
-from data_import.tasks import copy_to_database
-from data_import.utils import CsvMeta
+from data_import import tasks
+from data_import import utils
 
 
 @pytest.mark.celery
 @pytest.mark.django_db(transaction=True)
-def test_copy_to_database(standardized_file,
-                          real_file,
-                          raw_table_teardown,
-                          mocker,
-                          celery_worker,
-                          transactional_db):
-
-    s_file = standardized_file.build(standardized_file=real_file)
-
-    work = copy_to_database.delay(s_file_id=s_file.id)
-    work.get()
-
-    assert work.successful()
+def test_copy_to_database(raw_table_setup):
+    s_file = raw_table_setup
 
     with connection.cursor() as cursor:
         cursor.execute('''
@@ -55,8 +44,67 @@ def test_copy_to_database(standardized_file,
 
         columns = [row[0] for row in cursor]
 
-        assert set(columns) == set(CsvMeta.REQUIRED_FIELDS)
+        assert set(columns) == set(utils.CsvMeta.REQUIRED_FIELDS)
 
     s_file.refresh_from_db()
 
     assert s_file.status == 'copied to database'
+
+
+@pytest.mark.dev
+@pytest.mark.django_db(transaction=True)
+def test_select_unseen_responding_agency(transactional_db,
+                                         responding_agency,
+                                         raw_table_setup,
+                                         queue_teardown):
+
+    # Create a responding agency, so we can check that it is not added to
+    # the review queue.
+    existing = responding_agency.build()
+
+    s_file = raw_table_setup
+
+    work = tasks.select_unseen_responding_agency.delay(s_file_id=s_file.id)
+    work.get()
+
+    queue = utils.RespondingAgencyQueue(s_file.id)
+
+    # There are three distinct responding agencies in the data fixture. We
+    # added a responding agency matching one of them. Assert that the other
+    # two were added to the queue.
+    #
+    # n.b., If the data fixture changes, this test will need to be updated.
+    assert queue.remaining == 2
+    remaining = True
+
+    enqueued = []
+
+    while remaining:
+        uid, item = queue.checkout()
+
+        if item:
+            enqueued.append(item['name'])
+        else:
+            remaining = False
+
+    # Assert we have not added the responding agency we've already seen
+    # to the review queue.
+    assert existing.name not in enqueued
+
+    # Assert that the items we did are, are in fact responding agencies
+    # in the raw data.
+    with connection.cursor() as cursor:
+        for item in enqueued:
+            cursor.execute('''
+                SELECT EXISTS(
+                  SELECT 1 FROM {raw_payroll}
+                  WHERE responding_agency = '{item}'
+                )
+            '''.format(raw_payroll=s_file.raw_table_name, item=item))
+
+            exists, = cursor.fetchone()
+            assert exists
+
+    s_file.refresh_from_db()
+
+    assert s_file.status == 'responding agency unmatched'

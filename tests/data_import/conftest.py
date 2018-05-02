@@ -1,3 +1,4 @@
+import csv
 import datetime
 import shutil
 from uuid import uuid4
@@ -36,6 +37,17 @@ def real_file(request):
             pass
 
     return s_file
+
+
+@pytest.fixture
+def canned_data():
+    '''
+    Yield the first row of the canned data fixture, so we have access to
+    values we know will match.
+    '''
+    with open('tests/data_import/fixtures/standardized_data_sample.2016.csv', 'r') as data:
+        reader = csv.DictReader(data)
+        yield next(reader)
 
 
 @pytest.fixture
@@ -92,11 +104,11 @@ def standardized_file(mock_file, upload):
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def responding_agency(transactional_db):
+def responding_agency(transactional_db, canned_data):
     class RespondingAgencyFactory():
         def build(self, **kwargs):
             data = {
-                'name': 'ACORN LIBRARY DISTRICT',
+                'name': canned_data['Responding Agency'],
             }
             data.update(kwargs)
 
@@ -106,19 +118,23 @@ def responding_agency(transactional_db):
 
 
 @pytest.fixture
-def queue_teardown(request):
+@pytest.mark.django_db(transaction=True)
+def raw_table_setup(transactional_db,
+                    standardized_file,
+                    real_file,
+                    celery_worker,
+                    request):
+
+    s_file = standardized_file.build(standardized_file=real_file)
+
+    # Call copy_to_database directly, rather than using the transition
+    # method on the StandardizedFile object, so we can have test execution
+    # wait until the delayed work is finished via work.get()
+    work = copy_to_database.delay(s_file_id=s_file.id)
+    work.get()
+
     @request.addfinalizer
-    def flush_queue():
-        from redis import Redis
-
-        r = Redis()
-        r.flushdb()
-
-
-@pytest.fixture
-def raw_table_teardown(request):
-    @request.addfinalizer
-    def drop_table():
+    def raw_table_teardown():
         '''
         Transactional tests don't clean up data from outside the ORM.
         Raw tables are named with the associated StandardizedFile ID,
@@ -134,17 +150,18 @@ def raw_table_teardown(request):
         with connection.cursor() as cursor:
             cursor.execute(drop)
 
+    return s_file
+
 
 @pytest.fixture
-@pytest.mark.django_db(transaction=True)
-def review_setup(transactional_db,
-                 standardized_file,
-                 real_file,
-                 celery_worker):
+def queue_teardown(request):
+    '''
+    Queues are persistent between tests. Flush them after use, so we start
+    from a clean state each time.
+    '''
+    @request.addfinalizer
+    def flush_queue():
+        from redis import Redis
 
-    s_file = standardized_file.build(standardized_file=real_file)
-
-    work = copy_to_database.delay(s_file_id=s_file.id)
-    work.get()
-
-    return s_file
+        r = Redis()
+        r.flushdb()

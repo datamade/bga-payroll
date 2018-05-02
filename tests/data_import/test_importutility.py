@@ -1,42 +1,17 @@
-from django.core.files.uploadedfile import UploadedFile
-from django.db import connection
 import pytest
 
-from data_import.exceptions import OperationNotPermittedOnInstance
-from data_import.tasks import copy_to_database
-from data_import.utils import CsvMeta, ImportUtility
+from django.db import connection
 
-
-def test_alter_uploadedfile_raises_exception(mocker):
-    mock_uploadedfile = mocker.MagicMock(spec=UploadedFile)
-
-    # Patch _field_names setter to avoid StopIteration as result of
-    # passing in mock (e.g., empty) file
-
-    mocker.patch.object(CsvMeta, '_field_names')
-
-    meta = CsvMeta(mock_uploadedfile)
-
-    with pytest.raises(OperationNotPermittedOnInstance) as err:
-        meta.trim_extra_fields()
-
-    assert 'Cannot alter instance' in str(err)
+from data_import import utils
 
 
 @pytest.mark.django_db(transaction=True)
-def test_import_utility_init(standardized_file,
-                             real_file,
-                             transactional_db,
-                             raw_table_teardown,
-                             mocker,
-                             celery_worker):
+def test_import_utility_init(raw_table_setup,
+                             mocker):
 
-    s_file = standardized_file.build(standardized_file=real_file)
+    s_file = raw_table_setup
 
-    work = copy_to_database.delay(s_file_id=s_file.id)
-    work.get()
-
-    imp = ImportUtility(s_file.id, init=True)
+    imp = utils.ImportUtility(s_file.id, init=True)
     imp.populate_models_from_raw_data()
 
     with connection.cursor() as cursor:
@@ -105,7 +80,6 @@ def test_import_utility_init(standardized_file,
         # should return no rows for a full overlap.
         #
         # See https://stackoverflow.com/questions/5727882/check-if-two-selects-are-equivalent
-
         reconstruct = '''
             WITH reconstructed AS (
               SELECT
