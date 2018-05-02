@@ -113,19 +113,11 @@ class Review(DetailView):
             return redirect(reverse('data-import'))
 
     def get_object(self):
-        '''
-        If there are no items for checkout, return to main page where
-        the user will be told there is work remaining, but none is
-        currently available.
-        '''
         item_id, item = self.q.checkout()
 
         if item:
             item['id'] = item_id.decode('utf-8')
             return item
-
-        else:
-            return redirect(reverse('data-import', kwargs={'pending': True}))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -139,11 +131,21 @@ class Review(DetailView):
 
         return context
 
+    def render_to_response(self, context, **response_kwargs):
+        '''
+        If there no item was checked out, return to main page where
+        the user will be told there is work remaining, but none is
+        currently available.
+        '''
+        if context['object']:
+            return super().render_to_response(context, **response_kwargs)
+
+        else:
+            return redirect('/data-import/?pending=True')
+
     def finish_review_step(self):
         s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
-
-        if not s_file.processing:
-            getattr(s_file, self.transition)()
+        getattr(s_file, self.transition)()
 
 
 class RespondingAgencyReview(Review):
@@ -188,8 +190,9 @@ def review(request):
     match = data.get('match')  # None if adding
 
     if 'match' in request.build_absolute_uri('?'):
-        # If we're matching, assert a match came through
         assert match
+    else:
+        assert not match
 
     q_map = {
         'responding-agency': RespondingAgencyQueue,
@@ -197,10 +200,7 @@ def review(request):
         'child-employer': ChildEmployerQueue,
     }
 
-    q_obj = q_map[entity_type]
-
-    q = q_obj(s_file_id)
-
+    q = q_map[entity_type](s_file_id)
     q.match_or_create(unseen, match)
 
     return JsonResponse({'status_code': 200})

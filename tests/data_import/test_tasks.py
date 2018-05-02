@@ -51,7 +51,6 @@ def test_copy_to_database(raw_table_setup):
     assert s_file.status == 'copied to database'
 
 
-@pytest.mark.dev
 @pytest.mark.django_db(transaction=True)
 def test_select_unseen_responding_agency(transactional_db,
                                          responding_agency,

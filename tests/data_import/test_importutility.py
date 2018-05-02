@@ -1,3 +1,6 @@
+# TO-DO: Decide whether to roll this into test_tasks.
+# (Likely involves writing a task / workflow for first-time
+# slash non-validated imports.)
 import pytest
 
 from django.db import connection

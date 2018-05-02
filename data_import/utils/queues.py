@@ -53,6 +53,9 @@ class ReviewQueue(TableNamesMixin):
         '''
         return self.__q.fail(uid)
 
+    def match_or_create(self):
+        raise NotImplementedError
+
 
 class RespondingAgencyQueue(ReviewQueue):
     q_name = 'responding_agency_queue'
