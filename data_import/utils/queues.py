@@ -17,6 +17,11 @@ class ReviewQueue(TableNamesMixin):
                                   autoclean_interval=300,
                                   serializer=pickle)
 
+        from data_import.models import StandardizedFile
+        s_file = StandardizedFile.objects.get(id=s_file_id)
+
+        self.vintage = s_file.upload
+
     @property
     def remaining(self):
         return self.__q._redis.hlen(self.__q.ITEMS_KEY)
@@ -27,10 +32,11 @@ class ReviewQueue(TableNamesMixin):
         '''
         return self.__q.put(item)
 
-    def checkout(self, timeout=3):
+    def checkout(self, timeout=-1):
         '''
-        Get an item from the queue. If there are no items,
-        block for three seconds, then return.
+        Get an item from the queue. By default, do not block.
+        If blocking is desired, set :timeout to time in seconds
+        to wait before returning None.
         '''
         return self.__q.get(timeout=timeout)
 
@@ -47,14 +53,11 @@ class ReviewQueue(TableNamesMixin):
         '''
         return self.__q.fail(uid)
 
-    def flush(self):
-        return self.__q._redis.flushdb()
-
 
 class RespondingAgencyQueue(ReviewQueue):
     q_name = 'responding_agency_queue'
 
-    def process(self, item, match=None):
+    def match_or_create(self, item, match=None):
         '''
         Given an item, and (optionally) a match, handle review
         decision, then remove the item from the queue.
@@ -86,7 +89,7 @@ class RespondingAgencyQueue(ReviewQueue):
 class ParentEmployerQueue(ReviewQueue):
     q_name = 'parent_employer_queue'
 
-    def process(self, item, match=None):
+    def match_or_create(self, item, match=None):
         '''
         Given an item, and (optionally) a match, handle review
         decision, then remove the item from the queue.
@@ -110,7 +113,9 @@ class ParentEmployerQueue(ReviewQueue):
 
         else:
             from payroll.models import Employer
-            Employer.objects.create(**item)
+
+            Employer.objects.create(name=item['name'],
+                                    vintage=self.vintage)
 
         self.remove(uid)
 
@@ -118,7 +123,7 @@ class ParentEmployerQueue(ReviewQueue):
 class ChildEmployerQueue(ReviewQueue):
     q_name = 'child_employer_queue'
 
-    def process(self, item, match=None):
+    def match_or_create(self, item, match=None):
         '''
         Given an item, and (optionally) a match, handle review
         decision, then remove the item from the queue.
@@ -146,9 +151,11 @@ class ChildEmployerQueue(ReviewQueue):
             from payroll.models import Employer
 
             parent = Employer.objects.get(parent_id__isnull=True,
-                                          name__ieq=item['parent'])
+                                          name__iexact=item['parent'])
 
-            Employer.objects.create(name=item['name'], parent=parent)
+            Employer.objects.create(name=item['name'],
+                                    parent=parent,
+                                    vintage=self.vintage)
 
         self.remove(uid)
 

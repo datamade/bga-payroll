@@ -108,11 +108,11 @@ def responding_agency(transactional_db):
 @pytest.fixture
 def queue_teardown(request):
     @request.addfinalizer
-    def delete_queue():
-        from data_import.utils.queues import EmployerQueue
+    def flush_queue():
+        from redis import Redis
 
-        q = EmployerQueue(0)
-        q.flush()
+        r = Redis()
+        r.flushdb()
 
 
 @pytest.fixture

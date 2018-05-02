@@ -5,10 +5,7 @@ from django.db import connection, models
 from django_fsm import FSMField, transition
 
 from bga_database.base_models import SluggedModel
-from data_import.tasks import copy_to_database, select_unseen_responding_agency, \
-    insert_responding_agency, select_unseen_parent_employer, insert_parent_employer, \
-    select_unseen_child_employer, insert_child_employer, select_invalid_salary, \
-    insert_salary
+from data_import import tasks
 
 
 def set_deleted_user():
@@ -169,40 +166,40 @@ class StandardizedFile(models.Model):
                 source=State.UPLOADED,
                 target=State.COPIED)
     def copy_to_database(self):
-        copy_to_database.delay(s_file_id=self.id)
+        tasks.copy_to_database.delay(s_file_id=self.id)
 
     @transition(field=status,
                 source=State.COPIED,
                 target=State.RA_PENDING)
     def select_unseen_responding_agency(self):
-        select_unseen_responding_agency.delay(s_file_id=self.id)
+        tasks.select_unseen_responding_agency.delay(s_file_id=self.id)
 
     @transition(field=status,
                 source=State.RA_PENDING,
                 target=State.P_EMP_PENDING)
     def select_unseen_parent_employer(self):
-        insert_responding_agency.delay(s_file_id=self.id)
-        select_unseen_parent_employer.delay(s_file_id=self.id)
+        tasks.insert_responding_agency.delay(s_file_id=self.id)
+        tasks.select_unseen_parent_employer.delay(s_file_id=self.id)
 
     @transition(field=status,
                 source=State.P_EMP_PENDING,
                 target=State.C_EMP_PENDING)
     def select_unseen_child_employer(self):
-        insert_parent_employer.delay(s_file_id=self.id)
-        select_unseen_child_employer.delay(s_file_id=self.id)
+        tasks.insert_parent_employer.delay(s_file_id=self.id)
+        tasks.select_unseen_child_employer.delay(s_file_id=self.id)
 
     @transition(field=status,
                 source=State.C_EMP_PENDING,
                 target=State.SAL_PENDING)
     def select_invalid_salary(self):
-        insert_child_employer.delay(s_file_id=self.id)
-        select_invalid_salary.delay(s_file_id=self.id)
+        tasks.insert_child_employer.delay(s_file_id=self.id)
+        tasks.select_invalid_salary.delay(s_file_id=self.id)
 
     @transition(field=status,
                 source=State.SAL_PENDING,
                 target=State.COMPLETE)
     def insert_salary(self):
-        insert_salary.delay(s_file_id=self.id)
+        tasks.insert_salary.delay(s_file_id=self.id)
 
 
 def post_delete_handler(sender, instance, **kwargs):

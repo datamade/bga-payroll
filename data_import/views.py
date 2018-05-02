@@ -108,10 +108,16 @@ class Review(DetailView):
             return super().dispatch(request, *args, **kwargs)
 
         else:
+            # TO-DO: Make sure this can't be triggered more than once.
             self.finish_review_step()
             return redirect(reverse('data-import'))
 
     def get_object(self):
+        '''
+        If there are no items for checkout, return to main page where
+        the user will be told there is work remaining, but none is
+        currently available.
+        '''
         item_id, item = self.q.checkout()
 
         if item:
@@ -119,7 +125,7 @@ class Review(DetailView):
             return item
 
         else:
-            return {}
+            return redirect(reverse('data-import', kwargs={'pending': True}))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -195,7 +201,7 @@ def review(request):
 
     q = q_obj(s_file_id)
 
-    q.process(unseen, match)
+    q.match_or_create(unseen, match)
 
     return JsonResponse({'status_code': 200})
 

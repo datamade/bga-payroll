@@ -115,6 +115,7 @@ class ImportUtility(TableNamesMixin):
         user to review children, because we won't have seen any of
         them.
         '''
+        # TO-DO: This is selecting things we've already seen. Why?
         q = ChildEmployerQueue(self.s_file_id)
 
         select = '''
