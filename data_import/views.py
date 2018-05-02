@@ -133,8 +133,8 @@ class Review(DetailView):
 
     def render_to_response(self, context, **response_kwargs):
         '''
-        If there no item was checked out, return to main page where
-        the user will be told there is work remaining, but none is
+        If nothing is available for checkout, redirect to main page,
+        where the user will be told there is work remaining, but none is
         currently available.
         '''
         if context['object']:
