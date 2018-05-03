@@ -51,59 +51,110 @@ def test_copy_to_database(raw_table_setup):
     assert s_file.status == 'copied to database'
 
 
+@pytest.mark.dev
+@pytest.mark.parametrize('raw_field,task,queue,status,match_vintage', [
+    ('Responding Agency', tasks.select_unseen_responding_agency, utils.RespondingAgencyQueue, 'responding agency unmatched', False),
+    ('Employer', tasks.select_unseen_parent_employer, utils.ParentEmployerQueue, 'parent employer unmatched', False),
+    ('Department', tasks.select_unseen_child_employer, utils.ChildEmployerQueue, 'child employer unmatched', False),
+    ('Department', tasks.select_unseen_child_employer, utils.ChildEmployerQueue, 'child employer unmatched', True),
+])
 @pytest.mark.django_db(transaction=True)
 def test_select_unseen_responding_agency(transactional_db,
                                          responding_agency,
+                                         employer,
+                                         canned_data,
                                          raw_table_setup,
-                                         queue_teardown):
-
-    # Create a responding agency, so we can check that it is not added to
-    # the review queue.
-    existing = responding_agency.build()
-
+                                         queue_teardown,
+                                         raw_field,
+                                         task,
+                                         queue,
+                                         status,
+                                         match_vintage):
     s_file = raw_table_setup
 
-    work = tasks.select_unseen_responding_agency.delay(s_file_id=s_file.id)
+    with connection.cursor() as cursor:
+        if raw_field == 'Responding Agency':
+            existing = responding_agency.build(name=canned_data['Responding Agency'])
+
+            select = '''
+                SELECT
+                  COUNT(distinct raw.responding_agency)
+                FROM {raw_payroll} AS raw
+                LEFT JOIN data_import_respondingagency AS existing
+                ON raw.responding_agency = existing.name
+                WHERE existing.name IS NULL
+            '''.format(raw_payroll=s_file.raw_table_name)
+
+        elif raw_field == 'Employer':
+            existing = employer.build(name=canned_data['Employer'])
+
+            select = '''
+                SELECT
+                  COUNT(distinct raw.employer)
+                FROM {raw_payroll} AS raw
+                LEFT JOIN payroll_employer AS existing
+                ON raw.employer = existing.name
+                AND existing.parent_id IS NULL
+                WHERE existing.name IS NULL
+            '''.format(raw_payroll=s_file.raw_table_name)
+
+        elif raw_field == 'Department':
+            parent = employer.build(name=canned_data['Employer'])
+
+            if match_vintage:
+                parent.vintage = s_file.upload
+                parent.save()
+
+            existing = employer.build(name=canned_data['Department'], parent=parent)
+
+            select = '''
+                WITH child_employers AS (
+                    SELECT
+                      child.name AS employer_name,
+                      parent.name AS parent_name,
+                      parent.vintage_id AS parent_vintage
+                    FROM payroll_employer AS child
+                    JOIN payroll_employer AS parent
+                    ON child.parent_id = parent.id
+                ), unseen_child_employers AS (
+                    SELECT DISTINCT ON (raw.employer, raw.department)
+                      raw.employer,
+                      raw.department
+                    FROM {raw_payroll} AS raw
+                    LEFT JOIN child_employers AS existing
+                    ON raw.department = existing.employer_name
+                    AND raw.employer = existing.parent_name
+                    WHERE existing.employer_name IS NULL
+                    AND raw.department IS NOT NULL
+                )
+                SELECT COUNT(*) FROM unseen_child_employers
+            '''.format(raw_payroll=s_file.raw_table_name,
+                       vintage=s_file.upload.id)
+
+        cursor.execute(select)
+
+        n_unseen, = cursor.fetchone()
+
+    work = task.delay(s_file_id=s_file.id)
     work.get()
 
-    queue = utils.RespondingAgencyQueue(s_file.id)
+    q = queue(s_file.id)
 
-    # There are three distinct responding agencies in the data fixture. We
-    # added a responding agency matching one of them. Assert that the other
-    # two were added to the queue.
-    #
-    # n.b., If the data fixture changes, this test will need to be updated.
-    assert queue.remaining == 2
+    assert q.remaining == n_unseen
+
     remaining = True
-
     enqueued = []
 
     while remaining:
-        uid, item = queue.checkout()
+        uid, item = q.checkout()
 
         if item:
             enqueued.append(item['name'])
         else:
             remaining = False
 
-    # Assert we have not added the responding agency we've already seen
-    # to the review queue.
     assert existing.name not in enqueued
-
-    # Assert that the items we did are, are in fact responding agencies
-    # in the raw data.
-    with connection.cursor() as cursor:
-        for item in enqueued:
-            cursor.execute('''
-                SELECT EXISTS(
-                  SELECT 1 FROM {raw_payroll}
-                  WHERE responding_agency = '{item}'
-                )
-            '''.format(raw_payroll=s_file.raw_table_name, item=item))
-
-            exists, = cursor.fetchone()
-            assert exists
 
     s_file.refresh_from_db()
 
-    assert s_file.status == 'responding agency unmatched'
+    assert s_file.status == status

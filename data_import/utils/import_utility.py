@@ -115,33 +115,28 @@ class ImportUtility(TableNamesMixin):
         user to review children, because we won't have seen any of
         them.
         '''
-        # TO-DO: This is selecting things we've already seen. Why?
         q = ChildEmployerQueue(self.s_file_id)
 
         select = '''
-            WITH employers AS (
+            WITH child_employers AS (
               SELECT
                 child.name AS employer_name,
                 parent.name AS parent_name,
-                parent.vintage_id AS parent_vintage
+                parent.vintage_id
               FROM payroll_employer AS child
-              LEFT JOIN payroll_employer AS parent
+              JOIN payroll_employer AS parent
               ON child.parent_id = parent.id
-              JOIN data_import_upload AS upload
-              ON parent.vintage_id = upload.id
+              AND parent.vintage_id != {vintage}
             )
             SELECT DISTINCT ON (employer, department)
               employer,
               department
             FROM {raw_payroll} AS raw
-            LEFT JOIN employers AS existing
-            ON (
-              TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
-              AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
-              AND raw.department IS NOT NULL
-              AND existing.parent_vintage != {vintage}
-            )
-            WHERE existing.employer_name IS NULL
+            LEFT JOIN child_employers AS existing
+            ON TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
+            AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
+            WHERE raw.department IS NOT NULL
+            AND existing.employer_name IS NULL
         '''.format(raw_payroll=self.raw_payroll_table,
                    vintage=self.vintage)
 

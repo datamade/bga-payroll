@@ -8,7 +8,6 @@ from data_import.utils import RespondingAgencyQueue, ParentEmployerQueue, \
 from payroll.models import Employer
 
 
-@pytest.mark.dev
 @pytest.mark.parametrize('queue,raw_field,model,model_kwargs', [
     (RespondingAgencyQueue, 'Responding Agency', RespondingAgency, {}),
     (ParentEmployerQueue, 'Employer', Employer, {'parent_id__isnull': True}),

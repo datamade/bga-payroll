@@ -104,11 +104,11 @@ def standardized_file(mock_file, upload):
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def responding_agency(transactional_db, canned_data):
+def responding_agency(transactional_db):
     class RespondingAgencyFactory():
         def build(self, **kwargs):
             data = {
-                'name': canned_data['Responding Agency'],
+                'name': 'Half Acre Beer Co',
             }
             data.update(kwargs)
 
