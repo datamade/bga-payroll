@@ -82,10 +82,8 @@ class ImportUtility(TableNamesMixin):
             SELECT DISTINCT employer
             FROM {raw_payroll} AS raw
             LEFT JOIN payroll_employer AS existing
-            ON (
-              TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
-              AND existing.parent_id IS NULL
-            )
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
+            AND existing.parent_id IS NULL
             WHERE existing.name IS NULL
         '''.format(raw_payroll=self.raw_payroll_table)
 
@@ -122,23 +120,25 @@ class ImportUtility(TableNamesMixin):
               SELECT
                 child.name AS employer_name,
                 parent.name AS parent_name,
-                parent.vintage_id
+                parent.vintage_id = {vintage} AS new_parent
               FROM payroll_employer AS child
               JOIN payroll_employer AS parent
               ON child.parent_id = parent.id
-              AND parent.vintage_id != {vintage}
             )
             SELECT DISTINCT ON (employer, department)
               employer,
               department
             FROM {raw_payroll} AS raw
-            LEFT JOIN child_employers AS existing
-            ON TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
-            AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
+            LEFT JOIN child_employers AS child
+            ON raw.employer = child.parent_name
+            AND raw.department = child.employer_name
+            LEFT JOIN child_employers AS parent
+            ON raw.employer = parent.parent_name
             WHERE raw.department IS NOT NULL
-            AND existing.employer_name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table,
-                   vintage=self.vintage)
+            AND COALESCE(parent.new_parent, FALSE) IS FALSE
+            AND child.employer_name IS NULL
+        '''.format(vintage=self.vintage,
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)

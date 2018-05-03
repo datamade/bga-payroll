@@ -28,6 +28,9 @@ def employer(upload, transactional_db):
             }
             data.update(kwargs)
 
+            if data.get('parent'):
+                data['vintage'] = data['parent'].vintage
+
             return Employer.objects.create(**data)
 
     return EmployerFactory()

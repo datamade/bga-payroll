@@ -51,110 +51,169 @@ def test_copy_to_database(raw_table_setup):
     assert s_file.status == 'copied to database'
 
 
-@pytest.mark.dev
-@pytest.mark.parametrize('raw_field,task,queue,status,match_vintage', [
-    ('Responding Agency', tasks.select_unseen_responding_agency, utils.RespondingAgencyQueue, 'responding agency unmatched', False),
-    ('Employer', tasks.select_unseen_parent_employer, utils.ParentEmployerQueue, 'parent employer unmatched', False),
-    ('Department', tasks.select_unseen_child_employer, utils.ChildEmployerQueue, 'child employer unmatched', False),
-    ('Department', tasks.select_unseen_child_employer, utils.ChildEmployerQueue, 'child employer unmatched', True),
-])
-@pytest.mark.django_db(transaction=True)
-def test_select_unseen_responding_agency(transactional_db,
-                                         responding_agency,
-                                         employer,
-                                         canned_data,
-                                         raw_table_setup,
-                                         queue_teardown,
-                                         raw_field,
-                                         task,
-                                         queue,
-                                         status,
-                                         match_vintage):
-    s_file = raw_table_setup
+class TestSelectUnseenBase(object):
+    def run_and_validate_task(self):
+        work = self.task.delay(s_file_id=self.s_file.id)
+        work.get()
 
-    with connection.cursor() as cursor:
-        if raw_field == 'Responding Agency':
-            existing = responding_agency.build(name=canned_data['Responding Agency'])
+        self._assert_queue_len_equals_n_unseen()
+        self._assert_existing_entity_not_enqueued()
+        self._assert_status_updated()
 
-            select = '''
-                SELECT
-                  COUNT(distinct raw.responding_agency)
-                FROM {raw_payroll} AS raw
-                LEFT JOIN data_import_respondingagency AS existing
-                ON raw.responding_agency = existing.name
-                WHERE existing.name IS NULL
-            '''.format(raw_payroll=s_file.raw_table_name)
+    @property
+    def _n_unseen(self):
+        with connection.cursor() as cursor:
+            cursor.execute(self.unseen_select)
+            n_unseen, = cursor.fetchone()
 
-        elif raw_field == 'Employer':
-            existing = employer.build(name=canned_data['Employer'])
+        return n_unseen
 
-            select = '''
-                SELECT
-                  COUNT(distinct raw.employer)
-                FROM {raw_payroll} AS raw
-                LEFT JOIN payroll_employer AS existing
-                ON raw.employer = existing.name
-                AND existing.parent_id IS NULL
-                WHERE existing.name IS NULL
-            '''.format(raw_payroll=s_file.raw_table_name)
+    def _assert_queue_len_equals_n_unseen(self):
+        assert self.queue.remaining == self._n_unseen
 
-        elif raw_field == 'Department':
-            parent = employer.build(name=canned_data['Employer'])
+    def _assert_existing_entity_not_enqueued(self):
+        remaining = True
+        enqueued = []
 
-            if match_vintage:
-                parent.vintage = s_file.upload
-                parent.save()
+        while remaining:
+            uid, item = self.queue.checkout()
 
-            existing = employer.build(name=canned_data['Department'], parent=parent)
+            if item:
+                enqueued.append(item['name'])
+            else:
+                remaining = False
 
-            select = '''
-                WITH child_employers AS (
-                    SELECT
-                      child.name AS employer_name,
-                      parent.name AS parent_name,
-                      parent.vintage_id AS parent_vintage
-                    FROM payroll_employer AS child
-                    JOIN payroll_employer AS parent
-                    ON child.parent_id = parent.id
-                ), unseen_child_employers AS (
-                    SELECT DISTINCT ON (raw.employer, raw.department)
-                      raw.employer,
-                      raw.department
-                    FROM {raw_payroll} AS raw
-                    LEFT JOIN child_employers AS existing
-                    ON raw.department = existing.employer_name
-                    AND raw.employer = existing.parent_name
-                    WHERE existing.employer_name IS NULL
-                    AND raw.department IS NOT NULL
-                )
-                SELECT COUNT(*) FROM unseen_child_employers
-            '''.format(raw_payroll=s_file.raw_table_name,
-                       vintage=s_file.upload.id)
+        assert self.existing_entity.name not in enqueued
 
-        cursor.execute(select)
+    def _assert_status_updated(self):
+        self.s_file.refresh_from_db()
+        assert self.s_file.status == self.target_status
 
-        n_unseen, = cursor.fetchone()
 
-    work = task.delay(s_file_id=s_file.id)
-    work.get()
+class TestSelectUnseenRespondingAgency(TestSelectUnseenBase):
+    task = tasks.select_unseen_responding_agency
+    target_status = 'responding agency unmatched'
 
-    q = queue(s_file.id)
+    @property
+    def unseen_select(self):
+        select = '''
+            SELECT
+              COUNT(distinct raw.responding_agency) - 1
+            FROM {raw_payroll} AS raw
+        '''.format(raw_payroll=self.s_file.raw_table_name)
 
-    assert q.remaining == n_unseen
+        return select
 
-    remaining = True
-    enqueued = []
+    @property
+    def queue(self):
+        return utils.RespondingAgencyQueue(self.s_file.id)
 
-    while remaining:
-        uid, item = q.checkout()
+    @pytest.mark.django_db(transaction=True)
+    def test_select_unseen_responding_agency(self,
+                                             responding_agency,
+                                             canned_data,
+                                             raw_table_setup,
+                                             queue_teardown):
+        self.s_file = raw_table_setup
 
-        if item:
-            enqueued.append(item['name'])
-        else:
-            remaining = False
+        self.existing_entity = responding_agency.build(name=canned_data['Responding Agency'])
 
-    assert existing.name not in enqueued
+        self.run_and_validate_task()
 
-    s_file.refresh_from_db()
 
-    assert s_file.status == status
+class TestSelectUnseenParentEmployer(TestSelectUnseenBase):
+    task = tasks.select_unseen_parent_employer
+    target_status = 'parent employer unmatched'
+
+    @property
+    def unseen_select(self):
+        select = '''
+            SELECT
+              COUNT(distinct raw.employer) - 1
+            FROM {raw_payroll} AS raw
+        '''.format(raw_payroll=self.s_file.raw_table_name)
+
+        return select
+
+    @property
+    def queue(self):
+        return utils.ParentEmployerQueue(self.s_file.id)
+
+    @pytest.mark.django_db(transaction=True)
+    def test_select_unseen_parent_employer(self,
+                                           employer,
+                                           canned_data,
+                                           raw_table_setup,
+                                           queue_teardown):
+        self.s_file = raw_table_setup
+
+        self.existing_entity = employer.build(name=canned_data['Employer'])
+
+        self.run_and_validate_task()
+
+
+class TestSelectUnseenChildEmployer(TestSelectUnseenBase):
+    task = tasks.select_unseen_child_employer
+    target_status = 'child employer unmatched'
+
+    @property
+    def queue(self):
+        return utils.ChildEmployerQueue(self.s_file.id)
+
+
+class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer):
+    @property
+    def unseen_select(self):
+        select = '''
+            SELECT COUNT(*) - 1
+            FROM (
+              SELECT DISTINCT ON (employer, department)
+              * FROM {raw_payroll}
+              WHERE department IS NOT NULL
+            ) AS child_employers
+        '''.format(raw_payroll=self.s_file.raw_table_name)
+
+        return select
+
+    @pytest.mark.django_db(transaction=True)
+    def test_select_unseen_child_employer_with_existing_parent(self,
+                                                               employer,
+                                                               canned_data,
+                                                               raw_table_setup,
+                                                               queue_teardown):
+        self.s_file = raw_table_setup
+
+        parent = employer.build(name=canned_data['Employer'])
+        self.existing_entity = employer.build(name=canned_data['Department'], parent=parent)
+
+        self.run_and_validate_task()
+
+
+class TestSelectUnseenChildEmployerNewParent(TestSelectUnseenChildEmployer):
+    @property
+    def unseen_select(self):
+        select = '''
+            SELECT COUNT(*)
+            FROM (
+              SELECT DISTINCT ON (employer, department)
+              * FROM {raw_payroll}
+              WHERE employer != '{canned_data}'
+            ) AS child_employers
+        '''.format(raw_payroll=self.s_file.raw_table_name,
+                   canned_data=self.existing_entity.parent.name)
+
+        return select
+
+    @pytest.mark.dev
+    @pytest.mark.django_db(transaction=True)
+    def test_select_unseen_child_employer_with_new_parent(self,
+                                                          employer,
+                                                          canned_data,
+                                                          raw_table_setup,
+                                                          queue_teardown):
+        self.s_file = raw_table_setup
+
+        parent = employer.build(name=canned_data['Employer'], vintage=self.s_file.upload)
+        self.existing_entity = employer.build(name=canned_data['Department'], parent=parent)
+
+        self.run_and_validate_task()
