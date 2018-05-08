@@ -4,7 +4,7 @@ from celery import shared_task, Task
 from celery.signals import task_prerun
 from django.db import connection
 
-from data_import.utils import CsvMeta, ImportUtility
+from data_import.utils import CsvMeta, ImportUtility, queues
 
 
 class DataImportTask(Task):
@@ -122,6 +122,15 @@ def select_unseen_responding_agency(self, *, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
+def flush_responding_agency_queue(self, *, s_file_id):
+    q = queues.RespondingAgencyQueue(s_file_id)
+
+    q.flush()
+
+    return 'Flushed responding agency queue'
+
+
+@shared_task(bind=True, base=DataImportTask)
 def insert_responding_agency(self, *, s_file_id):
     self.import_utility.insert_responding_agency()
 
@@ -138,6 +147,15 @@ def select_unseen_parent_employer(self, *, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
+def flush_parent_employer_queue(self, *, s_file_id):
+    q = queues.ParentEmployerQueue(s_file_id)
+
+    q.flush()
+
+    return 'Flushed parent employer queue'
+
+
+@shared_task(bind=True, base=DataImportTask)
 def insert_parent_employer(self, *, s_file_id):
     self.import_utility.insert_parent_employer()
 
@@ -151,6 +169,15 @@ def select_unseen_child_employer(self, *, s_file_id):
     self.update_status('child employer unmatched')
 
     return 'Selected employers'
+
+
+@shared_task(bind=True, base=DataImportTask)
+def flush_child_employer_queue(self, *, s_file_id):
+    q = queues.ChildEmployerQueue(s_file_id)
+
+    q.flush()
+
+    return 'Flushed child employer queue'
 
 
 @shared_task(bind=True, base=DataImportTask)

@@ -190,15 +190,10 @@ class StandardizedFile(models.Model):
 
     @transition(field=status,
                 source=State.C_EMP_PENDING,
-                target=State.SAL_PENDING)
+                target=State.COMPLETE)
     def select_invalid_salary(self):
         tasks.insert_child_employer.delay(s_file_id=self.id)
         tasks.select_invalid_salary.delay(s_file_id=self.id)
-
-    @transition(field=status,
-                source=State.SAL_PENDING,
-                target=State.COMPLETE)
-    def insert_salary(self):
         tasks.insert_salary.delay(s_file_id=self.id)
 
 

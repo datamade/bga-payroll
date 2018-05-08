@@ -13,8 +13,8 @@ class ReviewQueue(TableNamesMixin):
         super().__init__(s_file_id)
 
         self.__q = SafeRedisQueue(url=REDIS_URL,
-                                  name=self.q_name,
-                                  autoclean_interval=300,
+                                  name=self.q_name_fmt.format(s_file_id),
+                                  autoclean_interval=150,
                                   serializer=pickle)
 
         from data_import.models import StandardizedFile
@@ -53,12 +53,24 @@ class ReviewQueue(TableNamesMixin):
         '''
         return self.__q.fail(uid)
 
+    def flush(self):
+        empty = False
+
+        while not empty:
+            uid, item = self.checkout()
+
+            if not item:
+                empty = True
+            else:
+                item['id'] = uid
+                self.match_or_create(item)
+
     def match_or_create(self):
         raise NotImplementedError
 
 
 class RespondingAgencyQueue(ReviewQueue):
-    q_name = 'responding_agency_queue'
+    q_name_fmt = 'responding_agency_queue_{}'
 
     def match_or_create(self, item, match=None):
         '''
@@ -90,7 +102,7 @@ class RespondingAgencyQueue(ReviewQueue):
 
 
 class ParentEmployerQueue(ReviewQueue):
-    q_name = 'parent_employer_queue'
+    q_name_fmt = 'parent_employer_queue_{}'
 
     def match_or_create(self, item, match=None):
         '''
@@ -124,7 +136,7 @@ class ParentEmployerQueue(ReviewQueue):
 
 
 class ChildEmployerQueue(ReviewQueue):
-    q_name = 'child_employer_queue'
+    q_name_fmt = 'child_employer_queue_{}'
 
     def match_or_create(self, item, match=None):
         '''
@@ -164,4 +176,4 @@ class ChildEmployerQueue(ReviewQueue):
 
 
 class SalaryQueue(ReviewQueue):
-    q_name = 'salary_queue'
+    q_name_fmt = 'salary_queue_{}'

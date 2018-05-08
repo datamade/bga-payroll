@@ -26,9 +26,16 @@ Review
     </tbody>
   </table>
 
-  <div class="float-right">
-    <a class="btn btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ object['name'] }}">Match</a>
-    <a class="btn btn-success text-light btn-add" data-entity="{{ object['name'] }}">Add</a>
+  <div class="row">
+    <div class="col-md-6">
+      <button type="button" class="btn btn-outline-dark btn-flush" data-entity="{{ object['name'] }}">Add <strong>{{ remaining }}</strong> unseen {{ entities }} &raquo;</button>
+    </div>
+    <div class="col-md-6">
+      <div class="float-right">
+        <button type="button" class="btn btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ object['name'] }}">Match</button>
+        <button type="button" class="btn btn-success text-light btn-add" data-entity="{{ object['name'] }}">Add</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -95,6 +102,24 @@ Review
           data={'data': JSON.stringify(params)},
           success=function reload(resp){
               location.reload();
+          },
+      );
+  });
+
+  $('.btn-flush').click(function submit_flush() {
+      var entity = $(this).attr('data-entity');
+
+      var params = {
+          's_file_id': {{ s_file_id }},
+          'entity_type': input.attr('data-entity-type'),
+          'unseen': {{ object|safe }},
+      }
+
+      $.post(
+          '/data-import/add/',
+          data={'data': JSON.stringify(params)},
+          success=function reload(resp){
+              window.location = window.location + '?flush=true';
           },
       );
   });

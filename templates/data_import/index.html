@@ -34,7 +34,7 @@ Uploads
             <td>{{ upload.created_at.strftime('%Y-%m-%d %I:%M %p') }}</td>
             <td>{{ s_file.status.title() }}</td>
             <td>
-              {% if not s_file.processing %}
+              {% if s_file.status != 'complete' %}
                 <a href="/data-import/review/{{ s_file.review_step }}/{{ s_file.id }}">
                   Resume import &raquo;
                 </a>

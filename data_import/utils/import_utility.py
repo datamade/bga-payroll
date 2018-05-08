@@ -9,11 +9,10 @@ from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
 
 class ImportUtility(TableNamesMixin):
 
-    def __init__(self, s_file_id, init=False):
+    def __init__(self, s_file_id):
         super().__init__(s_file_id)
 
         self.s_file_id = s_file_id
-        self.init = init
 
         from data_import.models import StandardizedFile
         s_file = StandardizedFile.objects.get(id=s_file_id)
@@ -100,7 +99,10 @@ class ImportUtility(TableNamesMixin):
                 DISTINCT employer,
                 {vintage}
               FROM {raw_payroll} AS raw
-            ON CONFLICT DO NOTHING
+              LEFT JOIN payroll_employer AS existing
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
+              AND existing.parent_id IS NULL
+              WHERE existing.name IS NULL
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 

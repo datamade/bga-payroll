@@ -14,7 +14,7 @@ def test_import_utility_init(raw_table_setup,
 
     s_file = raw_table_setup
 
-    imp = utils.ImportUtility(s_file.id, init=True)
+    imp = utils.ImportUtility(s_file.id)
     imp.populate_models_from_raw_data()
 
     with connection.cursor() as cursor:

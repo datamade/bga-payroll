@@ -13,6 +13,8 @@ from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
     Upload
 from data_import.utils import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
+from data_import.tasks import flush_responding_agency_queue, \
+    flush_parent_employer_queue, flush_child_employer_queue
 
 from payroll.models import Employer
 
@@ -58,7 +60,7 @@ class SourceFileHook(View):
 class StandardizedDataUpload(FormView):
     template_name = 'data_import/upload.html'
     form_class = UploadForm
-    success_url = 'upload-success/'
+    success_url = '/data-import/'
 
     def form_valid(self, form):
         upload = Upload.objects.create()
@@ -75,6 +77,7 @@ class StandardizedDataUpload(FormView):
 
         s_file = StandardizedFile.objects.create(**s_file_meta)
         s_file.copy_to_database()
+        s_file.select_unseen_responding_agency()
 
         return super().form_valid(form)
 
@@ -104,13 +107,17 @@ class Review(DetailView):
 
         Otherwise, show the review.
         '''
-        if self.q.remaining > 0:
-            return super().dispatch(request, *args, **kwargs)
-
-        else:
-            # TO-DO: Make sure this can't be triggered more than once.
+        if self.request.GET.get('flush') == 'true':
+            self.flush()
             self.finish_review_step()
             return redirect(reverse('data-import'))
+
+        elif self.q.remaining == 0:
+            self.finish_review_step()
+            return redirect(reverse('data-import'))
+
+        else:
+            return super().dispatch(request, *args, **kwargs)
 
     def get_object(self):
         item_id, item = self.q.checkout()
@@ -143,12 +150,17 @@ class Review(DetailView):
         else:
             return redirect('/data-import/?pending=True')
 
+    def flush(self):
+        self.flush_task.delay(s_file_id=self.kwargs['s_file_id'])
+
     def finish_review_step(self):
+        # TO-DO: Make sure this can't be triggered more than once.
         s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
         getattr(s_file, self.transition)()
 
 
 class RespondingAgencyReview(Review):
+    flush_task = flush_responding_agency_queue
     transition = 'select_unseen_parent_employer'
     entity = 'responding agency'
     entities = 'responding agencies'
@@ -159,6 +171,7 @@ class RespondingAgencyReview(Review):
 
 
 class ParentEmployerReview(Review):
+    flush_task = flush_parent_employer_queue
     transition = 'select_unseen_child_employer'
     entity = 'parent employer'
     entities = 'parent employers'
@@ -169,6 +182,7 @@ class ParentEmployerReview(Review):
 
 
 class ChildEmployerReview(Review):
+    flush_task = flush_child_employer_queue
     transition = 'select_invalid_salary'
     entity = 'child employer'
     entities = 'child employers'
