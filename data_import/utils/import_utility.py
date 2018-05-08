@@ -132,10 +132,10 @@ class ImportUtility(TableNamesMixin):
               department
             FROM {raw_payroll} AS raw
             LEFT JOIN child_employers AS child
-            ON raw.employer = child.parent_name
-            AND raw.department = child.employer_name
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(child.parent_name))
+            AND TRIM(LOWER(raw.department)) = TRIM(LOWER(child.employer_name))
             LEFT JOIN child_employers AS parent
-            ON raw.employer = parent.parent_name
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWeR(parent.parent_name))
             WHERE raw.department IS NOT NULL
             AND COALESCE(parent.new_parent, FALSE) IS FALSE
             AND child.employer_name IS NULL
@@ -262,16 +262,16 @@ class ImportUtility(TableNamesMixin):
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS employer
               ON (
-                raw.department = employer.employer_name
-                AND raw.employer = employer.parent_name
+                TRIM(LOWER(raw.department)) = TRIM(LOWER(employer.employer_name))
+                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(employer.parent_name))
                 AND raw.department IS NOT NULL
               ) OR (
-                raw.employer = employer.employer_name
+                TRIM(LOWER(raw.employer)) = TRIM(LOWER(employer.employer_name))
                 AND raw.department IS NULL
               )
               JOIN payroll_position AS pos
               ON pos.employer_id = employer.employer_id
-              AND pos.title = raw.title
+              AND TRIM(LOWER(pos.title)) = TRIM(LOWER(raw.title))
             )
             SELECT
               record_id,
