@@ -10,7 +10,18 @@ Review
 
 {% block content %}
 
-<div class="col-md-10 offset-md-1">
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="/data-import/">Uploads</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">
+      Review
+    </li>
+  </ol>
+</nav>
+
+<div class="col-md-10">
   <p class="lead">We found <strong>{{ remaining }}</strong> unmatched {{ entities }}.</p>
 
   <p>Click <span class="badge badge-dark">Match</span> to select an existing {{ entity }} or <span class="badge badge-success">Add</span> to create a new {{ entity }} in the database.</p>

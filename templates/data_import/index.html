@@ -6,9 +6,22 @@ Uploads
 
 {% block content %}
 
-<div class="col-md-10 offset-md-1">
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active" aria-current="page">
+      Uploads
+    </li>
+  </ol>
+</nav>
 
-  <h2>Uploads</h2>
+<div class="col-md-10">
+
+  <h2>
+    Uploads
+    <a role="button" class="btn btn-outline-dark float-right" href="/data-import/upload-standardized-file/">
+      <i class="fa fa-fw fa-upload"></i> Upload
+    </a>
+  </h2>
 
   {% if request.GET.get('pending') %}
     <div class="alert alert-warning" role="alert">
