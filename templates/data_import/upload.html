@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}
+Upload data
+{% endblock %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="/data-import/">Uploads</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">
+      Standardized File
+    </li>
+  </ol>
+</nav>
+
+<div class="row">
+  <div class="col-md-10">
+    <h2>Standardized data upload</h2>
+
+    <p class="lead">Upload a standardized data file.</p>
+
+    <p>Standardized files must be in CSV format and contain the following fields: responding agency, employer, last name, first name, title, department, salary, date started, and data year.</p>
+
+    <form enctype="multipart/form-data" method="POST" class="form">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+      <div class="form-group col-sm-5">
+        <label for="{{ form.standardized_file.auto_id }}"><strong>Standardized file</strong></label>
+        <input type="file" class="form-control-file{% if form.standardized_file.errors %} is-invalid{% endif %}" id="{{ form.standardized_file.auto_id }}" name="standardized_file" />
+        {% if form.standardized_file.errors %}
+        <div class="invalid-feedback">
+          {% for error in form.standardized_file.errors %}
+            {{ error }}<br />
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="form-group col-sm-5">
+        <label for="{{ form.reporting_year.auto_id }}"><strong>Reporting year</strong></label>
+        <input type="integer" class="form-control{% if form.reporting_year.errors %} is-invalid{% endif %}" id="{{ form.reporting_year.auto_id }}" name="reporting_year" placeholder="2017" value="{{ form.reporting_year.value() or '' }}" />
+        {% if form.reporting_year.errors %}
+        <div class="invalid-feedback">
+          {% for error in form.reporting_year.errors %}
+            {{ error }}<br />
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <br />
+      <button type="submit" class="btn btn-lg btn-primary">Submit!</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

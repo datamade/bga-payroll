@@ -1,41 +1,21 @@
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
-from django.utils.text import slugify
 
 from titlecase import titlecase
 
+from bga_database.base_models import SluggedModel
+from data_import.models import Upload
 from payroll.utils import format_name, format_numeral
 
 
-class SluggedModel(models.Model):
-    slug = models.SlugField(max_length=255, unique=True, null=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = self._make_unique_slug()
-
-        super().save()
-
-    def _make_base_slug(self):
-        return slugify(str(self))
-
-    def _make_unique_slug(self):
-        slug = self._make_base_slug()
-
-        i = 1
-        unique_slug = slug
-
-        while type(self).objects.filter(slug=unique_slug).exists():
-            unique_slug = '{0}-{1}'.format(slug, str(i))
-            i += 1
-
-        return unique_slug
+class VintagedModel(models.Model):
+    vintage = models.ForeignKey(Upload, on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
 
 
-class Employer(SluggedModel):
+class Employer(SluggedModel, VintagedModel):
     name = models.CharField(max_length=255)
     parent = models.ForeignKey('self',
                                null=True,
@@ -58,10 +38,9 @@ class Employer(SluggedModel):
         return bool(self.parent)
 
 
-class Person(SluggedModel):
+class Person(SluggedModel, VintagedModel):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
-    salaries = models.ManyToManyField('Salary')
     search_vector = SearchVectorField(max_length=255, null=True)
 
     def __str__(self):
@@ -71,35 +50,73 @@ class Person(SluggedModel):
         return titlecase(name.lower(), callback=format_name)
 
 
-class Position(models.Model):
+class Job(VintagedModel):
+    person = models.ForeignKey('Person',
+                               related_name='jobs',
+                               on_delete=models.CASCADE)
+    position = models.ForeignKey('Position', on_delete=models.CASCADE)
+    start_date = models.DateField(null=True)
+
+    def __str__(self):
+        return '{0} – {1}'.format(self.person, self.position)
+
+    @classmethod
+    def of_employer(cls, employer_id, n=None):
+        '''
+        Return Job objects for given employer.
+        '''
+        employer = models.Q(position__employer_id=employer_id)
+        parent_employer = models.Q(position__employer__parent_id=employer_id)
+
+        # Return only jobs of the given employer, if that employer is a
+        # department. Otherwise, return jobs of the given employer, as
+        # well as its child employers.
+
+        if Employer.objects.select_related('parent').get(id=employer_id).is_department:
+            criterion = employer
+
+        else:
+            criterion = employer | parent_employer
+
+        jobs = cls.objects.filter(criterion)\
+                          .order_by('-salaries__amount')\
+                          .select_related('person', 'position', 'position__employer', 'position__employer__parent')\
+                          .prefetch_related('salaries')[:n]
+
+        return jobs
+
+
+class Position(VintagedModel):
     employer = models.ForeignKey('Employer', on_delete=models.CASCADE)
     title = models.CharField(max_length=255, null=True)
 
     def __repr__(self):
-        position = '{0} – {1}'.format(self.employer, self.title)
+        position = '{0} {1}'.format(self.employer, self.title)
         return titlecase(position.lower())
 
     def __str__(self):
         return titlecase(self.title.lower(), callback=format_numeral)
 
 
-class Salary(models.Model):
-    position = models.ForeignKey('Position', on_delete=models.CASCADE)
-    amount = models.FloatField()
-    start_date = models.DateField(null=True)
-    vintage = models.IntegerField()
+class Salary(VintagedModel):
+    '''
+    The Salary object is a representation of prospective, annual salary. The
+    provided amount is not a measure of actual pay, i.e., it does not include
+    additional income, such as overtime or bonus pay. The provided amount is
+    instead the amount an employer anticipates paying an employee for a given
+    calendar (not fiscal) year.
+
+    While most salary amounts represent an annual rate, some salaries are
+    reported at hourly or per-appearance rates. This can be inferred, but is
+    not explicitly specified in the source data.
+    '''
+    job = models.ForeignKey('Job',
+                            related_name='salaries',
+                            on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return '{0} {1}'.format(self.amount, self.position)
-
-    @property
-    def person(self):
-        # Force Django to use the cached person objects, if they exist
-        if hasattr(self, '_prefetched_objects_cache') and 'person' in self._prefetched_objects_cache:
-            return self._prefetched_objects_cache['person'][0]
-
-        else:
-            return self.person_set.get()
+        return '{0} {1}'.format(self.amount, self.job)
 
     @property
     def is_wage(self):
@@ -109,28 +126,3 @@ class Salary(models.Model):
         salary amount is less than 1000, False otherwise.
         '''
         return self.amount < 1000
-
-    @classmethod
-    def of_employer(cls, employer_id, n=None):
-        '''
-        Return Salary objects for given employer.
-        '''
-        employer = models.Q(position__employer_id=employer_id)
-        parent_employer = models.Q(position__employer__parent_id=employer_id)
-
-        # Return only salaries of the given employer, if that employer is a
-        # department. Otherwise, return salaries of the given employer, as
-        # well as its child employers.
-
-        if Employer.objects.select_related('parent').get(id=employer_id).is_department:
-            criterion = employer
-
-        else:
-            criterion = employer | parent_employer
-
-        salaries = cls.objects.filter(criterion)\
-                              .order_by('-amount')\
-                              .select_related('position', 'position__employer', 'position__employer__parent')\
-                              .prefetch_related('person_set')[:n]
-
-        return salaries

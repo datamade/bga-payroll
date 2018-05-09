@@ -1,0 +1,2 @@
+class OperationNotPermittedOnInstance(Exception):
+    pass

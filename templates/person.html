@@ -5,7 +5,7 @@
 {% block content %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    {% with entity = entity.salaries.first().position.employer %}
+    {% with entity = entity.jobs.first().position.employer %}
       {% include 'partials/breadcrumbs.html' %}
     {% endwith %}
     <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
@@ -16,7 +16,7 @@
   <h2 class="mb-3">
     <i class="far fa-address-card"></i>
     {{ entity }}
-    {% with position = entity.salaries.first().position %}
+    {% with position = entity.jobs.first().position %}
       <small>{{ position }} at {{ position.employer }}</small>
     {% endwith %}
   </h2>
@@ -26,7 +26,7 @@
       <h3 class="card-title mb-4">
         <i class="fas fa-briefcase"></i> All positions
       </h3>
-      {% with salaries = entity.salaries.all(), entity = namespace(is_department=false) %}
+      {% with jobs = entity.jobs.all(), entity = namespace(is_department=false) %}
         {% include 'partials/person_table.html' %}
       {% endwith %}
     </div>

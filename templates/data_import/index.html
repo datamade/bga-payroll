@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}
+Uploads
+{% endblock %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active" aria-current="page">
+      Uploads
+    </li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-body">
+
+    <h2>
+      Uploads
+      <a role="button" class="btn btn-outline-primary float-right" href="/data-import/upload-standardized-file/">
+        <i class="fa fa-fw fa-upload"></i> Upload
+      </a>
+    </h2>
+
+    {% if request.GET.get('pending') %}
+      <div class="alert alert-warning" role="alert">
+        {# TO-DO: Better language. Also indicate which upload has pending review. #}
+        <strong>There is outstanding work.</strong> Come back in a few minutes.
+      </div>
+    {% endif %}
+
+    <table class="table table-striped table-hover">
+      <thead class="bg-warning">
+        <tr>
+          <th scope="col">Reporting Year</th>
+          <th scope="col">Upload time</th>
+          <th scope="col">Status</th>
+          <th scope="col">Next step</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for upload in uploads %}
+          {% with s_file = upload.standardized_file.get() %}
+            <tr>
+              <td>{{ s_file.reporting_year }}</td>
+              <td>{{ upload.created_at.strftime('%Y-%m-%d %I:%M %p') }}</td>
+              <td>{{ s_file.status.title() }}</td>
+              <td>
+                {% if s_file.status != 'complete' %}
+                  <a href="/data-import/review/{{ s_file.review_step }}/{{ s_file.id }}">
+                    Resume import &raquo;
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+  {% include 'partials/pagination.html' %}
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}
