@@ -27,15 +27,15 @@ def test_match_or_create_responding_agency(raw_table_setup,
 
     name = canned_data[raw_field]
 
+    item = {'id': None, 'name': name}
+
+    if isinstance(q, ChildEmployerQueue):
+        parent = canned_data['Employer']
+        employer.build(name=parent, vintage=s_file.upload)
+        item['parent'] = parent
+
     for match in (None, 'a matching agency'):
-        item = {'id': None, 'name': name}
-
-        if isinstance(q, ChildEmployerQueue):
-            parent = canned_data['Employer']
-            Employer.objects.create(name=parent, vintage=s_file.upload)
-            item['parent'] = parent
-
-        q.match_or_create(item, match)
+        q.match_or_create(item.copy(), match)
 
         with connection.cursor() as cursor:
             select = '''
