@@ -1,39 +1,21 @@
-from django.core.files.uploadedfile import UploadedFile
-from django.db import connection
+# TO-DO: Decide whether to roll this into test_tasks.
+# (Likely involves writing a task / workflow for first-time
+# slash non-validated imports.)
 import pytest
 
-from data_import.exceptions import OperationNotPermittedOnInstance
-from data_import.tasks import copy_to_database
-from data_import.utils import CsvMeta, ImportUtility
+from django.db import connection
 
-
-def test_alter_uploadedfile_raises_exception(mocker):
-    mock_uploadedfile = mocker.MagicMock(spec=UploadedFile)
-
-    # Patch _field_names setter to avoid StopIteration as result of
-    # passing in mock (e.g., empty) file
-
-    mocker.patch.object(CsvMeta, '_field_names')
-
-    meta = CsvMeta(mock_uploadedfile)
-
-    with pytest.raises(OperationNotPermittedOnInstance) as err:
-        meta.trim_extra_fields()
-
-    assert 'Cannot alter instance' in str(err)
+from data_import import utils
 
 
 @pytest.mark.django_db(transaction=True)
-def test_import_utility(standardized_file,
-                        real_file,
-                        transactional_db,
-                        raw_table_teardown):
+def test_import_utility_init(raw_table_setup,
+                             mocker):
 
-    s_file = standardized_file.build(standardized_file=real_file)
+    s_file = raw_table_setup
 
-    copy_to_database(s_file_id=s_file.id)
-
-    imp = ImportUtility(s_file.id, s_file.upload.id)
+    imp = utils.ImportUtility(s_file.id)
+    imp.populate_models_from_raw_data()
 
     with connection.cursor() as cursor:
         # Do some validation on the individual model tables, so we have a
@@ -101,7 +83,6 @@ def test_import_utility(standardized_file,
         # should return no rows for a full overlap.
         #
         # See https://stackoverflow.com/questions/5727882/check-if-two-selects-are-equivalent
-
         reconstruct = '''
             WITH reconstructed AS (
               SELECT

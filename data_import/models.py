@@ -1,9 +1,12 @@
 from os.path import basename
 
+from celery import chain
 from django.contrib.auth import get_user_model
 from django.db import connection, models
+from django_fsm import FSMField, transition
 
 from bga_database.base_models import SluggedModel
+from data_import import tasks
 
 
 def set_deleted_user():
@@ -74,7 +77,7 @@ class SourceFile(models.Model):
     upload = models.ForeignKey(
         'Upload',
         on_delete=models.CASCADE,
-        related_name='source_files'
+        related_name='source_file'
     )
     google_drive_file_id = models.CharField(max_length=255)
     standardized_file = models.ForeignKey(
@@ -116,6 +119,14 @@ def standardized_file_upload_name(instance, filename):
 
 
 class StandardizedFile(models.Model):
+    class State:
+        UPLOADED = 'uploaded'
+        RA_PENDING = 'responding agency unmatched'
+        P_EMP_PENDING = 'parent employer unmatched'
+        C_EMP_PENDING = 'child employer unmatched'
+        SAL_PENDING = 'salary unvalidated'
+        COMPLETE = 'complete'
+
     standardized_file = models.FileField(
         max_length=1000,
         upload_to=standardized_file_upload_name
@@ -124,12 +135,25 @@ class StandardizedFile(models.Model):
     upload = models.ForeignKey(
         'Upload',
         on_delete=models.CASCADE,
-        related_name='standardized_files'
+        related_name='standardized_file'
     )
+    status = FSMField(default=State.UPLOADED)
 
     @property
     def raw_table_name(self):
         return 'raw_payroll_{}'.format(self.id)
+
+    @property
+    def processing(self):
+        '''
+        TO-DO: Find a less expensive way to check whether an instance
+        is processing.
+        '''
+        return False
+
+    @property
+    def review_step(self):
+        return '-'.join(self.status.split(' ')[:-1])
 
     def post_delete_handler(self):
         '''
@@ -137,6 +161,51 @@ class StandardizedFile(models.Model):
         '''
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE IF EXISTS {}'.format(self.raw_table_name))
+
+    @transition(field=status,
+                source=State.UPLOADED,
+                target=State.RA_PENDING)
+    def copy_to_database(self):
+        work = chain(
+            tasks.copy_to_database.si(s_file_id=self.id),
+            tasks.select_unseen_responding_agency.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
+
+    @transition(field=status,
+                source=State.RA_PENDING,
+                target=State.P_EMP_PENDING)
+    def select_unseen_parent_employer(self):
+        work = chain(
+            tasks.insert_responding_agency.si(s_file_id=self.id),
+            tasks.select_unseen_parent_employer.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
+
+    @transition(field=status,
+                source=State.P_EMP_PENDING,
+                target=State.C_EMP_PENDING)
+    def select_unseen_child_employer(self):
+        work = chain(
+            tasks.insert_parent_employer.si(s_file_id=self.id),
+            tasks.select_unseen_child_employer.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
+
+    @transition(field=status,
+                source=State.C_EMP_PENDING,
+                target=State.COMPLETE)
+    def select_invalid_salary(self):
+        work = chain(
+            tasks.insert_child_employer.si(s_file_id=self.id),
+            tasks.select_invalid_salary.si(s_file_id=self.id),
+            tasks.insert_salary.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
 
 
 def post_delete_handler(sender, instance, **kwargs):

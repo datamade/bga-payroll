@@ -1,19 +1,29 @@
 from django.db import connection
 
+from data_import.utils.table_names import TableNamesMixin
+from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
+    RespondingAgencyQueue
 
-class ImportUtility(object):
 
-    def __init__(self, s_file_id, upload_id):
-        self.vintage = upload_id
-        self.raw_payroll_table = 'raw_payroll_{}'.format(s_file_id)
-        self.raw_position_table = 'raw_position_{}'.format(s_file_id)
-        self.raw_job_table = 'raw_job_{}'.format(s_file_id)
-        self.raw_person_table = 'raw_person_{}'.format(s_file_id)
+# TO-DO: Return select / insert counts for logging
+
+class ImportUtility(TableNamesMixin):
+
+    def __init__(self, s_file_id):
+        super().__init__(s_file_id)
+
+        self.s_file_id = s_file_id
+
+        from data_import.models import StandardizedFile
+        s_file = StandardizedFile.objects.get(id=s_file_id)
+
+        self.vintage = s_file.upload.id
 
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
 
-        self.insert_employer()
+        self.insert_parent_employer()
+        self.insert_child_employer()
 
         self.insert_position()
 
@@ -25,6 +35,24 @@ class ImportUtility(object):
 
         self.insert_salary()
 
+    def select_unseen_responding_agency(self):
+        q = RespondingAgencyQueue(self.s_file_id)
+
+        select = '''
+            SELECT
+              DISTINCT responding_agency
+            FROM {raw} AS raw
+            LEFT JOIN data_import_respondingagency AS existing
+            ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
+            WHERE existing.name IS NULL
+        '''.format(raw=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for agency in cursor:
+                q.add({'name': agency[0]})
+
     def insert_responding_agency(self):
         insert = '''
             INSERT INTO data_import_respondingagency (name)
@@ -32,21 +60,39 @@ class ImportUtility(object):
                 DISTINCT responding_agency
               FROM {} AS raw
               LEFT JOIN data_import_respondingagency AS existing
-              ON raw.responding_agency = existing.name
+              ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
               WHERE existing.name IS NULL
         '''.format(self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
-    def insert_employer(self):
+    def select_unseen_parent_employer(self):
         '''
-        Insert parents that do not already exist, then insert
-        departments, no-op'ing on duplicates via the unique index
-        on payroll_employer name / parent ID. The uniqueness of
-        everything else is predicated on the uniqueness of the
-        parents. TO-DO: Explain this in better English!
+        Select all parent employers we have not yet seen, regardless
+        of whether they directly employ people (department is null) or
+        not (department is not null). Do this, in order to avoid the
+        user having to review every department of a parent employer
+        that can be matched to an existing department.
         '''
+        q = ParentEmployerQueue(self.s_file_id)
+
+        select = '''
+            SELECT DISTINCT employer
+            FROM {raw_payroll} AS raw
+            LEFT JOIN payroll_employer AS existing
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
+            AND existing.parent_id IS NULL
+            WHERE existing.name IS NULL
+        '''.format(raw_payroll=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for employer in cursor:
+                q.add({'name': employer[0]})
+
+    def insert_parent_employer(self):
         insert_parents = '''
             INSERT INTO payroll_employer (name, vintage_id)
               SELECT
@@ -54,11 +100,59 @@ class ImportUtility(object):
                 {vintage}
               FROM {raw_payroll} AS raw
               LEFT JOIN payroll_employer AS existing
-              ON raw.employer = existing.name
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
+              AND existing.parent_id IS NULL
               WHERE existing.name IS NULL
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 
+        with connection.cursor() as cursor:
+            cursor.execute(insert_parents)
+
+    def select_unseen_child_employer(self):
+        '''
+        If the parent is new as of this vintage, don't force the
+        user to review children, because we won't have seen any of
+        them.
+        '''
+        q = ChildEmployerQueue(self.s_file_id)
+
+        select = '''
+            WITH child_employers AS (
+              SELECT
+                child.name AS employer_name,
+                parent.name AS parent_name,
+                parent.vintage_id = {vintage} AS new_parent
+              FROM payroll_employer AS child
+              JOIN payroll_employer AS parent
+              ON child.parent_id = parent.id
+            )
+            SELECT DISTINCT ON (employer, department)
+              employer,
+              department
+            FROM {raw_payroll} AS raw
+            LEFT JOIN child_employers AS child
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(child.parent_name))
+            AND TRIM(LOWER(raw.department)) = TRIM(LOWER(child.employer_name))
+            LEFT JOIN child_employers AS parent
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWeR(parent.parent_name))
+            WHERE raw.department IS NOT NULL
+            AND COALESCE(parent.new_parent, FALSE) IS FALSE
+            AND child.employer_name IS NULL
+        '''.format(vintage=self.vintage,
+                   raw_payroll=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for employer in cursor:
+                parent, department = employer
+                q.add({
+                    'name': department,
+                    'parent': parent,
+                })
+
+    def insert_child_employer(self):
         insert_children = '''
             INSERT INTO payroll_employer (name, parent_id, vintage_id)
               SELECT DISTINCT ON (employer, department)
@@ -67,14 +161,13 @@ class ImportUtility(object):
                 {vintage}
               FROM {raw_payroll} AS raw
               JOIN payroll_employer AS parent
-              ON raw.employer = parent.name
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(parent.name))
               WHERE department IS NOT NULL
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
-            cursor.execute(insert_parents)
             cursor.execute(insert_children)
 
     def insert_position(self):
@@ -101,11 +194,11 @@ class ImportUtility(object):
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
               ON (
-                raw.department = existing.employer_name
-                AND raw.employer = existing.parent_name
+                TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
+                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
                 AND raw.department IS NOT NULL
               ) OR (
-                raw.employer = existing.employer_name
+                TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.employer_name))
                 AND raw.department IS NULL
               )
             ON CONFLICT DO NOTHING
@@ -169,16 +262,16 @@ class ImportUtility(object):
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS employer
               ON (
-                raw.department = employer.employer_name
-                AND raw.employer = employer.parent_name
+                TRIM(LOWER(raw.department)) = TRIM(LOWER(employer.employer_name))
+                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(employer.parent_name))
                 AND raw.department IS NOT NULL
               ) OR (
-                raw.employer = employer.employer_name
+                TRIM(LOWER(raw.employer)) = TRIM(LOWER(employer.employer_name))
                 AND raw.department IS NULL
               )
               JOIN payroll_position AS pos
               ON pos.employer_id = employer.employer_id
-              AND pos.title = raw.title
+              AND TRIM(LOWER(pos.title)) = TRIM(LOWER(raw.title))
             )
             SELECT
               record_id,

@@ -4,9 +4,7 @@ from django.db import models
 from titlecase import titlecase
 
 from bga_database.base_models import SluggedModel
-
 from data_import.models import Upload
-
 from payroll.utils import format_name, format_numeral
 
 

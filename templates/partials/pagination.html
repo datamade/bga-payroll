@@ -1,0 +1,21 @@
+{% if is_paginated %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item{% if not page_obj.has_previous() %} disabled{% endif %}">
+                <a class="page-link" {% if page_obj.has_previous() %}href="{{ request.path }}?{{ request|query_transform }}{% if request|query_transform %}&{% endif %}page={{ page_obj.previous_page_number() }}"{% else %}tabindex="-1"{% endif %}>
+                    <i class="fas fa-arrow-circle-left"></i> Previous
+                </a>
+            </li>
+
+            <li class="page-item">
+                <a class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a>
+            </li>
+
+            <li class="page-item{% if not page_obj.has_next() %} disabled{% endif %}">
+                <a class="page-link" {% if page_obj.has_next() %}href="{{ request.path }}?{{ request|query_transform }}{% if request|query_transform %}&{% endif %}page={{ page_obj.next_page_number() }}"{% else %}tabindex="-1"{% endif %}>
+                    Next <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+{% endif %}

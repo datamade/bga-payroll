@@ -58,7 +58,8 @@ class CsvMeta(object):
 
         return [self._clean_field(field) for field in fields]
 
-    def _clean_field(self, field):
+    @classmethod
+    def _clean_field(cls, field):
         return '_'.join(field.strip().lower().split(' '))
 
     def trim_extra_fields(self):
