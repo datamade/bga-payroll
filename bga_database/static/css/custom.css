@@ -12,3 +12,7 @@ body {
 ol.breadcrumb {
     background-color:unset;
 }
+
+.invalid-feedback {
+    display: unset;
+}

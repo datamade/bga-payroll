@@ -39,7 +39,7 @@ Upload data
     </div>
     <div class="form-group">
       <label for="{{ form.reporting_year.auto_id }}"><strong>Reporting year</strong></label>
-      <input type="integer" class="form-control{% if form.reporting_year.errors %} is-invalid{% endif %}" id="{{ form.reporting_year.auto_id }}" name="reporting_year" placeholder="2017" />
+      <input type="integer" class="form-control{% if form.reporting_year.errors %} is-invalid{% endif %}" id="{{ form.reporting_year.auto_id }}" name="reporting_year" placeholder="2017" value="{{ form.reporting_year.value() or '' }}" />
       {% if form.reporting_year.errors %}
       <div class="invalid-feedback">
         {% for error in form.reporting_year.errors %}
