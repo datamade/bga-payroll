@@ -1,7 +1,6 @@
 branches:
   only:
   - master
-  - upload
   - "/^v0.*$/"
 
 language: python
