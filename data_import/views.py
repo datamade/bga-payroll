@@ -76,8 +76,8 @@ class StandardizedDataUpload(FormView):
         }
 
         s_file = StandardizedFile.objects.create(**s_file_meta)
+
         s_file.copy_to_database()
-        s_file.select_unseen_responding_agency()
 
         return super().form_valid(form)
 
@@ -90,7 +90,7 @@ class Uploads(ListView):
     template_name = 'data_import/index.html'
     model = Upload
     context_object_name = 'uploads'
-    paginate_by = 25
+    paginate_by = 10
 
     def get_queryset(self):
         return Upload.objects.filter(standardized_file__isnull=False)\
@@ -109,7 +109,6 @@ class Review(DetailView):
         '''
         if self.request.GET.get('flush') == 'true':
             self.flush()
-            self.finish_review_step()
             return redirect(reverse('data-import'))
 
         elif self.q.remaining == 0:

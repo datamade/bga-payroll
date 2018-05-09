@@ -23,12 +23,12 @@ def test_child_employer(client,
                         salary,
                         transactional_db):
 
-    # Create a parent employer, then give a child employer.
-    parent_employer = employer.build()
-    child_employer = employer.build(name='Brew Staff', parent=parent_employer)
-
     # Create a salary.
     salary = salary.build()
+
+    # Grab the parent employer, then give it a child employer.
+    parent_employer = salary.job.position.employer
+    child_employer = employer.build(name='Brew Staff', parent=parent_employer)
 
     # Make the job attached to the salary, a job of the child employer.
     child_employer.position_set.add(salary.job.position)

@@ -1,5 +1,6 @@
 from os.path import basename
 
+from celery import chain
 from django.contrib.auth import get_user_model
 from django.db import connection, models
 from django_fsm import FSMField, transition
@@ -120,7 +121,6 @@ def standardized_file_upload_name(instance, filename):
 class StandardizedFile(models.Model):
     class State:
         UPLOADED = 'uploaded'
-        COPIED = 'copied to database'
         RA_PENDING = 'responding agency unmatched'
         P_EMP_PENDING = 'parent employer unmatched'
         C_EMP_PENDING = 'child employer unmatched'
@@ -164,37 +164,48 @@ class StandardizedFile(models.Model):
 
     @transition(field=status,
                 source=State.UPLOADED,
-                target=State.COPIED)
-    def copy_to_database(self):
-        tasks.copy_to_database.delay(s_file_id=self.id)
-
-    @transition(field=status,
-                source=State.COPIED,
                 target=State.RA_PENDING)
-    def select_unseen_responding_agency(self):
-        tasks.select_unseen_responding_agency.delay(s_file_id=self.id)
+    def copy_to_database(self):
+        work = chain(
+            tasks.copy_to_database.si(s_file_id=self.id),
+            tasks.select_unseen_responding_agency.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
 
     @transition(field=status,
                 source=State.RA_PENDING,
                 target=State.P_EMP_PENDING)
     def select_unseen_parent_employer(self):
-        tasks.insert_responding_agency.delay(s_file_id=self.id)
-        tasks.select_unseen_parent_employer.delay(s_file_id=self.id)
+        work = chain(
+            tasks.insert_responding_agency.si(s_file_id=self.id),
+            tasks.select_unseen_parent_employer.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
 
     @transition(field=status,
                 source=State.P_EMP_PENDING,
                 target=State.C_EMP_PENDING)
     def select_unseen_child_employer(self):
-        tasks.insert_parent_employer.delay(s_file_id=self.id)
-        tasks.select_unseen_child_employer.delay(s_file_id=self.id)
+        work = chain(
+            tasks.insert_parent_employer.si(s_file_id=self.id),
+            tasks.select_unseen_child_employer.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
 
     @transition(field=status,
                 source=State.C_EMP_PENDING,
                 target=State.COMPLETE)
     def select_invalid_salary(self):
-        tasks.insert_child_employer.delay(s_file_id=self.id)
-        tasks.select_invalid_salary.delay(s_file_id=self.id)
-        tasks.insert_salary.delay(s_file_id=self.id)
+        work = chain(
+            tasks.insert_child_employer.si(s_file_id=self.id),
+            tasks.select_invalid_salary.si(s_file_id=self.id),
+            tasks.insert_salary.si(s_file_id=self.id)
+        )
+
+        work.apply_async()
 
 
 def post_delete_handler(sender, instance, **kwargs):

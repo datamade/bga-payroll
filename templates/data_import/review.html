@@ -21,30 +21,33 @@ Review
   </ol>
 </nav>
 
-<div class="col-md-10">
-  <p class="lead">We found <strong>{{ remaining }}</strong> unmatched {{ entities }}.</p>
+<div class="row">
+  <div class="col-md-10">
+    <h2>Review</h2>
+    <p class="lead">We found <strong>{{ remaining }}</strong> unmatched {{ entities }}.</p>
 
-  <p>Click <span class="badge badge-dark">Match</span> to select an existing {{ entity }} or <span class="badge badge-success">Add</span> to create a new {{ entity }} in the database.</p>
+    <p>Click <span class="badge badge-dark">Match</span> to select an existing {{ entity }} or <span class="badge badge-success">Add</span> to create a new {{ entity }} in the database.</p>
 
-  <table class="table table-striped table-hover">
-    <tbody>
-      {% for key in object.keys() if key != 'id' %}
-        <tr>
-          <td><strong>{{ key }}</strong></td>
-          <td>{{ object[key] }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <table class="table table-striped table-hover">
+      <tbody>
+        {% for key in object.keys() if key != 'id' %}
+          <tr>
+            <td><strong>{{ key }}</strong></td>
+            <td>{{ object[key] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-  <div class="row">
-    <div class="col-md-6">
-      <button type="button" class="btn btn-outline-dark btn-flush" data-entity="{{ object['name'] }}">Add <strong>{{ remaining }}</strong> unseen {{ entities }} &raquo;</button>
-    </div>
-    <div class="col-md-6">
-      <div class="float-right">
-        <button type="button" class="btn btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ object['name'] }}">Match</button>
-        <button type="button" class="btn btn-success text-light btn-add" data-entity="{{ object['name'] }}">Add</button>
+    <div class="row">
+      <div class="col-md-6">
+        <button type="button" class="btn btn-outline-dark btn-flush" data-entity="{{ object['name'] }}">Add <strong>{{ remaining }}</strong> unseen {{ entities }} &raquo;</button>
+      </div>
+      <div class="col-md-6">
+        <div class="float-right">
+          <button type="button" class="btn btn-dark text-light btn-match" data-toggle="modal" data-target="#matchModal" data-entity="{{ object['name'] }}">Match</button>
+          <button type="button" class="btn btn-success text-light btn-add" data-entity="{{ object['name'] }}">Add</button>
+        </div>
       </div>
     </div>
   </div>
@@ -72,7 +75,6 @@ Review
   </div>
 </div>
 
-{% include 'partials/pagination.html' %}
 {% endblock %}
 
 {% block extra_js %}

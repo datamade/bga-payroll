@@ -63,7 +63,13 @@ class ReviewQueue(TableNamesMixin):
                 empty = True
             else:
                 item['id'] = uid
-                self.match_or_create(item)
+                try:
+                    self.match_or_create(item)
+
+                except:
+                    # TO-DO: Handle better.
+                    # It seems like the same item can be checked out 2x...
+                    pass
 
     def match_or_create(self):
         raise NotImplementedError

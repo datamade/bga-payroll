@@ -98,7 +98,6 @@ def test_valid_standardized_data_upload(standardized_data_upload_blob,
 
     # Mock our delayed tasks (which we'll test over in test_tasks)
     mock_copy = mocker.patch('data_import.views.StandardizedFile.copy_to_database')
-    mock_select = mocker.patch('data_import.views.StandardizedFile.select_unseen_responding_agency')
 
     standardized_data_upload_blob['standardized_file'] = real_file
 
@@ -110,4 +109,3 @@ def test_valid_standardized_data_upload(standardized_data_upload_blob,
     assert rv.status_code == 302
 
     assert mock_copy.call_count == 1
-    assert mock_select.call_count == 1
