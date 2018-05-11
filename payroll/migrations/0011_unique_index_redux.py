@@ -10,5 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL('CREATE UNIQUE INDEX ON payroll_employer (name) WHERE parent_id IS NULL'),
+        migrations.RunSQL('CREATE UNIQUE INDEX ON payroll_employer (TRIM(LOWER(name))) WHERE parent_id IS NULL'),
     ]
