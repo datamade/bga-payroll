@@ -3,6 +3,7 @@ import pytest
 
 from data_import import tasks
 from data_import import utils
+from payroll.models import Employer
 
 
 @pytest.mark.celery
@@ -183,7 +184,16 @@ class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer)
                                                                queue_teardown):
         self.s_file = raw_table_setup
 
-        parent = employer.build(name=canned_data['Employer'])
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT DISTINCT employer FROM {raw_payroll}
+            '''.format(raw_payroll=self.s_file.raw_table_name))
+
+            for record in cursor:
+                parent_name, = record
+                employer.build(name=parent_name)
+
+        parent = Employer.objects.get(name=canned_data['Employer'])
         self.existing_entity = employer.build(name=canned_data['Department'], parent=parent)
 
         self.run_and_validate_task()
@@ -213,7 +223,19 @@ class TestSelectUnseenChildEmployerNewParent(TestSelectUnseenChildEmployer):
                                                           queue_teardown):
         self.s_file = raw_table_setup
 
-        parent = employer.build(name=canned_data['Employer'], vintage=self.s_file.upload)
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT DISTINCT employer FROM {raw_payroll}
+            '''.format(raw_payroll=self.s_file.raw_table_name))
+
+            for record in cursor:
+                parent_name, = record
+                employer.build(name=parent_name)
+
+        parent = Employer.objects.get(name=canned_data['Employer'])
+        parent.vintage = self.s_file.upload
+        parent.save()
+
         self.existing_entity = employer.build(name=canned_data['Department'], parent=parent)
 
         self.run_and_validate_task()
