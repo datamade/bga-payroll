@@ -1,4 +1,5 @@
 import csv
+import itertools
 from os.path import basename
 
 from cchardet import UniversalDetector
@@ -28,7 +29,13 @@ class CsvMeta(object):
 
     def __init__(self, incoming_file):
         self.file = incoming_file
-        self.chunk = next(self.file.chunks())
+
+        # We need two copies of the file chunk generator:
+        # One to detect file encoding, and one to grab the field names.
+        all_chunks, first_chunk = itertools.tee(self.file.chunks())
+        self.first_chunk = next(first_chunk)
+        self.chunks = all_chunks
+
         self.file_type = guess_format(self.file.name.lower())
         self.file_encoding = self._file_encoding()
         self.field_names = self._field_names()
@@ -36,10 +43,11 @@ class CsvMeta(object):
     def _file_encoding(self):
         detector = UniversalDetector()
 
-        for line in self.chunk.splitlines():
-            detector.feed(line)
-            if detector.done:
-                break
+        for chunk in self.chunks:
+            for line in chunk.splitlines():
+                detector.feed(line)
+                if detector.done:
+                    break
 
         detector.close()
         encoding = detector.result['encoding']
@@ -47,11 +55,7 @@ class CsvMeta(object):
         return encoding
 
     def _field_names(self):
-        try:
-            decoded_chunk = self.chunk.decode('utf-8').splitlines()
-
-        except UnicodeDecodeError:
-            decoded_chunk = self.chunk.decode(self.file_encoding).splitlines()
+        decoded_chunk = self.first_chunk.decode(self.file_encoding).splitlines()
 
         reader = csv.reader(decoded_chunk)
         fields = next(reader)
@@ -70,16 +74,13 @@ class CsvMeta(object):
         if isinstance(self.file, FieldFile):
             infile = self.file.open(mode='r')
             lines = infile.read().decode(self.file_encoding).splitlines()
-
             reader = csv.DictReader(lines)
 
             # Downcase and underscore field names, so they will match with
             # REQUIRED_FIELDS.
-
             reader.fieldnames = self.field_names
 
             # Discard header.
-
             next(reader)
 
             outfile_name = '/tmp/{}'.format(basename(self.file.name))
