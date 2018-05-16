@@ -5,18 +5,14 @@ SAMPLE_HEADER=responding_agency,employer,department,last_name,first_name,title,\
 
 .INTERMEDIATE : 2016-formatted.csv 2017-formatted.csv
 
-samples : data/output/2016-sample-a.csv data/output/2016-sample-b.csv \
-	data/output/2017-sample-a.csv
+samples : data/output/2016-sample.csv data/output/2017-sample.csv
 
 
-data/output/2017-sample-a.csv : 2017-formatted.csv
+data/output/2016-sample.csv : 2016-formatted.csv
 	head -n 5000 $< > $@
 
-data/output/2016-sample-a.csv : 2016-formatted.csv
-	head -n 2500 $< > $@
-
-data/output/2016-sample-b.csv : 2016-formatted.csv
-	tail -n 300000 $< | (echo $(SAMPLE_HEADER); head -n 3450) > $@
+data/output/2017-sample.csv : 2017-formatted.csv
+	csvgrep -c Employer -r "(ACORN LIBRARY DISTRICT|ADAMS COUNTY|FOX RIVER GROVE FIRE PROTECTION DISTRICT)" $< > $@
 
 2016-formatted.csv : raw/2016_payroll.csv
 	csvcut -c 12,12,6,4,3,5,7,8,11 -e ISO-8859-1 $< | tail +2 | \
