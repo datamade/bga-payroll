@@ -83,6 +83,7 @@ class PayrollDatabaseScraper(object):
         for entity in self.UNMAPPED_ENTITIES:
             writer.writerow(entity)
 
+
 if __name__ == '__main__':
     pds = PayrollDatabaseScraper()
     pds.scrape()

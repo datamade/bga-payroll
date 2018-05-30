@@ -1,0 +1,906 @@
+entity,entity_type,chicago,cook_or_collar
+Chicago,Municipal,True,False
+Chicago Housing Authority,Municipal,True,False
+Chicago Park District,Municipal,True,False
+Chicago Public Schools,Municipal,True,False
+Chicago Transit Authority,Municipal,True,False
+City Colleges of Chicago,Municipal,True,False
+Metropolitan Pier and Exposition Authority,Municipal,True,False
+Public Building Commission,Municipal,True,False
+Cook County,County,False,True
+Cook County Forest Preserve,Forest Preserve,False,False
+DuPage County,County,False,True
+DuPage County Forest Preserve,Forest Preserve,False,False
+Kane County,County,False,True
+Kane County Forest Preserve,Forest Preserve,False,False
+Lake County,County,False,True
+Lake County Forest Preserve,Forest Preserve,False,False
+McHenry County,County,False,True
+McHenry County Conservation,Forest Preserve,False,False
+Will County,County,False,True
+Will County Forest Preserve,Forest Preserve,False,False
+Barrington Township,Township,False,True
+Berwyn Township,Township,False,True
+Bloom Township,Township,False,True
+Bremen Township,Township,False,True
+Calumet Township,Township,False,True
+Elk Grove Township,Township,False,True
+Evanston Township,Township,False,True
+Hanover Township,Township,False,True
+Lemont Township,Township,False,True
+Leyden Township,Township,False,True
+Lyons Township,Township,False,True
+Maine Township,Township,False,True
+New Trier Township,Township,False,True
+Niles Township,Township,False,True
+Northfield Township,Township,False,True
+Norwood Park Township,Township,False,True
+Oak Park Township,Township,False,True
+Orland Township,Township,False,True
+Palatine Township,Township,False,True
+Palos Township,Township,False,True
+Proviso Township,Township,False,True
+Rich Township,Township,False,True
+River Forest Township,Township,False,True
+Riverside Township,Township,False,True
+Schaumburg Township,Township,False,True
+Stickney Township,Township,False,True
+Thornton Township,Township,False,True
+Wheeling Township,Township,False,True
+Worth Township,Township,False,True
+Addison Township,Township,False,False
+Alden Township,Township,False,False
+Algonquin Township,Township,False,False
+Antioch Township,Township,False,False
+Aurora Township,Township,False,False
+Avon Township,Township,False,False
+Batavia Township,Township,False,False
+Benton Township,Township,False,False
+Big Rock Township,Township,False,False
+Blackberry Township,Township,False,False
+Bloomingdale Township,Township,False,False
+Burlington Township,Township,False,False
+Burton Township,Township,False,False
+Campton Township,Township,False,False
+Channahon Township,Township,False,False
+Chemung Township,Township,False,False
+Coral Township,Township,False,False
+Crete Township,Township,False,False
+Cuba Township,Township,False,False
+Custer Township,Township,False,False
+Dorr Township,Township,False,False
+Downers Grove Township,Township,False,False
+Dundee Township,Township,False,False
+Dunham Township,Township,False,False
+DuPage Township,Township,False,False
+Ela Township,Township,False,False
+Elgin Township,Township,False,False
+Florence Township,Township,False,False
+Frankfort Township,Township,False,False
+Fremont Township,Township,False,False
+Geneva Township,Township,False,False
+Grafton Township,Township,False,False
+Grant Township,Township,False,False
+Green Garden Township,Township,False,False
+Greenwood Township,Township,False,False
+Hampshire Township,Township,False,False
+Hartland Township,Township,False,False
+Hebron Township,Township,False,False
+Homer Township,Township,False,False
+Jackson Township,Township,False,False
+Joliet Township,Township,False,False
+Kaneville Township,Township,False,False
+Lake Villa Township,Township,False,False
+Libertyville Township,Township,False,False
+Lisle Township,Township,False,False
+Lockport Township,Township,False,False
+Manhattan Township,Township,False,False
+Marengo Township,Township,False,False
+McHenry Township,Township,False,False
+Milton Township,Township,False,False
+Monee Township,Township,False,False
+Moraine Township,Township,False,False
+Naperville Township,Township,False,False
+New Lenox Township,Township,False,False
+Newport Township,Township,False,False
+Norwood Township,Township,False,False
+Nunda Township,Township,False,False
+Peotone Township,Township,False,False
+Plainfield Township,Township,False,False
+Reed Township,Township,False,False
+Richmond Township,Township,False,False
+Riley Township,Township,False,False
+Seneca Township,Township,False,False
+Shields Township,Township,False,False
+St. Charles Township,Township,False,False
+Sugar Grove Township,Township,False,False
+Troy Township,Township,False,False
+Vernon Township,Township,False,False
+Warren Township,Township,False,False
+Washington Township,Township,False,False
+Wauconda Township,Township,False,False
+Waukegan Township,Township,False,False
+Wayne Township,Township,False,False
+Wesley Township,Township,False,False
+West Deerfield Township,Township,False,False
+Wheatland Township,Township,False,False
+Will Township,Township,False,False
+Wilmington Township,Township,False,False
+Wilton Township,Township,False,False
+Winfield Township,Township,False,False
+York Township,Township,False,False
+Zion Township,Township,False,False
+Addison,Municipal,False,False
+Algonquin,Municipal,False,False
+Alsip,Municipal,False,False
+Alton,Municipal,False,False
+Antioch,Municipal,False,False
+Arlington Heights,Municipal,False,False
+Aurora,Municipal,False,False
+Bannockburn,Municipal,False,False
+Barrington,Municipal,False,False
+Barrington Hills,Municipal,False,False
+Bartlett,Municipal,False,False
+Batavia,Municipal,False,False
+Beach Park,Municipal,False,False
+Bedford Park,Municipal,False,False
+Beecher,Municipal,False,False
+Belleville,Municipal,False,False
+Bellwood,Municipal,False,False
+Bensenville,Municipal,False,False
+Berkeley,Municipal,False,False
+Berwyn,Municipal,False,False
+Big Rock,Municipal,False,False
+Bloomingdale,Municipal,False,False
+Bloomington,Municipal,False,False
+Blue Island,Municipal,False,False
+Bolingbrook,Municipal,False,False
+Bourbonnais,Municipal,False,False
+Braidwood,Municipal,False,False
+Bridgeview,Municipal,False,False
+Broadview,Municipal,False,False
+Brookfield,Municipal,False,False
+Buffalo Grove,Municipal,False,False
+Bull Valley,Municipal,False,False
+Burbank,Municipal,False,False
+Burlington,Municipal,False,False
+Burnham,Municipal,False,False
+Burr Ridge,Municipal,False,False
+Calumet City,Municipal,False,False
+Calumet Park,Municipal,False,False
+Campton Hills,Municipal,False,False
+Carbondale,Municipal,False,False
+Carol Stream,Municipal,False,False
+Carpentersville,Municipal,False,False
+Cary,Municipal,False,False
+Champaign,Municipal,False,False
+Channahon,Municipal,False,False
+Charleston,Municipal,False,False
+Chicago Heights,Municipal,False,False
+Chicago Ridge,Municipal,False,False
+Cicero,Municipal,False,False
+Clarendon Hills,Municipal,False,False
+Coal City,Municipal,False,False
+Country Club Hills,Municipal,False,False
+Countryside,Municipal,False,False
+Crest Hill,Municipal,False,False
+Crestwood,Municipal,False,False
+Crete,Municipal,False,False
+Crystal Lake,Municipal,False,False
+Danville,Municipal,False,False
+Darien,Municipal,False,False
+Deer Park,Municipal,False,False
+Deerfield,Municipal,False,False
+DeKalb,Municipal,False,False
+Des Plaines,Municipal,False,False
+Diamond,Municipal,False,False
+Dixmoor,Municipal,False,False
+Dolton,Municipal,False,False
+Downers Grove,Municipal,False,False
+East Dundee,Municipal,False,False
+East Hazel Crest,Municipal,False,False
+Effingham,Municipal,False,False
+Elburn,Municipal,False,False
+Elgin,Municipal,False,False
+Elk Grove Village,Municipal,False,False
+Elmhurst,Municipal,False,False
+Elmwood Park,Municipal,False,False
+Elwood,Municipal,False,False
+Evanston,Municipal,False,False
+Evergreen Park,Municipal,False,False
+Fairmont,Municipal,False,False
+Flossmoor,Municipal,False,False
+Ford Heights,Municipal,False,False
+Forest Park,Municipal,False,False
+Forest View,Municipal,False,False
+Fox Lake,Municipal,False,False
+Fox River Grove,Municipal,False,False
+Frankfort,Municipal,False,False
+Franklin Park,Municipal,False,False
+Galena,Municipal,False,False
+Galesburg,Municipal,False,False
+Geneva,Municipal,False,False
+Gilberts,Municipal,False,False
+Glen Ellyn,Municipal,False,False
+Glencoe,Municipal,False,False
+Glendale Heights,Municipal,False,False
+Glenview,Municipal,False,False
+Glenwood,Municipal,False,False
+Godley,Municipal,False,False
+Golf,Municipal,False,False
+Grayslake,Municipal,False,False
+Green Oaks,Municipal,False,False
+Gurnee,Municipal,False,False
+Hainesville,Municipal,False,False
+Hampshire,Municipal,False,False
+Hanover Park,Municipal,False,False
+Harvard,Municipal,False,False
+Harvey,Municipal,False,False
+Harwood Heights,Municipal,False,False
+Hawthorn Woods,Municipal,False,False
+Hazel Crest,Municipal,False,False
+Hebron,Municipal,False,False
+Hickory Hills,Municipal,False,False
+Highland Park,Municipal,False,False
+Highwood,Municipal,False,False
+Hillside,Municipal,False,False
+Hinsdale,Municipal,False,False
+Hodgkins,Municipal,False,False
+Hoffman Estates,Municipal,False,False
+Holiday Hills,Municipal,False,False
+Homer Glen,Municipal,False,False
+Hometown,Municipal,False,False
+Homewood,Municipal,False,False
+Huntley,Municipal,False,False
+Indian Head Park,Municipal,False,False
+Inverness,Municipal,False,False
+Island Lake,Municipal,False,False
+Itasca,Municipal,False,False
+Jacksonville,Municipal,False,False
+Johnsburg,Municipal,False,False
+Joliet,Municipal,False,False
+Justice,Municipal,False,False
+Kaneville,Municipal,False,False
+Kankakee,Municipal,False,False
+Kenilworth,Municipal,False,False
+Kildeer,Municipal,False,False
+La Grange,Municipal,False,False
+La Grange Park,Municipal,False,False
+Lake Barrington,Municipal,False,False
+Lake Bluff,Municipal,False,False
+Lake Forest,Municipal,False,False
+Lake in the Hills,Municipal,False,False
+Lake Zurich,Municipal,False,False
+Lakemoor,Municipal,False,False
+Lakewood,Municipal,False,False
+Lansing,Municipal,False,False
+LaSalle,Municipal,False,False
+Lemont,Municipal,False,False
+Libertyville,Municipal,False,False
+Lily Lake,Municipal,False,False
+Lincolnshire,Municipal,False,False
+Lincolnwood,Municipal,False,False
+Lindenhurst,Municipal,False,False
+Lisle,Municipal,False,False
+Lockport,Municipal,False,False
+Lombard,Municipal,False,False
+Long Grove,Municipal,False,False
+Lynwood,Municipal,False,False
+Lyons,Municipal,False,False
+Macomb,Municipal,False,False
+Manhattan,Municipal,False,False
+Maple Park,Municipal,False,False
+Marengo,Municipal,False,False
+Marion,Municipal,False,False
+Markham,Municipal,False,False
+Matteson,Municipal,False,False
+Maywood,Municipal,False,False
+McCook,Municipal,False,False
+McCullom Lake,Municipal,False,False
+McHenry,Municipal,False,False
+Melrose Park,Municipal,False,False
+Merrionette Park,Municipal,False,False
+Midlothian,Municipal,False,False
+Minooka,Municipal,False,False
+Mokena,Municipal,False,False
+Monee,Municipal,False,False
+Montgomery,Municipal,False,False
+Morton Grove,Municipal,False,False
+Mount Prospect,Municipal,False,False
+Mundelein,Municipal,False,False
+Naperville,Municipal,False,False
+New Lenox,Municipal,False,False
+Niles,Municipal,False,False
+Norridge,Municipal,False,False
+North Aurora,Municipal,False,False
+North Barrington,Municipal,False,False
+North Chicago,Municipal,False,False
+North Riverside,Municipal,False,False
+Northbrook,Municipal,False,False
+Northfield,Municipal,False,False
+Northlake,Municipal,False,False
+Oak Brook,Municipal,False,False
+Oak Forest,Municipal,False,False
+Oak Lawn,Municipal,False,False
+Oak Park,Municipal,False,False
+Oakbrook Terrace,Municipal,False,False
+Oakwood Hills,Municipal,False,False
+Olympia Fields,Municipal,False,False
+Orland Hills,Municipal,False,False
+Orland Park,Municipal,False,False
+Ottawa,Municipal,False,False
+Palatine,Municipal,False,False
+Palos Heights,Municipal,False,False
+Palos Hills,Municipal,False,False
+Palos Park,Municipal,False,False
+Park City,Municipal,False,False
+Park Forest,Municipal,False,False
+Park Ridge,Municipal,False,False
+Peoria,Municipal,False,False
+Peotone,Municipal,False,False
+Phoenix,Municipal,False,False
+Pingree Grove,Municipal,False,False
+Plainfield,Municipal,False,False
+Plato Township,Municipal,False,False
+Port Barrington,Municipal,False,False
+Posen,Municipal,False,False
+Prairie Grove,Municipal,False,False
+Prospect Heights,Municipal,False,False
+Richmond,Municipal,False,False
+Richton Park,Municipal,False,False
+Ringwood,Municipal,False,False
+River Forest,Municipal,False,False
+River Grove,Municipal,False,False
+Riverdale,Municipal,False,False
+Riverside,Municipal,False,False
+Riverwoods,Municipal,False,False
+Robbins,Municipal,False,False
+Rockdale,Municipal,False,False
+Rockford,Municipal,False,False
+Rolling Meadows,Municipal,False,False
+Romeoville,Municipal,False,False
+Roselle,Municipal,False,False
+Rosemont,Municipal,False,False
+Round Lake,Municipal,False,False
+Round Lake Beach,Municipal,False,False
+Round Lake Heights,Municipal,False,False
+Round Lake Park,Municipal,False,False
+Rutland Township,Municipal,False,False
+Sauk Village,Municipal,False,False
+Schaumburg,Municipal,False,False
+Schiller Park,Municipal,False,False
+Shorewood,Municipal,False,False
+Skokie,Municipal,False,False
+Sleepy Hollow,Municipal,False,False
+South Barrington,Municipal,False,False
+South Chicago Heights,Municipal,False,False
+South Elgin,Municipal,False,False
+South Holland,Municipal,False,False
+Spring Grove,Municipal,False,False
+Springfield,Municipal,False,False
+St. Charles,Municipal,False,False
+Steger,Municipal,False,False
+Stickney,Municipal,False,False
+Stone Park,Municipal,False,False
+Streamwood,Municipal,False,False
+Sugar Grove,Municipal,False,False
+Summit,Municipal,False,False
+Third Lake,Municipal,False,False
+Thornton,Municipal,False,False
+Tinley Park,Municipal,False,False
+Tower Lakes,Municipal,False,False
+Union,Municipal,False,False
+University Park,Municipal,False,False
+Urbana,Municipal,False,False
+Vernon Hills,Municipal,False,False
+Villa Park,Municipal,False,False
+Virgil,Municipal,False,False
+Virgil Township,Municipal,False,False
+Volo,Municipal,False,False
+Wadsworth,Municipal,False,False
+Warrenville,Municipal,False,False
+Wauconda,Municipal,False,False
+Waukegan,Municipal,False,False
+Wayne,Municipal,False,False
+West Chicago,Municipal,False,False
+West Dundee,Municipal,False,False
+Westchester,Municipal,False,False
+Western Springs,Municipal,False,False
+Westmont,Municipal,False,False
+Wheaton,Municipal,False,False
+Wheeling,Municipal,False,False
+Willow Springs,Municipal,False,False
+Willowbrook,Municipal,False,False
+Wilmette,Municipal,False,False
+Wilmington,Municipal,False,False
+Winfield,Municipal,False,False
+Winnetka,Municipal,False,False
+Winthrop Harbor,Municipal,False,False
+Wonder Lake,Municipal,False,False
+Wood Dale,Municipal,False,False
+Woodridge,Municipal,False,False
+Woodstock,Municipal,False,False
+Worth,Municipal,False,False
+Zion,Municipal,False,False
+Adams County,County,False,False
+Alexander County,County,False,False
+Bond County,County,False,False
+Boone County,County,False,False
+Brown County,County,False,False
+Bureau County,County,False,False
+Calhoun County,County,False,False
+Carroll County,County,False,False
+Cass County,County,False,False
+Champaign County,County,False,False
+Christian County,County,False,False
+Clark County,County,False,False
+Clay County,County,False,False
+Clinton County,County,False,False
+Coles County,County,False,False
+Crawford County,County,False,False
+Cumberland County,County,False,False
+DeKalb County,County,False,False
+DeWitt County,County,False,False
+Douglas County,County,False,False
+Edgar County,County,False,False
+Edwards County,County,False,False
+Effingham County,County,False,False
+Fayette County,County,False,False
+Ford County,County,False,False
+Franklin County,County,False,False
+Fulton County,County,False,False
+Gallatin County,County,False,False
+Greene County,County,False,False
+Grundy County,County,False,False
+Hamilton County,County,False,False
+Hancock County,County,False,False
+Hardin County,County,False,False
+Henderson County,County,False,False
+Henry County,County,False,False
+Iroquois County,County,False,False
+Jackson County,County,False,False
+Jasper County,County,False,False
+Jefferson County,County,False,False
+Jersey County,County,False,False
+Jo Daviess County,County,False,False
+Johnson County,County,False,False
+Kankakee County,County,False,False
+Kendall County,County,False,False
+Knox County,County,False,False
+LaSalle County,County,False,False
+Lawrence County,County,False,False
+Lee County,County,False,False
+Livingston County,County,False,False
+Logan County,County,False,False
+Macon County,County,False,False
+Macoupin County,County,False,False
+Madison County,County,False,False
+Marion County,County,False,False
+Marshall County,County,False,False
+Mason County,County,False,False
+Massac County,County,False,False
+McDonough County,County,False,False
+McLean County,County,False,False
+Menard County,County,False,False
+Mercer County,County,False,False
+Monroe County,County,False,False
+Montgomery County,County,False,False
+Morgan County,County,False,False
+Moultrie County,County,False,False
+Ogle County,County,False,False
+Peoria County,County,False,False
+Perry County,County,False,False
+Piatt County,County,False,False
+Pike County,County,False,False
+Pope County,County,False,False
+Pulaski County,County,False,False
+Putnam County,County,False,False
+Randolph County,County,False,False
+Richland County,County,False,False
+River Grove County,County,False,False
+Rock Island County,County,False,False
+Saline County,County,False,False
+Sangamon County,County,False,False
+Schuyler County,County,False,False
+Scott County,County,False,False
+Shelby County,County,False,False
+St. Clair County,County,False,False
+Stark County,County,False,False
+Stephenson County,County,False,False
+Tazewell County,County,False,False
+Union County,County,False,False
+Vermilion County,County,False,False
+Wabash County,County,False,False
+Warren County,County,False,False
+Washington County,County,False,False
+White County,County,False,False
+Whiteside County,County,False,False
+Williamson County,County,False,False
+Winnebago County,County,False,False
+Woodford County,County,False,False
+Illinois,State,False,False
+Indiana,State,False,False
+Missouri,State,False,False
+Wisconsin,State,False,False
+All Elementary/High School Employees,Education,False,False
+All Higher Ed Employees,Education,False,False
+Chicago Public Schools,Education,False,False
+Chicago State University,Education,False,False
+City Colleges of Chicago,Education,False,False
+Governors State University,Education,False,False
+Illinois Community College Board,Education,False,False
+Chicago Metropolitan Agency for Planning,Regional,False,False
+Illinois Sports Facilities Authority,Regional,False,False
+Metra,Regional,False,False
+Metropolitan Water Reclamation District,Regional,False,False
+Pace Suburban Bus Service,Regional,False,False
+Regional Transportation Authority,Regional,False,False
+Addison Park District,Parks District,False,False
+Alsip Park District,Parks District,False,False
+Arlington Heights Park District,Parks District,False,False
+Barrington Park District,Parks District,False,False
+Barrington Hills Park District,Parks District,False,False
+Bartlett Park District,Parks District,False,False
+Batavia Park District,Parks District,False,False
+Bedford Park District,Parks District,False,False
+Bensenville Park District,Parks District,False,False
+Berkeley Park District,Parks District,False,False
+Berwyn Park District,Parks District,False,False
+Bloomingdale Park District,Parks District,False,False
+Blue Island Park District,Parks District,False,False
+Bolingbrook Park District,Parks District,False,False
+Braidwood Park District,Parks District,False,False
+Bridgeview Park District,Parks District,False,False
+Broadview Park District,Parks District,False,False
+Buffalo Grove Park District,Parks District,False,False
+Burbank Park District,Parks District,False,False
+Burr Ridge Park District,Parks District,False,False
+Butterfield Park District,Parks District,False,False
+Calumet Memorial Park District,Parks District,False,False
+Carol Stream Park District,Parks District,False,False
+Cary Park District,Parks District,False,False
+Channahon Park District,Parks District,False,False
+Chicago Park District,Parks District,False,False
+Chicago Heights Park District,Parks District,False,False
+Chicago Ridge Park District,Parks District,False,False
+Clarendon Hills Park District,Parks District,False,False
+Clyde Park District,Parks District,False,False
+Crete Park District,Parks District,False,False
+Crystal Lake Park District,Parks District,False,False
+Darien Park District,Parks District,False,False
+Deerfield Park District,Parks District,False,False
+Des Plaines Park District,Parks District,False,False
+Dolton Park District,Parks District,False,False
+Downers Grove Park District,Parks District,False,False
+Dundee Park District,Parks District,False,False
+Elk Grove Park District,Parks District,False,False
+Elmhurst Park District,Parks District,False,False
+Evanston Lighthouse Park District,Parks District,False,False
+Forest Park Park District,Parks District,False,False
+Forest View Park District,Parks District,False,False
+Foss Park District,Parks District,False,False
+Fox Valley Park District,Parks District,False,False
+Frankfort Park District,Parks District,False,False
+Frankfort Square Park District,Parks District,False,False
+Franklin Park Park District,Parks District,False,False
+Geneva Park District,Parks District,False,False
+Glen Ellyn Park District,Parks District,False,False
+Glencoe Park District,Parks District,False,False
+Glenview Park District,Parks District,False,False
+Golf Maine Park District,Parks District,False,False
+Grandwood Park District,Parks District,False,False
+Grayslake Park District,Parks District,False,False
+Gurnee Park District,Parks District,False,False
+Hampshire Park District,Parks District,False,False
+Hanover Park Park District,Parks District,False,False
+Harvey Park District,Parks District,False,False
+Hawthorne Park District,Parks District,False,False
+Hazel Crest Park District,Parks District,False,False
+Hickory Hills Park District,Parks District,False,False
+Highland Park Park District,Parks District,False,False
+Hodgkins Park District,Parks District,False,False
+Hoffman Estates Park District,Parks District,False,False
+Homewood-Flossmoor Park District,Parks District,False,False
+Huntley Park District,Parks District,False,False
+Inverness Park District,Parks District,False,False
+Itasca Park District,Parks District,False,False
+Joliet Park District,Parks District,False,False
+Justice Park District,Parks District,False,False
+Kenilworth Park District,Parks District,False,False
+La Grange Park District,Parks District,False,False
+Lake Bluff Park District,Parks District,False,False
+Lan Oak Park District,Parks District,False,False
+Lemont Park District,Parks District,False,False
+Lindenhurst Park District,Parks District,False,False
+Lisle Park District,Parks District,False,False
+Lockport Park District,Parks District,False,False
+Lombard Park District,Parks District,False,False
+Long Grove Park District,Parks District,False,False
+Manhattan Park District,Parks District,False,False
+Marengo Park District,Parks District,False,False
+Markham Park District,Parks District,False,False
+McCook Park District,Parks District,False,False
+Medinah Park District,Parks District,False,False
+Memorial Park District,Parks District,False,False
+Midlothian Park District,Parks District,False,False
+Mokena Park District,Parks District,False,False
+Morton Grove Park District,Parks District,False,False
+Mt. Prospect Park District,Parks District,False,False
+Mundelein Park District,Parks District,False,False
+Naperville Park District,Parks District,False,False
+New Lenox Community Park District,Parks District,False,False
+Niles Park District,Parks District,False,False
+Norridge Park District,Parks District,False,False
+North Berwyn Park District,Parks District,False,False
+Northbrook Park District,Parks District,False,False
+Northfield Park District,Parks District,False,False
+Oak Brook Park District,Parks District,False,False
+Oak Forest Park District,Parks District,False,False
+Oak Lawn Park District,Parks District,False,False
+Oakbrook Terrace Park District,Parks District,False,False
+Oak Park Park District,Parks District,False,False
+Olympia Fields Park District,Parks District,False,False
+Palatine Park District,Parks District,False,False
+Park RIdge Park District,Parks District,False,False
+Peotone Park District,Parks District,False,False
+Plainfield Park District,Parks District,False,False
+Pleasant Dale Park District,Parks District,False,False
+Posen Park District,Parks District,False,False
+Prospect Heights Park District,Parks District,False,False
+Ridgeville Park District,Parks District,False,False
+Riverdale Park District,Parks District,False,False
+Riverside Park District,Parks District,False,False
+RIver Forest Park District,Parks District,False,False
+River Trails Park District,Parks District,False,False
+Rolling Meadows Park District,Parks District,False,False
+Roselle Park District,Parks District,False,False
+Rosemont Park District,Parks District,False,False
+Round Lake Area Park District,Parks District,False,False
+Salt Creek Rural Park District,Parks District,False,False
+Schaumburg Park District,Parks District,False,False
+Skokie Park District,Parks District,False,False
+South Barrington Park District,Parks District,False,False
+St. Charles Park District,Parks District,False,False
+Streamwood Park District,Parks District,False,False
+Sugar Grove Park District,Parks District,False,False
+Summit Park District,Parks District,False,False
+Tinley Park Park District,Parks District,False,False
+Vernon Hills Park District,Parks District,False,False
+Veterans Park District,Parks District,False,False
+Warrenville Park District,Parks District,False,False
+Wauconda Park District,Parks District,False,False
+Waukegan Park District,Parks District,False,False
+West Chicago Park District,Parks District,False,False
+Westchester Park District,Parks District,False,False
+Western Springs Park District,Parks District,False,False
+Westmont Park District,Parks District,False,False
+Wheaton Park District,Parks District,False,False
+Wheeling Park District,Parks District,False,False
+Wildwood Park District,Parks District,False,False
+Wilmette Park District,Parks District,False,False
+Wilmington Island Park District,Parks District,False,False
+Winfield Park District,Parks District,False,False
+Winnetka Park District,Parks District,False,False
+Wood Dale Park District,Parks District,False,False
+Woodridge Park District,Parks District,False,False
+Worth Park District,Parks District,False,False
+York Center Park District,Parks District,False,False
+Zion Park District,Parks District,False,False
+Acorn Library District,Library District,False,False
+Addision Library District,Library District,False,False
+Algonquin Library District,Library District,False,False
+Alsip-Merrionette Library District,Library District,False,False
+Antioch Library District,Library District,False,False
+Barrington Library District,Library District,False,False
+Bartlett Library District,Library District,False,False
+Batavia Library District,Library District,False,False
+Bedford Park Library District,Library District,False,False
+Beecher Library District,Library District,False,False
+Bellwood Library District,Library District,False,False
+Bensenville Library District,Library District,False,False
+Berkeley Library District,Library District,False,False
+Bridgeview Library District,Library District,False,False
+Broadview Library District,Library District,False,False
+Carol Stream Library District,Library District,False,False
+Cary Area Library District,Library District,False,False
+Cook Memorial Library District,Library District,False,False
+Crestwood Library District,Library District,False,False
+Crete Library District,Library District,False,False
+Deerfield Library District,Library District,False,False
+Dolton Library District,Library District,False,False
+Eisenhower Library District,Library District,False,False
+Ela Area Library District,Library District,False,False
+Ella Johnson Library District,Library District,False,False
+Flossmoor Library District,Library District,False,False
+Fossil Ridge Library District,Library District,False,False
+Fountaindale Library District,Library District,False,False
+Fox Lake Library District,Library District,False,False
+Fox River Grove Library District,Library District,False,False
+Fox River Valley Library District,Library District,False,False
+Frankfort Library District,Library District,False,False
+Franklin Park Library District,Library District,False,False
+Fremont Library District,Library District,False,False
+Gail Borden Library District,Library District,False,False
+Geneva Library District,Library District,False,False
+Glen Ellyn Library District,Library District,False,False
+Glenside Library District,Library District,False,False
+Glenwood-Lynwood Library District,Library District,False,False
+Grande Prairie Library District,Library District,False,False
+Grayslake Library District,Library District,False,False
+Green Hills Library District,Library District,False,False
+Harvey Library District,Library District,False,False
+Helen M. Plum Memorial Library District,Library District,False,False
+Hinsdale Library District,Library District,False,False
+Hodgkins Library District,Library District,False,False
+Homer Township Library District,Library District,False,False
+Homewood Library District,Library District,False,False
+Huntley Library District,Library District,False,False
+Indian Prairie Library District,Library District,False,False
+Indian Trails Library District,Library District,False,False
+Johnsburg Library District,Library District,False,False
+Justice Library District,Library District,False,False
+Kaneville Library District,Library District,False,False
+La Grange Library District,Library District,False,False
+La Grange Park Library District,Library District,False,False
+Lake Villa Library District,Library District,False,False
+Lemont Library District,Library District,False,False
+Lincolnwood Library District,Library District,False,False
+Lisle Library District,Library District,False,False
+Manhattan-Elwood Library District,Library District,False,False
+Marengo-Union Library District,Library District,False,False
+Maywood Library District,Library District,False,False
+McConathy Library District,Library District,False,False
+McHenry Library District,Library District,False,False
+Messenger Library District,Library District,False,False
+Mokena Library District,Library District,False,False
+Mount Prospect Library District,Library District,False,False
+Nancy L. Mc Conathy Library District,Library District,False,False
+New Lennox Library District,Library District,False,False
+Niles Library District,Library District,False,False
+Nippersink Library District,Library District,False,False
+North Riverside Library District,Library District,False,False
+Northlake Library District,Library District,False,False
+Orland Park Library District,Library District,False,False
+Palatine Library District,Library District,False,False
+Park Forest Library District,Library District,False,False
+Peotone Library District,Library District,False,False
+Phoenix Library District,Library District,False,False
+Plainfield Library District,Library District,False,False
+Poplar Creek Library District,Library District,False,False
+Prairie Trails Library District,Library District,False,False
+Prospect Heights Library District,Library District,False,False
+Richton Park Library District,Library District,False,False
+River Forest Library District,Library District,False,False
+River Grove Library District,Library District,False,False
+Riverdale Library District,Library District,False,False
+Riverside Library District,Library District,False,False
+Roselle Library District,Library District,False,False
+Round Lake Area Library District,Library District,False,False
+Rural Woodstock Library District,Library District,False,False
+Schaumberg Library District,Library District,False,False
+Shorewood Troy Library District,Library District,False,False
+Skokie Library District,Library District,False,False
+St. Charles Library District,Library District,False,False
+Steger-So Chicago Heights Library District,Library District,False,False
+Stickney-Forest View Library District,Library District,False,False
+Sugar Grove Library District,Library District,False,False
+Summit Library District,Library District,False,False
+Three Rivers Library District,Library District,False,False
+Town & Country Library District,Library District,False,False
+University Park Library District,Library District,False,False
+Vernon Area Library District,Library District,False,False
+Warren-Newport Library District,Library District,False,False
+Warrenville Library District,Library District,False,False
+Wauconda Library District,Library District,False,False
+West Chicago Library District,Library District,False,False
+Westchester Library District,Library District,False,False
+Westmont Library District,Library District,False,False
+White Oak Library District,Library District,False,False
+William Leonard Library District,Library District,False,False
+Wilmette Library District,Library District,False,False
+Wilmington Library District,Library District,False,False
+Winnetka-Northfield Library District,Library District,False,False
+Wood Dale Library District,Library District,False,False
+Woodridge Library District,Library District,False,False
+Worth Library District,Library District,False,False
+Zion-Benton Library District,Library District,False,False
+Addison FPD,Fire Protection District,False,False
+Algonquin Lake in the Hills FPD,Fire Protection District,False,False
+Antioch FPD,Fire Protection District,False,False
+Arden Shore North FPD,Fire Protection District,False,False
+Aurora Township FPD,Fire Protection District,False,False
+Barrington Countryside FPD,Fire Protection District,False,False
+Bartlett FPD,Fire Protection District,False,False
+Beach Park FPD,Fire Protection District,False,False
+Beecher FPD,Fire Protection District,False,False
+Bensenville FPD,Fire Protection District,False,False
+Big Rock FPD,Fire Protection District,False,False
+Bloomingdale FPD,Fire Protection District,False,False
+Burlington Community FPD,Fire Protection District,False,False
+Carol Stream FPD,Fire Protection District,False,False
+Carpentersville Countryside FPD,Fire Protection District,False,False
+Central Stickney FPD,Fire Protection District,False,False
+Channahon FPD,Fire Protection District,False,False
+Countryside FPD,Fire Protection District,False,False
+Crete FPD,Fire Protection District,False,False
+Darien Woodridge FPD,Fire Protection District,False,False
+Deerfield Bannockbum FPD,Fire Protection District,False,False
+East Dundee Countryside FPD,Fire Protection District,False,False
+East Joliet FPD,Fire Protection District,False,False
+Elbum Countryside FPD,Fire Protection District,False,False
+Elwood FPD,Fire Protection District,False,False
+Fairview FPD,Fire Protection District,False,False
+Forest View FPD,Fire Protection District,False,False
+Fox Lake FPD,Fire Protection District,False,False
+Fox River Countryside FPD,Fire Protection District,False,False
+Frankfort FPD,Fire Protection District,False,False
+Glenbard FPD,Fire Protection District,False,False
+Glenside FPD,Fire Protection District,False,False
+Grayslake FPD,Fire Protection District,False,False
+Greater Round Lake FPD,Fire Protection District,False,False
+Hampshire FPD,Fire Protection District,False,False
+Harvard FPD,Fire Protection District,False,False
+Hebron Alden Greenwood FPD,Fire Protection District,False,False
+Hoffman Estates FPD,Fire Protection District,False,False
+Homer FPD,Fire Protection District,False,False
+Hometown FPD,Fire Protection District,False,False
+Itasca FPD,Fire Protection District,False,False
+Lake Villa FPD,Fire Protection District,False,False
+Lake Zurich Rural FPD,Fire Protection District,False,False
+Lemont FPD,Fire Protection District,False,False
+Leyden FPD,Fire Protection District,False,False
+Lincolnshire Riverwoods FPD,Fire Protection District,False,False
+Lisle Woodridge FPD,Fire Protection District,False,False
+Lockport Twp FPD,Fire Protection District,False,False
+Long Grove Rural FPD,Fire Protection District,False,False
+Manhattan FPD,Fire Protection District,False,False
+Maple Park Countryside FPD,Fire Protection District,False,False
+Marengo FPD,Fire Protection District,False,False
+McHenry FPD,Fire Protection District,False,False
+Mokena FPD,Fire Protection District,False,False
+Monee FPD,Fire Protection District,False,False
+Montgomery Countryside FPD,Fire Protection District,False,False
+New Lenox FPD,Fire Protection District,False,False
+Newport FPD,Fire Protection District,False,False
+North Aurora Countryside FPD,Fire Protection District,False,False
+North Maine FPD,Fire Protection District,False,False
+North Palos FPD,Fire Protection District,False,False
+Northlake FPD,Fire Protection District,False,False
+Northwest Homer FPD,Fire Protection District,False,False
+Norwood Park FPD,Fire Protection District,False,False
+Nunda Rural FPD,Fire Protection District,False,False
+Oakbrook Terrace FPD,Fire Protection District,False,False
+Orland FPD,Fire Protection District,False,False
+Palatine Rural FPD,Fire Protection District,False,False
+Palos FPD,Fire Protection District,False,False
+Palos Heights FPD,Fire Protection District,False,False
+Peotone FPD,Fire Protection District,False,False
+Pingree Grove & Countryside FPD,Fire Protection District,False,False
+Plainfield FPD,Fire Protection District,False,False
+Pleasantview FPD,Fire Protection District,False,False
+Prospect Heights FPD,Fire Protection District,False,False
+Richmond FPD,Fire Protection District,False,False
+Roberts Park FPD,Fire Protection District,False,False
+Rutland-Dundee Twp FPD,Fire Protection District,False,False
+South Elgin Countryside FPD,Fire Protection District,False,False
+Spring Grove FPD,Fire Protection District,False,False
+Steger Estates FPD,Fire Protection District,False,False
+Sugar Grove FPD,Fire Protection District,False,False
+Sunnycrest FPD,Fire Protection District,False,False
+Tri-State FPD,Fire Protection District,False,False
+Troy FPD,Fire Protection District,False,False
+Union FPD,Fire Protection District,False,False
+Warrenville FPD,Fire Protection District,False,False
+Warren-Waukegan FPD,Fire Protection District,False,False
+Wauconda FPD,Fire Protection District,False,False
+West Chicago FPD,Fire Protection District,False,False
+Wilmington FPD,Fire Protection District,False,False
+Winfield FPD,Fire Protection District,False,False
+Wonder Lake FPD,Fire Protection District,False,False
+Wood Dale FPD,Fire Protection District,False,False
+Woodstock FPD,Fire Protection District,False,False
+York Center FPD,Fire Protection District,False,False
+Elburn Countryside FPD,Fire Protection District,False,False
+Iverness Park District,Parks District,False,False
+River East Library District,Library District,False,False
+Steger-South Chicago Heights Library District,Library District,False,False
