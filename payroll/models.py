@@ -21,6 +21,10 @@ class Employer(SluggedModel, VintagedModel):
                                null=True,
                                on_delete=models.CASCADE,
                                related_name='departments')
+    taxonomy = models.ForeignKey('EmployerTaxonomy',
+                                 null=True,
+                                 on_delete=models.SET_NULL,
+                                 related_name='employers')
 
     def __str__(self):
         name = self.name
@@ -36,6 +40,24 @@ class Employer(SluggedModel, VintagedModel):
         Return True if employer has parent, False otherwise.
         '''
         return bool(self.parent)
+
+
+class EmployerTaxonomy(models.Model):
+    entity_type = models.CharField(max_length=255)
+    chicago = models.BooleanField()
+    cook_or_collar = models.BooleanField()
+
+    def __str__(self):
+        kwargs = {
+            'type': self.entity_type,
+        }
+
+        if self.chicago:
+            kwargs['special'] = 'Chicago'
+        elif self.cook_or_collar:
+            kwargs['special'] = 'Cook or Collar'
+
+        return '{special} {type}'.format(**kwargs).strip()
 
 
 class Person(SluggedModel, VintagedModel):
