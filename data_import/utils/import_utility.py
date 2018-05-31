@@ -210,7 +210,7 @@ class ImportUtility(TableNamesMixin):
               )
               SELECT DISTINCT ON (
                 existing.employer_id,
-                COALESCE(raw.title, 'EMPLOYEE')
+                TRIM(LOWER(COALESCE(raw.title, 'EMPLOYEE')))
               )
                 existing.employer_id,
                 COALESCE(raw.title, 'EMPLOYEE'),
