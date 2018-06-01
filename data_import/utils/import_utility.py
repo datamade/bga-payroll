@@ -208,12 +208,9 @@ class ImportUtility(TableNamesMixin):
                 LEFT JOIN payroll_employer AS parent
                 ON child.parent_id = parent.id
               )
-              SELECT DISTINCT ON (
-                existing.employer_id,
-                TRIM(LOWER(COALESCE(raw.title, 'EMPLOYEE')))
-              )
-                existing.employer_id,
-                COALESCE(raw.title, 'EMPLOYEE'),
+              SELECT
+                employer_id,
+                COALESCE(title, 'EMPLOYEE'),
                 {vintage}
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
@@ -225,10 +222,7 @@ class ImportUtility(TableNamesMixin):
                 {raw_employer} = {existing_employer_name}
                 AND raw.department IS NULL
               )
-              LEFT JOIN payroll_position AS pos
-              ON existing.employer_id = pos.employer_id
-              AND TRIM(LOWER(COALESCE(raw.title, 'EMPLOYEE'))) = TRIM(LOWER(pos.title))
-              WHERE pos.id IS NULL
+            ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table,
                    **self.common_fields)
