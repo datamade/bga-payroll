@@ -143,7 +143,7 @@ def select_unseen_parent_employer(self, *, s_file_id):
 
     self.update_status('parent employer unmatched')
 
-    return 'Selected employers'
+    return 'Selected parent employers'
 
 
 @shared_task(bind=True, base=DataImportTask)
@@ -168,7 +168,7 @@ def select_unseen_child_employer(self, *, s_file_id):
 
     self.update_status('child employer unmatched')
 
-    return 'Selected employers'
+    return 'Selected child employers'
 
 
 @shared_task(bind=True, base=DataImportTask)

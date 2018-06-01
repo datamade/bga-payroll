@@ -45,6 +45,15 @@ def test_import_utility_init(raw_table_setup,
 
         assert raw_count == generated_count
 
+        validate_taxonomy = '''
+            SELECT taxonomy_id FROM payroll_employer
+            WHERE parent_id IS NULL
+        '''
+
+        cursor.execute(validate_taxonomy)
+
+        assert all(tax for tax in cursor)
+
         validate_position = '''
             WITH distinct_positions AS (
               SELECT DISTINCT ON (employer, department, title) *

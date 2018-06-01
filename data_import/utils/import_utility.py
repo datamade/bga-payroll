@@ -125,6 +125,27 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert_parents)
 
+        self._classify_parent_employers()
+
+    def _classify_parent_employers(self):
+        '''
+        In the future, there will be a review step to classify employers
+        that are not in the canonical list, e.g., are not classified in this
+        step. For now, just leave them unclassified.
+        '''
+        update = '''
+            UPDATE payroll_employer
+            SET taxonomy_id = model_taxonomy.id
+            FROM employer_taxonomy AS raw_taxonomy
+            JOIN payroll_employertaxonomy AS model_taxonomy
+            USING (entity_type, chicago, cook_or_collar)
+            WHERE TRIM(LOWER(payroll_employer.name)) = TRIM(LOWER(raw_taxonomy.entity))
+              AND payroll_employer.parent_id IS NULL
+        '''
+
+        with connection.cursor() as cursor:
+            cursor.execute(update)
+
     def select_unseen_child_employer(self):
         '''
         If the parent is new as of this vintage, don't force the
