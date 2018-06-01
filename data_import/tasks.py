@@ -183,7 +183,6 @@ def flush_child_employer_queue(self, *, s_file_id):
 @shared_task(bind=True, base=DataImportTask)
 def insert_child_employer(self, *, s_file_id):
     self.import_utility.insert_child_employer()
-    self.import_utility.classify_employers()
 
     return 'Inserted child employers'
 
