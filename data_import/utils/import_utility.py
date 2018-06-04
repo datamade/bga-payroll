@@ -1,6 +1,7 @@
 import addfips
 from census import Census
 from django.db import connection
+from sqlalchemy import table, column, insert
 
 from bga_database.local_settings import CENSUS_API_KEY
 
@@ -187,20 +188,37 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(select)
 
+            population_objects = []
+
             for employer_id, employer_name, employer_type in cursor:
                 if employer_type.lower() == 'county':
-                    employer_fips = self.FIPS_LOOKUP.get_county_fips(employer_name, 'illinois')
-                    if employer_fips:
-                        print(self.CENSUS.acs5.state_county('B01003_001E',
-                                                            self.ILLINOIS_FIPS,
-                                                            employer_fips))
+                    geoid = self.FIPS_LOOKUP.get_county_fips(employer_name, 'illinois')[2:]
+                    census_func = 'state_county'
 
                 elif employer_type.lower() == 'municipal':
-                    employer_fips = cursor.execute('''
-                        SELECT geoid
-                        FROM illinois_places
-                        WHERE 
-                    ''')
+                    geoid = Place(employer_name).geoid[2:]
+                    census_func = 'state_place'
+
+                else:
+                    geoid, census_func = None, None
+
+                if geoid:
+                    args = ('B01003_001E', self.ILLINOIS_FIPS, geoid)
+                    pop_array = getattr(self.CENSUS.acs5, census_func)(*args)
+                    population = int(sum(d['B01003_001E'] for d in pop_array))
+                    population_objects.append([{
+                        'employer_id': employer_id,
+                        'population': population,
+                        'population_year': self.CENSUS.acs5.default_year,
+                    }])
+
+            if population_objects:
+                places = table('payroll_employerpopulation',
+                               column('employer_id'),
+                               column('population'),
+                               column('population_year'))
+
+                cursor.executemany(places.insert(), population_objects)
 
     def select_unseen_child_employer(self):
         '''

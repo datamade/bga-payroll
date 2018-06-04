@@ -12,5 +12,5 @@ illinois_places_tigerlines : illinois_places_tigerlines.zip
 illinois_places : illinois_places_tigerlines/
 	psql -d $(PG_DB) -c "\d $@" > /dev/null 2>&1 || ( \
 		shp2pgsql -I $</tl_2017_17_place.shp illinois_places bga_payroll | \
-		psql -d bga_payroll
+		psql -d bga_payroll \
 	)

@@ -60,11 +60,12 @@ class EmployerTaxonomy(models.Model):
         return '{special} {type}'.format(**kwargs).strip()
 
 
-class EmployerPopulation(VintagedModel):
+class EmployerPopulation(models.Model):
     employer = models.ForeignKey('Employer',
                                  related_name='population',
                                  on_delete=models.CASCADE)
     population = models.IntegerField()
+    population_year = models.IntegerField()
 
 
 class Person(SluggedModel, VintagedModel):
