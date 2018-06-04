@@ -10,4 +10,4 @@ $(PG_DB) : data/output/2018-05-30-employer_taxonomy.csv
 data/output/2018-05-30-employer_taxonomy.csv :
 	python data/processors/get_taxonomy.py > $@
 
-include data_samples.mk
+include data_samples.mk places.mk

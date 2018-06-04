@@ -1,13 +1,38 @@
+import addfips
+from census import Census
 from django.db import connection
+
+from bga_database.local_settings import CENSUS_API_KEY
 
 from data_import.utils.table_names import TableNamesMixin
 from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
 
 
+class Place(object):
+    def __init__(self, place_name):
+        select = '''
+            SELECT geoid
+            FROM illinois_places
+            WHERE name ILIKE '{place_name}'
+        '''.format(place_name=place_name)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            try:
+                self.geoid = cursor.fetchone()[0]
+
+            except TypeError:
+                self.geoid = None
+
+
 # TO-DO: Return select / insert counts for logging
 
 class ImportUtility(TableNamesMixin):
+    CENSUS = Census(CENSUS_API_KEY)
+    FIPS_LOOKUP = addfips.AddFIPS()
+    ILLINOIS_FIPS = FIPS_LOOKUP.get_state_fips('illinois')
 
     def __init__(self, s_file_id):
         super().__init__(s_file_id)
@@ -126,6 +151,7 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert_parents)
 
         self._classify_parent_employers()
+        self._get_parent_employer_population()
 
     def _classify_parent_employers(self):
         '''
@@ -145,6 +171,36 @@ class ImportUtility(TableNamesMixin):
 
         with connection.cursor() as cursor:
             cursor.execute(update)
+
+    def _get_parent_employer_population(self):
+        select = '''
+            SELECT
+              employer.id,
+              employer.name,
+              taxonomy.entity_type
+            FROM payroll_employer AS employer
+            JOIN payroll_employertaxonomy AS taxonomy
+            ON employer.taxonomy_id = taxonomy.id
+            WHERE taxonomy.entity_type IN ('County', 'Municipal', 'Township')
+        '''
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for employer_id, employer_name, employer_type in cursor:
+                if employer_type.lower() == 'county':
+                    employer_fips = self.FIPS_LOOKUP.get_county_fips(employer_name, 'illinois')
+                    if employer_fips:
+                        print(self.CENSUS.acs5.state_county('B01003_001E',
+                                                            self.ILLINOIS_FIPS,
+                                                            employer_fips))
+
+                elif employer_type.lower() == 'municipal':
+                    employer_fips = cursor.execute('''
+                        SELECT geoid
+                        FROM illinois_places
+                        WHERE 
+                    ''')
 
     def select_unseen_child_employer(self):
         '''
