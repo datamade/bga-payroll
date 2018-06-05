@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.db import connection
 import pytest
 from pytest_django.fixtures import transactional_db
@@ -10,26 +11,7 @@ from payroll.models import Employer
 @pytest.mark.django_db
 def django_db_setup(django_db_setup,
                     transactional_db):
-    table_name = 'illinois_places'
-
-    columns = '''
-        name VARCHAR,
-        geoid VARCHAR
-    '''
-
-    create = 'CREATE TABLE {} ({})'.format(table_name, columns)
-
-    with connection.cursor() as cursor:
-        cursor.execute(create)
-
-    with open('tests/data_import/fixtures/illinois_places.csv', 'r', encoding='utf-8') as f:
-        with connection.cursor() as cursor:
-            copy_fmt = 'COPY "{table}" ({cols}) FROM STDIN CSV HEADER'
-
-            copy = copy_fmt.format(table=table_name,
-                                   cols=columns.replace(' VARCHAR', '').replace(' BOOLEAN', ''))
-
-            cursor.copy_expert(copy, f)
+    call_command('import_metadata')
 
 
 @pytest.fixture

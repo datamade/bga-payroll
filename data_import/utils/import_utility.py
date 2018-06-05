@@ -1,40 +1,14 @@
-import addfips
-from census import Census
 from django.db import connection
-from sqlalchemy import table, column, insert
-
-from bga_database.local_settings import CENSUS_API_KEY
+from sqlalchemy import text
 
 from data_import.utils.table_names import TableNamesMixin
 from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
 
 
-class Place(object):
-    def __init__(self, place_name):
-        select = '''
-            SELECT geoid
-            FROM illinois_places
-            WHERE name ILIKE '{place_name}'
-        '''.format(place_name=place_name)
-
-        with connection.cursor() as cursor:
-            cursor.execute(select)
-
-            try:
-                self.geoid = cursor.fetchone()[0]
-
-            except TypeError:
-                self.geoid = None
-
-
 # TO-DO: Return select / insert counts for logging
 
 class ImportUtility(TableNamesMixin):
-    CENSUS = Census(CENSUS_API_KEY)
-    FIPS_LOOKUP = addfips.AddFIPS()
-    ILLINOIS_FIPS = FIPS_LOOKUP.get_state_fips('illinois')
-
     def __init__(self, s_file_id):
         super().__init__(s_file_id)
 
@@ -174,51 +148,29 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(update)
 
     def _get_parent_employer_population(self):
-        select = '''
-            SELECT
-              employer.id,
-              employer.name,
-              taxonomy.entity_type
-            FROM payroll_employer AS employer
-            JOIN payroll_employertaxonomy AS taxonomy
-            ON employer.taxonomy_id = taxonomy.id
-            WHERE taxonomy.entity_type IN ('County', 'Municipal', 'Township')
+        insert = '''
+            INSERT INTO payroll_employerpopulation (
+              employer_id,
+              population,
+              population_year
+            )
+              SELECT
+                emp.id,
+                pop.population,
+                pop.population_year
+              FROM payroll_employer AS emp
+              LEFT JOIN raw_population AS pop
+              ON TRIM(LOWER(emp.name)) = TRIM(LOWER(pop.name))
+              JOIN payroll_employertaxonomy AS tax
+              ON emp.taxonomy_id = tax.id
+              WHERE emp.parent_id IS NULL
+              AND pop.population IS NOT NULL
+              AND (tax.entity_type ILIKE 'county'
+                   OR tax.entity_type ILIKE 'municipal')
         '''
 
         with connection.cursor() as cursor:
-            cursor.execute(select)
-
-            population_objects = []
-
-            for employer_id, employer_name, employer_type in cursor:
-                if employer_type.lower() == 'county':
-                    geoid = self.FIPS_LOOKUP.get_county_fips(employer_name, 'illinois')[2:]
-                    census_func = 'state_county'
-
-                elif employer_type.lower() == 'municipal':
-                    geoid = Place(employer_name).geoid[2:]
-                    census_func = 'state_place'
-
-                else:
-                    geoid, census_func = None, None
-
-                if geoid:
-                    args = ('B01003_001E', self.ILLINOIS_FIPS, geoid)
-                    pop_array = getattr(self.CENSUS.acs5, census_func)(*args)
-                    population = int(sum(d['B01003_001E'] for d in pop_array))
-                    population_objects.append([{
-                        'employer_id': employer_id,
-                        'population': population,
-                        'population_year': self.CENSUS.acs5.default_year,
-                    }])
-
-            if population_objects:
-                places = table('payroll_employerpopulation',
-                               column('employer_id'),
-                               column('population'),
-                               column('population_year'))
-
-                cursor.executemany(places.insert(), population_objects)
+            cursor.execute(insert)
 
     def select_unseen_child_employer(self):
         '''
