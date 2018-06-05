@@ -28,7 +28,7 @@ Perform the following steps from your terminal.
     ```bash
     pip install -r requirements.txt
     ```
-4. Copy the local settings file.
+4. Copy the local settings file. Note that you may need to update `DATABASES` in your own copy of `local_settings.py` to reflect your local Postgres setup.
 
     ```bash
     cp bga_database/local_settings.py.example bga_database/local_settings.py
@@ -38,8 +38,16 @@ Perform the following steps from your terminal.
     ```bash
     make database
     ```
-6. Run the app.
+6. Run the app. In three seperate terminal windows:
 
     ```bash
-    python manage.py runserver
+    redis-server
+    ```
+    
+    ```bash
+    celery --app=bga_database.celery:app worker --loglevel=DEBUG
+    ```
+
+    ```bash
+    python manage.py runserver 
     ```
