@@ -1,9 +1,13 @@
+from datetime import datetime
 import json
 from functools import partialmethod
+from contextlib import redirect_stdout
 
 from census import Census
 from django.core.management.base import BaseCommand
+from django.db import connection
 import sqlalchemy as sa
+from sqlalchemy.engine.url import URL
 from us import states
 
 from bga_database.local_settings import CENSUS_API_KEY, DATABASES
@@ -23,7 +27,7 @@ class Command(BaseCommand):
     help = 'load in employer metadata from the census api and old bga database'
 
     base_dir = 'data/output/'
-    taxonomy_file = base_dir + '2018-05-30-employer_taxonomy.csv'
+    taxonomy_file_fmt = base_dir + '{date}-employer_taxonomy.csv'
     place_population_file = base_dir + 'illinois_place_population.json'
     county_population_file = base_dir + 'illinois_county_population.json'
     total_population_table = 'B01003_001E'
@@ -36,7 +40,7 @@ class Command(BaseCommand):
 
         parser.add_argument('--import_only',
                             action='store_true',
-                            default=None,
+                            default=True,
                             help='only load metadata')
 
         parser.add_argument('--download_only',
@@ -45,12 +49,27 @@ class Command(BaseCommand):
                             help='only download metadata')
 
     def handle(self, *args, **options):
+        django_conn = connection.get_connection_params()
+
+        conn_kwargs = {
+            'username': django_conn.get('user', ''),
+            'password': django_conn.get('password', ''),
+            'host': django_conn.get('host', ''),
+            'port': django_conn.get('port', ''),
+            'database': django_conn.get('database', ''),
+        }
+
+        engine = sa.create_engine(URL('postgresql', **conn_kwargs))
+
         self.connection = engine.connect()
 
         self.endpoints = options['endpoints'].split(',')
 
         self.download_only = options['download_only']
         self.import_only = options['import_only']
+
+        if self.import_only:  # use the cached taxonomy file
+            self.taxonomy_file = self.taxonomy_file_fmt.format(date='2018-05-30')
 
         for endpoint in self.endpoints:
             getattr(self, '{}_etl'.format(endpoint))()
@@ -107,6 +126,16 @@ class Command(BaseCommand):
 
     def grab_taxonomy(self):
         print('downloading taxonomy')
+
+        today = datetime.now().strftime('%Y-%m-%d')
+        self.taxonomy_file = self.taxonomy_file_fmt.format(date=today)
+
+        with open(self.taxonomy_file, 'w') as outfile:
+            with redirect_stdout(outfile):
+                pds = PayrollDatabaseScraper()
+                pds.scrape()
+
+        print('taxonomy downloaded')
 
     ##########
     # INSERT #
@@ -191,3 +220,24 @@ class Command(BaseCommand):
 
     def insert_taxonomy(self):
         print('inserting taxonomy')
+
+        columns = '''
+            entity VARCHAR,
+            entity_type VARCHAR,
+            chicago BOOLEAN,
+            cook_or_collar BOOLEAN
+        '''
+
+        self.remake_raw('taxonomy', columns)
+
+        with open(self.taxonomy_file, 'r', encoding='utf-8') as f:
+            with connection.cursor() as cursor:
+                copy_fmt = 'COPY "{table}" ({cols}) FROM STDIN CSV HEADER'
+
+                copy = copy_fmt.format(table='raw_taxonomy',
+                                       cols=columns.replace(' VARCHAR', '')\
+                                                   .replace(' BOOLEAN', ''))
+
+                cursor.copy_expert(copy, f)
+
+        print('inserted taxonomy')

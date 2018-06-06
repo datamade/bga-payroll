@@ -65,7 +65,7 @@ class EmployerPopulation(models.Model):
                                  related_name='population',
                                  on_delete=models.CASCADE)
     population = models.IntegerField()
-    population_year = models.IntegerField()
+    data_year = models.IntegerField()
 
 
 class Person(SluggedModel, VintagedModel):

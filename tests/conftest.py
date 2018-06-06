@@ -9,13 +9,6 @@ from payroll.models import Employer
 
 @pytest.fixture
 @pytest.mark.django_db
-def django_db_setup(django_db_setup,
-                    transactional_db):
-    call_command('import_metadata')
-
-
-@pytest.fixture
-@pytest.mark.django_db
 def upload():
     class UploadFactory():
         def build(self, **kwargs):

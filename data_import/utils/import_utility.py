@@ -137,7 +137,7 @@ class ImportUtility(TableNamesMixin):
         update = '''
             UPDATE payroll_employer
             SET taxonomy_id = model_taxonomy.id
-            FROM employer_taxonomy AS raw_taxonomy
+            FROM raw_taxonomy
             JOIN payroll_employertaxonomy AS model_taxonomy
             USING (entity_type, chicago, cook_or_collar)
             WHERE TRIM(LOWER(payroll_employer.name)) = TRIM(LOWER(raw_taxonomy.entity))
@@ -152,12 +152,12 @@ class ImportUtility(TableNamesMixin):
             INSERT INTO payroll_employerpopulation (
               employer_id,
               population,
-              population_year
+              data_year
             )
               SELECT
                 emp.id,
                 pop.population,
-                pop.population_year
+                pop.data_year
               FROM payroll_employer AS emp
               LEFT JOIN raw_population AS pop
               ON TRIM(LOWER(emp.name)) = TRIM(LOWER(pop.name))
