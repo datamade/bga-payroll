@@ -1,7 +1,4 @@
-from django.core.management import call_command
-from django.db import connection
 import pytest
-from pytest_django.fixtures import transactional_db
 
 from data_import.models import Upload
 from payroll.models import Employer

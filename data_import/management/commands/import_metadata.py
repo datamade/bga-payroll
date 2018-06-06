@@ -10,18 +10,9 @@ import sqlalchemy as sa
 from sqlalchemy.engine.url import URL
 from us import states
 
-from bga_database.local_settings import CENSUS_API_KEY, DATABASES
+from bga_database.local_settings import CENSUS_API_KEY
 from data.processors.get_taxonomy import PayrollDatabaseScraper
 
-
-DB_CONN = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'
-
-# TO-DO: Figure out how to use the test database, when appropriate (i.e.,
-# during testing)
-
-engine = sa.create_engine(DB_CONN.format(**DATABASES['default']),
-                          convert_unicode=True,
-                          server_side_cursors=True)
 
 class Command(BaseCommand):
     help = 'load in employer metadata from the census api and old bga database'
@@ -75,15 +66,11 @@ class Command(BaseCommand):
             getattr(self, '{}_etl'.format(endpoint))()
 
     def executeTransaction(self, query, *args, **kwargs):
-        with self.connection.begin() as trans:
-            try:
-                if kwargs:
-                    self.connection.execute(query, **kwargs)
-                else:
-                    self.connection.execute(query, *args)
-            except:
-                client.captureException()
-                raise
+        with self.connection.begin():
+            if kwargs:
+                self.connection.execute(query, **kwargs)
+            else:
+                self.connection.execute(query, *args)
 
     #######
     # ETL #
@@ -235,7 +222,7 @@ class Command(BaseCommand):
                 copy_fmt = 'COPY "{table}" ({cols}) FROM STDIN CSV HEADER'
 
                 copy = copy_fmt.format(table='raw_taxonomy',
-                                       cols=columns.replace(' VARCHAR', '')\
+                                       cols=columns.replace(' VARCHAR', '')
                                                    .replace(' BOOLEAN', ''))
 
                 cursor.copy_expert(copy, f)

@@ -10,7 +10,7 @@ def insert_raw_taxonomy(*args):
 
 
 def delete_raw_taxonomy(*args):
-    with connection.cursor():
+    with connection.cursor() as cursor:
         cursor.execute('DROP TABLE raw_taxonomy')
 
 

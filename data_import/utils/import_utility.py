@@ -1,5 +1,4 @@
 from django.db import connection
-from sqlalchemy import text
 
 from data_import.utils.table_names import TableNamesMixin
 from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
