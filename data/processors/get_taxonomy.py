@@ -44,6 +44,9 @@ class PayrollDatabaseScraper(object):
         return any(substr in entity.lower() for substr in ('conservation',
                                                            'forest preserve'))
 
+    def _is_township(self, entity):
+        return entity.lower().endswith('township')
+
     def classifications(self):
         page = requests.get('https://www.bettergov.org/payroll-database')
         tree = etree.HTML(page.text)
@@ -66,10 +69,17 @@ class PayrollDatabaseScraper(object):
                 for entity in classification.iterchildren():
                     formatted_entity_type = self.ENTITY_MAP[entity_type]
 
+                    if self._is_township(entity.text):
+                        # A handful of townships are in the municipal category
+                        # by mistake in the existing taxonomy.
+                        formatted_entity_type = 'Township'
+
                     chicago = self._is_chicago(entity_type)
                     cook_or_collar = self._is_cook_or_collar(entity_type)
 
                     if self._is_forest_preserve(entity.text):
+                        # Forest preserves are county-level units, but are
+                        # their own class of entity in this app.
                         formatted_entity_type = 'Forest Preserve'
                         cook_or_collar = False
 

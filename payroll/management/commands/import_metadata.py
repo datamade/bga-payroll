@@ -19,8 +19,8 @@ class Command(BaseCommand):
 
     base_dir = 'data/output/'
     taxonomy_file_fmt = base_dir + '{date}-employer_taxonomy.csv'
-    place_population_file = base_dir + 'illinois_place_population.json'
-    county_population_file = base_dir + 'illinois_county_population.json'
+    population_file_fmt = base_dir + 'illinois_{geography}_population.json'
+
     total_population_table = 'B01003_001E'
     data_year = 2016
 
@@ -29,15 +29,10 @@ class Command(BaseCommand):
                             help='a specific endpoint to load data from',
                             default='population,taxonomy')
 
-        parser.add_argument('--import_only',
+        parser.add_argument('--refresh',
                             action='store_true',
-                            default=True,
-                            help='only load metadata')
-
-        parser.add_argument('--download_only',
-                            action='store_true',
-                            default=None,
-                            help='only download metadata')
+                            default=False,
+                            help='re-download source data')
 
     def handle(self, *args, **options):
         django_conn = connection.get_connection_params()
@@ -56,10 +51,9 @@ class Command(BaseCommand):
 
         self.endpoints = options['endpoints'].split(',')
 
-        self.download_only = options['download_only']
-        self.import_only = options['import_only']
+        self.refresh = options['refresh']
 
-        if self.import_only:  # use the cached taxonomy file
+        if not self.refresh:  # use the cached taxonomy file
             self.taxonomy_file = self.taxonomy_file_fmt.format(date='2018-05-30')
 
         for endpoint in self.endpoints:
@@ -77,11 +71,10 @@ class Command(BaseCommand):
     #######
 
     def etl(self, endpoint, *args):
-        if not self.import_only:
+        if self.refresh:
             getattr(self, 'grab_{}'.format(endpoint))()
 
-        if not self.download_only:
-            getattr(self, 'insert_{}'.format(endpoint))()
+        getattr(self, 'insert_{}'.format(endpoint))()
 
     population_etl = partialmethod(etl, 'population')
     taxonomy_etl = partialmethod(etl, 'taxonomy')
@@ -95,7 +88,7 @@ class Command(BaseCommand):
 
         c = Census(CENSUS_API_KEY, year=self.data_year)
 
-        for geography in ('place', 'county'):
+        for geography in ('place', 'county', 'county subdivision'):
 
             geo = {
                 'for': '{}:*'.format(geography),
@@ -104,7 +97,7 @@ class Command(BaseCommand):
 
             pop = c.acs5.get(('NAME', self.total_population_table), geo)
 
-            outfile = getattr(self, '{}_population_file'.format(geography))
+            outfile = self.population_file_fmt.format(geography=geography.replace(' ', '_'))
 
             with open(outfile, 'w') as f:
                 f.write(json.dumps(pop))
@@ -150,30 +143,56 @@ class Command(BaseCommand):
 
         inserts = []
 
-        for geography in ('place', 'county'):
+        cook_or_collar = [
+            'cook',
+            'dupage',
+            'kane',
+            'lake',
+            'mchenry',
+            'will',
+        ]
 
-            infile = getattr(self, '{}_population_file'.format(geography))
+        for geography in ('place', 'county', 'county subdivision'):
+
+            infile = self.population_file_fmt.format(geography=geography.replace(' ', '_'))
 
             with open(infile, 'r') as f:
                 pop = json.load(f)
 
             for place in pop:
                 if geography == 'place':
-                    # parse name like Valley City village, Illinois
-                    classfied_name, _ = place['NAME'].split(',')
+                    # Parse name like Valley City village, Illinois
+                    classfied_name, *_ = place['NAME'].split(',')
                     name_parts = classfied_name.split(' ')
                     name, classification = ' '.join(name_parts[:-1]), name_parts[-1]
 
                 elif geography == 'county':
-                    # parse name like Adams County, Illinois
+                    # Parse name like Adams County, Illinois
                     name, _ = place['NAME'].split(',')
 
                     # For some reason, this comes back from the Census API
                     # with a space. It doesn't have a space: https://www.dewittcountyill.com/
-                    if name == 'De Witt':
-                        name = 'DeWitt'
+                    if name.startswith('De Witt'):
+                        name = name.replace('De Witt', 'DeWitt')
 
                     classification = 'county'
+
+                elif geography == 'county subdivision':
+                    # Parse name like York township, DuPage County, Illinois
+                    classfied_name, county, _ = place['NAME'].split(',')
+                    name_parts = classfied_name.split(' ')
+                    name, classification = ' '.join(name_parts[:-1]), name_parts[-1]
+
+                    if classification != 'township':
+                        continue
+
+                    parsed_county = ' '.join(county.split(' ')[:-1]).lower().strip()
+
+                    # Data only includes townships in Cook and collar counties,
+                    # so omit the others, to avoid name collisions (township
+                    # name is not unique statewide).
+                    if parsed_county not in cook_or_collar:
+                        continue
 
                 place_meta = {
                     'name': name,

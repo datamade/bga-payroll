@@ -54,6 +54,34 @@ def test_import_utility_init(raw_table_setup,
 
         assert all(tax for tax in cursor)
 
+        validate_population = '''
+            WITH parents AS (
+              SELECT
+                emp.name
+              FROM payroll_employer AS emp
+              JOIN payroll_employertaxonomy AS tax
+              ON emp.taxonomy_id = tax.id
+              WHERE LOWER(tax.entity_type) IN ('township', 'municipal', 'county')
+            ), employers_with_population AS (
+              SELECT
+                emp.name,
+                pop.population
+              FROM payroll_employer AS emp
+              JOIN payroll_employerpopulation AS pop
+              ON emp.id = pop.employer_id
+            )
+            SELECT
+              (SELECT COUNT(*) FROM parents) AS raw_count,
+              (SELECT COUNT(*) FROM employers_with_population) AS generated_count
+        '''
+
+        cursor.execute(validate_population)
+
+        result, = cursor
+        raw_count, generated_count = result
+
+        assert raw_count == generated_count
+
         validate_position = '''
             WITH distinct_positions AS (
               SELECT DISTINCT ON (employer, department, title) *

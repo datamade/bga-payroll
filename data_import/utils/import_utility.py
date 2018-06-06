@@ -125,7 +125,7 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert_parents)
 
         self._classify_parent_employers()
-        self._get_parent_employer_population()
+        self._insert_parent_employer_population()
 
     def _classify_parent_employers(self):
         '''
@@ -146,7 +146,7 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(update)
 
-    def _get_parent_employer_population(self):
+    def _insert_parent_employer_population(self):
         insert = '''
             INSERT INTO payroll_employerpopulation (
               employer_id,
@@ -158,14 +158,20 @@ class ImportUtility(TableNamesMixin):
                 pop.population,
                 pop.data_year
               FROM payroll_employer AS emp
-              LEFT JOIN raw_population AS pop
-              ON TRIM(LOWER(emp.name)) = TRIM(LOWER(pop.name))
               JOIN payroll_employertaxonomy AS tax
               ON emp.taxonomy_id = tax.id
+              LEFT JOIN raw_population AS pop
+              ON (
+                TRIM(LOWER(emp.name)) = TRIM(LOWER(pop.name))
+                AND LOWER(tax.entity_type) IN ('municipal', 'county')
+                AND pop.classification != 'township'
+              ) OR (
+                TRIM(LOWER(REGEXP_REPLACE(emp.name, ' township', '', 'i'))) = TRIM(LOWER(pop.name))
+                AND LOWER(tax.entity_type) = 'township'
+                AND pop.classification = 'township'
+              )
               WHERE emp.parent_id IS NULL
-              AND pop.population IS NOT NULL
-              AND (tax.entity_type ILIKE 'county'
-                   OR tax.entity_type ILIKE 'municipal')
+              AND pop.name IS NOT NULL
         '''
 
         with connection.cursor() as cursor:
