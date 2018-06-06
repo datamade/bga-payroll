@@ -147,31 +147,56 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(update)
 
     def _insert_parent_employer_population(self):
+        '''
+        All entities in the 2017 data could be matched to an entity in the
+        raw_population data. This may or may not be true for future years.
+        For now, just leave potential unmatched employers be.
+        '''
         insert = '''
             INSERT INTO payroll_employerpopulation (
               employer_id,
               population,
               data_year
             )
-              SELECT
+              WITH unmatched_gov_units AS (
+                SELECT
+                  emp.id,
+                  tax.entity_type
+                FROM payroll_employer AS emp
+                JOIN payroll_employertaxonomy AS tax
+                ON emp.taxonomy_id = tax.id
+                LEFT JOIN payroll_employerpopulation AS pop
+                ON pop.employer_id = emp.id
+                WHERE emp.parent_id IS NULL
+                AND LOWER(tax.entity_type) in (
+                  'municipal',
+                  'county',
+                  'township'
+                )
+                AND pop.employer_id IS NULL
+              )
+              SELECT DISTINCT ON (emp.id)
                 emp.id,
                 pop.population,
                 pop.data_year
               FROM payroll_employer AS emp
-              JOIN payroll_employertaxonomy AS tax
-              ON emp.taxonomy_id = tax.id
-              LEFT JOIN raw_population AS pop
+              JOIN unmatched_gov_units AS unmatched
+              USING (id)
+              JOIN raw_population AS pop
               ON (
                 TRIM(LOWER(emp.name)) = TRIM(LOWER(pop.name))
-                AND LOWER(tax.entity_type) IN ('municipal', 'county')
+                AND LOWER(unmatched.entity_type) IN ('municipal', 'county')
                 AND pop.classification != 'township'
               ) OR (
                 TRIM(LOWER(REGEXP_REPLACE(emp.name, ' township', '', 'i'))) = TRIM(LOWER(pop.name))
-                AND LOWER(tax.entity_type) = 'township'
+                AND LOWER(unmatched.entity_type) = 'township'
                 AND pop.classification = 'township'
               )
-              WHERE emp.parent_id IS NULL
-              AND pop.name IS NOT NULL
+              /* There are a handful of instances where there are CDPs called
+              the same thing as a city or village. They always have a smaller
+              population. We want the city or village, so order by population
+              in order to grab the larger population via DISTINCT ON. */
+              ORDER BY emp.id, pop.population DESC
         '''
 
         with connection.cursor() as cursor:
