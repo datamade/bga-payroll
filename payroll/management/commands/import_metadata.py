@@ -1,7 +1,7 @@
-from datetime import datetime
-import json
-from functools import partialmethod
 from contextlib import redirect_stdout
+from datetime import datetime
+from functools import partialmethod
+import json
 
 from census import Census
 from django.core.management.base import BaseCommand
@@ -11,15 +11,16 @@ from sqlalchemy.engine.url import URL
 from us import states
 
 from bga_database.local_settings import CENSUS_API_KEY
+from bga_database.settings import BASE_DIR
 from data.processors.get_taxonomy import PayrollDatabaseScraper
 
 
 class Command(BaseCommand):
     help = 'load in employer metadata from the census api and old bga database'
 
-    base_dir = 'data/output/'
-    taxonomy_file_fmt = base_dir + '{date}-employer_taxonomy.csv'
-    population_file_fmt = base_dir + 'illinois_{geography}_population.json'
+    DATA_DIR = '/data/output'
+    taxonomy_file_fmt = BASE_DIR + DATA_DIR + '/{date}-employer_taxonomy.csv'
+    population_file_fmt = BASE_DIR + DATA_DIR + '/illinois_{geography}_population.json'
 
     total_population_table = 'B01003_001E'
     data_year = 2016
@@ -45,9 +46,7 @@ class Command(BaseCommand):
             'database': django_conn.get('database', ''),
         }
 
-        engine = sa.create_engine(URL('postgresql', **conn_kwargs))
-
-        self.connection = engine.connect()
+        self.engine = sa.create_engine(URL('postgresql', **conn_kwargs))
 
         self.endpoints = options['endpoints'].split(',')
 
@@ -60,11 +59,8 @@ class Command(BaseCommand):
             getattr(self, '{}_etl'.format(endpoint))()
 
     def executeTransaction(self, query, *args, **kwargs):
-        with self.connection.begin():
-            if kwargs:
-                self.connection.execute(query, **kwargs)
-            else:
-                self.connection.execute(query, *args)
+        with self.engine.begin() as conn:
+            conn.execute(query, *args, **kwargs)
 
     #######
     # ETL #

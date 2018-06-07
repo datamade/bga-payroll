@@ -1,7 +1,15 @@
+import os
+
 import pytest
 
 from data_import.models import Upload
 from payroll.models import Employer
+
+
+@pytest.fixture
+def project_directory():
+    test_directory = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(test_directory, '..')
 
 
 @pytest.fixture
