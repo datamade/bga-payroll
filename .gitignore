@@ -121,3 +121,4 @@ data/output/*
 !data/output/2018-05-30-employer_taxonomy.csv
 !data/output/illinois_place_population.json
 !data/output/illinois_county_population.json
+!data/output/illinois_county_subdivision_population.json
