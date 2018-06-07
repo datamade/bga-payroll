@@ -52,3 +52,9 @@ Perform the following steps from your terminal.
     ```bash
     python manage.py runserver
     ```
+7. In the project directory, make a test data file.
+    ```bash
+    make 2016-formatted.csv
+    ```
+
+8. Go to `http://localhost:8000/data-import/` and follow the steps to upload the CSV you just made. Don't forget to put in the data year. It will take a bit to complete each step, you can refresh the page to see if it's ready to move on to the next section. You can also keep track of progress in your Celery terminal.
