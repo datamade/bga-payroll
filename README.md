@@ -5,7 +5,7 @@ How much do your public officials make?
 ## Requirements
 
 - Python 3.x
-- Postgres
+- Postgres >= 9
 - GNU Make
 
 ## Running the app locally
@@ -33,21 +33,22 @@ Perform the following steps from your terminal.
     ```bash
     cp bga_database/local_settings.py.example bga_database/local_settings.py
     ```
-5. Create the database and add 2017 data. (This may take a couple of minutes.)
+5. Create the database and run the migrations.
 
     ```bash
     make database
+    python manage.py migrate
     ```
 6. Run the app. In three seperate terminal windows:
 
     ```bash
     redis-server
     ```
-    
+
     ```bash
     celery --app=bga_database.celery:app worker --loglevel=DEBUG
     ```
 
     ```bash
-    python manage.py runserver 
+    python manage.py runserver
     ```
