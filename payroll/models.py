@@ -41,6 +41,25 @@ class Employer(SluggedModel, VintagedModel):
         '''
         return bool(self.parent)
 
+    def get_population(self, year=None):
+        '''
+        If we have no population information, return None. Otherwise, return
+        the population closest to the target year (reporting year by default,
+        but configurable to support viewing data from previous years in the
+        future).
+        '''
+        if self.population.all():
+            if year:
+                target_year = year
+            else:
+                source_file = self.vintage.standardized_file.get()
+                target_year = source_file.reporting_year
+
+            population_years = [p.data_year for p in self.population.all()]
+            closest = min(population_years, key=lambda x: target_year - x)
+
+            return self.population.get(data_year=closest).population
+
 
 class EmployerTaxonomy(models.Model):
     entity_type = models.CharField(max_length=255)
@@ -58,6 +77,17 @@ class EmployerTaxonomy(models.Model):
             kwargs['special'] = 'Cook or Collar'
 
         return '{special} {type}'.format(**kwargs).strip()
+
+
+class EmployerPopulation(models.Model):
+    employer = models.ForeignKey('Employer',
+                                 related_name='population',
+                                 on_delete=models.CASCADE)
+    population = models.IntegerField()
+    data_year = models.IntegerField()
+
+    def __str__(self):
+        return '{0} ({1})'.format(self.population, self.data_year)
 
 
 class Person(SluggedModel, VintagedModel):
