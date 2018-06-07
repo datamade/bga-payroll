@@ -41,6 +41,45 @@ class Employer(SluggedModel, VintagedModel):
         '''
         return bool(self.parent)
 
+    @property
+    def size_class(self):
+        population = self.get_population()
+
+        # These are approximately broken into thirds
+        if str(self.taxonomy) == 'Municipal':
+            if population < 7500:
+                return 'Small'
+            elif population < 21000:
+                return 'Medium'
+            else:
+                return 'Large'
+
+        if str(self.taxonomy) == 'County':
+            if population < 16000:
+                return 'Small'
+            elif population < 39000:
+                return 'Medium'
+            else:
+                return 'Large'
+
+        if str(self.taxonomy) == 'Township':
+            if population < 16000:
+                return 'Small'
+            elif population < 60000:
+                return 'Medium'
+            else:
+                return 'Large'
+
+        if population:
+            if population < 5000:
+                return 'Small'
+            elif population < 10000:
+                return 'Medium'
+            else:
+                return 'Large'
+        else:
+            raise ValueError('There is no population attribute')
+
     def get_population(self, year=None):
         '''
         If we have no population information, return None. Otherwise, return
@@ -76,7 +115,12 @@ class EmployerTaxonomy(models.Model):
         elif self.cook_or_collar:
             kwargs['special'] = 'Cook or Collar'
 
-        return '{special} {type}'.format(**kwargs).strip()
+        if 'special' in kwargs:
+            str_taxonomy = '{special} {type}'.format(**kwargs).strip()
+        else:
+            str_taxonomy = '{type}'.format(**kwargs).strip()
+
+        return str_taxonomy
 
 
 class EmployerPopulation(models.Model):
