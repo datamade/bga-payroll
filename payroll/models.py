@@ -78,7 +78,7 @@ class Employer(SluggedModel, VintagedModel):
             else:
                 return 'Large'
         else:
-            raise ValueError('There is no population attribute')
+            return None
 
     def get_population(self, year=None):
         '''
@@ -116,9 +116,9 @@ class EmployerTaxonomy(models.Model):
             kwargs['special'] = 'Cook or Collar'
 
         if 'special' in kwargs:
-            str_taxonomy = '{special} {type}'.format(**kwargs).strip()
+            str_taxonomy = '{type} ({special})'.format(**kwargs)
         else:
-            str_taxonomy = '{type}'.format(**kwargs).strip()
+            str_taxonomy = '{type}'.format(**kwargs)
 
         return str_taxonomy
 
