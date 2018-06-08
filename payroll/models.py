@@ -1,5 +1,5 @@
 from django.contrib.postgres.search import SearchVectorField
-from django.db import models
+from django.db import models, connection
 
 from titlecase import titlecase
 
@@ -43,42 +43,48 @@ class Employer(SluggedModel, VintagedModel):
 
     @property
     def size_class(self):
-        population = self.get_population()
+        entity_type = self.taxonomy.entity_type
 
-        # These are approximately broken into thirds
-        if str(self.taxonomy) == 'Municipal':
-            if population < 7500:
-                return 'Small'
-            elif population < 21000:
-                return 'Medium'
-            else:
-                return 'Large'
+        if entity_type.lower() in ('county', 'township', 'municipal'):
+            select = '''
+                WITH coded_population AS (
+                  SELECT
+                    emp.id AS employer_id,
+                    NTILE(3) OVER (ORDER BY population) AS code
+                  FROM payroll_employer AS emp
+                  JOIN payroll_employertaxonomy AS tax
+                  ON emp.taxonomy_id = tax.id
+                  JOIN payroll_employerpopulation AS pop
+                  ON emp.id = pop.employer_id
+                  AND tax.entity_type ILIKE '{taxonomy}'
+                )
+                SELECT code_lookup.class
+                FROM coded_population
+                JOIN (
+                  SELECT code, class
+                  FROM (
+                    VALUES
+                      (1, 'Small'),
+                      (2, 'Medium'),
+                      (3, 'Large')
+                  ) AS code_lookup (code, class)
+                ) AS code_lookup
+                USING (code)
+                WHERE employer_id = {employer_id}
+            '''.format(taxonomy=self.taxonomy.entity_type,
+                       employer_id=self.id)
 
-        if str(self.taxonomy) == 'County':
-            if population < 16000:
-                return 'Small'
-            elif population < 39000:
-                return 'Medium'
-            else:
-                return 'Large'
+            with connection.cursor() as cursor:
+                cursor.execute(select)
 
-        if str(self.taxonomy) == 'Township':
-            if population < 16000:
-                return 'Small'
-            elif population < 60000:
-                return 'Medium'
-            else:
-                return 'Large'
+                try:
+                    size_class, = cursor.fetchone()
 
-        if population:
-            if population < 5000:
-                return 'Small'
-            elif population < 10000:
-                return 'Medium'
-            else:
-                return 'Large'
-        else:
-            return None
+                except TypeError:  # no result
+                    return None
+
+            return size_class
+
 
     def get_population(self, year=None):
         '''
