@@ -1,5 +1,5 @@
 from django.contrib.postgres.search import SearchVectorField
-from django.db import models
+from django.db import models, connection
 
 from titlecase import titlecase
 
@@ -41,6 +41,50 @@ class Employer(SluggedModel, VintagedModel):
         '''
         return bool(self.parent)
 
+    @property
+    def size_class(self):
+        entity_type = self.taxonomy.entity_type
+
+        if entity_type.lower() in ('county', 'township', 'municipal'):
+            select = '''
+                WITH coded_population AS (
+                  SELECT
+                    emp.id AS employer_id,
+                    NTILE(3) OVER (ORDER BY population) AS code
+                  FROM payroll_employer AS emp
+                  JOIN payroll_employertaxonomy AS tax
+                  ON emp.taxonomy_id = tax.id
+                  JOIN payroll_employerpopulation AS pop
+                  ON emp.id = pop.employer_id
+                  AND tax.entity_type ILIKE '{taxonomy}'
+                )
+                SELECT code_lookup.class
+                FROM coded_population
+                JOIN (
+                  SELECT code, class
+                  FROM (
+                    VALUES
+                      (1, 'Small'),
+                      (2, 'Medium'),
+                      (3, 'Large')
+                  ) AS code_lookup (code, class)
+                ) AS code_lookup
+                USING (code)
+                WHERE employer_id = {employer_id}
+            '''.format(taxonomy=self.taxonomy.entity_type,
+                       employer_id=self.id)
+
+            with connection.cursor() as cursor:
+                cursor.execute(select)
+
+                try:
+                    size_class, = cursor.fetchone()
+
+                except TypeError:  # no result
+                    return None
+
+            return size_class
+
     def get_population(self, year=None):
         '''
         If we have no population information, return None. Otherwise, return
@@ -76,7 +120,12 @@ class EmployerTaxonomy(models.Model):
         elif self.cook_or_collar:
             kwargs['special'] = 'Cook or Collar'
 
-        return '{special} {type}'.format(**kwargs).strip()
+        if 'special' in kwargs:
+            str_taxonomy = '{type} ({special})'.format(**kwargs)
+        else:
+            str_taxonomy = '{type}'.format(**kwargs)
+
+        return str_taxonomy
 
 
 class EmployerPopulation(models.Model):
@@ -106,7 +155,7 @@ class Job(VintagedModel):
     person = models.ForeignKey('Person',
                                related_name='jobs',
                                on_delete=models.CASCADE)
-    position = models.ForeignKey('Position', on_delete=models.CASCADE)
+    position = models.ForeignKey('Position', on_delete=models.CASCADE, related_name='jobs')
     start_date = models.DateField(null=True)
 
     def __str__(self):
@@ -139,7 +188,7 @@ class Job(VintagedModel):
 
 
 class Position(VintagedModel):
-    employer = models.ForeignKey('Employer', on_delete=models.CASCADE)
+    employer = models.ForeignKey('Employer', on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255, null=True)
 
     def __repr__(self):

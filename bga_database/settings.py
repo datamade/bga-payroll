@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'data_import',
     'debug_toolbar',
     'django.contrib.postgres',
+    'postgres_stats',
 ]
 
 MIDDLEWARE = [
