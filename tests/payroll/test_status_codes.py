@@ -31,7 +31,7 @@ def test_child_employer(client,
     child_employer = employer.build(name='Brew Staff', parent=parent_employer)
 
     # Make the job attached to the salary, a job of the child employer.
-    child_employer.position_set.add(salary.job.position)
+    child_employer.positions.add(salary.job.position)
     child_employer.save()
 
     e = Employer.objects.get(name='Brew Staff')

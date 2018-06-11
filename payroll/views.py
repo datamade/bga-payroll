@@ -100,10 +100,7 @@ class EmployerView(DetailView):
 
     def median_entity_salary(self):
 
-        if self.object.parent is None:
-            q = Salary.objects.filter(job__position__employer__parent=self.object)
-        else:
-            q = Salary.objects.filter(job__position__employer=self.object)
+        q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
 
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
