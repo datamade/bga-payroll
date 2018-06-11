@@ -156,7 +156,7 @@ class Job(VintagedModel):
     person = models.ForeignKey('Person',
                                related_name='jobs',
                                on_delete=models.CASCADE)
-    position = models.ForeignKey('Position', on_delete=models.CASCADE)
+    position = models.ForeignKey('Position', on_delete=models.CASCADE, related_name='jobs')
     start_date = models.DateField(null=True)
 
     def __str__(self):
@@ -189,7 +189,7 @@ class Job(VintagedModel):
 
 
 class Position(VintagedModel):
-    employer = models.ForeignKey('Employer', on_delete=models.CASCADE)
+    employer = models.ForeignKey('Employer', on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255, null=True)
 
     def __repr__(self):

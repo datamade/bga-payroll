@@ -3,16 +3,17 @@ import json
 
 from django.contrib.postgres.search import SearchVector
 from django.db import connection
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, FloatField
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+from postgres_stats.aggregates import Percentile
 
 import numpy as np
 
-from payroll.models import Employer, Job, Person
+from payroll.models import Employer, Job, Person, Salary
 from payroll.utils import format_ballpark_number
 
 
@@ -60,7 +61,7 @@ class EmployerView(DetailView):
 
         context.update({
             'jobs': Job.of_employer(self.object.id, n=5),
-            'mean_salary': self.mean_entity_salary(),
+            'median_salary': self.median_entity_salary(),
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
             'employee_salary_json': json.dumps(binned_employee_salaries),
@@ -97,21 +98,17 @@ class EmployerView(DetailView):
             where_clause=self.where_clause,
         )
 
-    def mean_entity_salary(self):
-        query = self._make_query('''
-            SELECT
-                AVG(salary.amount) AS average
-            {from_clause}
-            {where_clause}
-        ''')
+    def median_entity_salary(self):
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
+        if self.object.parent == None:
+            q = Salary.objects.filter(job__position__employer__parent=self.object)
+        else:
+            q = Salary.objects.filter(job__position__employer=self.object)
 
-            result, = cursor
-            mean_salary, = result
+        results = q.all().aggregate(median=
+            Percentile('amount', 0.5, output_field=FloatField()))
 
-        return mean_salary
+        return results['median']
 
     def aggregate_department_statistics(self):
         query = self._make_query('''
