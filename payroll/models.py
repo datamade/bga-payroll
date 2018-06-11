@@ -85,7 +85,6 @@ class Employer(SluggedModel, VintagedModel):
 
             return size_class
 
-
     def get_population(self, year=None):
         '''
         If we have no population information, return None. Otherwise, return
