@@ -18,21 +18,6 @@ class ImportUtility(TableNamesMixin):
 
         self.vintage = s_file.upload.id
 
-    def _trim_lower(self, field):
-        return 'TRIM(LOWER({}))'.format(field)
-
-    @property
-    def common_fields(self):
-        return {
-            'raw_responding_agency': self._trim_lower('raw.responding_agency'),
-            'raw_employer': self._trim_lower('raw.employer'),
-            'raw_department': self._trim_lower('raw.department'),
-            'raw_title': self._trim_lower('raw.title'),
-            'existing_name': self._trim_lower('existing.name'),
-            'existing_employer_name': self._trim_lower('existing.employer_name'),
-            'existing_parent_name': self._trim_lower('existing.parent_name'),
-        }
-
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
 
@@ -57,9 +42,9 @@ class ImportUtility(TableNamesMixin):
               DISTINCT responding_agency
             FROM {raw_payroll} AS raw
             LEFT JOIN data_import_respondingagency AS existing
-            ON {raw_responding_agency} = {existing_name}
+            ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
             WHERE existing.name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table, **self.common_fields)
+        '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -74,9 +59,9 @@ class ImportUtility(TableNamesMixin):
                 DISTINCT responding_agency
               FROM {raw_payroll} AS raw
               LEFT JOIN data_import_respondingagency AS existing
-              ON {raw_responding_agency} = {existing_name}
+              ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
               WHERE existing.name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table, **self.common_fields)
+        '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
@@ -95,10 +80,10 @@ class ImportUtility(TableNamesMixin):
             SELECT DISTINCT employer
             FROM {raw_payroll} AS raw
             LEFT JOIN payroll_employer AS existing
-            ON {raw_employer} = {existing_name}
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
             AND existing.parent_id IS NULL
             WHERE existing.name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table, **self.common_fields)
+        '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -114,12 +99,11 @@ class ImportUtility(TableNamesMixin):
                 {vintage}
               FROM {raw_payroll} AS raw
               LEFT JOIN payroll_employer AS existing
-              ON {raw_employer} = {existing_name}
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
               AND existing.parent_id IS NULL
               WHERE existing.name IS NULL
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   **self.common_fields)
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert_parents)
@@ -228,20 +212,16 @@ class ImportUtility(TableNamesMixin):
             Parents will always exist, because we added them in
             the prior step. */
             LEFT JOIN child_employers AS parent
-            ON {raw_employer} = {parent_parent_name}
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(parent.parent_name))
             /* Join to filter records with a corresponding child. */
             LEFT JOIN child_employers AS child
-            ON {raw_employer} = {child_parent_name}
-            AND {raw_department} = {child_employer_name}
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(child.parent_name))
+            AND TRIM(LOWER(raw.department)) = TRIM(LOWER(child.employer_name))
             WHERE raw.department IS NOT NULL
             AND parent.new_parent IS FALSE
             AND child.employer_name IS NULL
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   parent_parent_name=self._trim_lower('parent.parent_name'),
-                   child_parent_name=self._trim_lower('child.parent_name'),
-                   child_employer_name=self._trim_lower('child.employer_name'),
-                   **self.common_fields)
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -262,13 +242,11 @@ class ImportUtility(TableNamesMixin):
                 {vintage}
               FROM {raw_payroll} AS raw
               JOIN payroll_employer AS parent
-              ON {raw_employer} = {parent_name}
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(parent.name))
               WHERE department IS NOT NULL
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   parent_name=self._trim_lower('parent.name'),
-                   **self.common_fields)
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert_children)
@@ -292,17 +270,16 @@ class ImportUtility(TableNamesMixin):
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
               ON (
-                {raw_department} = {existing_employer_name}
-                AND {raw_employer} = {existing_parent_name}
+                TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
+                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
                 AND raw.department IS NOT NULL
               ) OR (
-                {raw_employer} = {existing_employer_name}
+                TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.employer_name))
                 AND raw.department IS NULL
               )
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   **self.common_fields)
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
@@ -361,16 +338,16 @@ class ImportUtility(TableNamesMixin):
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
               ON (
-                {raw_department} = {existing_employer_name}
-                AND {raw_employer} = {existing_parent_name}
+                TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
+                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
                 AND raw.department IS NOT NULL
               ) OR (
-                {raw_employer} = {existing_employer_name}
+                TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.employer_name))
                 AND raw.department IS NULL
               )
               JOIN payroll_position AS position
               ON position.employer_id = existing.employer_id
-              AND {position_title} = {raw_title}
+              AND TRIM(LOWER(position.title)) = TRIM(LOWER(raw.title))
             )
             SELECT
               record_id,
@@ -391,9 +368,7 @@ class ImportUtility(TableNamesMixin):
             USING (record_id)
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
-                   raw_payroll=self.raw_payroll_table,
-                   position_title=self._trim_lower('position.title'),
-                   **self.common_fields)
+                   raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
