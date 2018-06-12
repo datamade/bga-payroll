@@ -73,14 +73,16 @@ class ImportUtility(TableNamesMixin):
               SELECT
                 record_id,
                 employer,
-                department
+                department,
+                title
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
               UNION ALL
               SELECT
                 record_id,
                 department AS employer,
-                NULL as department
+                NULL as department,
+                title
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             )
@@ -308,20 +310,12 @@ class ImportUtility(TableNamesMixin):
                 FROM payroll_employer AS child
                 LEFT JOIN payroll_employer AS parent
                 ON child.parent_id = parent.id
-              ), raw_employer AS (
-                SELECT
-                  emp.employer,
-                  emp.department,
-                  pay.title
-                FROM {raw_payroll} AS pay
-                JOIN {raw_employer} AS emp
-                USING (record_id)
               )
               SELECT
                 employer_id,
                 COALESCE(title, 'EMPLOYEE'),
                 {vintage}
-              FROM raw_employer AS raw
+              FROM {raw_employer} AS raw
               JOIN employer_ids AS existing
               ON (
                 TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
@@ -333,7 +327,6 @@ class ImportUtility(TableNamesMixin):
               )
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
                    raw_employer=self.raw_employer_table)
 
         with connection.cursor() as cursor:
@@ -386,20 +379,11 @@ class ImportUtility(TableNamesMixin):
               FROM payroll_employer AS child
               LEFT JOIN payroll_employer AS parent
               ON child.parent_id = parent.id
-            ), raw_employer AS (
-                SELECT
-                  emp.record_id,
-                  emp.employer,
-                  emp.department,
-                  pay.title
-                FROM {raw_payroll} AS pay
-                JOIN {raw_employer} AS emp
-                USING (record_id)
-              ), position_ids AS (
+            ), position_ids AS (
               SELECT
                 record_id,
                 position.id AS position_id
-              FROM raw_employer AS raw
+              FROM {raw_employer} AS raw
               JOIN employer_ids AS existing
               ON (
                 TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
