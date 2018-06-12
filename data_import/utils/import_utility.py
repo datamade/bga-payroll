@@ -253,7 +253,7 @@ class ImportUtility(TableNamesMixin):
             SELECT DISTINCT ON (employer, department)
               employer,
               department
-            FROM {raw_payroll} AS raw
+            FROM {raw_employer} AS raw
             /* Join to filter records where new_parent is True.
             Parents will always exist, because we added them in
             the prior step. */
@@ -267,7 +267,7 @@ class ImportUtility(TableNamesMixin):
             AND parent.new_parent IS FALSE
             AND child.employer_name IS NULL
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table)
+                   raw_employer=self.raw_employer_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
