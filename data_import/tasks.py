@@ -138,8 +138,14 @@ def insert_responding_agency(self, *, s_file_id):
 
 
 @shared_task(bind=True, base=DataImportTask)
+def reshape_raw_payroll(self, *, s_file_id):
+    self.import_utility.reshape_raw_payroll()
+
+    return 'Reshaped raw payroll'
+
+
+@shared_task(bind=True, base=DataImportTask)
 def select_unseen_parent_employer(self, *, s_file_id):
-    self.import_utility.select_raw_employer()
     self.import_utility.select_unseen_parent_employer()
 
     self.update_status('parent employer unmatched')

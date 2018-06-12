@@ -131,8 +131,8 @@ class TestSelectUnseenParentEmployer(TestSelectUnseenBase):
         select = '''
             SELECT
               COUNT(distinct raw.employer) - 1
-            FROM {raw_payroll} AS raw
-        '''.format(raw_payroll=self.s_file.raw_table_name)
+            FROM {intermediate_employer} AS raw
+        '''.format(intermediate_employer=self.s_file.intermediate_table_name)
 
         return select
 
@@ -144,9 +144,9 @@ class TestSelectUnseenParentEmployer(TestSelectUnseenBase):
     def test_select_unseen_parent_employer(self,
                                            employer,
                                            canned_data,
-                                           raw_table_setup,
+                                           reshaped_table_setup,
                                            queue_teardown):
-        self.s_file = raw_table_setup
+        self.s_file = reshaped_table_setup
 
         self.existing_entity = employer.build(name=canned_data['Employer'])
 
@@ -169,10 +169,10 @@ class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer)
             SELECT COUNT(*) - 1
             FROM (
               SELECT DISTINCT ON (employer, department)
-              * FROM {raw_payroll}
+              * FROM {intermediate_payroll}
               WHERE department IS NOT NULL
             ) AS child_employers
-        '''.format(raw_payroll=self.s_file.raw_table_name)
+        '''.format(intermediate_payroll=self.s_file.intermediate_table_name)
 
         return select
 
@@ -180,14 +180,14 @@ class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer)
     def test_select_unseen_child_employer_with_existing_parent(self,
                                                                employer,
                                                                canned_data,
-                                                               raw_table_setup,
+                                                               reshaped_table_setup,
                                                                queue_teardown):
-        self.s_file = raw_table_setup
+        self.s_file = reshaped_table_setup
 
         with connection.cursor() as cursor:
             cursor.execute('''
-                SELECT DISTINCT employer FROM {raw_payroll}
-            '''.format(raw_payroll=self.s_file.raw_table_name))
+                SELECT DISTINCT employer FROM {intermediate_payroll}
+            '''.format(intermediate_payroll=self.s_file.intermediate_table_name))
 
             for record in cursor:
                 parent_name, = record
@@ -206,10 +206,11 @@ class TestSelectUnseenChildEmployerNewParent(TestSelectUnseenChildEmployer):
             SELECT COUNT(*)
             FROM (
               SELECT DISTINCT ON (employer, department)
-              * FROM {raw_payroll}
+              * FROM {intermediate_payroll}
               WHERE employer != '{canned_data}'
+                AND department IS NOT NULL
             ) AS child_employers
-        '''.format(raw_payroll=self.s_file.raw_table_name,
+        '''.format(intermediate_payroll=self.s_file.intermediate_table_name,
                    canned_data=self.existing_entity.parent.name)
 
         return select
@@ -219,14 +220,14 @@ class TestSelectUnseenChildEmployerNewParent(TestSelectUnseenChildEmployer):
     def test_select_unseen_child_employer_with_new_parent(self,
                                                           employer,
                                                           canned_data,
-                                                          raw_table_setup,
+                                                          reshaped_table_setup,
                                                           queue_teardown):
-        self.s_file = raw_table_setup
+        self.s_file = reshaped_table_setup
 
         with connection.cursor() as cursor:
             cursor.execute('''
-                SELECT DISTINCT employer FROM {raw_payroll}
-            '''.format(raw_payroll=self.s_file.raw_table_name))
+                SELECT DISTINCT employer FROM {intermediate_payroll}
+            '''.format(intermediate_payroll=self.s_file.intermediate_table_name))
 
             for record in cursor:
                 parent_name, = record
