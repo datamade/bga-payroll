@@ -149,7 +149,7 @@ class ImportUtility(TableNamesMixin):
         that are not in the canonical list, e.g., are not classified in this
         step. For now, just leave them unclassified.
         '''
-        update = '''
+        update_non_school_districts = '''
             UPDATE payroll_employer
             SET taxonomy_id = model_taxonomy.id
             FROM raw_taxonomy
@@ -159,8 +159,22 @@ class ImportUtility(TableNamesMixin):
               AND payroll_employer.parent_id IS NULL
         '''
 
+        update_school_districts = '''
+            WITH school_district_taxonomy AS (
+              SELECT id FROM payroll_employertaxonomy
+              WHERE entity_type ilike 'school district'
+            )
+            UPDATE payroll_employer
+            SET taxonomy_id = (SELECT id FROM school_district_taxonomy)
+            FROM {raw_payroll} AS raw
+            WHERE TRIM(LOWER(raw.employer)) = 'all elementary/high school employees'
+              AND TRIM(LOWER(payroll_employer.name)) = TRIM(LOWER(raw.department))
+              AND payroll_employer.parent_id IS NULL
+        '''.format(raw_payroll=self.raw_payroll_table)
+
         with connection.cursor() as cursor:
-            cursor.execute(update)
+            cursor.execute(update_non_school_districts)
+            cursor.execute(update_school_districts)
 
     def _insert_parent_employer_population(self):
         '''

@@ -59,7 +59,7 @@ def test_import_utility_init(raw_table_setup,
 
         cursor.execute(validate_taxonomy)
 
-        assert all(tax for tax in cursor)
+        assert all(tax[0] for tax in cursor)
 
         validate_population = '''
             WITH parents AS (
