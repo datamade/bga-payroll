@@ -8,9 +8,10 @@ from django.db import connection
 from data_import import utils
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 def test_import_utility_init(raw_table_setup,
-                             mocker):
+                             mocker,
+                             transactional_db):
 
     s_file = raw_table_setup
 
@@ -28,10 +29,16 @@ def test_import_utility_init(raw_table_setup,
             WITH parents AS (
               SELECT DISTINCT employer
               FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
+              UNION
+              SELECT DISTINCT department
+              FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             ), children AS (
               SELECT DISTINCT ON (employer, department) *
               FROM {raw_payroll}
               WHERE department IS NOT NULL
+              AND TRIM(LOWER(employer)) != 'all elementary/high school employees'
             )
             SELECT
               (SELECT COUNT(*) FROM parents) + (SELECT COUNT(*) FROM children) AS raw_count,
@@ -157,6 +164,18 @@ def test_import_utility_init(raw_table_setup,
                 salary::NUMERIC,
                 NULLIF(date_started, '')::DATE
               FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
+              UNION ALL
+              SELECT
+                department AS employer,
+                NULL AS department,
+                title,
+                first_name,
+                last_name,
+                salary::NUMERIC,
+                NULLIF(date_started, '')::DATE
+              FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             )
             SELECT * FROM raw
             EXCEPT

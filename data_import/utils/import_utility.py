@@ -21,6 +21,7 @@ class ImportUtility(TableNamesMixin):
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
 
+        self.select_raw_employer()
         self.insert_parent_employer()
         self.insert_child_employer()
 
@@ -66,6 +67,37 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
+    def select_raw_employer(self):
+        select = '''
+            CREATE TABLE {raw_employer} AS (
+              SELECT
+                record_id,
+                employer,
+                department
+              FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
+              UNION ALL
+              SELECT
+                record_id,
+                department AS employer,
+                NULL as department
+              FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
+            )
+        '''.format(raw_employer=self.raw_employer_table,
+                   raw_payroll=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            cursor.execute('''
+                CREATE INDEX ON {raw_employer} (TRIM(LOWER(employer)))
+            '''.format(raw_employer=self.raw_employer_table))
+
+            cursor.execute('''
+                CREATE INDEX ON {raw_employer} (TRIM(LOWER(department)))
+            '''.format(raw_employer=self.raw_employer_table))
+
     def select_unseen_parent_employer(self):
         '''
         Select all parent employers we have not yet seen, regardless
@@ -78,12 +110,12 @@ class ImportUtility(TableNamesMixin):
 
         select = '''
             SELECT DISTINCT employer
-            FROM {raw_payroll} AS raw
+            FROM {raw_employer} AS raw
             LEFT JOIN payroll_employer AS existing
             ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
             AND existing.parent_id IS NULL
             WHERE existing.name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table)
+        '''.format(raw_employer=self.raw_employer_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -97,13 +129,13 @@ class ImportUtility(TableNamesMixin):
               SELECT
                 DISTINCT employer,
                 {vintage}
-              FROM {raw_payroll} AS raw
+              FROM {raw_employer} AS raw
               LEFT JOIN payroll_employer AS existing
               ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
               AND existing.parent_id IS NULL
               WHERE existing.name IS NULL
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table)
+                   raw_employer=self.raw_employer_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert_parents)
@@ -240,13 +272,13 @@ class ImportUtility(TableNamesMixin):
                 department AS employer_name,
                 parent.id AS parent_id,
                 {vintage}
-              FROM {raw_payroll} AS raw
+              FROM {raw_employer} AS raw
               JOIN payroll_employer AS parent
               ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(parent.name))
               WHERE department IS NOT NULL
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table)
+                   raw_employer=self.raw_employer_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert_children)
@@ -262,12 +294,20 @@ class ImportUtility(TableNamesMixin):
                 FROM payroll_employer AS child
                 LEFT JOIN payroll_employer AS parent
                 ON child.parent_id = parent.id
+              ), raw_employer AS (
+                SELECT
+                  emp.employer,
+                  emp.department,
+                  pay.title
+                FROM {raw_payroll} AS pay
+                JOIN {raw_employer} AS emp
+                USING (record_id)
               )
               SELECT
                 employer_id,
                 COALESCE(title, 'EMPLOYEE'),
                 {vintage}
-              FROM {raw_payroll} AS raw
+              FROM raw_employer AS raw
               JOIN employer_ids AS existing
               ON (
                 TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
@@ -279,7 +319,8 @@ class ImportUtility(TableNamesMixin):
               )
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table)
+                   raw_payroll=self.raw_payroll_table,
+                   raw_employer=self.raw_employer_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
@@ -331,11 +372,20 @@ class ImportUtility(TableNamesMixin):
               FROM payroll_employer AS child
               LEFT JOIN payroll_employer AS parent
               ON child.parent_id = parent.id
-            ), position_ids AS (
+            ), raw_employer AS (
+                SELECT
+                  emp.record_id,
+                  emp.employer,
+                  emp.department,
+                  pay.title
+                FROM {raw_payroll} AS pay
+                JOIN {raw_employer} AS emp
+                USING (record_id)
+              ), position_ids AS (
               SELECT
                 record_id,
                 position.id AS position_id
-              FROM {raw_payroll} AS raw
+              FROM raw_employer AS raw
               JOIN employer_ids AS existing
               ON (
                 TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
@@ -368,7 +418,8 @@ class ImportUtility(TableNamesMixin):
             USING (record_id)
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
-                   raw_payroll=self.raw_payroll_table)
+                   raw_payroll=self.raw_payroll_table,
+                   raw_employer=self.raw_employer_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
