@@ -104,7 +104,6 @@ def copy_to_database(self, *, s_file_id):
 
             cursor.copy_expert(copy, f)
 
-            cursor.execute('CREATE INDEX ON {} (record_id)'.format(table_name))
             cursor.execute('CREATE INDEX ON {} (TRIM(LOWER(employer)))'.format(table_name))
 
     self.update_status('copied to database')

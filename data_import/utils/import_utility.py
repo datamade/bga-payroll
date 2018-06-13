@@ -100,13 +100,10 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(select)
 
-            cursor.execute('''
-                CREATE INDEX ON {intermediate_payroll} (TRIM(LOWER(employer)))
-            '''.format(intermediate_payroll=self.intermediate_payroll_table))
-
-            cursor.execute('''
-                CREATE INDEX ON {intermediate_payroll} (TRIM(LOWER(department)))
-            '''.format(intermediate_payroll=self.intermediate_payroll_table))
+            for field in ('employer', 'department', 'title'):
+                cursor.execute('''
+                    CREATE INDEX ON {table} (TRIM(LOWER({field})))
+                '''.format(table=self.intermediate_payroll_table, field=field))
 
     def select_unseen_parent_employer(self):
         '''
@@ -387,29 +384,11 @@ class ImportUtility(TableNamesMixin):
               FROM payroll_employer AS child
               LEFT JOIN payroll_employer AS parent
               ON child.parent_id = parent.id
-            ), position_ids AS (
-              SELECT
-                record_id,
-                position.id AS position_id,
-                date_started
-              FROM {intermediate_payroll} AS raw
-              JOIN employer_ids AS existing
-              ON (
-                TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
-                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
-                AND raw.department IS NOT NULL
-              ) OR (
-                TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.employer_name))
-                AND raw.department IS NULL
-              )
-              JOIN payroll_position AS position
-              ON position.employer_id = existing.employer_id
-              AND TRIM(LOWER(position.title)) = TRIM(LOWER(raw.title))
             )
             SELECT
               record_id,
               person_id,
-              position_id,
+              position.id AS position_id,
               NULLIF(TRIM(date_started), '')::DATE AS start_date,
               NEXTVAL('payroll_job_id_seq') AS job_id
               /* payroll_job does not have a uniquely identifying
@@ -419,8 +398,20 @@ class ImportUtility(TableNamesMixin):
               use in a later join to create the Salary table. */
             INTO {raw_job}
             FROM {raw_person}
-            JOIN position_ids
+            JOIN {intermediate_payroll} AS raw
             USING (record_id)
+            JOIN employer_ids AS emp
+            ON (
+              TRIM(LOWER(raw.department)) = TRIM(LOWER(emp.employer_name))
+              AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(emp.parent_name))
+              AND raw.department IS NOT NULL
+            ) OR (
+              TRIM(LOWER(raw.employer)) = TRIM(LOWER(emp.employer_name))
+              AND raw.department IS NULL
+            )
+            JOIN payroll_position AS position
+            ON position.employer_id = emp.employer_id
+            AND TRIM(LOWER(position.title)) = TRIM(LOWER(raw.title))
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
                    intermediate_payroll=self.intermediate_payroll_table)
