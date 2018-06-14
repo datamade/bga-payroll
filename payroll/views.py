@@ -43,6 +43,7 @@ class EmployerView(DetailView):
     model = Employer
     context_object_name = 'entity'
 
+    # This connects salaries and employers
     from_clause = '''
         FROM payroll_job AS job
         JOIN payroll_salary AS salary
@@ -108,17 +109,30 @@ class EmployerView(DetailView):
 
     def aggregate_department_statistics(self):
         query = self._make_query('''
-            SELECT
-                employer.name,
-                AVG(salary.amount) AS average,
-                SUM(salary.amount) AS budget,
-                COUNT(*) AS headcount,
-                employer.slug AS slug
-            {from_clause}
+            WITH median_salaries as (
+                SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY payroll_salary.amount ASC) as ms,
+                parent_id
+                {from_clause}
+                GROUP BY parent_id)
+            SELECT percent_rank()
+            OVER (ORDER BY median_salaries.ms asc), payroll_employer.name, median_salaries.ms
+            FROM median_salaries
+            INNER JOIN payroll_employer
+            ON median_salaries.parent_id = payroll_employer_id
             {where_clause}
-            GROUP BY employer.id, employer.name
-            ORDER BY SUM(salary.amount) DESC
         ''')
+        # query = self._make_query('''
+        #     SELECT
+        #         employer.name,
+        #         AVG(salary.amount) AS average,
+        #         SUM(salary.amount) AS budget,
+        #         COUNT(*) AS headcount,
+        #         employer.slug AS slug
+        #     {from_clause}
+        #     {where_clause}
+        #     GROUP BY employer.id, employer.name
+        #     ORDER BY SUM(salary.amount) DESC
+        # ''')
 
         with connection.cursor() as cursor:
             cursor.execute(query)
