@@ -228,7 +228,7 @@ class SearchView(ListView):
 
         return employers.filter(condition)\
                         .select_related('parent')\
-                        .annotate(budget=Sum('position__job__salaries__amount'))\
+                        .annotate(budget=Sum('positions__jobs__salaries__amount'))\
                         .order_by('-budget')
 
 
