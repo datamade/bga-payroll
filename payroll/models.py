@@ -1,5 +1,5 @@
 from django.contrib.postgres.search import SearchVectorField
-from django.db import models, connection
+from django.db import models
 
 from titlecase import titlecase
 
