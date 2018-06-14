@@ -43,14 +43,19 @@ class EmployerView(DetailView):
     model = Employer
     context_object_name = 'entity'
 
-    # This connects salaries and employers
+    '''
+    from_clause connects salaries and employers through a series of joins.
+    Removed alias for payroll_employer because it breaks if
+    {from_clause} and {where_clause} aren't in the same query.
+    '''
+
     from_clause = '''
         FROM payroll_job AS job
         JOIN payroll_salary AS salary
         ON salary.job_id = job.id
         JOIN payroll_position AS position
         ON job.position_id = position.id
-        JOIN payroll_employer AS employer
+        JOIN payroll_employer as employer
         ON position.employer_id = employer.id
     '''
 
@@ -65,6 +70,8 @@ class EmployerView(DetailView):
             'median_salary': self.median_entity_salary(),
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
+            'salary_percentile': self.salary_percentile(),
+            'exp_percentile': self.exp_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
         })
 
@@ -109,36 +116,22 @@ class EmployerView(DetailView):
 
     def aggregate_department_statistics(self):
         query = self._make_query('''
-            WITH median_salaries as (
-                SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY payroll_salary.amount ASC) as ms,
-                parent_id
-                {from_clause}
-                GROUP BY parent_id)
-            SELECT percent_rank()
-            OVER (ORDER BY median_salaries.ms asc), payroll_employer.name, median_salaries.ms
-            FROM median_salaries
-            INNER JOIN payroll_employer
-            ON median_salaries.parent_id = payroll_employer_id
+            SELECT
+                employer.name,
+                AVG(salary.amount) AS average,
+                SUM(salary.amount) AS budget,
+                COUNT(*) AS headcount,
+                employer.slug AS slug
+            {from_clause}
             {where_clause}
+            GROUP BY employer.id, employer.name
+            ORDER BY SUM(salary.amount) DESC
         ''')
-        # query = self._make_query('''
-        #     SELECT
-        #         employer.name,
-        #         AVG(salary.amount) AS average,
-        #         SUM(salary.amount) AS budget,
-        #         COUNT(*) AS headcount,
-        #         employer.slug AS slug
-        #     {from_clause}
-        #     {where_clause}
-        #     GROUP BY employer.id, employer.name
-        #     ORDER BY SUM(salary.amount) DESC
-        # ''')
 
         with connection.cursor() as cursor:
             cursor.execute(query)
 
             department_salaries = []
-
             for department, average, budget, headcount, slug in cursor:
                 department_salaries.append({
                     'department': department,
@@ -149,6 +142,63 @@ class EmployerView(DetailView):
                 })
 
         return department_salaries
+
+    def exp_percentile(self):
+        query = '''
+            WITH total_expenditure as (
+              select sum(amount) as tot, pe.id as id, pe.name
+              from payroll_salary as s
+              inner join payroll_job as j
+              on s.job_id = j.id
+              inner join payroll_position as p
+              on j.position_id = p.id
+              inner join payroll_employer as e
+              on p.employer_id = e.id
+              inner join payroll_employer as pe
+              on e.parent_id = pe.id
+              group by pe.id
+              order by tot desc),
+            exp_percentiles as (
+                select percent_rank() over (order by total_expenditure.tot asc) as percentile, total_expenditure.id as id
+                from total_expenditure
+                inner join payroll_employer
+                on total_expenditure.id = payroll_employer.id
+            )
+            select percentile
+            from exp_percentiles
+            where id = {id}
+        '''.format(id=self.object.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()[0]
+        return result
+
+    def salary_percentile(self):
+        query = '''
+            WITH median_salaries as (
+              select percentile_cont(0.5) within group (order by payroll_salary.amount asc) as median_salary,
+              parent_id as employer_id
+              from payroll_salary
+              inner join payroll_job on payroll_salary.job_id = payroll_job.id
+              inner join payroll_position on payroll_job.position_id = payroll_position.id
+              inner join payroll_employer on payroll_position.employer_id = payroll_employer.id
+              group by parent_id),
+             salary_percentiles as (
+                select percent_rank() over (order by median_salaries.median_salary asc) as percentile, employer_id
+                from median_salaries
+                inner join payroll_employer
+                on median_salaries.employer_id = payroll_employer.id
+             )
+             select percentile
+             from salary_percentiles
+             WHERE employer_id = {id}
+             '''.format(id=self.object.id)
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()[0]
+
+        return result
 
     def employee_salaries(self):
         query = self._make_query('''
