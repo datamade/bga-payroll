@@ -43,47 +43,39 @@ class Employer(SluggedModel, VintagedModel):
 
     @property
     def size_class(self):
-        entity_type = self.taxonomy.entity_type
+        '''
+        Small, medium, or large classification for the given employer, for the
+        purpose of comparing similarly sized entities.
 
-        if entity_type.lower() in ('county', 'township', 'municipal'):
-            select = '''
-                WITH coded_population AS (
-                  SELECT
-                    emp.id AS employer_id,
-                    NTILE(3) OVER (ORDER BY population) AS code
-                  FROM payroll_employer AS emp
-                  JOIN payroll_employertaxonomy AS tax
-                  ON emp.taxonomy_id = tax.id
-                  JOIN payroll_employerpopulation AS pop
-                  ON emp.id = pop.employer_id
-                  AND tax.entity_type ILIKE '{taxonomy}'
-                )
-                SELECT code_lookup.class
-                FROM coded_population
-                JOIN (
-                  SELECT code, class
-                  FROM (
-                    VALUES
-                      (1, 'Small'),
-                      (2, 'Medium'),
-                      (3, 'Large')
-                  ) AS code_lookup (code, class)
-                ) AS code_lookup
-                USING (code)
-                WHERE employer_id = {employer_id}
-            '''.format(taxonomy=self.taxonomy.entity_type,
-                       employer_id=self.id)
+        Size cutoffs were generated with consideration for the average, minimum,
+        and maximum populations, and distribution thereof, for a given entity
+        type. We also considered the practical realities of scale: Government in
+        a village of 200 is a different task from government in a city of 200k.
 
-            with connection.cursor() as cursor:
-                cursor.execute(select)
+        Note that Chicago is its own special class, and it should always be
+        large.
+        '''
+        class_lookup = {
+            ('Municipal', True): (-1, -1),
+            ('Municipal', False): (10, 50),  # Lower / upper bounds in thousands
+            ('County', True): (25, 75),
+            ('County', False): (500, 1000),
+            ('Township', True): (25, 100),
+            ('Township', False): (10, 50),
+        }
 
-                try:
-                    size_class, = cursor.fetchone()
+        lookup_key = (self.taxonomy.entity_type, self.taxonomy.is_special)
+        lower_bound, upper_bound = class_lookup[lookup_key]
+        population = self.get_population()
 
-                except TypeError:  # no result
-                    return None
+        if population >= upper_bound * 1000:
+            return 'Large'
 
-            return size_class
+        elif population >= lower_bound * 1000:
+            return 'Medium'
+
+        else:
+            return 'Small'
 
     def get_population(self, year=None):
         '''
@@ -126,6 +118,10 @@ class EmployerTaxonomy(models.Model):
             str_taxonomy = '{type}'.format(**kwargs)
 
         return str_taxonomy
+
+    @property
+    def is_special(self):
+        return self.chicago or self.cook_or_collar
 
 
 class EmployerPopulation(models.Model):
