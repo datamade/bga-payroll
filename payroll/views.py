@@ -72,6 +72,7 @@ class EmployerView(DetailView):
             'total_expenditure': sum(employee_salaries),
             'salary_percentile': self.salary_percentile(),
             'exp_percentile': self.exp_percentile(),
+            'pop_percentile': self.pop_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
         })
 
@@ -172,6 +173,31 @@ class EmployerView(DetailView):
         with connection.cursor() as cursor:
             cursor.execute(query)
             result = cursor.fetchone()[0]
+        return result
+
+    def pop_percentile(self):
+        # Currently finds percentile only within current taxonomy
+        query = '''
+            WITH pop_percentile as (
+              select
+              percent_rank() over (order by pop.population asc) as percentile,
+              pop.population,
+              pop.employer_id
+              from payroll_employerpopulation as pop
+              inner join payroll_employer as emp
+              on pop.employer_id = emp.id
+              inner join payroll_employertaxonomy as tax
+              on emp.taxonomy_id = tax.id
+              where tax.id = {taxonomy}
+            )
+            select percentile from pop_percentile
+            where employer_id = {id}
+        '''.format(taxonomy=self.object.taxonomy_id, id=self.object.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()[0]
+
         return result
 
     def salary_percentile(self):
