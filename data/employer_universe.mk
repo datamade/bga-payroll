@@ -1,7 +1,9 @@
 # These recipes assume 2017 payroll data has been imported into your database.
 
 data/output/fire_departments.csv :
-	psql -d bga_payroll -c " \
+	# Capture both departments in a given unit, e.g., municipal fire departments,
+	# and fire protection districts (which are units themselves).
+	psql -d $(PG_DB) -c " \
 		COPY ( \
 		  SELECT \
 		    NULL AS parent, \
@@ -23,7 +25,8 @@ data/output/fire_departments.csv :
 		) TO STDOUT CSV HEADER" > $@
 
 data/output/police_departments.csv :
-	psql -d bga_payroll -c " \
+	# Capture only departments, as there are no police-related units.
+	psql -d $(PG_DB) -c " \
 		COPY ( \
 		  SELECT \
 		    parent.name AS parent, \
