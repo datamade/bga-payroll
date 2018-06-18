@@ -149,18 +149,18 @@ class EmployerView(DetailView):
             WITH total_expenditure AS (
               SELECT
                 sum(amount) AS tot,
-                pe.id AS id,
-                pe.name
+                pe.parent_id AS id
               FROM payroll_salary AS s
               JOIN payroll_job AS j
               ON s.job_id = j.id
               JOIN payroll_position AS p
               ON j.position_id = p.id
-              JOIN payroll_employer AS e
-              ON p.employer_id = e.id
-              JOIN payroll_employer AS pe
-              ON e.parent_id = pe.id
-              GROUP BY pe.id
+              JOIN (SELECT
+                      id,
+                      COALESCE(parent_id, id) AS parent_id
+                    FROM payroll_employer) AS pe
+              ON p.employer_id = pe.id
+              GROUP BY parent_id
               ORDER BY tot DESC),
             exp_percentiles AS (
                 SELECT
@@ -182,6 +182,10 @@ class EmployerView(DetailView):
         return result
 
     def population_percentile(self):
+
+        if (self.object.get_population() == None):
+            return 'N/A'
+
         # Currently finds percentile only within current taxonomy
         query = '''
             WITH pop_percentile AS (
@@ -202,9 +206,9 @@ class EmployerView(DetailView):
 
         with connection.cursor() as cursor:
             cursor.execute(query)
-            result = cursor.fetchone()[0]
+            result = cursor.fetchone()
 
-        return result
+        return result[0]
 
     def salary_percentile(self):
         query = '''
@@ -212,13 +216,23 @@ class EmployerView(DetailView):
               SELECT
                 percentile_cont(0.5) WITHIN GROUP (ORDER BY payroll_salary.amount ASC) AS median_salary,
                 parent_id AS employer_id
-              from payroll_salary
+              FROM payroll_salary
               JOIN payroll_job
               ON payroll_salary.job_id = payroll_job.id
               JOIN payroll_position
               ON payroll_job.position_id = payroll_position.id
-              JOIN payroll_employer
-              ON payroll_position.employer_id = payroll_employer.id
+              JOIN (SELECT
+                        id,
+                        parent_id
+                    FROM payroll_employer
+                    WHERE payroll_employer.parent_id IS NOT NULL
+                    UNION
+                    SELECT
+                        id,
+                        id AS parent_id
+                    FROM payroll_employer
+                    WHERE payroll_employer.parent_id IS NULL) AS all_employers
+              ON payroll_position.employer_id = all_employers.id
               GROUP BY parent_id),
              salary_percentiles AS (
                 SELECT
@@ -235,9 +249,9 @@ class EmployerView(DetailView):
 
         with connection.cursor() as cursor:
             cursor.execute(query)
-            result = cursor.fetchone()[0]
+            result = cursor.fetchone()
 
-        return result
+        return result[0]
 
     def employee_salaries(self):
         query = self._make_query('''
