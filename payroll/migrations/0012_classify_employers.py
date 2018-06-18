@@ -43,5 +43,11 @@ class Migration(migrations.Migration):
                 chicago,
                 cook_or_collar
               FROM raw_taxonomy
+              /* Add a school district taxonomy. */
+              UNION
+              SELECT
+                'School District' AS entity_type,
+                FALSE AS chicago,
+                FALSE AS cook_or_collar
         ''', reverse_sql='DELETE FROM payroll_employertaxonomy'),
     ]

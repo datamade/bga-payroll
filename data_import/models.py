@@ -144,6 +144,10 @@ class StandardizedFile(models.Model):
         return 'raw_payroll_{}'.format(self.id)
 
     @property
+    def intermediate_table_name(self):
+        return 'intermediate_payroll_{}'.format(self.id)
+
+    @property
     def processing(self):
         '''
         TO-DO: Find a less expensive way to check whether an instance
@@ -179,6 +183,7 @@ class StandardizedFile(models.Model):
     def select_unseen_parent_employer(self):
         work = chain(
             tasks.insert_responding_agency.si(s_file_id=self.id),
+            tasks.reshape_raw_payroll.si(s_file_id=self.id),
             tasks.select_unseen_parent_employer.si(s_file_id=self.id)
         )
 

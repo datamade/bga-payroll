@@ -105,7 +105,6 @@ def copy_to_database(self, *, s_file_id):
             cursor.copy_expert(copy, f)
 
             cursor.execute('CREATE INDEX ON {} (TRIM(LOWER(employer)))'.format(table_name))
-            cursor.execute('CREATE INDEX ON {} (TRIM(LOWER(department)))'.format(table_name))
 
     self.update_status('copied to database')
 
@@ -135,6 +134,13 @@ def insert_responding_agency(self, *, s_file_id):
     self.import_utility.insert_responding_agency()
 
     return 'Inserted responding agencies'
+
+
+@shared_task(bind=True, base=DataImportTask)
+def reshape_raw_payroll(self, *, s_file_id):
+    self.import_utility.reshape_raw_payroll()
+
+    return 'Reshaped raw payroll'
 
 
 @shared_task(bind=True, base=DataImportTask)

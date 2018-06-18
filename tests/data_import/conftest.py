@@ -9,6 +9,7 @@ import pytest
 
 from data_import.models import RespondingAgency, StandardizedFile
 from data_import.tasks import copy_to_database
+from data_import.utils import ImportUtility
 
 
 @pytest.fixture
@@ -149,6 +150,16 @@ def raw_table_setup(transactional_db,
 
         with connection.cursor() as cursor:
             cursor.execute(drop)
+
+    return s_file
+
+
+@pytest.fixture
+def reshaped_table_setup(raw_table_setup):
+    s_file = raw_table_setup
+
+    imp = ImportUtility(s_file.id)
+    imp.reshape_raw_payroll()
 
     return s_file
 

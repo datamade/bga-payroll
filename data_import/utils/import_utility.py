@@ -18,24 +18,10 @@ class ImportUtility(TableNamesMixin):
 
         self.vintage = s_file.upload.id
 
-    def _trim_lower(self, field):
-        return 'TRIM(LOWER({}))'.format(field)
-
-    @property
-    def common_fields(self):
-        return {
-            'raw_responding_agency': self._trim_lower('raw.responding_agency'),
-            'raw_employer': self._trim_lower('raw.employer'),
-            'raw_department': self._trim_lower('raw.department'),
-            'raw_title': self._trim_lower('raw.title'),
-            'existing_name': self._trim_lower('existing.name'),
-            'existing_employer_name': self._trim_lower('existing.employer_name'),
-            'existing_parent_name': self._trim_lower('existing.parent_name'),
-        }
-
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
 
+        self.reshape_raw_payroll()
         self.insert_parent_employer()
         self.insert_child_employer()
 
@@ -57,9 +43,9 @@ class ImportUtility(TableNamesMixin):
               DISTINCT responding_agency
             FROM {raw_payroll} AS raw
             LEFT JOIN data_import_respondingagency AS existing
-            ON {raw_responding_agency} = {existing_name}
+            ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
             WHERE existing.name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table, **self.common_fields)
+        '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -74,12 +60,50 @@ class ImportUtility(TableNamesMixin):
                 DISTINCT responding_agency
               FROM {raw_payroll} AS raw
               LEFT JOIN data_import_respondingagency AS existing
-              ON {raw_responding_agency} = {existing_name}
+              ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(existing.name))
               WHERE existing.name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table, **self.common_fields)
+        '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
+
+    def reshape_raw_payroll(self):
+        select = '''
+            CREATE TABLE {intermediate_payroll} AS (
+              SELECT
+                record_id,
+                employer,
+                department,
+                title,
+                first_name,
+                last_name,
+                date_started,
+                salary
+              FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
+              UNION ALL
+              SELECT
+                record_id,
+                department AS employer,
+                NULL as department,
+                title,
+                first_name,
+                last_name,
+                date_started,
+                salary
+              FROM {raw_payroll}
+              WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
+            )
+        '''.format(intermediate_payroll=self.intermediate_payroll_table,
+                   raw_payroll=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(select)
+
+            for field in ('employer', 'department', 'title'):
+                cursor.execute('''
+                    CREATE INDEX ON {table} (TRIM(LOWER({field})))
+                '''.format(table=self.intermediate_payroll_table, field=field))
 
     def select_unseen_parent_employer(self):
         '''
@@ -93,12 +117,12 @@ class ImportUtility(TableNamesMixin):
 
         select = '''
             SELECT DISTINCT employer
-            FROM {raw_payroll} AS raw
+            FROM {intermediate_payroll} AS raw
             LEFT JOIN payroll_employer AS existing
-            ON {raw_employer} = {existing_name}
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
             AND existing.parent_id IS NULL
             WHERE existing.name IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table, **self.common_fields)
+        '''.format(intermediate_payroll=self.intermediate_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -112,14 +136,13 @@ class ImportUtility(TableNamesMixin):
               SELECT
                 DISTINCT employer,
                 {vintage}
-              FROM {raw_payroll} AS raw
+              FROM {intermediate_payroll} AS raw
               LEFT JOIN payroll_employer AS existing
-              ON {raw_employer} = {existing_name}
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.name))
               AND existing.parent_id IS NULL
               WHERE existing.name IS NULL
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   **self.common_fields)
+                   intermediate_payroll=self.intermediate_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert_parents)
@@ -133,7 +156,7 @@ class ImportUtility(TableNamesMixin):
         that are not in the canonical list, e.g., are not classified in this
         step. For now, just leave them unclassified.
         '''
-        update = '''
+        update_non_school_districts = '''
             UPDATE payroll_employer
             SET taxonomy_id = model_taxonomy.id
             FROM raw_taxonomy
@@ -143,8 +166,22 @@ class ImportUtility(TableNamesMixin):
               AND payroll_employer.parent_id IS NULL
         '''
 
+        update_school_districts = '''
+            WITH school_district_taxonomy AS (
+              SELECT id FROM payroll_employertaxonomy
+              WHERE entity_type ilike 'school district'
+            )
+            UPDATE payroll_employer
+            SET taxonomy_id = (SELECT id FROM school_district_taxonomy)
+            FROM {raw_payroll} AS raw
+            WHERE TRIM(LOWER(raw.employer)) = 'all elementary/high school employees'
+              AND TRIM(LOWER(payroll_employer.name)) = TRIM(LOWER(raw.department))
+              AND payroll_employer.parent_id IS NULL
+        '''.format(raw_payroll=self.raw_payroll_table)
+
         with connection.cursor() as cursor:
-            cursor.execute(update)
+            cursor.execute(update_non_school_districts)
+            cursor.execute(update_school_districts)
 
     def _insert_parent_employer_population(self):
         '''
@@ -223,25 +260,21 @@ class ImportUtility(TableNamesMixin):
             SELECT DISTINCT ON (employer, department)
               employer,
               department
-            FROM {raw_payroll} AS raw
+            FROM {intermediate_payroll} AS raw
             /* Join to filter records where new_parent is True.
             Parents will always exist, because we added them in
             the prior step. */
             LEFT JOIN child_employers AS parent
-            ON {raw_employer} = {parent_parent_name}
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(parent.parent_name))
             /* Join to filter records with a corresponding child. */
             LEFT JOIN child_employers AS child
-            ON {raw_employer} = {child_parent_name}
-            AND {raw_department} = {child_employer_name}
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(child.parent_name))
+            AND TRIM(LOWER(raw.department)) = TRIM(LOWER(child.employer_name))
             WHERE raw.department IS NOT NULL
             AND parent.new_parent IS FALSE
             AND child.employer_name IS NULL
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   parent_parent_name=self._trim_lower('parent.parent_name'),
-                   child_parent_name=self._trim_lower('child.parent_name'),
-                   child_employer_name=self._trim_lower('child.employer_name'),
-                   **self.common_fields)
+                   intermediate_payroll=self.intermediate_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -260,15 +293,13 @@ class ImportUtility(TableNamesMixin):
                 department AS employer_name,
                 parent.id AS parent_id,
                 {vintage}
-              FROM {raw_payroll} AS raw
+              FROM {intermediate_payroll} AS raw
               JOIN payroll_employer AS parent
-              ON {raw_employer} = {parent_name}
+              ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(parent.name))
               WHERE department IS NOT NULL
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   parent_name=self._trim_lower('parent.name'),
-                   **self.common_fields)
+                   intermediate_payroll=self.intermediate_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert_children)
@@ -289,20 +320,19 @@ class ImportUtility(TableNamesMixin):
                 employer_id,
                 COALESCE(title, 'EMPLOYEE'),
                 {vintage}
-              FROM {raw_payroll} AS raw
+              FROM {intermediate_payroll} AS raw
               JOIN employer_ids AS existing
               ON (
-                {raw_department} = {existing_employer_name}
-                AND {raw_employer} = {existing_parent_name}
+                TRIM(LOWER(raw.department)) = TRIM(LOWER(existing.employer_name))
+                AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.parent_name))
                 AND raw.department IS NOT NULL
               ) OR (
-                {raw_employer} = {existing_employer_name}
+                TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.employer_name))
                 AND raw.department IS NULL
               )
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
-                   **self.common_fields)
+                   intermediate_payroll=self.intermediate_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
@@ -354,28 +384,11 @@ class ImportUtility(TableNamesMixin):
               FROM payroll_employer AS child
               LEFT JOIN payroll_employer AS parent
               ON child.parent_id = parent.id
-            ), position_ids AS (
-              SELECT
-                record_id,
-                position.id AS position_id
-              FROM {raw_payroll} AS raw
-              JOIN employer_ids AS existing
-              ON (
-                {raw_department} = {existing_employer_name}
-                AND {raw_employer} = {existing_parent_name}
-                AND raw.department IS NOT NULL
-              ) OR (
-                {raw_employer} = {existing_employer_name}
-                AND raw.department IS NULL
-              )
-              JOIN payroll_position AS position
-              ON position.employer_id = existing.employer_id
-              AND {position_title} = {raw_title}
             )
             SELECT
               record_id,
               person_id,
-              position_id,
+              position.id AS position_id,
               NULLIF(TRIM(date_started), '')::DATE AS start_date,
               NEXTVAL('payroll_job_id_seq') AS job_id
               /* payroll_job does not have a uniquely identifying
@@ -385,15 +398,23 @@ class ImportUtility(TableNamesMixin):
               use in a later join to create the Salary table. */
             INTO {raw_job}
             FROM {raw_person}
-            JOIN position_ids
+            JOIN {intermediate_payroll} AS raw
             USING (record_id)
-            JOIN {raw_payroll}
-            USING (record_id)
+            JOIN employer_ids AS emp
+            ON (
+              TRIM(LOWER(raw.department)) = TRIM(LOWER(emp.employer_name))
+              AND TRIM(LOWER(raw.employer)) = TRIM(LOWER(emp.parent_name))
+              AND raw.department IS NOT NULL
+            ) OR (
+              TRIM(LOWER(raw.employer)) = TRIM(LOWER(emp.employer_name))
+              AND raw.department IS NULL
+            )
+            JOIN payroll_position AS position
+            ON position.employer_id = emp.employer_id
+            AND TRIM(LOWER(position.title)) = TRIM(LOWER(raw.title))
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
-                   raw_payroll=self.raw_payroll_table,
-                   position_title=self._trim_lower('position.title'),
-                   **self.common_fields)
+                   intermediate_payroll=self.intermediate_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -422,11 +443,11 @@ class ImportUtility(TableNamesMixin):
                 raw_job.job_id,
                 REGEXP_REPLACE(salary, '[^0-9.]', '', 'g')::NUMERIC,
                 {vintage}
-              FROM {raw_payroll}
+              FROM {intermediate_payroll}
               JOIN {raw_job} AS raw_job
               USING (record_id)
         '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table,
+                   intermediate_payroll=self.intermediate_payroll_table,
                    raw_job=self.raw_job_table)
 
         with connection.cursor() as cursor:
