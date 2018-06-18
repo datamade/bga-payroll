@@ -1,5 +1,5 @@
 from django.contrib.postgres.search import SearchVectorField
-from django.db import models, connection
+from django.db import models
 
 from titlecase import titlecase
 
@@ -43,47 +43,53 @@ class Employer(SluggedModel, VintagedModel):
 
     @property
     def size_class(self):
-        entity_type = self.taxonomy.entity_type
+        '''
+        Small, medium, or large classification for the given employer, for the
+        purpose of comparing similarly sized entities.
 
-        if entity_type.lower() in ('county', 'township', 'municipal'):
-            select = '''
-                WITH coded_population AS (
-                  SELECT
-                    emp.id AS employer_id,
-                    NTILE(3) OVER (ORDER BY population) AS code
-                  FROM payroll_employer AS emp
-                  JOIN payroll_employertaxonomy AS tax
-                  ON emp.taxonomy_id = tax.id
-                  JOIN payroll_employerpopulation AS pop
-                  ON emp.id = pop.employer_id
-                  AND tax.entity_type ILIKE '{taxonomy}'
-                )
-                SELECT code_lookup.class
-                FROM coded_population
-                JOIN (
-                  SELECT code, class
-                  FROM (
-                    VALUES
-                      (1, 'Small'),
-                      (2, 'Medium'),
-                      (3, 'Large')
-                  ) AS code_lookup (code, class)
-                ) AS code_lookup
-                USING (code)
-                WHERE employer_id = {employer_id}
-            '''.format(taxonomy=self.taxonomy.entity_type,
-                       employer_id=self.id)
+        Size cutoffs were generated with consideration for the average, minimum,
+        and maximum populations, and distribution thereof, for a given entity
+        type. We also considered the practical realities of scale: Government in
+        a village of 200 is a different task from government in a city of 200k.
 
-            with connection.cursor() as cursor:
-                cursor.execute(select)
+        Note that Chicago is its own special class, and it should always be
+        large.
+        '''
+        # Create a size class lookup where the key is a unique tuple,
+        # (entity type, is_special), and the value is a tuple, (lower size
+        # class boundary, upper size class boundary), where the boundaries
+        # are population in thousands, such that an entity with a population
+        # greater than or equal to the upper boundary is Large; less than the
+        # upper but greater than or equal to the lower boundary is Medium; or
+        # less than the lower boundary is Small.
+        class_lookup = {
+            ('Municipal', True): (-1, -1),  # Chicago municipal (always large)
+            ('Municipal', False): (10, 50),  # Non-Chicago municipal
+            ('County', True): (500, 1000),  # Cook or collar county
+            ('County', False): (25, 75),  # Downstate county
+            ('Township', True): (25, 100),  # Cook or collar township
+            ('Township', False): (10, 50),  # Downstate township
+        }
 
-                try:
-                    size_class, = cursor.fetchone()
+        lookup_key = (self.taxonomy.entity_type, self.taxonomy.is_special)
 
-                except TypeError:  # no result
-                    return None
+        bounds = class_lookup.get(lookup_key)
 
-            return size_class
+        if bounds:
+            lower_bound, upper_bound = bounds
+            population = self.get_population()
+
+            if population >= upper_bound * 1000:
+                return 'Large'
+
+            elif population >= lower_bound * 1000:
+                return 'Medium'
+
+            else:
+                return 'Small'
+
+        else:
+            return None
 
     def get_population(self, year=None):
         '''
@@ -126,6 +132,10 @@ class EmployerTaxonomy(models.Model):
             str_taxonomy = '{type}'.format(**kwargs)
 
         return str_taxonomy
+
+    @property
+    def is_special(self):
+        return self.chicago or self.cook_or_collar
 
 
 class EmployerPopulation(models.Model):
