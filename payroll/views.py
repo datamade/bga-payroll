@@ -71,8 +71,8 @@ class EmployerView(DetailView):
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
             'salary_percentile': self.salary_percentile(),
-            'exp_percentile': self.exp_percentile(),
-            'pop_percentile': self.pop_percentile(),
+            'expenditure_percentile': self.expenditure_percentile(),
+            'population_percentile': self.population_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
         })
 
@@ -144,30 +144,36 @@ class EmployerView(DetailView):
 
         return department_salaries
 
-    def exp_percentile(self):
+    def expenditure_percentile(self):
         query = '''
-            WITH total_expenditure as (
-              select sum(amount) as tot, pe.id as id, pe.name
-              from payroll_salary as s
-              inner join payroll_job as j
-              on s.job_id = j.id
-              inner join payroll_position as p
-              on j.position_id = p.id
-              inner join payroll_employer as e
-              on p.employer_id = e.id
-              inner join payroll_employer as pe
-              on e.parent_id = pe.id
-              group by pe.id
-              order by tot desc),
-            exp_percentiles as (
-                select percent_rank() over (order by total_expenditure.tot asc) as percentile, total_expenditure.id as id
-                from total_expenditure
-                inner join payroll_employer
-                on total_expenditure.id = payroll_employer.id
+            WITH total_expenditure AS (
+              SELECT
+                sum(amount) AS tot,
+                pe.id AS id,
+                pe.name
+              FROM payroll_salary AS s
+              JOIN payroll_job AS j
+              ON s.job_id = j.id
+              JOIN payroll_position AS p
+              ON j.position_id = p.id
+              JOIN payroll_employer AS e
+              ON p.employer_id = e.id
+              JOIN payroll_employer AS pe
+              ON e.parent_id = pe.id
+              GROUP BY pe.id
+              ORDER BY tot DESC),
+            exp_percentiles AS (
+                SELECT
+                    percent_rank() OVER (ORDER BY total_expenditure.tot ASC) AS percentile,
+                    total_expenditure.id AS id
+                FROM total_expenditure
+                JOIN payroll_employer
+                ON total_expenditure.id = payroll_employer.id
             )
-            select percentile
-            from exp_percentiles
-            where id = {id}
+            SELECT
+                percentile
+            FROM exp_percentiles
+            WHERE id = {id}
         '''.format(id=self.object.id)
 
         with connection.cursor() as cursor:
@@ -175,23 +181,23 @@ class EmployerView(DetailView):
             result = cursor.fetchone()[0]
         return result
 
-    def pop_percentile(self):
+    def population_percentile(self):
         # Currently finds percentile only within current taxonomy
         query = '''
-            WITH pop_percentile as (
-              select
-              percent_rank() over (order by pop.population asc) as percentile,
-              pop.population,
-              pop.employer_id
-              from payroll_employerpopulation as pop
-              inner join payroll_employer as emp
-              on pop.employer_id = emp.id
-              inner join payroll_employertaxonomy as tax
-              on emp.taxonomy_id = tax.id
-              where tax.id = {taxonomy}
+            WITH pop_percentile AS (
+              SELECT
+                percent_rank() OVER (ORDER BY pop.population ASC) AS percentile,
+                pop.population,
+                pop.employer_id
+              FROM payroll_employerpopulation AS pop
+              JOIN payroll_employer AS emp
+              ON pop.employer_id = emp.id
+              JOIN payroll_employertaxonomy AS tax
+              ON emp.taxonomy_id = tax.id
+              WHERE tax.id = {taxonomy}
             )
-            select percentile from pop_percentile
-            where employer_id = {id}
+            SELECT percentile FROM pop_percentile
+            WHERE employer_id = {id}
         '''.format(taxonomy=self.object.taxonomy_id, id=self.object.id)
 
         with connection.cursor() as cursor:
@@ -202,24 +208,31 @@ class EmployerView(DetailView):
 
     def salary_percentile(self):
         query = '''
-            WITH median_salaries as (
-              select percentile_cont(0.5) within group (order by payroll_salary.amount asc) as median_salary,
-              parent_id as employer_id
+            WITH median_salaries AS (
+              SELECT
+                percentile_cont(0.5) WITHIN GROUP (ORDER BY payroll_salary.amount ASC) AS median_salary,
+                parent_id AS employer_id
               from payroll_salary
-              inner join payroll_job on payroll_salary.job_id = payroll_job.id
-              inner join payroll_position on payroll_job.position_id = payroll_position.id
-              inner join payroll_employer on payroll_position.employer_id = payroll_employer.id
-              group by parent_id),
-             salary_percentiles as (
-                select percent_rank() over (order by median_salaries.median_salary asc) as percentile, employer_id
-                from median_salaries
-                inner join payroll_employer
-                on median_salaries.employer_id = payroll_employer.id
+              JOIN payroll_job
+              ON payroll_salary.job_id = payroll_job.id
+              JOIN payroll_position
+              ON payroll_job.position_id = payroll_position.id
+              JOIN payroll_employer
+              ON payroll_position.employer_id = payroll_employer.id
+              GROUP BY parent_id),
+             salary_percentiles AS (
+                SELECT
+                    percent_rank() OVER (ORDER BY median_salaries.median_salary ASC) AS percentile,
+                    employer_id
+                FROM median_salaries
+                JOIN payroll_employer
+                ON median_salaries.employer_id = payroll_employer.id
              )
-             select percentile
-             from salary_percentiles
+             SELECT percentile
+             FROM salary_percentiles
              WHERE employer_id = {id}
              '''.format(id=self.object.id)
+
         with connection.cursor() as cursor:
             cursor.execute(query)
             result = cursor.fetchone()[0]
