@@ -25,6 +25,10 @@ class Employer(SluggedModel, VintagedModel):
                                  null=True,
                                  on_delete=models.SET_NULL,
                                  related_name='employers')
+    universe = models.ForeignKey('EmployerUniverse',
+                                 null=True,
+                                 on_delete=models.SET_NULL,
+                                 related_name='employers')
 
     def __str__(self):
         name = self.name
@@ -112,6 +116,9 @@ class Employer(SluggedModel, VintagedModel):
 
 
 class EmployerTaxonomy(models.Model):
+    '''
+    Classification of unit, e.g., municipal.
+    '''
     entity_type = models.CharField(max_length=255)
     chicago = models.BooleanField()
     cook_or_collar = models.BooleanField()
@@ -147,6 +154,13 @@ class EmployerPopulation(models.Model):
 
     def __str__(self):
         return '{0} ({1})'.format(self.population, self.data_year)
+
+
+class EmployerUniverse(models.Model):
+    '''
+    Category of a unit / department's positions, e.g., police department.
+    '''
+    universe = models.CharField(max_length=255)
 
 
 class Person(SluggedModel, VintagedModel):
