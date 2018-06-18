@@ -55,27 +55,41 @@ class Employer(SluggedModel, VintagedModel):
         Note that Chicago is its own special class, and it should always be
         large.
         '''
+        # Create a size class lookup where the key is a unique tuple,
+        # (entity type, is_special), and the value is a tuple, (lower size
+        # class boundary, upper size class boundary), where the boundaries
+        # are population in thousands, such that an entity with a population
+        # greater than or equal to the upper boundary is Large; less than the
+        # upper but greater than or equal to the lower boundary is Medium; or
+        # less than the lower boundary is Small.
         class_lookup = {
-            ('Municipal', True): (-1, -1),
-            ('Municipal', False): (10, 50),  # Lower / upper bounds in thousands
-            ('County', True): (25, 75),
-            ('County', False): (500, 1000),
-            ('Township', True): (25, 100),
-            ('Township', False): (10, 50),
+            ('Municipal', True): (-1, -1),  # Chicago municipal (always large)
+            ('Municipal', False): (10, 50),  # Non-Chicago municipal
+            ('County', True): (500, 1000),  # Cook or collar county
+            ('County', False): (25, 75),  # Downstate county
+            ('Township', True): (25, 100),  # Cook or collar township
+            ('Township', False): (10, 50),  # Downstate township
         }
 
         lookup_key = (self.taxonomy.entity_type, self.taxonomy.is_special)
-        lower_bound, upper_bound = class_lookup[lookup_key]
-        population = self.get_population()
 
-        if population >= upper_bound * 1000:
-            return 'Large'
+        bounds = class_lookup.get(lookup_key)
 
-        elif population >= lower_bound * 1000:
-            return 'Medium'
+        if bounds:
+            lower_bound, upper_bound = bounds
+            population = self.get_population()
+
+            if population >= upper_bound * 1000:
+                return 'Large'
+
+            elif population >= lower_bound * 1000:
+                return 'Medium'
+
+            else:
+                return 'Small'
 
         else:
-            return 'Small'
+            return None
 
     def get_population(self, year=None):
         '''
