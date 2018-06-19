@@ -145,7 +145,11 @@ class EmployerView(DetailView):
             return 'N/A'
 
         query = '''
-            WITH total_expenditure AS (
+            WITH pe AS (SELECT
+                    id,
+                    COALESCE(parent_id, id) AS parent_id
+                  FROM payroll_employer),
+            total_expenditure AS (
               SELECT
                 sum(amount) AS tot,
                 pe.parent_id AS id
@@ -154,10 +158,7 @@ class EmployerView(DetailView):
               ON s.job_id = j.id
               JOIN payroll_position AS p
               ON j.position_id = p.id
-              JOIN (SELECT
-                      id,
-                      COALESCE(parent_id, id) AS parent_id
-                    FROM payroll_employer) AS pe
+              JOIN pe
               ON p.employer_id = pe.id
               GROUP BY parent_id
               ORDER BY tot DESC),
@@ -213,7 +214,12 @@ class EmployerView(DetailView):
             return 'N/A'
 
         query = '''
-            WITH median_salaries AS (
+            WITH all_employers AS (SELECT
+                      id,
+                      COALESCE(parent_id, id) AS parent_id
+                  FROM payroll_employer
+                  ),
+            median_salaries AS (
               SELECT
                 percentile_cont(0.5) WITHIN GROUP (ORDER BY payroll_salary.amount ASC) AS median_salary,
                 parent_id AS employer_id
@@ -222,17 +228,7 @@ class EmployerView(DetailView):
               ON payroll_salary.job_id = payroll_job.id
               JOIN payroll_position
               ON payroll_job.position_id = payroll_position.id
-              JOIN (SELECT
-                        id,
-                        parent_id
-                    FROM payroll_employer
-                    WHERE payroll_employer.parent_id IS NOT NULL
-                    UNION
-                    SELECT
-                        id,
-                        id AS parent_id
-                    FROM payroll_employer
-                    WHERE payroll_employer.parent_id IS NULL) AS all_employers
+              JOIN all_employers
               ON payroll_position.employer_id = all_employers.id
               GROUP BY parent_id),
              salary_percentiles AS (
