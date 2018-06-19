@@ -39,6 +39,7 @@ def format_salary(i):
     '''
     return "${:,.0f}".format(i)
 
+
 def format_ballpark_number(i):
     '''
     Given an integer, i, return a shortened form of the number, i.e.,
@@ -77,5 +78,5 @@ def format_ballpark_number(i):
 def format_percentile(i):
     if isinstance(i, str):
         return i
-        
+
     return "{:,.2f}".format(i)

@@ -141,7 +141,7 @@ class EmployerView(DetailView):
         return department_salaries
 
     def expenditure_percentile(self):
-        if self.object.is_department == True:
+        if self.object.is_department is True:
             return 'N/A'
 
         query = '''
@@ -181,7 +181,7 @@ class EmployerView(DetailView):
         return result
 
     def population_percentile(self):
-        if (self.object.get_population() == None) or (self.object.is_department == True):
+        if (self.object.get_population() is None) or (self.object.is_department is True):
             return 'N/A'
 
         # Currently finds percentile only within current taxonomy
@@ -209,7 +209,7 @@ class EmployerView(DetailView):
         return result[0]
 
     def salary_percentile(self):
-        if self.object.is_department == True:
+        if self.object.is_department is True:
             return 'N/A'
 
         query = '''
