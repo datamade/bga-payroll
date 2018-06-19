@@ -43,12 +43,7 @@ class EmployerView(DetailView):
     model = Employer
     context_object_name = 'entity'
 
-    '''
-    from_clause connects salaries and employers through a series of joins.
-    Removed alias for payroll_employer because it breaks if
-    {from_clause} and {where_clause} aren't in the same query.
-    '''
-
+    # from_clause connects salaries and employers through a series of joins.
     from_clause = '''
         FROM payroll_job AS job
         JOIN payroll_salary AS salary
@@ -74,6 +69,7 @@ class EmployerView(DetailView):
             'expenditure_percentile': self.expenditure_percentile(),
             'population_percentile': self.population_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
+            'is_department': self.object.is_department,
         })
 
         if not self.object.is_department:
@@ -145,6 +141,9 @@ class EmployerView(DetailView):
         return department_salaries
 
     def expenditure_percentile(self):
+        if self.object.is_department == True:
+            return 'N/A'
+
         query = '''
             WITH total_expenditure AS (
               SELECT
@@ -182,8 +181,7 @@ class EmployerView(DetailView):
         return result
 
     def population_percentile(self):
-
-        if (self.object.get_population() == None):
+        if (self.object.get_population() == None) or (self.object.is_department == True):
             return 'N/A'
 
         # Currently finds percentile only within current taxonomy
@@ -211,6 +209,9 @@ class EmployerView(DetailView):
         return result[0]
 
     def salary_percentile(self):
+        if self.object.is_department == True:
+            return 'N/A'
+
         query = '''
             WITH median_salaries AS (
               SELECT
