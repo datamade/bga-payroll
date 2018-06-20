@@ -69,7 +69,6 @@ class EmployerView(DetailView):
             'expenditure_percentile': self.expenditure_percentile(),
             'population_percentile': self.population_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
-            'is_department': self.object.is_department,
         })
 
         if not self.object.is_department:
@@ -145,33 +144,33 @@ class EmployerView(DetailView):
             return 'N/A'
 
         query = '''
-            WITH pe AS (SELECT
-                    id,
-                    COALESCE(parent_id, id) AS parent_id
-                  FROM payroll_employer),
-            total_expenditure AS (
+            WITH employer_parent_lookup AS (
               SELECT
-                sum(amount) AS tot,
-                pe.parent_id AS id
-              FROM payroll_salary AS s
-              JOIN payroll_job AS j
-              ON s.job_id = j.id
-              JOIN payroll_position AS p
-              ON j.position_id = p.id
-              JOIN pe
-              ON p.employer_id = pe.id
+                id,
+                COALESCE(parent_id, id) AS parent_id
+              FROM payroll_employer),
+            expenditure_by_unit AS (
+              SELECT
+                sum(amount) AS total_budget,
+                employer_parent_lookup.parent_id AS id
+              FROM payroll_salary AS salary
+              JOIN payroll_job AS job
+              ON salary.job_id = job.id
+              JOIN payroll_position AS position
+              ON job.position_id = position.id
+              JOIN employer_parent_lookup
+              ON position.employer_id = employer_parent_lookup.id
               GROUP BY parent_id
-              ORDER BY tot DESC),
+              ORDER BY total_budget DESC
+            ),
             exp_percentiles AS (
-                SELECT
-                    percent_rank() OVER (ORDER BY total_expenditure.tot ASC) AS percentile,
-                    total_expenditure.id AS id
-                FROM total_expenditure
-                JOIN payroll_employer
-                ON total_expenditure.id = payroll_employer.id
+              SELECT
+                percent_rank() OVER (ORDER BY expenditure_by_unit.total_budget ASC) AS percentile,
+                expenditure_by_unit.id AS id
+              FROM expenditure_by_unit
             )
             SELECT
-                percentile
+              percentile
             FROM exp_percentiles
             WHERE id = {id}
         '''.format(id=self.object.id)
@@ -214,11 +213,12 @@ class EmployerView(DetailView):
             return 'N/A'
 
         query = '''
-            WITH all_employers AS (SELECT
-                      id,
-                      COALESCE(parent_id, id) AS parent_id
-                  FROM payroll_employer
-                  ),
+            WITH all_employers AS (
+              SELECT
+                id,
+                COALESCE(parent_id, id) AS parent_id
+              FROM payroll_employer
+            ),
             median_salaries AS (
               SELECT
                 percentile_cont(0.5) WITHIN GROUP (ORDER BY payroll_salary.amount ASC) AS median_salary,
@@ -230,14 +230,13 @@ class EmployerView(DetailView):
               ON payroll_job.position_id = payroll_position.id
               JOIN all_employers
               ON payroll_position.employer_id = all_employers.id
-              GROUP BY parent_id),
+              GROUP BY parent_id
+             ),
              salary_percentiles AS (
-                SELECT
-                    percent_rank() OVER (ORDER BY median_salaries.median_salary ASC) AS percentile,
-                    employer_id
-                FROM median_salaries
-                JOIN payroll_employer
-                ON median_salaries.employer_id = payroll_employer.id
+               SELECT
+                 percent_rank() OVER (ORDER BY median_salaries.median_salary ASC) AS percentile,
+                 employer_id
+               FROM median_salaries
              )
              SELECT percentile
              FROM salary_percentiles
