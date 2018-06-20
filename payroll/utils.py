@@ -73,3 +73,10 @@ def format_ballpark_number(i):
     }
 
     return truncated_i + suffix_map[truncate_count]
+
+
+def format_percentile(i):
+    if isinstance(i, str):
+        return i
+
+    return "{:,.2f}".format(i)

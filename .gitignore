@@ -106,6 +106,8 @@ venv.bak/
 .mypy_cache/
 
 payroll/management/commands/2017_payroll.sorted.csv
+scratch.txt
+2016-formatted.csv
 /keyrings/live/pubring.gpg~
 /keyrings/live/pubring.kbx~
 /keyrings/live/secring.gpg

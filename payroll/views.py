@@ -43,13 +43,14 @@ class EmployerView(DetailView):
     model = Employer
     context_object_name = 'entity'
 
+    # from_clause connects salaries and employers through a series of joins.
     from_clause = '''
         FROM payroll_job AS job
         JOIN payroll_salary AS salary
         ON salary.job_id = job.id
         JOIN payroll_position AS position
         ON job.position_id = position.id
-        JOIN payroll_employer AS employer
+        JOIN payroll_employer as employer
         ON position.employer_id = employer.id
     '''
 
@@ -64,6 +65,9 @@ class EmployerView(DetailView):
             'median_salary': self.median_entity_salary(),
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
+            'salary_percentile': self.salary_percentile(),
+            'expenditure_percentile': self.expenditure_percentile(),
+            'population_percentile': self.population_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
         })
 
@@ -124,7 +128,6 @@ class EmployerView(DetailView):
             cursor.execute(query)
 
             department_salaries = []
-
             for department, average, budget, headcount, slug in cursor:
                 department_salaries.append({
                     'department': department,
@@ -135,6 +138,116 @@ class EmployerView(DetailView):
                 })
 
         return department_salaries
+
+    def expenditure_percentile(self):
+        if self.object.is_department is True:
+            return 'N/A'
+
+        query = '''
+            WITH employer_parent_lookup AS (
+              SELECT
+                id,
+                COALESCE(parent_id, id) AS parent_id
+              FROM payroll_employer),
+            expenditure_by_unit AS (
+              SELECT
+                sum(amount) AS total_budget,
+                employer_parent_lookup.parent_id AS id
+              FROM payroll_salary AS salary
+              JOIN payroll_job AS job
+              ON salary.job_id = job.id
+              JOIN payroll_position AS position
+              ON job.position_id = position.id
+              JOIN employer_parent_lookup
+              ON position.employer_id = employer_parent_lookup.id
+              GROUP BY parent_id
+              ORDER BY total_budget DESC
+            ),
+            exp_percentiles AS (
+              SELECT
+                percent_rank() OVER (ORDER BY expenditure_by_unit.total_budget ASC) AS percentile,
+                expenditure_by_unit.id AS id
+              FROM expenditure_by_unit
+            )
+            SELECT
+              percentile
+            FROM exp_percentiles
+            WHERE id = {id}
+        '''.format(id=self.object.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()[0]
+        return result
+
+    def population_percentile(self):
+        if (self.object.get_population() is None) or (self.object.is_department is True):
+            return 'N/A'
+
+        # Currently finds percentile only within current taxonomy
+        query = '''
+            WITH pop_percentile AS (
+              SELECT
+                percent_rank() OVER (ORDER BY pop.population ASC) AS percentile,
+                pop.population,
+                pop.employer_id
+              FROM payroll_employerpopulation AS pop
+              JOIN payroll_employer AS emp
+              ON pop.employer_id = emp.id
+              JOIN payroll_employertaxonomy AS tax
+              ON emp.taxonomy_id = tax.id
+              WHERE tax.id = {taxonomy}
+            )
+            SELECT percentile FROM pop_percentile
+            WHERE employer_id = {id}
+        '''.format(taxonomy=self.object.taxonomy_id, id=self.object.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return result[0]
+
+    def salary_percentile(self):
+        if self.object.is_department is True:
+            return 'N/A'
+
+        query = '''
+            WITH all_employers AS (
+              SELECT
+                id,
+                COALESCE(parent_id, id) AS parent_id
+              FROM payroll_employer
+            ),
+            median_salaries AS (
+              SELECT
+                percentile_cont(0.5) WITHIN GROUP (ORDER BY payroll_salary.amount ASC) AS median_salary,
+                parent_id AS employer_id
+              FROM payroll_salary
+              JOIN payroll_job
+              ON payroll_salary.job_id = payroll_job.id
+              JOIN payroll_position
+              ON payroll_job.position_id = payroll_position.id
+              JOIN all_employers
+              ON payroll_position.employer_id = all_employers.id
+              GROUP BY parent_id
+             ),
+             salary_percentiles AS (
+               SELECT
+                 percent_rank() OVER (ORDER BY median_salaries.median_salary ASC) AS percentile,
+                 employer_id
+               FROM median_salaries
+             )
+             SELECT percentile
+             FROM salary_percentiles
+             WHERE employer_id = {id}
+             '''.format(id=self.object.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return result[0]
 
     def employee_salaries(self):
         query = self._make_query('''

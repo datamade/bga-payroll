@@ -19,6 +19,27 @@
 <div class="col-3">
   <div class="card-body text-center">
     <h3>{{ median_salary|format_salary }}</h3>
-    <small class="text-muted">Average salary</small>
+    <small class="text-muted">Median salary</small>
   </div>
 </div>
+
+{% if entity.is_department == False %}
+  <div class="col-3">
+    <div class="card-body text-center">
+      <h3>{{ salary_percentile|format_percentile }}</h3>
+      <small class="text-muted">Median salary percentile</small>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="card-body text-center">
+      <h3>{{ expenditure_percentile|format_percentile }}</h3>
+      <small class="text-muted">Total expenditure percentile</small>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="card-body text-center">
+      <h3>{{ population_percentile|format_percentile }}</h3>
+      <small class="text-muted">Population percentile</small>
+    </div>
+  </div>
+{% endif %}
