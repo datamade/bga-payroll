@@ -39,7 +39,6 @@ def person(request, slug):
 
 
 class EmployerView(DetailView):
-    template_name = 'employer.html'
     model = Employer
     context_object_name = 'entity'
 
@@ -67,34 +66,9 @@ class EmployerView(DetailView):
             'total_expenditure': sum(employee_salaries),
             'salary_percentile': self.salary_percentile(),
             'expenditure_percentile': self.expenditure_percentile(),
-            'population_percentile': self.population_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
         })
-
-        if not self.object.is_department:
-            department_statistics = self.aggregate_department_statistics()
-            department_salaries = [d['amount'] for d in department_statistics]
-            binned_department_salaries = self.bin_salary_data(department_salaries)
-
-            context.update({
-                'department_salaries': department_statistics[:5],
-                'department_salary_json': json.dumps(binned_department_salaries),
-            })
-
         return context
-
-    @property
-    def where_clause(self):
-        if self.object.is_department:
-            return '''
-                WHERE employer.id = {id}
-            '''.format(id=self.object.id)
-
-        else:
-            return '''
-                WHERE employer.id = {id}
-                OR employer.parent_id = {id}
-            '''.format(id=self.object.id)
 
     def _make_query(self, query_fmt):
         return query_fmt.format(
@@ -109,35 +83,6 @@ class EmployerView(DetailView):
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
         return results['median']
-
-    def aggregate_department_statistics(self):
-        query = self._make_query('''
-            SELECT
-                employer.name,
-                AVG(salary.amount) AS average,
-                SUM(salary.amount) AS budget,
-                COUNT(*) AS headcount,
-                employer.slug AS slug
-            {from_clause}
-            {where_clause}
-            GROUP BY employer.id, employer.name
-            ORDER BY SUM(salary.amount) DESC
-        ''')
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-
-            department_salaries = []
-            for department, average, budget, headcount, slug in cursor:
-                department_salaries.append({
-                    'department': department,
-                    'amount': average,
-                    'total_budget': budget,
-                    'headcount': headcount,
-                    'slug': slug,
-                })
-
-        return department_salaries
 
     def expenditure_percentile(self):
         if self.object.is_department is True:
@@ -179,34 +124,6 @@ class EmployerView(DetailView):
             cursor.execute(query)
             result = cursor.fetchone()[0]
         return result
-
-    def population_percentile(self):
-        if (self.object.get_population() is None) or (self.object.is_department is True):
-            return 'N/A'
-
-        # Currently finds percentile only within current taxonomy
-        query = '''
-            WITH pop_percentile AS (
-              SELECT
-                percent_rank() OVER (ORDER BY pop.population ASC) AS percentile,
-                pop.population,
-                pop.employer_id
-              FROM payroll_employerpopulation AS pop
-              JOIN payroll_employer AS emp
-              ON pop.employer_id = emp.id
-              JOIN payroll_employertaxonomy AS tax
-              ON emp.taxonomy_id = tax.id
-              WHERE tax.id = {taxonomy}
-            )
-            SELECT percentile FROM pop_percentile
-            WHERE employer_id = {id}
-        '''.format(taxonomy=self.object.taxonomy_id, id=self.object.id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-        return result[0]
 
     def salary_percentile(self):
         if self.object.is_department is True:
@@ -280,6 +197,96 @@ class EmployerView(DetailView):
             })
 
         return salary_json
+
+class UnitView(EmployerView):
+    template_name = 'unit.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        department_statistics = self.aggregate_department_statistics()
+        department_salaries = [d['amount'] for d in department_statistics]
+        binned_department_salaries = self.bin_salary_data(department_salaries)
+
+        context.update({
+            'department_salaries': department_statistics[:5],
+            'department_salary_json': json.dumps(binned_department_salaries),
+            'population_percentile': self.population_percentile(),
+        })
+        return context
+
+    @property
+    def where_clause(self):
+        return '''
+            WHERE employer.id = {id}
+            OR employer.parent_id = {id}
+        '''.format(id=self.object.id)
+
+    def aggregate_department_statistics(self):
+        query = self._make_query('''
+            SELECT
+                employer.name,
+                AVG(salary.amount) AS average,
+                SUM(salary.amount) AS budget,
+                COUNT(*) AS headcount,
+                employer.slug AS slug
+            {from_clause}
+            {where_clause}
+            GROUP BY employer.id, employer.name
+            ORDER BY SUM(salary.amount) DESC
+        ''')
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+            department_salaries = []
+            for department, average, budget, headcount, slug in cursor:
+                department_salaries.append({
+                    'department': department,
+                    'amount': average,
+                    'total_budget': budget,
+                    'headcount': headcount,
+                    'slug': slug,
+                })
+
+        return department_salaries
+
+    def population_percentile(self):
+        if (self.object.get_population() is None) or (self.object.is_department is True):
+            return 'N/A'
+
+        # Currently finds percentile only within current taxonomy
+        query = '''
+            WITH pop_percentile AS (
+              SELECT
+                percent_rank() OVER (ORDER BY pop.population ASC) AS percentile,
+                pop.population,
+                pop.employer_id
+              FROM payroll_employerpopulation AS pop
+              JOIN payroll_employer AS emp
+              ON pop.employer_id = emp.id
+              JOIN payroll_employertaxonomy AS tax
+              ON emp.taxonomy_id = tax.id
+              WHERE tax.id = {taxonomy}
+            )
+            SELECT percentile FROM pop_percentile
+            WHERE employer_id = {id}
+        '''.format(taxonomy=self.object.taxonomy_id, id=self.object.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return result[0]
+
+class DepartmentView(EmployerView):
+    template_name = 'department.html'
+
+    @property
+    def where_clause(self):
+        return '''
+            WHERE employer.id = {id}
+        '''.format(id=self.object.id)
+
 
 
 class SearchView(ListView):

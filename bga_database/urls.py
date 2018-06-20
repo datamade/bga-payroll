@@ -24,7 +24,8 @@ from payroll import views as payroll_views
 urlpatterns = [
     # client
     path('', payroll_views.index, name='home'),
-    path('employer/<str:slug>/', payroll_views.EmployerView.as_view(), name='employer'),
+    path('unit/<str:slug>/', payroll_views.UnitView.as_view(), name='unit'),
+    path('department/<str:slug>/', payroll_views.DepartmentView.as_view(), name='department'),
     path('person/<str:slug>/', payroll_views.person, name='person'),
     path('entity-lookup/', payroll_views.entity_lookup, name='entity-lookup'),
     path('search/', payroll_views.SearchView.as_view(), name='search'),
