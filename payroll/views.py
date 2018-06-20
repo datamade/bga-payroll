@@ -198,6 +198,7 @@ class EmployerView(DetailView):
 
         return salary_json
 
+
 class UnitView(EmployerView):
     template_name = 'unit.html'
 
@@ -278,6 +279,7 @@ class UnitView(EmployerView):
 
         return result[0]
 
+
 class DepartmentView(EmployerView):
     template_name = 'department.html'
 
@@ -286,7 +288,6 @@ class DepartmentView(EmployerView):
         return '''
             WHERE employer.id = {id}
         '''.format(id=self.object.id)
-
 
 
 class SearchView(ListView):
