@@ -252,7 +252,7 @@ class UnitView(EmployerView):
         return department_salaries
 
     def population_percentile(self):
-        if (self.object.get_population() is None) or (self.object.is_department is True):
+        if (self.object.get_population() is None):
             return 'N/A'
 
         # Currently finds percentile only within current taxonomy
