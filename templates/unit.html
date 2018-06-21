@@ -10,20 +10,13 @@
 </nav>
 
 <div class="col-md-12">
-  <h2 class="mb-3"><i class="{% if entity.is_department %}far{% else %}fas{% endif %} fa-building"></i> {{ entity }}</h2>
+  <h2 class="mb-3"><i class="fas fa-building"></i> {{ entity }}</h2>
   <div class="badge badge-primary">
-    {% if entity.is_department %}
-      {{ entity.parent.taxonomy }}
-    {% else %}
-      {{ entity.taxonomy }}
-    {% endif %}
+
+    {{ entity.taxonomy }}
   </div>
   <div class="badge badge-secondary">
-    {% if entity.is_department %}
-      {{ entity.parent.size_class }}
-    {% else %}
-      {{ entity.size_class }}
-    {% endif %}
+    {{ entity.size_class }}
   </div>
 
   <div class="row mb-4">
@@ -36,11 +29,10 @@
     {% include 'partials/employee_card.html' %}
   </div>
 
-  {% if not entity.is_department %}
-    <div class="card mb-4">
-      {% include 'partials/department_card.html' %}
-    </div>
-  {% endif %}
+  <div class="card mb-4">
+    {% include 'partials/department_card.html' %}
+  </div>
+
 </div>
 {% endblock %}
 
@@ -50,8 +42,6 @@
 <script type="text/javascript">
   ChartHelper.make_salary_chart({{ employee_salary_json|safe }}, 'employee');
 
-  {% if not entity.is_department %}
   ChartHelper.make_salary_chart({{ department_salary_json|safe }}, 'department');
-  {% endif %}
 </script>
 {% endblock %}

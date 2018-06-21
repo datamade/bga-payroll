@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entity }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    {% include 'partials/breadcrumbs.html' %}
+  </ol>
+</nav>
+
+<div class="col-md-12">
+  <h2 class="mb-3"><i class="far fa-building"></i> {{ entity }}</h2>
+  <div class="badge badge-primary">
+    {{ entity.parent.taxonomy }}
+
+  </div>
+  <div class="badge badge-secondary">
+    {{ entity.parent.size_class }}
+  </div>
+
+  <div class="row mb-4">
+    {% with context = aggregate_stats %}
+      {% include 'partials/baseball_stats.html' %}
+    {% endwith %}
+  </div>
+
+  <div class="card mb-4">
+    {% include 'partials/employee_card.html' %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ static('js/chart_helper.js') }}"></script>
+
+<script type="text/javascript">
+  ChartHelper.make_salary_chart({{ employee_salary_json|safe }}, 'employee');
+</script>
+{% endblock %}
