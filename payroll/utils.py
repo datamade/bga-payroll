@@ -79,4 +79,4 @@ def format_percentile(i):
     if isinstance(i, str):
         return i
 
-    return "{:,.2f}".format(i)
+    return "{:,.2f}".format(i) + '%'
