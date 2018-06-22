@@ -12,25 +12,21 @@
         <th scope="col">Number of employees</th>
         <th scope="col">Median salary</th>
         <th scope="col">Total expenditure</th>
+        <th scope="col">Percent of unit expenditure</th>
       </tr>
     </thead>
     <tbody>
     {% for department in department_salaries %}
       <tr>
-        <td><a href="/employer/{{ department['slug'] }}">{{ department['department']|titlecase_standalone }}</a></td>
+        <td><a href="/department/{{ department['slug'] }}">{{ department['department']|titlecase_standalone }}</a></td>
         <td>{{ department['headcount'] }}</td>
         <td>{{ department['amount']|format_salary }}</td>
         <td>${{ department['total_budget']|format_ballpark_number }}</td>
+        <td>placeholder</td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
-  <p class="text-right">
-    <small><strong>Data year:</strong> 2017 (<a href="#">Source</a>)</small>
-  </p>
-
-  <h4 class="card-subtitle mt-5 mb-4">Distribution of average salary by department</h4>
-  <div id="department-distribution-chart"></div>
   <p class="text-right">
     <small><strong>Data year:</strong> 2017 (<a href="#">Source</a>)</small>
   </p>

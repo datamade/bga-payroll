@@ -1,0 +1,13 @@
+<div class="card-body">
+  <h3 class="card-title mb-4">
+    <i class="fas fa-users"></i> Elected Officials
+    <small><a href="/search/?entity_type=person&employer={{ entity.slug }}">View all ({{ headcount }})</a></small>
+  </h3>
+
+  <h4 class="card-subtitle mb-3">Highest compensated elected officials in {{ entity }}</h4>
+  {% include 'partials/person_table.html' %}
+
+  <p class="text-right">
+    <small><strong>Data year:</strong> 2017 (<a href="#">Source</a>)</small>
+  </p>
+</div>
