@@ -333,8 +333,11 @@ class UnitView(EmployerView):
             cursor.execute(highest_spending_amount)
             result2 = cursor.fetchone()
 
-        results = [result1[0], result2[0]]
-        return results
+        if result1 and result2:
+            results = [result1[0], result2[0] * 100]
+            return results
+        else:
+            return ['N/A', 'N/A']
 
 
 class DepartmentView(EmployerView):
@@ -344,9 +347,9 @@ class DepartmentView(EmployerView):
         context = super().get_context_data(**kwargs)
         department_expenditure = sum(self.employee_salaries())
         parent_expediture = sum(self.total_parent_expenditure())
-        percentage = department_expenditure/parent_expediture
+        percentage = department_expenditure / parent_expediture
         context.update({
-            'percent_of_total_expenditure': percentage * 100,
+            'percent_of_total_expenditure': percentage * 100,  # MIGHT NEED TO HANDLE EXCEPTIONS
         })
         return context
 
@@ -367,7 +370,7 @@ class DepartmentView(EmployerView):
           ON job.position_id = position.id
           JOIN payroll_employer as employer
           ON position.employer_id = employer.id
-          WHERE employer.parent_id = 254;
+          WHERE employer.parent_id = {parent_id}
         '''.format(parent_id=self.object.parent_id)
 
         with connection.cursor() as cursor:

@@ -37,6 +37,8 @@ def format_salary(i):
     '''
     Strip cents off salary figures.
     '''
+    if isinstance(i, str):
+        return i
     return "${:,.0f}".format(i)
 
 
