@@ -281,7 +281,7 @@ class UnitView(EmployerView):
         return result[0] * 100
 
     def highest_spending_department(self):
-        department_expenditures = '''
+        query = '''
           WITH all_department_expenditures AS (
             SELECT
               SUM(salary.amount) AS dept_budget,
@@ -303,41 +303,25 @@ class UnitView(EmployerView):
             ON ade.dept_id = employer.id
             WHERE employer.parent_id = {id}
           )
-        '''.format(id=self.object.id)
-
-        highest_spending_name = '''
-          {budgets}
           SELECT
-            employer.name
+            employer.name,
+            dept_budget
           FROM parent_department_expenditures
           JOIN payroll_employer as employer
           ON parent_department_expenditures.dept_id = employer.id
           ORDER BY dept_budget DESC
           LIMIT 1
-        '''.format(budgets=department_expenditures)
-
-        highest_spending_amount = '''
-            {budgets}
-            SELECT
-              dept_budget
-            FROM parent_department_expenditures
-            ORDER BY dept_budget DESC
-            LIMIT 1
-        '''.format(budgets=department_expenditures)
+        '''.format(id=self.object.id)
 
         with connection.cursor() as cursor:
-            cursor.execute(highest_spending_name)
-            result1 = cursor.fetchone()
+            cursor.execute(query)
+            result = cursor.fetchone()
 
-        with connection.cursor() as cursor:
-            cursor.execute(highest_spending_amount)
-            result2 = cursor.fetchone()
-
-        if result1 and result2:
-            results = [result1[0], result2[0] * 100]
-            return results
-        else:
-            return ['N/A', 'N/A']
+        highest_spending_department = {
+            'name': result[0],
+            'amount': result[1]
+        }
+        return highest_spending_department
 
 
 class DepartmentView(EmployerView):
