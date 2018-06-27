@@ -317,9 +317,16 @@ class UnitView(EmployerView):
             cursor.execute(query)
             result = cursor.fetchone()
 
+        if result is None:
+            name = 'N/A'
+            amount = 'N/A'
+        else:
+            name = result[0]
+            amount = result[1]
+
         highest_spending_department = {
-            'name': result[0],
-            'amount': result[1]
+            'name': name,
+            'amount': amount
         }
         return highest_spending_department
 
