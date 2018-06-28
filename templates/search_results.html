@@ -31,19 +31,16 @@
             </thead>
             <tbody>
                 {% for result in results %}
-                    {% set entity_type = result.__class__.__name__|lower %}
                     <tr>
                         <td>
-                            <a href="/{{ entity_type }}/{{ result.slug }}/">{{ result }}</a>
+                            <a href="/{{ result.endpoint }}/{{ result.slug }}/">{{ result }}</a>
                             <span class="badge badge-light">
-                                {% if entity_type == 'person' %}
+                                {% if result.endpoint == 'person' %}
                                     <i class="far fa-address-card"></i> Person
-                                {% else %}
-                                    {% if result.is_department %}
+                                {% elif result.endpoint == 'department' %}
                                         <i class="far fa-building"></i> Department
-                                    {% else %}
-                                        <i class="fas fa-building"></i> Unit
-                                    {% endif %}
+                                {% elif result.endpoint =='unit' %}
+                                    <i class="fas fa-building"></i> Unit
                                 {% endif %}
                             </span>
                         </td>
