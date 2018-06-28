@@ -25,5 +25,5 @@ data/output/2017-sample.csv : 2017-formatted.csv
 2017-actual-formatted.csv : raw/2017_payroll_actual.csv
 	csvcut -c 2,2,3,4,5,6,7,8,9,10 $< | \
 	csvgrep -c 1 -ir '^$$'| \
-	perl -pe 's/Employer/Responding Agency/' | \
+	perl -pe 's/Employer/Responding Agency/; s/Base Salary/Salary/' | \
 	tr -s " " > $@
