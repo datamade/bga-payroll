@@ -411,7 +411,7 @@ class ImportUtility(TableNamesMixin):
             )
             JOIN payroll_position AS position
             ON position.employer_id = emp.employer_id
-            AND TRIM(LOWER(position.title)) = TRIM(LOWER(raw.title))
+            AND TRIM(LOWER(position.title)) = TRIM(LOWER(COALESCE(raw.title, 'EMPLOYEE')))
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
                    intermediate_payroll=self.intermediate_payroll_table)
