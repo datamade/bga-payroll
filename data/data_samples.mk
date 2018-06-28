@@ -21,3 +21,9 @@ data/output/2017-sample.csv : 2017-formatted.csv
 2017-formatted.csv : raw/2017_payroll.csv
 	csvcut -c 2,2,3,4,5,6,7,8,9 -e WINDOWS-1250 $< | \
 	perl -pe 's/Employer/Responding Agency/' > $@
+
+2017-actual-formatted.csv : raw/2017_payroll_actual.csv
+	csvcut -c 2,2,3,4,5,6,7,8,9,10 $< | \
+	csvgrep -c 1 -ir '^$$'| \
+	perl -pe 's/Employer/Responding Agency/' | \
+	tr -s " " > $@
