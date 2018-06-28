@@ -93,7 +93,8 @@ class EmployerView(DetailView):
               SELECT
                 id,
                 COALESCE(parent_id, id) AS parent_id
-              FROM payroll_employer),
+              FROM payroll_employer
+            ),
             expenditure_by_unit AS (
               SELECT
                 sum(amount) AS total_budget,
@@ -122,8 +123,9 @@ class EmployerView(DetailView):
 
         with connection.cursor() as cursor:
             cursor.execute(query)
-            result = cursor.fetchone()[0]
-        return result
+            result = cursor.fetchone()
+
+        return result[0]
 
     def salary_percentile(self):
         if self.object.is_department is True:
