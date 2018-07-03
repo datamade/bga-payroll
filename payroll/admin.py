@@ -8,4 +8,5 @@ class AdminEmployer(admin.ModelAdmin):
     raw_id_fields = ('parent',)
     readonly_fields = ('slug', 'parent', 'vintage',)
 
+
 admin.site.register(Employer, AdminEmployer)

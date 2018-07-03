@@ -304,6 +304,38 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert_children)
 
+        self._add_employer_universe()
+
+    def _add_employer_universe(self):
+        update = '''
+            WITH pattern_matched_employers AS (
+              SELECT
+                id,
+                name,
+                CASE
+                  WHEN
+                    name ~* E'\\y((?<!f)pd|(?<!\\ystate\\y )police|(?<!\\yhomeland\\y )security|public safety)\\y'
+                    AND name !~* E'\\y(board|comm(isss?ion)?(er)?s?)\\y'
+                  THEN 'Police Department'
+                  WHEN name ~* E'\\y(fp?d|fire)\\y' THEN 'Fire Department'
+                END AS match
+              FROM payroll_employer
+            )
+            UPDATE payroll_employer
+            SET universe_id = xwalk.universe_id FROM (
+              SELECT
+                emp.id AS employer_id,
+                uni.id AS universe_id
+              FROM pattern_matched_employers AS emp
+              JOIN payroll_employeruniverse AS uni
+              ON emp.match = uni.name
+            ) xwalk
+            WHERE payroll_employer.id = x.employer_id
+        '''
+
+        with connection.cursor() as cursor:
+            cursor.execute(update)
+
     def insert_position(self):
         insert = '''
             INSERT INTO payroll_position (employer_id, title, vintage_id)

@@ -160,7 +160,7 @@ class EmployerUniverse(models.Model):
     '''
     Category of a unit / department's positions, e.g., police department.
     '''
-    universe = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
 
 
 class Person(SluggedModel, VintagedModel):
