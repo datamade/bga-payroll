@@ -37,6 +37,8 @@ def format_salary(i):
     '''
     Strip cents off salary figures.
     '''
+    if isinstance(i, str):
+        return i
     return "${:,.0f}".format(i)
 
 
@@ -79,4 +81,4 @@ def format_percentile(i):
     if isinstance(i, str):
         return i
 
-    return "{:,.2f}".format(i)
+    return "{:,.2f}".format(i) + '%'

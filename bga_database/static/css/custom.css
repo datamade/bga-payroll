@@ -16,3 +16,16 @@ ol.breadcrumb {
 .invalid-feedback {
     display: unset;
 }
+
+div.row.intro {
+  padding-left: 10px;
+  padding-right: 30px;
+}
+
+div#department-expenditure-chart.col-lg-6 {
+  text-align: right;
+  background-color: grey;
+  height: 225px;
+  width: 470px;
+  padding-right: 30px;
+}

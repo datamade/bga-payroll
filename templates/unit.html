@@ -25,8 +25,26 @@
     {% endwith %}
   </div>
 
+  <div class="row intro">
+    <div id="intro-text" class="col-lg-6">
+      <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong>{{ highest_spending_department.name|titlecase_standalone }}</strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
+
+      <p><strong>{{ entity }}</strong> is classified as <strong>{{ entity.size_class }}</strong> because it is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> populations in Illinois.</p>
+
+      <p>The median salary in <strong>{{ entity }}</strong> is <strong>{{ median_salary|format_salary }}</strong>, which is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> median salaries in Illinois.</p>
+
+      <p><strong>{{ entity }}</strong> has a total payroll expenditure higher than <strong>{{ expenditure_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> expenditures in Illinois.</p>
+    </div>
+    <div id="department-expenditure-chart" class="col-lg-6">distribution of department expenditures</div>
+
+  </div>
+
   <div class="card mb-4">
     {% include 'partials/employee_card.html' %}
+  </div>
+
+  <div class="card mb-4">
+    {% include 'partials/elected_officials_card.html' %}
   </div>
 
   <div class="card mb-4">

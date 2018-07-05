@@ -166,7 +166,7 @@ class EmployerView(DetailView):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0]
+        return result[0] * 100
 
     def employee_salaries(self):
         query = self._make_query('''
@@ -214,6 +214,7 @@ class UnitView(EmployerView):
             'department_salaries': department_statistics[:5],
             'department_salary_json': json.dumps(binned_department_salaries),
             'population_percentile': self.population_percentile(),
+            'highest_spending_department': self.highest_spending_department(),
         })
         return context
 
@@ -279,17 +280,97 @@ class UnitView(EmployerView):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0]
+        return result[0] * 100
+
+    def highest_spending_department(self):
+        query = '''
+          WITH all_department_expenditures AS (
+            SELECT
+              SUM(salary.amount) AS dept_budget,
+              employer.id as dept_id
+            FROM payroll_salary AS salary
+            JOIN payroll_job AS job
+            ON salary.job_id = job.id
+            JOIN payroll_position AS positions
+            ON job.position_id = positions.id
+            JOIN payroll_employer AS employer
+            ON positions.employer_id = employer.id
+            GROUP BY employer.id
+          ),
+          parent_department_expenditures AS (
+            SELECT
+              *
+            FROM all_department_expenditures as ade
+            JOIN payroll_employer AS employer
+            ON ade.dept_id = employer.id
+            WHERE employer.parent_id = {id}
+          )
+          SELECT
+            employer.name,
+            dept_budget
+          FROM parent_department_expenditures
+          JOIN payroll_employer as employer
+          ON parent_department_expenditures.dept_id = employer.id
+          ORDER BY dept_budget DESC
+          LIMIT 1
+        '''.format(id=self.object.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        if result is None:
+            name = 'N/A'
+            amount = 'N/A'
+        else:
+            name = result[0]
+            amount = result[1]
+
+        highest_spending_department = {
+            'name': name,
+            'amount': amount
+        }
+        return highest_spending_department
 
 
 class DepartmentView(EmployerView):
     template_name = 'department.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        department_expenditure = sum(self.employee_salaries())
+        parent_expediture = self.total_parent_expenditure()
+        percentage = department_expenditure / parent_expediture
+        context.update({
+            'percent_of_total_expenditure': percentage * 100,  # MIGHT NEED TO HANDLE EXCEPTIONS
+        })
+        return context
 
     @property
     def where_clause(self):
         return '''
             WHERE employer.id = {id}
         '''.format(id=self.object.id)
+
+    def total_parent_expenditure(self):
+        query = '''
+          SELECT
+            sum(salary.amount)
+          FROM payroll_job AS job
+          JOIN payroll_salary AS salary
+          ON salary.job_id = job.id
+          JOIN payroll_position AS position
+          ON job.position_id = position.id
+          JOIN payroll_employer as employer
+          ON position.employer_id = employer.id
+          WHERE employer.parent_id = {parent_id}
+        '''.format(parent_id=self.object.parent_id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return result[0]
 
 
 class SearchView(ListView):
