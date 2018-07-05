@@ -36,10 +36,14 @@ class Employer(SluggedModel, VintagedModel):
 
     @property
     def is_department(self):
-        '''
-        Return True if employer has parent, False otherwise.
-        '''
         return bool(self.parent)
+
+    @property
+    def endpoint(self):
+        if self.is_department:
+            return 'department'
+        else:
+            return 'unit'
 
     @property
     def size_class(self):
@@ -159,6 +163,10 @@ class Person(SluggedModel, VintagedModel):
                         .lstrip('-')
 
         return titlecase(name.lower(), callback=format_name)
+
+    @property
+    def endpoint(self):
+        return 'person'
 
 
 class Job(VintagedModel):

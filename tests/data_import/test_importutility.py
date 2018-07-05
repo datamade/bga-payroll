@@ -138,7 +138,10 @@ def test_import_utility_init(raw_table_setup,
                   WHEN emp.parent_id IS NOT NULL THEN emp.name
                   ELSE NULL
                 END AS department,
-                pos.title,
+                CASE
+                  WHEN pos.title = 'EMPLOYEE' THEN NULL
+                  ELSE pos.title
+                END AS title,
                 per.first_name,
                 per.last_name,
                 sal.amount AS salary,
@@ -162,7 +165,7 @@ def test_import_utility_init(raw_table_setup,
                 first_name,
                 last_name,
                 salary::NUMERIC,
-                NULLIF(date_started, '')::DATE
+                NULLIF(date_started, '')::DATE AS date_started
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
               UNION ALL
@@ -173,7 +176,7 @@ def test_import_utility_init(raw_table_setup,
                 first_name,
                 last_name,
                 salary::NUMERIC,
-                NULLIF(date_started, '')::DATE
+                NULLIF(date_started, '')::DATE AS date_started
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             )
