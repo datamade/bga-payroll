@@ -307,7 +307,7 @@ class ImportUtility(TableNamesMixin):
         self._add_employer_universe()
 
     def _add_employer_universe(self):
-        update = '''
+        pattern_update = '''
             WITH pattern_matched_employers AS (
               SELECT
                 id,
@@ -333,8 +333,23 @@ class ImportUtility(TableNamesMixin):
             WHERE payroll_employer.id = xwalk.employer_id
         '''
 
+        taxonomy_update = '''
+            UPDATE payroll_employer
+            SET universe_id = (
+              SELECT id
+              FROM payroll_employeruniverse
+              WHERE name = 'Public Education'
+            )
+            WHERE payroll_employer.taxonomy_id = (
+              SELECT id
+              FROM payroll_employertaxonomy
+              WHERE name = 'School District'
+            )
+        '''
+
         with connection.cursor() as cursor:
-            cursor.execute(update)
+            cursor.execute(pattern_update)
+            cursor.execute(taxonomy_update)
 
     def insert_position(self):
         insert = '''
