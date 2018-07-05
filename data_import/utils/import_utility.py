@@ -330,7 +330,7 @@ class ImportUtility(TableNamesMixin):
               JOIN payroll_employeruniverse AS uni
               ON emp.match = uni.name
             ) xwalk
-            WHERE payroll_employer.id = x.employer_id
+            WHERE payroll_employer.id = xwalk.employer_id
         '''
 
         with connection.cursor() as cursor:
