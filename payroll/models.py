@@ -1,5 +1,7 @@
 from django.contrib.postgres.search import SearchVectorField
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from titlecase import titlecase
 
@@ -23,10 +25,12 @@ class Employer(SluggedModel, VintagedModel):
                                related_name='departments')
     taxonomy = models.ForeignKey('EmployerTaxonomy',
                                  null=True,
+                                 blank=True,
                                  on_delete=models.SET_NULL,
                                  related_name='employers')
     universe = models.ForeignKey('EmployerUniverse',
                                  null=True,
+                                 blank=True,
                                  on_delete=models.SET_NULL,
                                  related_name='employers')
 
@@ -37,6 +41,15 @@ class Employer(SluggedModel, VintagedModel):
             name = '{} {}'.format(self.parent, self.name)
 
         return titlecase(name.lower())
+
+    def clean(self):
+        if self.is_department:
+            if self.taxonomy:
+                raise ValidationError(_('Departments may not have a taxonomy. Did you mean to add a universe?'))
+
+        else:
+            if self.universe:
+                raise ValidationError(_('Units may not have a universe. Did you mean to add a taxonomy?'))
 
     @property
     def is_department(self):
@@ -158,7 +171,7 @@ class EmployerPopulation(models.Model):
 
 class EmployerUniverse(models.Model):
     '''
-    Category of a unit / department's positions, e.g., police department.
+    Classification of a department, e.g., police department.
     '''
     name = models.CharField(max_length=255)
 

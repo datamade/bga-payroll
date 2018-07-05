@@ -28,8 +28,7 @@ class Migration(migrations.Migration):
               SELECT * FROM (
                 VALUES
                   ('Police Department'),
-                  ('Fire Department'),
-                  ('Public Education')
+                  ('Fire Department')
               ) AS u
         ''', reverse_sql='DELETE FROM payroll_employeruniverse')
     ]
