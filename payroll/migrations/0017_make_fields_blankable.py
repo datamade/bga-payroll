@@ -14,11 +14,23 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='employer',
             name='taxonomy',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='employers', to='payroll.EmployerTaxonomy'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='employers',
+                to='payroll.EmployerTaxonomy'
+            ),
         ),
         migrations.AlterField(
             model_name='employer',
             name='universe',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='employers', to='payroll.EmployerUniverse'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='employers',
+                to='payroll.EmployerUniverse'
+            ),
         ),
     ]

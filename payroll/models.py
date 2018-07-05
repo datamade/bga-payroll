@@ -157,6 +157,9 @@ class EmployerTaxonomy(models.Model):
     def is_special(self):
         return self.chicago or self.cook_or_collar
 
+    class Meta:
+        verbose_name_plural = 'Employer taxonomies'
+
 
 class EmployerPopulation(models.Model):
     employer = models.ForeignKey('Employer',
