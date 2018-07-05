@@ -27,7 +27,7 @@ before_script:
 - cp bga_database/local_settings.py.example bga_database/local_settings.py
 
 script:
-- pytest --create-db
+- pytest --reuse-db
 - jshint bga_database/static/js/*.js
 
 deploy:

@@ -339,7 +339,7 @@ class DepartmentView(EmployerView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         department_expenditure = sum(self.employee_salaries())
-        parent_expediture = sum(self.total_parent_expenditure())
+        parent_expediture = self.total_parent_expenditure()
         percentage = department_expenditure / parent_expediture
         context.update({
             'percent_of_total_expenditure': percentage * 100,  # MIGHT NEED TO HANDLE EXCEPTIONS
@@ -368,10 +368,9 @@ class DepartmentView(EmployerView):
 
         with connection.cursor() as cursor:
             cursor.execute(query)
+            result = cursor.fetchone()
 
-            employee_salaries = [row[0] for row in cursor]
-
-        return employee_salaries
+        return result[0]
 
 
 class SearchView(ListView):
