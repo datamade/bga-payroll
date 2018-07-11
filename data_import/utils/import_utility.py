@@ -314,10 +314,13 @@ class ImportUtility(TableNamesMixin):
                 name,
                 CASE
                   WHEN
-                    name ~* E'\\y((?<!f)pd|(?<!\\ystate\\y )police|(?<!\\yhomeland\\y )security|public safety)\\y'
-                    AND name !~* E'\\y(board|comm(isss?ion)?(er)?s?)\\y'
+                    (name ~* E'\\mpd'
+                    OR name ~* E'(?<!state )police'
+                    OR name ~* E'(?<!homeland )security'
+                    OR name ~* E'public safety')
+                    AND name !~* E'(board|comm(isss?ion)?(er)?s?)'
                   THEN 'Police Department'
-                  WHEN name ~* E'\\y(fp?d|fire)\\y' THEN 'Fire Department'
+                  WHEN name ~* E'\\m(fp?d|fire)' THEN 'Fire Department'
                 END AS match
               FROM payroll_employer
               /* Only add departments to universes. */
