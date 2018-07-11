@@ -85,7 +85,7 @@ class EmployerView(DetailView):
         return results['median']
 
     def expenditure_percentile(self):
-        if self.object.is_department is True:
+        if any([self.object.is_department, self.object.is_unclassified]):
             return 'N/A'
 
         query = '''
@@ -131,7 +131,7 @@ class EmployerView(DetailView):
         return result[0] * 100
 
     def salary_percentile(self):
-        if self.object.is_department is True:
+        if any([self.object.is_department, self.object.is_unclassified]):
             return 'N/A'
 
         query = '''
