@@ -70,14 +70,7 @@ class EmployerView(DetailView):
         })
         return context
 
-    def _make_query(self, query_fmt):
-        return query_fmt.format(
-            from_clause=self.from_clause,
-            where_clause=self.where_clause,
-        )
-
     def median_entity_salary(self):
-
         q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
 
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
@@ -85,12 +78,14 @@ class EmployerView(DetailView):
         return results['median']
 
     def employee_salaries(self):
-        query = self._make_query('''
+        query = '''
             SELECT
-                salary.amount
+              salary.amount
             {from_clause}
-            {where_clause}
-        ''')
+            WHERE employer.id = {id}
+            OR employer.parent_id = {id}
+        '''.format(from_clause=self.from_clause,
+                   id=self.object.id)
 
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -134,26 +129,20 @@ class UnitView(EmployerView):
         })
         return context
 
-    @property
-    def where_clause(self):
-        return '''
-            WHERE employer.id = {id}
-            OR employer.parent_id = {id}
-        '''.format(id=self.object.id)
-
     def aggregate_department_statistics(self):
-        query = self._make_query('''
+        query = '''
             SELECT
-                employer.name,
-                AVG(salary.amount) AS average,
-                SUM(salary.amount) AS budget,
-                COUNT(*) AS headcount,
-                employer.slug AS slug
+              employer.name,
+              AVG(salary.amount) AS average,
+              SUM(salary.amount) AS budget,
+              COUNT(*) AS headcount,
+              employer.slug AS slug
             {from_clause}
-            {where_clause}
+            WHERE employer.parent_id = {id}
             GROUP BY employer.id, employer.name
             ORDER BY SUM(salary.amount) DESC
-        ''')
+        '''.format(from_clause=self.from_clause,
+                   id=self.object.id)
 
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -350,12 +339,6 @@ class DepartmentView(EmployerView):
             'percent_of_total_expenditure': percentage * 100,  # MIGHT NEED TO HANDLE EXCEPTIONS
         })
         return context
-
-    @property
-    def where_clause(self):
-        return '''
-            WHERE employer.id = {id}
-        '''.format(id=self.object.id)
 
     def total_parent_expenditure(self):
         query = '''
