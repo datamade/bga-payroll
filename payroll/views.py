@@ -185,7 +185,24 @@ class EmployerView(DetailView):
 
     def bin_salary_data(self, data):
         float_data = np.asarray(data, dtype='float')
-        values, edges = np.histogram(float_data, bins=6)
+
+        # Size of the bins
+        multiplier = 25000
+
+        # This is to make the appropriate number of bins
+        max_value = np.amax(float_data)
+        print("max value", max_value)
+        bin_num = int(max_value / multiplier) + 1
+        print(bin_num)
+        #import ipdb; ipdb.set_trace()
+        bin_edges = np.array([], dtype='float')
+
+        for i in range(bin_num):
+            bin_edges = np.append(bin_edges, i * multiplier)
+
+        print(bin_edges)
+
+        values, edges = np.histogram(float_data, bins=bin_edges)
 
         salary_json = []
 
@@ -193,7 +210,7 @@ class EmployerView(DetailView):
             lower, upper = int(edges[i]), int(edges[i + 1])
 
             salary_json.append({
-                'value': int(value),
+                'value': int(value), # number of salaries in given bin
                 'lower_edge': format_ballpark_number(lower),
                 'upper_edge': format_ballpark_number(upper),
             })

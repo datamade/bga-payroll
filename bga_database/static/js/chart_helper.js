@@ -29,6 +29,15 @@ var ChartHelper = {
             title: {
                 text: '', // Done in template
             },
+            plotOptions: {
+              column: {
+                maxPointWidth: 80,
+                minPointLength: 2,
+                dataLabels: {
+                  enabled: true
+                }
+              }
+            },
             xAxis: {
                 labels: {
                     enabled: true,
@@ -48,10 +57,6 @@ var ChartHelper = {
                 type: 'column',
                 data: values,
                 id: 'salaries',
-                tooltip: {
-                    headerFormat: '', // Remove header
-                    pointFormatter: tooltip_format,
-                },
                 color: '#6c757c',
             }],
             legend: {
