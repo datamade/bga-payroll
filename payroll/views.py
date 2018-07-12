@@ -191,10 +191,7 @@ class EmployerView(DetailView):
 
         # This is to make the appropriate number of bins
         max_value = np.amax(float_data)
-        print("max value", max_value)
         bin_num = int(max_value / multiplier) + 1
-        print(bin_num)
-        #import ipdb; ipdb.set_trace()
         bin_edges = np.array([], dtype='float')
 
         for i in range(bin_num):
@@ -210,7 +207,7 @@ class EmployerView(DetailView):
             lower, upper = int(edges[i]), int(edges[i + 1])
 
             salary_json.append({
-                'value': int(value), # number of salaries in given bin
+                'value': int(value),  # number of salaries in given bin
                 'lower_edge': format_ballpark_number(lower),
                 'upper_edge': format_ballpark_number(upper),
             })

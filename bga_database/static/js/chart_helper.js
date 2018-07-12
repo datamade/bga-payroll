@@ -57,6 +57,9 @@ var ChartHelper = {
                 type: 'column',
                 data: values,
                 id: 'salaries',
+                tooltip: {
+                    enabled: false
+                },
                 color: '#6c757c',
             }],
             legend: {
