@@ -110,10 +110,7 @@ class EmployerView(DetailView):
         for i in range(bin_num + 1):  # adding 1 to get appropriate number of bins
             bin_edges = np.append(bin_edges, i * multiplier)
 
-        print(bin_edges)
         values, edges = np.histogram(float_data, bins=bin_edges)
-        print(values)
-        print(edges)
 
         salary_json = []
 
