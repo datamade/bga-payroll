@@ -58,7 +58,8 @@ var ChartHelper = {
                 data: values,
                 id: 'salaries',
                 tooltip: {
-                    enabled: false
+                  headerFormat: '', // Remove header
+-                 pointFormatter: tooltip_format,
                 },
                 color: '#6c757c',
             }],
