@@ -3,7 +3,7 @@
   <tr>
     <th scope="col">Name</th>
     <th scope="col">Position</th>
-    {% if not entity.is_department and departments %}
+    {% if not entity.is_department and department_salaries %}
     <th scope="col">Department</th>
     {% endif %}
     <th scope="col">Salary</th>
@@ -14,7 +14,7 @@
   <tr>
     <td><a href="/person/{{ job.person.slug }}">{{ job.person }}</a></td>
     <td>{{ job.position }}</td>
-    {% if not entity.is_department and departments %}
+    {% if not entity.is_department and department_salaries %}
     <td><a href="/department/{{ job.position.employer.slug }}">{{ job.position.employer }}</a></td>
     {% endif %}
     <td>{{ job.salaries.get().amount|format_salary }}</td>

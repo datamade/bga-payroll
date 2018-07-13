@@ -132,12 +132,9 @@ class UnitView(EmployerView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
-        department_salaries = [d['amount'] for d in department_statistics]
-        binned_department_salaries = self.bin_salary_data(department_salaries)
 
         context.update({
             'department_salaries': department_statistics[:5],
-            'department_salary_json': json.dumps(binned_department_salaries),
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
         })
