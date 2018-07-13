@@ -378,11 +378,20 @@ class DepartmentView(EmployerView):
         return result[0]
 
     def expenditure_percentile(self):
-        if self.object.is_unclassified:
+        if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
         query = '''
-            WITH expenditure_by_department AS (
+            WITH taxonomy_members AS (
+              SELECT
+                department.id,
+                department.universe_id
+              FROM payroll_employer AS unit
+              JOIN payroll_employer AS department
+              ON unit.id = department.parent_id
+              WHERE unit.taxonomy_id = {taxonomy}
+            ),
+            expenditure_by_department AS (
               SELECT
                 SUM(salary.amount) AS total_budget,
                 department.id AS department_id
@@ -391,7 +400,7 @@ class DepartmentView(EmployerView):
               ON salary.job_id = job.id
               JOIN payroll_position AS position
               ON job.position_id = position.id
-              JOIN payroll_employer AS department
+              JOIN taxonomy_members AS department
               ON position.employer_id = department.id
               WHERE department.universe_id = {universe}
               GROUP BY department.id
@@ -406,7 +415,8 @@ class DepartmentView(EmployerView):
               percentile
             FROM exp_percentiles
             WHERE department_id = {id}
-        '''.format(universe=self.object.universe.id,
+        '''.format(taxonomy=self.object.parent.taxonomy.id,
+                   universe=self.object.universe.id,
                    id=self.object.id)
 
         with connection.cursor() as cursor:
@@ -416,11 +426,20 @@ class DepartmentView(EmployerView):
         return result[0] * 100
 
     def salary_percentile(self):
-        if self.object.is_unclassified:
+        if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
         query = '''
-            WITH median_salaries_by_department AS (
+            WITH taxonomy_members AS (
+              SELECT
+                department.id,
+                department.universe_id
+              FROM payroll_employer AS unit
+              JOIN payroll_employer AS department
+              ON unit.id = department.parent_id
+              WHERE unit.taxonomy_id = {taxonomy}
+            ),
+            median_salaries_by_department AS (
               SELECT
                 percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
                 department.id AS department_id
@@ -429,7 +448,7 @@ class DepartmentView(EmployerView):
               ON salary.job_id = job.id
               JOIN payroll_position AS position
               ON job.position_id = position.id
-              JOIN payroll_employer AS department
+              JOIN taxonomy_members AS department
               ON position.employer_id = department.id
               WHERE department.universe_id = {universe}
               GROUP BY department.id
@@ -443,7 +462,8 @@ class DepartmentView(EmployerView):
             SELECT percentile
             FROM salary_percentiles
             WHERE department_id = {id}
-            '''.format(universe=self.object.universe.id,
+            '''.format(taxonomy=self.object.parent.taxonomy.id,
+                       universe=self.object.universe.id,
                        id=self.object.id)
 
         with connection.cursor() as cursor:
