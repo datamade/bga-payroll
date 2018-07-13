@@ -20,7 +20,13 @@ var ChartHelper = {
 
         var axis_format = function() {
             var edges = data[this.value];
-            return '$' + edges.lower_edge + ' – $' + edges.upper_edge;
+
+            if (this.value === data.length) {
+              edges = data[this.value - 1]
+              return '$' + edges.upper_edge
+            }
+
+            return '$' + edges.lower_edge
         };
 
         var element = entity_type + '-distribution-chart';
@@ -35,7 +41,10 @@ var ChartHelper = {
                 minPointLength: 2,
                 dataLabels: {
                   enabled: true
-                }
+                },
+                pointPlacement: 'between',
+                pointPadding: 0,
+                groupPadding: 0
               }
             },
             xAxis: {
@@ -43,9 +52,12 @@ var ChartHelper = {
                     enabled: true,
                     formatter: axis_format,
                 },
+                tickInterval: 0,
+                endOnTick: true,
                 title: {
                     text: 'Salary range',
                 },
+                allowDecimals: false
             },
             yAxis: {
                 title: {
