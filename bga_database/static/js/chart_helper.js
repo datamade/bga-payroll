@@ -59,7 +59,7 @@ var ChartHelper = {
                 id: 'salaries',
                 tooltip: {
                   headerFormat: '', // Remove header
--                 pointFormatter: tooltip_format,
+-                 pointFormatter: tooltip_format
                 },
                 color: '#6c757c',
             }],
@@ -67,5 +67,5 @@ var ChartHelper = {
                 enabled: false,
             }
         });
-    },
+    }
 };

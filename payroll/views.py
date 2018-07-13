@@ -193,7 +193,7 @@ class EmployerView(DetailView):
 
         # This is to make the appropriate number of bins
         max_value = np.amax(float_data)
-        bin_num = math.ceil(max_value / multiplier)  # rounding up to capture max value
+        bin_num = int(math.ceil(max_value / multiplier))  # rounding up to capture max value
         bin_edges = np.array([], dtype='float')
 
         for i in range(bin_num + 1):  # adding 1 to get appropriate number of bins
