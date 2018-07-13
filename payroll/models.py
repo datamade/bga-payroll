@@ -56,6 +56,11 @@ class Employer(SluggedModel, VintagedModel):
         return bool(self.parent)
 
     @property
+    def is_unclassified(self):
+        return (self.is_department and not self.universe) \
+            or (not self.is_department and not self.taxonomy)
+
+    @property
     def endpoint(self):
         if self.is_department:
             return 'department'
