@@ -11,12 +11,15 @@
 
 <div class="col-md-12">
   <h2 class="mb-3"><i class="far fa-building"></i> {{ entity }}</h2>
-  <div class="badge badge-primary">
-    {{ entity.parent.taxonomy }}
 
+  {% if entity.universe %}
+  <div class="badge badge-primary">
+    {{ entity.universe }}
   </div>
+  {% endif %}
+
   <div class="badge badge-secondary">
-    {{ entity.parent.size_class }}
+    {{ entity.parent.taxonomy }}
   </div>
 
   <div class="row mb-4">
@@ -29,6 +32,10 @@
     <div id="intro-text" class="col-lg-6">
       <p>This department makes up <strong>{{ percent_of_total_expenditure|format_percentile }}</strong> of the total payroll expenditure of <strong>{{ entity.parent }}</strong>.</p>
 
+      <p>This department's total expenditure is higher than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other <strong>{{ entity.parent.taxonomy }} {{ entity.universe }}s</strong>.</p>
+
+      <p>This department's median salary is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of other <strong>{{ entity.parent.taxonomy }} {{ entity.universe }}s</strong>.</p>
+    </div>
     <div id="department-expenditure-chart" class="col-lg-6">strip plot of salaries in department</div>
   </div>
 
