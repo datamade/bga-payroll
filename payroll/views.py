@@ -1,5 +1,6 @@
 from itertools import chain
 import json
+import math
 
 from django.contrib.postgres.search import SearchVector
 from django.db import connection
@@ -10,6 +11,7 @@ from django.urls import reverse
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
+
 
 import numpy as np
 
@@ -191,10 +193,10 @@ class EmployerView(DetailView):
 
         # This is to make the appropriate number of bins
         max_value = np.amax(float_data)
-        bin_num = int(max_value / multiplier) + 1
+        bin_num = math.ceil(max_value / multiplier)  # rounding up to capture max value
         bin_edges = np.array([], dtype='float')
 
-        for i in range(bin_num):
+        for i in range(bin_num + 1):  # adding 1 to get appropriate number of bins
             bin_edges = np.append(bin_edges, i * multiplier)
 
         values, edges = np.histogram(float_data, bins=bin_edges)
