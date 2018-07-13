@@ -22,11 +22,11 @@ var ChartHelper = {
             var edges = data[this.value];
 
             if (this.value === data.length) {
-              edges = data[this.value - 1]
-              return '$' + edges.upper_edge
+              edges = data[this.value - 1];
+              return '$' + edges.upper_edge;
             }
 
-            return '$' + edges.lower_edge
+            return '$' + edges.lower_edge;
         };
 
         var element = entity_type + '-distribution-chart';
