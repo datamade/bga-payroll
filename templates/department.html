@@ -12,15 +12,15 @@
 <div class="col-md-12">
   <h2 class="mb-3"><i class="far fa-building"></i> {{ entity }}</h2>
 
-  {% if entity.universe %}
   <div class="badge badge-primary">
-    {{ entity.universe }}
+    {% if entity.universe %}{{ entity.universe }}{% else %}Department{% endif %}
   </div>
-  {% endif %}
 
+  {% if entity.parent.taxonomy %}
   <div class="badge badge-secondary">
     {{ entity.parent.taxonomy }}
   </div>
+  {% endif %}
 
   <div class="row mb-4">
     {% with context = aggregate_stats %}
