@@ -191,10 +191,8 @@ class UnitView(EmployerView):
 
     # Returns the data required to make the composition chart of top spending departments
     def composition_data(self):
-        total_expenditure = sum(self.employee_salaries())
         all_departments = self.aggregate_department_statistics()
         top_departments = all_departments[:5]
-        print(top_departments)
 
         composition_json = []
         percentage_tracker = 0
@@ -205,18 +203,16 @@ class UnitView(EmployerView):
                 'data': [value['percentage']],
                 'index': i
             })
-            percentage_tracker+=value['percentage']
-
+            percentage_tracker += value['percentage']
 
         composition_json.append({
             'name': 'All else',
-            'data': [100-percentage_tracker],
+            'data': [100 - percentage_tracker],
             'index': 5
 
         })
 
         return composition_json
-
 
     def population_percentile(self):
         if (self.object.get_population() is None):

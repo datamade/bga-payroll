@@ -81,9 +81,6 @@ var ChartHelper = {
         });
     },
     make_composition_chart: function(data) {
-
-      console.log(data)
-
       element = 'department-composition-chart'
 
       var chart = Highcharts.chart(element, {
