@@ -48,6 +48,7 @@
 
   <div class="card mb-4">
     {% include 'partials/department_card.html' %}
+    <div id="department-composition-chart"></div>
   </div>
 
 </div>
@@ -58,7 +59,6 @@
 
 <script type="text/javascript">
   ChartHelper.make_salary_chart({{ employee_salary_json|safe }}, 'employee');
-
-  ChartHelper.make_salary_chart({{ department_salary_json|safe }}, 'department');
+  ChartHelper.make_composition_chart({{ composition_json|safe }});
 </script>
 {% endblock %}

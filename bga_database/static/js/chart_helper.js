@@ -79,5 +79,34 @@ var ChartHelper = {
                 enabled: false,
             }
         });
+    },
+    make_composition_chart: function(data) {
+
+      console.log(data)
+
+      element = 'department-composition-chart'
+
+      var chart = Highcharts.chart(element, {
+        title: '',
+        chart: {
+          type: 'bar'
+        },
+        plotOptions: {
+          series: {
+            stacking: 'normal'
+          }
+        },
+        xAxis: {
+          title: {
+            text: ''
+          }
+        },
+        yAxis: {
+          title: {
+            text: 'Percent of total unit payroll expenditure'
+          }
+        },
+        series: data
+      });
     }
 };
