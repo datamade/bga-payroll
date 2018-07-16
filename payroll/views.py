@@ -2,6 +2,7 @@ from itertools import chain
 import json
 import math
 
+from django.conf import settings
 from django.contrib.postgres.search import SearchVector
 from django.db import connection
 from django.db.models import Q, Sum, FloatField
@@ -10,10 +11,9 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from postgres_stats.aggregates import Percentile
-
-
 import numpy as np
+from postgres_stats.aggregates import Percentile
+import pysolr
 
 from payroll.models import Employer, Job, Person, Salary
 from payroll.utils import format_ballpark_number
@@ -473,6 +473,8 @@ class SearchView(ListView):
     context_object_name = 'results'
     paginate_by = 25
 
+    searcher = pysolr.Solr(settings.SOLR_URL)
+
     def get_queryset(self, **kwargs):
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
@@ -481,13 +483,45 @@ class SearchView(ListView):
                 return self._get_person_queryset(params)
 
             elif params.get('entity_type') == 'employer':
-                return self._get_employer_queryset(params)
+                return self.search(params)
 
         else:
-            matching_employers = self._get_employer_queryset(params)
+            matching_employers = self.search(params)
             matching_people = self._get_person_queryset(params)
 
             return list(matching_employers) + list(matching_people)
+
+    def search(self, params):
+        search_kwargs = {
+            'facet': 'true',
+            'facet.pivot': 'taxonomy_s_fct,size_class_s_fct',
+            'facet.interval': ['expenditure_d', 'headcount_i'],
+            'f.expenditure_d.facet.interval.set': ['[0,500000)', '[500000,1500000)', '[1500000,5000000)', '[5000000,*)'],
+            'f.headcount_i.facet.interval.set': ['[0,25)', '[25,100)', '[100,500)', '[500,*)'],
+            'sort': 'expenditure_d desc',
+        }
+
+        query_string = self._make_querystring(params)
+
+        results = self.searcher.search(query_string, **search_kwargs)
+
+        import pprint
+        pprint.pprint(results.facets)
+
+        employers = []
+
+        for result in results:
+            unit_id = result['id'].split('.')[1]
+            employers.append(Employer.objects.get(id=unit_id))
+
+        return employers
+
+    def _make_querystring(self, params):
+        query_parts = ['{0}:{1}'.format(field, params[field])
+                       for field in ('name', 'employer')
+                       if params.get(field)]
+
+        return '&'.join(query_parts)
 
     def _get_person_queryset(self, params):
         condition = Q()
@@ -504,30 +538,6 @@ class SearchView(ListView):
 
         return Person.objects.filter(condition)\
                              .order_by('-jobs__salaries__amount')
-
-    def _get_employer_queryset(self, params):
-        condition = Q()
-
-        employers = Employer.objects.all()
-
-        if params:
-            if params.get('name'):
-                employers = employers.annotate(search_vector=SearchVector('name'))
-                name = Q(search_vector=params.get('name'))
-                condition &= name
-
-            if params.get('employer'):
-                name = Q(slug=params.get('employer'))
-                condition &= name
-
-            if params.get('parent'):
-                parent = Q(parent__slug=params.get('parent'))
-                condition &= parent
-
-        return employers.filter(condition)\
-                        .select_related('parent')\
-                        .annotate(budget=Sum('positions__jobs__salaries__amount'))\
-                        .order_by('-budget')
 
 
 def entity_lookup(request):
