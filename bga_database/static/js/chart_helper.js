@@ -93,17 +93,28 @@ var ChartHelper = {
         },
         plotOptions: {
           series: {
-            stacking: 'normal'
+            stacking: 'percent',
+            dataLabels: {
+              align: 'right',
+              enabled: true,
+              format: '{percentage:.1f}%'
+            }
           }
         },
         xAxis: {
           title: {
             text: ''
+          },
+          labels: {
+            enabled: false
           }
         },
         yAxis: {
           title: {
-            text: 'Percent of total unit payroll expenditure'
+            text: 'Percent of total unit payroll expenditure',
+            labels: {
+              enabled: false
+            }
           }
         },
         series: data
