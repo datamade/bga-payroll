@@ -1,6 +1,7 @@
 from itertools import chain
 import json
 import math
+import re
 
 from django.conf import settings
 from django.contrib.postgres.search import SearchVector
@@ -482,7 +483,7 @@ class SearchView(ListView):
             if params.get('entity_type') == 'person':
                 return self._get_person_queryset(params)
 
-            elif params.get('entity_type') == 'employer':
+            elif params.get('entity_type') in ('unit', 'department'):
                 return self.search(params)
 
         else:
@@ -498,6 +499,7 @@ class SearchView(ListView):
             'facet.interval': ['expenditure_d', 'headcount_i'],
             'f.expenditure_d.facet.interval.set': ['[0,500000)', '[500000,1500000)', '[1500000,5000000)', '[5000000,*)'],
             'f.headcount_i.facet.interval.set': ['[0,25)', '[25,100)', '[100,500)', '[500,*)'],
+            'rows': '99999999',
             'sort': 'expenditure_d desc',
         }
 
@@ -505,23 +507,36 @@ class SearchView(ListView):
 
         results = self.searcher.search(query_string, **search_kwargs)
 
-        import pprint
-        pprint.pprint(results.facets)
+        # Retain ordering from Solr results when filtering the model objects.
+        sort_order = [self._id_from_result(result) for result in results]
 
-        employers = []
+        return sorted(Employer.objects.filter(id__in=sort_order),
+                      key=lambda x: sort_order.index(str(x.id)))
 
-        for result in results:
-            unit_id = result['id'].split('.')[1]
-            employers.append(Employer.objects.get(id=unit_id))
-
-        return employers
+    def _id_from_result(self, result):
+        '''
+        Return model object ID from result id like "unit.<ID>.<REPORTING YEAR>"
+        '''
+        return result['id'].split('.')[1]
 
     def _make_querystring(self, params):
-        query_parts = ['{0}:{1}'.format(field, params[field])
-                       for field in ('name', 'employer')
-                       if params.get(field)]
+        query_parts = []
 
-        return '&'.join(query_parts)
+        for field in ('name', 'employer'):
+            if params.get(field):
+                query_parts.append('{0}:{1}'.format(field, params[field]))
+
+        if params.get('entity_type'):
+            query_parts.append('id:{}*'.format(params['entity_type']))
+
+        if params.get('expenditure'):
+            match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>\d+)\)', params['expenditure'])
+
+            interval = 'expenditure_d:[{0} TO {1}]'.format(match.group('lower_bound'),
+                                                           match.group('upper_bound'))
+            query_parts.append(interval)
+
+        return ' AND '.join(query_parts)
 
     def _get_person_queryset(self, params):
         condition = Q()
