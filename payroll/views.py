@@ -1,4 +1,5 @@
 from itertools import chain
+from functools import partialmethod
 import json
 import math
 import re
@@ -476,42 +477,78 @@ class SearchView(ListView):
 
     searcher = pysolr.Solr(settings.SOLR_URL)
 
+    unit_model = Employer
+    department_model = Employer
+    person_model = Person
+
+    def __init__(self, *args, **kwargs):
+        base_search_kwargs = {'rows': '99999999'}
+
+        employer_search_kwargs = dict(base_search_kwargs, **{
+            'facet': 'true',
+            'facet.interval': ['expenditure_d', 'headcount_i'],
+            'f.expenditure_d.facet.interval.set': ['[0,500000)', '[500000,1500000)', '[1500000,5000000)', '[5000000,*)'],
+            'f.headcount_i.facet.interval.set': ['[0,25)', '[25,100)', '[100,500)', '[500,*)'],
+            'sort': 'expenditure_d desc',
+        })
+
+        self.unit_search_kwargs = dict(employer_search_kwargs, **{
+            'facet.pivot': 'taxonomy_s_fct,size_class_s_fct',
+        })
+
+        self.department_search_kwargs = dict(employer_search_kwargs, **{
+            'facet.field': 'parent_id_i',
+        })
+
+        super().__init__(*args, **kwargs)
+
     def get_queryset(self, **kwargs):
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
         if params.get('entity_type'):
-            if params.get('entity_type') == 'person':
-                return self._get_person_queryset(params)
-
-            elif params.get('entity_type') in ('unit', 'department'):
-                return self.search(params)
-
+            entity_types = params.pop('entity_type').split(',')
         else:
-            matching_employers = self.search(params)
-            matching_people = self._get_person_queryset(params)
-
-            return list(matching_employers) + list(matching_people)
-
-    def search(self, params):
-        search_kwargs = {
-            'facet': 'true',
-            'facet.pivot': 'taxonomy_s_fct,size_class_s_fct',
-            'facet.interval': ['expenditure_d', 'headcount_i'],
-            'f.expenditure_d.facet.interval.set': ['[0,500000)', '[500000,1500000)', '[1500000,5000000)', '[5000000,*)'],
-            'f.headcount_i.facet.interval.set': ['[0,25)', '[25,100)', '[100,500)', '[500,*)'],
-            'rows': '99999999',
-            'sort': 'expenditure_d desc',
-        }
+            entity_types = ['unit', 'department', 'person']
 
         query_string = self._make_querystring(params)
 
+        return list(self.search(entity_types, query_string))
+
+    def search(self, entity_types, query_string):
+        for entity_type in entity_types:
+            yield from getattr(self, '_search_{}'.format(entity_type))(query_string)
+
+    def _search(self, entity_type, *args):
+        search_kwargs = getattr(self, '{}_search_kwargs'.format(entity_type))
+
+        query_string, = args
+
+        entity_filter = 'id:{}*'.format(entity_type)
+
+        if query_string:
+            query_string += ' AND {}'.format(entity_filter)
+        else:
+            query_string = entity_filter
+
         results = self.searcher.search(query_string, **search_kwargs)
+
+        import pprint
+        pprint.pprint(results.facets)
+
+        '''
+        TO-DO: Add facets to template context.
+        '''
 
         # Retain ordering from Solr results when filtering the model objects.
         sort_order = [self._id_from_result(result) for result in results]
 
-        return sorted(Employer.objects.filter(id__in=sort_order),
+        model = getattr(self, '{}_model'.format(entity_type))
+
+        return sorted(model.objects.filter(id__in=sort_order),
                       key=lambda x: sort_order.index(str(x.id)))
+
+    _search_unit = partialmethod(_search, 'unit')
+    _search_department = partialmethod(_search, 'department')
 
     def _id_from_result(self, result):
         '''
@@ -522,23 +559,25 @@ class SearchView(ListView):
     def _make_querystring(self, params):
         query_parts = []
 
-        for field in ('name', 'employer'):
-            if params.get(field):
-                query_parts.append('{0}:{1}'.format(field, params[field]))
+        param_index_map = {
+            'parent': 'parent_s_fct',
+        }
 
-        if params.get('entity_type'):
-            query_parts.append('id:{}*'.format(params['entity_type']))
+        for param, value in params.items():
+            if param == 'expenditure':
+                match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>\d+)\)', params['expenditure'])
 
-        if params.get('expenditure'):
-            match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>\d+)\)', params['expenditure'])
-
-            interval = 'expenditure_d:[{0} TO {1}]'.format(match.group('lower_bound'),
+                interval = 'expenditure_d:[{0} TO {1}]'.format(match.group('lower_bound'),
                                                            match.group('upper_bound'))
-            query_parts.append(interval)
+                query_parts.append(interval)
+
+            else:
+                index_field = param_index_map.get(param, param)
+                query_parts.append('{0}:{1}'.format(index_field, value))
 
         return ' AND '.join(query_parts)
 
-    def _get_person_queryset(self, params):
+    def _search_person(self, params):
         condition = Q()
 
         if params:

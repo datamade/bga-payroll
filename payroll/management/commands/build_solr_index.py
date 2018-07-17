@@ -21,17 +21,17 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--update',
-            action='store_true',
-            dest='update',
-            default=False,
-            help='Add new items to an existing search index'
-        )
-        parser.add_argument(
             '--entity-types',
             dest='entity_types',
             help='Comma separated list of entity types to index',
             default='units,departments,positions,people'
+        )
+        parser.add_argument(
+            '--recreate',
+            action='store_true',
+            dest='recreate',
+            default=False,
+            help='Delete all existing documents before creating the search index.'
         )
         parser.add_argument(
             '--s_file',
@@ -44,13 +44,6 @@ class Command(BaseCommand):
             dest='reporting_year',
             default=None,
             help='Specify a specific reporting year to index'
-        )
-        parser.add_argument(
-            '--recreate',
-            action='store_true',
-            dest='recreate',
-            default=False,
-            help='Delete all existing documents before creating the search index.'
         )
 
 
@@ -103,9 +96,44 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(success_message))
 
-    '''
-    to-do:
-    - figure out faceting on numeric ranges
-    - figure out unclosed socket
-    - figure out numeric values not in scientific notation
-    '''
+    def index_departments(self):
+        self.stdout.write(self.style.SUCCESS('Indexing departments'))
+
+        documents = []
+
+        departments = Employer.objects.filter(parent_id__isnull=False)
+
+        for department in departments:
+            name = department.name
+
+            of_department = Q(job__position__employer=department)
+
+            for year in self.reporting_years:
+                in_year = Q(vintage__standardized_file__reporting_year=year)
+
+                salaries = Salary.objects.filter(of_department & in_year)
+                expenditure = salaries.aggregate(expenditure=Sum('amount'))['expenditure']
+                headcount = salaries.count()
+
+                document = {
+                    'id': 'department.{0}.{1}'.format(department.id, year),
+                    'name': name,
+                    'entity_type': 'Employer',
+                    'year': year,
+                    'expenditure_d': expenditure,
+                    'headcount_i': headcount,
+                    'parent_s': department.parent.slug,
+                    'text': name,
+                }
+
+                if department.universe:
+                    document['universe_s'] = str(department.universe)
+
+                documents.append(document)
+
+        self.searcher.add(documents)
+
+        success_message = 'Added {0} documents for {1} departments to the index'.format(len(documents),
+                                                                                        departments.count())
+
+        self.stdout.write(self.style.SUCCESS(success_message))
