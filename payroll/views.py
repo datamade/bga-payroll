@@ -476,6 +476,7 @@ class SearchView(ListView):
     paginate_by = 25
 
     searcher = pysolr.Solr(settings.SOLR_URL)
+    facets = {}
 
     unit_model = Employer
     department_model = Employer
@@ -514,6 +515,13 @@ class SearchView(ListView):
 
         return list(self.search(entity_types, query_string))
 
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        context['facets'] = self.facets
+
+        return context
+
     def search(self, entity_types, query_string):
         for entity_type in entity_types:
             yield from getattr(self, '_search_{}'.format(entity_type))(query_string)
@@ -530,14 +538,7 @@ class SearchView(ListView):
         else:
             query_string = entity_filter
 
-        results = self.searcher.search(query_string, **search_kwargs)
-
-        import pprint
-        pprint.pprint(results.facets)
-
-        '''
-        TO-DO: Add facets to template context.
-        '''
+        self.facets.update({entity_type: results.facets})
 
         # Retain ordering from Solr results when filtering the model objects.
         sort_order = [self._id_from_result(result) for result in results]
