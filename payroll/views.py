@@ -5,7 +5,6 @@ import math
 import re
 
 from django.conf import settings
-from django.contrib.postgres.search import SearchVector
 from django.db import connection
 from django.db.models import Q, Sum, FloatField
 from django.http import JsonResponse
@@ -538,6 +537,8 @@ class SearchView(ListView):
         else:
             query_string = entity_filter
 
+        results = self.searcher.search(query_string, **search_kwargs)
+
         self.facets.update({entity_type: results.facets})
 
         # Retain ordering from Solr results when filtering the model objects.
@@ -569,7 +570,7 @@ class SearchView(ListView):
                 match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>\d+)\)', params['expenditure'])
 
                 interval = 'expenditure_d:[{0} TO {1}]'.format(match.group('lower_bound'),
-                                                           match.group('upper_bound'))
+                                                               match.group('upper_bound'))
                 query_parts.append(interval)
 
             else:

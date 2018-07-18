@@ -5,11 +5,11 @@ import pysolr
 from django.conf import settings
 
 from data_import.models import StandardizedFile
-from payroll.models import Employer, Person, Salary
+from payroll.models import Employer, Person, Salary, Job
 
 
 class Command(BaseCommand):
-    help = 'build a solr index'
+    help = 'Populate the Solr index'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -18,20 +18,19 @@ class Command(BaseCommand):
         self.reporting_years = [x.reporting_year for x
                                 in StandardizedFile.objects.distinct('reporting_year')]
 
-
     def add_arguments(self, parser):
         parser.add_argument(
             '--entity-types',
             dest='entity_types',
             help='Comma separated list of entity types to index',
-            default='units,departments,positions,people'
+            default='units,departments,people'
         )
         parser.add_argument(
             '--recreate',
             action='store_true',
             dest='recreate',
             default=False,
-            help='Delete all existing documents before creating the search index.'
+            help='Delete all existing documents before creating the search index'
         )
         parser.add_argument(
             '--s_file',
@@ -46,11 +45,8 @@ class Command(BaseCommand):
             help='Specify a specific reporting year to index'
         )
 
-
     def handle(self, *args, **options):
-        if options['recreate']:
-            self.stdout.write(self.style.SUCCESS('Dropping existing index'))
-            self.searcher.delete(q='*:*')
+        self.recreate = options['recreate']
 
         entities = options['entity_types'].split(',')
 
@@ -58,7 +54,12 @@ class Command(BaseCommand):
             getattr(self, 'index_{}'.format(entity))()
 
     def index_units(self):
-        self.stdout.write(self.style.SUCCESS('Indexing units'))
+        if self.recreate:
+            self.stdout.write('Dropping units from index')
+            self.searcher.delete(q='id:unit*')
+            self.stdout.write(self.style.SUCCESS('Units dropped from index'))
+
+        self.stdout.write('Indexing units')
 
         documents = []
 
@@ -97,7 +98,12 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(success_message))
 
     def index_departments(self):
-        self.stdout.write(self.style.SUCCESS('Indexing departments'))
+        if self.recreate:
+            self.stdout.write('Dropping departments from index')
+            self.searcher.delete(q='id:department*')
+            self.stdout.write(self.style.SUCCESS('Departments dropped from index'))
+
+        self.stdout.write('Indexing departments')
 
         documents = []
 
@@ -135,5 +141,79 @@ class Command(BaseCommand):
 
         success_message = 'Added {0} documents for {1} departments to the index'.format(len(documents),
                                                                                         departments.count())
+
+        self.stdout.write(self.style.SUCCESS(success_message))
+
+    def index_people(self):
+        if self.recreate:
+            self.stdout.write('Dropping people from index')
+            self.searcher.delete(q='id:person*')
+            self.stdout.write(self.style.SUCCESS('People dropped from index'))
+
+        self.stdout.write('Indexing people')
+
+        documents = []
+
+        people = Person.objects.prefetch_related('jobs').all()[:25000]
+
+        for person in people:
+            name = str(person)
+
+            for year in self.reporting_years:
+                try:
+                    job = person.jobs.select_related('position', 'position__employer')\
+                                     .prefetch_related('salaries')\
+                                     .get(vintage__standardized_file__reporting_year=year)
+
+                except Job.DoesNotExist:
+                    # It's reasonable to expect every person won't appear in
+                    # every year of data.
+                    continue
+
+                except Job.MultipleObjectsReturned:
+                    # A very, very small minority of people (less than 20) in
+                    # the full 2017 data I'm using for testing were imported
+                    # such that they have more than one job. I'm not totally
+                    # certain why, but I suspect edge cases, e.g., Governors
+                    # State University reported payroll itself, and was also
+                    # reported by the state board of higher education.
+                    #
+                    # I've opened an issue to investigate these edge cases. In
+                    # the meantime, I'm just going to log these inconsistencies
+                    # (there's no guarantee they'll recur in the new data any-
+                    # way) and add only one of the jobs to the index.
+                    job_str = ', '.join('{0} for {1}'.format(
+                        j.position.title, j.position.employer) for j in person.jobs.all()
+                    )
+
+                    info = '{0} (#{1}) has more than one job in {2}: {3}'.format(name,
+                                                                                 person.id,
+                                                                                 year,
+                                                                                 job_str)
+                    self.stdout.write(self.style.NOTICE(info))
+
+                    job = person.jobs.select_related('position', 'position__employer')\
+                                     .prefetch_related('salaries')\
+                                     .first()
+
+                else:
+                    text = '{0} {1} {2}'.format(name, job.position.employer, job.position)
+
+                    document = {
+                        'id': 'person.{0}.{1}'.format(person.id, year),
+                        'name': name,
+                        'entity_type': 'Person',
+                        'year': year,
+                        'employer_s': job.position.employer.slug,
+                        'salary_d': job.salaries.get().amount,
+                        'text': text,
+                    }
+
+                    documents.append(document)
+
+        self.searcher.add(documents)
+
+        success_message = 'Added {0} documents for {1} people to the index'.format(len(documents),
+                                                                                   people.count())
 
         self.stdout.write(self.style.SUCCESS(success_message))
