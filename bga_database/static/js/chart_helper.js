@@ -83,10 +83,14 @@ var ChartHelper = {
     make_composition_chart: function(data) {
       element = 'department-composition-chart';
 
-      var chart = Highcharts.chart(element, {
+      Highcharts.chart(element, {
         title: '',
         chart: {
           type: 'bar'
+        },
+        colors: ['#343a40', '#6c757c', '#007aff', '#ffc107', '#f8f9fa', '#28a845'],
+        legend: {
+          verticalAlign: 'top'
         },
         plotOptions: {
           series: {
@@ -111,8 +115,9 @@ var ChartHelper = {
             text: 'Percent of total unit payroll expenditure',
             labels: {
               enabled: false
-            }
-          }
+            },
+          },
+          reversedStacks: false
         },
         series: data
       });

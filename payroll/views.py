@@ -172,8 +172,10 @@ class UnitView(EmployerView):
 
         return department_salaries
 
-    # Returns the data required to make the composition chart of top spending departments
     def composition_data(self):
+        '''
+        Returns the data required to make the composition chart of top spending departments
+        '''
         all_departments = self.aggregate_department_statistics()
         top_departments = all_departments[:5]
 
