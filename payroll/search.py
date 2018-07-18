@@ -1,5 +1,4 @@
 from functools import partialmethod
-import re
 import sys
 
 from django.conf import settings
@@ -19,20 +18,17 @@ class EmployerSearch(object):
         'sort': 'expenditure_d desc',
     }
 
-
 class UnitSearch(EmployerSearch):
     model = Employer
     search_kwargs = dict(EmployerSearch.search_kwargs, **{
         'facet.pivot': 'taxonomy_s_fct,size_class_s_fct',
     })
 
-
 class DepartmentSearch(EmployerSearch):
     model = Employer
     search_kwargs = dict(EmployerSearch.search_kwargs, **{
         'facet.field': 'parent_s',
     })
-
 
 class PersonSearch(object):
     model = Person
@@ -44,12 +40,18 @@ class PersonSearch(object):
         'f.salary_d.facet.interval.set': ['[0,25000)', '[25000,75000)', '[75000,150000)', '[150000,*)'],
     }
 
-
 class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
     facets = {}
 
-    def search(self, entity_types, query_string):
+    def search(self, params):
+        if params.get('entity_type'):
+            entity_types = params.pop('entity_type').split(',')
+        else:
+            entity_types = ['unit', 'department', 'person']
+
+        query_string = self._make_querystring(params)
+
         for entity_type in entity_types:
             yield from getattr(self, '_search_{}'.format(entity_type))(query_string)
 

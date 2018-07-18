@@ -474,14 +474,7 @@ class SearchView(ListView, PayrollSearchMixin):
     def get_queryset(self, **kwargs):
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
-        if params.get('entity_type'):
-            entity_types = params.pop('entity_type').split(',')
-        else:
-            entity_types = ['unit', 'department', 'person']
-
-        query_string = self._make_querystring(params)
-
-        return list(self.search(entity_types, query_string))
+        return list(self.search(params))
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
