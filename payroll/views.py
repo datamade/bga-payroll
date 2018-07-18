@@ -482,10 +482,12 @@ class SearchView(ListView):
     person_model = Person
 
     def __init__(self, *args, **kwargs):
-        base_search_kwargs = {'rows': '99999999'}
+        base_search_kwargs = {
+            'rows': '99999999',
+            'facet': 'true',
+        }
 
         employer_search_kwargs = dict(base_search_kwargs, **{
-            'facet': 'true',
             'facet.interval': ['expenditure_d', 'headcount_i'],
             'f.expenditure_d.facet.interval.set': ['[0,500000)', '[500000,1500000)', '[1500000,5000000)', '[5000000,*)'],
             'f.headcount_i.facet.interval.set': ['[0,25)', '[25,100)', '[100,500)', '[500,*)'],
@@ -497,7 +499,13 @@ class SearchView(ListView):
         })
 
         self.department_search_kwargs = dict(employer_search_kwargs, **{
-            'facet.field': 'parent_id_i',
+            'facet.field': 'parent_s',
+        })
+
+        self.person_search_kwargs = dict(base_search_kwargs, **{
+            'facet.field': 'employer_ss',  # TO-DO: Is this the right way to facet multi-valued fields?
+            'facet.interval': ['salary_d'],
+            'f.salary_d.facet.interval.set': ['[0,25000)', '[25000,75000)', '[75000,150000)', '[150000,*)'],
         })
 
         super().__init__(*args, **kwargs)
@@ -551,6 +559,7 @@ class SearchView(ListView):
 
     _search_unit = partialmethod(_search, 'unit')
     _search_department = partialmethod(_search, 'department')
+    _search_person = partialmethod(_search, 'person')
 
     def _id_from_result(self, result):
         '''
@@ -563,6 +572,7 @@ class SearchView(ListView):
 
         param_index_map = {
             'parent': 'parent_s_fct',
+            'employer': 'employer_ss_fct',
         }
 
         for param, value in params.items():
@@ -578,22 +588,6 @@ class SearchView(ListView):
                 query_parts.append('{0}:{1}'.format(index_field, value))
 
         return ' AND '.join(query_parts)
-
-    def _search_person(self, params):
-        condition = Q()
-
-        if params:
-            if params.get('name'):
-                name = Q(search_vector=params.get('name'))
-                condition &= name
-
-            if params.get('employer'):
-                child_employer = Q(jobs__position__employer__slug=params.get('employer'))
-                parent_employer = Q(jobs__position__employer__parent__slug=params.get('employer'))
-                condition &= child_employer | parent_employer
-
-        return Person.objects.filter(condition)\
-                             .order_by('-jobs__salaries__amount')
 
 
 def entity_lookup(request):

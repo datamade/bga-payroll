@@ -154,7 +154,7 @@ class Command(BaseCommand):
 
         documents = []
 
-        people = Person.objects.prefetch_related('jobs').all()[:25000]
+        people = Person.objects.prefetch_related('jobs').all()[:1000]
 
         for person in people:
             name = str(person)
@@ -197,15 +197,23 @@ class Command(BaseCommand):
                                      .first()
 
                 else:
-                    text = '{0} {1} {2}'.format(name, job.position.employer, job.position)
+                    position = job.position
+                    employer = position.employer
+
+                    text = '{0} {1} {2}'.format(name, employer, position)
+
+                    if employer.is_department:
+                        employer_slug = [employer.parent.slug, employer.slug]
+                    else:
+                        employer_slug = [employer.slug]
 
                     document = {
                         'id': 'person.{0}.{1}'.format(person.id, year),
                         'name': name,
                         'entity_type': 'Person',
                         'year': year,
-                        'employer_s': job.position.employer.slug,
                         'salary_d': job.salaries.get().amount,
+                        'employer_ss': employer_slug,
                         'text': text,
                     }
 
