@@ -1,10 +1,7 @@
 from itertools import chain
-from functools import partialmethod
 import json
 import math
-import re
 
-from django.conf import settings
 from django.db import connection
 from django.db.models import Q, Sum, FloatField
 from django.http import JsonResponse
@@ -14,9 +11,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 import numpy as np
 from postgres_stats.aggregates import Percentile
-import pysolr
 
 from payroll.models import Employer, Job, Person, Salary
+from payroll.search import PayrollSearchMixin
 from payroll.utils import format_ballpark_number
 
 
@@ -468,47 +465,11 @@ class DepartmentView(EmployerView):
         return result[0] * 100
 
 
-class SearchView(ListView):
+class SearchView(ListView, PayrollSearchMixin):
     queryset = []
     template_name = 'search_results.html'
     context_object_name = 'results'
     paginate_by = 25
-
-    searcher = pysolr.Solr(settings.SOLR_URL)
-    facets = {}
-
-    unit_model = Employer
-    department_model = Employer
-    person_model = Person
-
-    def __init__(self, *args, **kwargs):
-        base_search_kwargs = {
-            'rows': '99999999',
-            'facet': 'true',
-        }
-
-        employer_search_kwargs = dict(base_search_kwargs, **{
-            'facet.interval': ['expenditure_d', 'headcount_i'],
-            'f.expenditure_d.facet.interval.set': ['[0,500000)', '[500000,1500000)', '[1500000,5000000)', '[5000000,*)'],
-            'f.headcount_i.facet.interval.set': ['[0,25)', '[25,100)', '[100,500)', '[500,*)'],
-            'sort': 'expenditure_d desc',
-        })
-
-        self.unit_search_kwargs = dict(employer_search_kwargs, **{
-            'facet.pivot': 'taxonomy_s_fct,size_class_s_fct',
-        })
-
-        self.department_search_kwargs = dict(employer_search_kwargs, **{
-            'facet.field': 'parent_s',
-        })
-
-        self.person_search_kwargs = dict(base_search_kwargs, **{
-            'facet.field': 'employer_ss',  # TO-DO: Is this the right way to facet multi-valued fields?
-            'facet.interval': ['salary_d'],
-            'f.salary_d.facet.interval.set': ['[0,25000)', '[25000,75000)', '[75000,150000)', '[150000,*)'],
-        })
-
-        super().__init__(*args, **kwargs)
 
     def get_queryset(self, **kwargs):
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
@@ -528,66 +489,6 @@ class SearchView(ListView):
         context['facets'] = self.facets
 
         return context
-
-    def search(self, entity_types, query_string):
-        for entity_type in entity_types:
-            yield from getattr(self, '_search_{}'.format(entity_type))(query_string)
-
-    def _search(self, entity_type, *args):
-        search_kwargs = getattr(self, '{}_search_kwargs'.format(entity_type))
-
-        query_string, = args
-
-        entity_filter = 'id:{}*'.format(entity_type)
-
-        if query_string:
-            query_string += ' AND {}'.format(entity_filter)
-        else:
-            query_string = entity_filter
-
-        results = self.searcher.search(query_string, **search_kwargs)
-
-        self.facets.update({entity_type: results.facets})
-
-        # Retain ordering from Solr results when filtering the model objects.
-        sort_order = [self._id_from_result(result) for result in results]
-
-        model = getattr(self, '{}_model'.format(entity_type))
-
-        return sorted(model.objects.filter(id__in=sort_order),
-                      key=lambda x: sort_order.index(str(x.id)))
-
-    _search_unit = partialmethod(_search, 'unit')
-    _search_department = partialmethod(_search, 'department')
-    _search_person = partialmethod(_search, 'person')
-
-    def _id_from_result(self, result):
-        '''
-        Return model object ID from result id like "unit.<ID>.<REPORTING YEAR>"
-        '''
-        return result['id'].split('.')[1]
-
-    def _make_querystring(self, params):
-        query_parts = []
-
-        param_index_map = {
-            'parent': 'parent_s_fct',
-            'employer': 'employer_ss_fct',
-        }
-
-        for param, value in params.items():
-            if param == 'expenditure':
-                match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>\d+)\)', params['expenditure'])
-
-                interval = 'expenditure_d:[{0} TO {1}]'.format(match.group('lower_bound'),
-                                                               match.group('upper_bound'))
-                query_parts.append(interval)
-
-            else:
-                index_field = param_index_map.get(param, param)
-                query_parts.append('{0}:{1}'.format(index_field, value))
-
-        return ' AND '.join(query_parts)
 
 
 def entity_lookup(request):
