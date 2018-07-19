@@ -491,9 +491,15 @@ class EntityLookup(ListView, PayrollSearchMixin):
             'name': self.request.GET['term'],
         }
 
+        extra_search_kwargs = {
+            'expenditure_d': '[1000000 TO *]',
+            'salary_d': '[100000 TO *]',
+            'rows': 10,
+        }
+
         entities = []
 
-        for result in self.search(params):
+        for result in self.search(params, extra_search_kwargs):
             data = {
                 'label': str(result),
                 'value': str(result),
@@ -520,9 +526,3 @@ class EntityLookup(ListView, PayrollSearchMixin):
         results = self.get_queryset(*args, **kwargs)
 
         return JsonResponse(results, safe=False)
-
-    def _search_unit(self, *args):
-        return super()._search_unit(*args)[:10]
-
-    def _search_person(self, *args):
-        return super()._search_person(*args)[:10]

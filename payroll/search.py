@@ -50,7 +50,7 @@ class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
     facets = {}
 
-    def search(self, params):
+    def search(self, params, *args):
         if params.get('entity_type'):
             entity_types = params.pop('entity_type').split(',')
         else:
@@ -59,12 +59,16 @@ class PayrollSearchMixin(object):
         query_string = self._make_querystring(params)
 
         for entity_type in entity_types:
-            yield from getattr(self, '_search_{}'.format(entity_type))(query_string)
+            yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
 
     def _search(self, entity_type, *args):
         search_kwargs = getattr(self._search_class(entity_type), 'search_kwargs')
 
-        query_string, = args
+        try:
+            query_string, = args
+        except ValueError:
+            query_string, extra_search_kwargs = args
+            search_kwargs.update(extra_search_kwargs)
 
         entity_filter = 'id:{}*'.format(entity_type)
 
