@@ -484,66 +484,45 @@ class SearchView(ListView, PayrollSearchMixin):
         return context
 
 
-
-class EntityAutocomplete(ListView, PayrollSearchMixin):
-    def get_queryset(self, **kwargs):
+class EntityLookup(ListView, PayrollSearchMixin):
+    def get_queryset(self, *args, **kwargs):
         params = {
             'entity_type': 'unit,person',
-            'name': request.GET['term'],
+            'name': self.request.GET['term'],
         }
 
-        return JsonResponse(list(self.search(params)), safe=False)
+        entities = []
+
+        for result in self.search(params):
+            data = {
+                'label': str(result),
+                'value': str(result),
+            }
+
+            if isinstance(result, Person):
+                url = '/person/{slug}'
+                category = 'Person'
+
+            else:
+                url = '/unit/{slug}'
+                category = 'Employer'
+
+            data.update({
+                'url': url.format(slug=result.slug),
+                'category': category,
+            })
+
+            entities.append(data)
+
+        return entities
+
+    def render_to_response(self, *args, **kwargs):
+        results = self.get_queryset(*args, **kwargs)
+
+        return JsonResponse(results, safe=False)
 
     def _search_unit(self, *args):
-        results = super()._search_unit(*args)
+        return super()._search_unit(*args)[:10]
 
-        for result in result:
-            if result['expenditure_d'] > 1000000:
-                yield result
-
-
-def entity_lookup(request):
-    q = request.GET['term']
-
-    top_level = Q(parent_id__isnull=True)
-    high_budget = Q(budget__gt=1000000)
-
-    employers = Employer.objects\
-                        .annotate(budget=Sum('position__job__salaries__amount'))\
-                        .filter(top_level | high_budget)
-
-    people = Person.objects.filter(jobs__salaries__amount__gt=100000)
-
-    if q:
-        employers = employers.filter(name__istartswith=q)[:10]
-
-        last_token = q.split(' ')[-1]
-
-        people = people.filter(
-            Q(search_vector=q) | Q(last_name__istartswith=last_token)
-        )[:10]
-
-    entities = []
-
-    for e in chain(employers, people):
-        data = {
-            'label': str(e),
-            'value': str(e),
-        }
-
-        if isinstance(e, Person):
-            url = '/person/{slug}'
-            category = 'Person'
-
-        else:
-            url = '/employer/{slug}'
-            category = 'Employer'
-
-        data.update({
-            'url': url.format(slug=e.slug),
-            'category': category,
-        })
-
-        entities.append(data)
-
-    return JsonResponse(entities, safe=False)
+    def _search_person(self, *args):
+        return super()._search_person(*args)[:10]

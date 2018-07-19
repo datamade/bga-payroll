@@ -118,6 +118,7 @@
          If you don't need it, consider removing it and the corresponding copyField directive.
     -->
     <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+    <field name="slug" type="string" indexed="false" stored="true" multiValued="false" />
     <field name="name" type="text_general" indexed="true" stored="true" required="true" multiValued="false" />
     <field name="entity_type" type="string" indexed="true" stored="true" required="true" multiValued="false" />
     <field name="year" type="int" indexed="true" stored="true" required="true" multiValued="false" />

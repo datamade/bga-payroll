@@ -80,6 +80,7 @@ class Command(BaseCommand):
 
                 documents.append({
                     'id': 'unit.{0}.{1}'.format(unit.id, year),
+                    'slug': unit.slug,
                     'name': name,
                     'entity_type': 'Employer',
                     'year': year,
@@ -123,6 +124,7 @@ class Command(BaseCommand):
 
                 document = {
                     'id': 'department.{0}.{1}'.format(department.id, year),
+                    'slug': department.slug,
                     'name': name,
                     'entity_type': 'Employer',
                     'year': year,
@@ -209,6 +211,7 @@ class Command(BaseCommand):
 
                     document = {
                         'id': 'person.{0}.{1}'.format(person.id, year),
+                        'slug': person.slug,
                         'name': name,
                         'entity_type': 'Person',
                         'year': year,
