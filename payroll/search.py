@@ -37,6 +37,7 @@ class DepartmentSearch(EmployerSearch):
 class PersonSearch(object):
     model = Person
     search_kwargs = {
+        'q.op': 'AND',
         'rows': '99999999',
         'facet': 'true',
         'facet.field': 'employer_ss',  # TO-DO: Is this the right way to facet multi-valued fields?

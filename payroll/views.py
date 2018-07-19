@@ -484,6 +484,24 @@ class SearchView(ListView, PayrollSearchMixin):
         return context
 
 
+
+class EntityAutocomplete(ListView, PayrollSearchMixin):
+    def get_queryset(self, **kwargs):
+        params = {
+            'entity_type': 'unit,person',
+            'name': request.GET['term'],
+        }
+
+        return JsonResponse(list(self.search(params)), safe=False)
+
+    def _search_unit(self, *args):
+        results = super()._search_unit(*args)
+
+        for result in result:
+            if result['expenditure_d'] > 1000000:
+                yield result
+
+
 def entity_lookup(request):
     q = request.GET['term']
 
