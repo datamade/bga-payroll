@@ -1,5 +1,5 @@
 from functools import partialmethod
-import re
+from itertools import chain
 import sys
 
 from django.conf import settings
@@ -94,6 +94,10 @@ class PayrollSearchMixin(object):
     _search_person = partialmethod(_search, 'person')
 
     def _search_class(self, entity_type):
+        '''
+        Get a handle on the appropriate *Search class from a string of the
+        class name.
+        '''
         cls = '{}Search'.format(entity_type.title())
         return getattr(sys.modules[__name__], cls)
 
@@ -111,16 +115,28 @@ class PayrollSearchMixin(object):
             'employer': 'employer_ss_fct',
         }
 
+        salary_kwargs = {k: v for k, v in params.items() if k.startswith('salary')}
+        expenditure_kwargs = {k: v for k, v in params.items() if k.startswith('expenditure')}
+
         for param, value in params.items():
-            if param == 'expenditure':
-                match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>\d+)\)', params['expenditure'])
-
-                interval = 'expenditure_d:[{0} TO {1}]'.format(match.group('lower_bound'),
-                                                               match.group('upper_bound'))
-                query_parts.append(interval)
-
-            else:
+            if param not in chain(salary_kwargs, expenditure_kwargs):
                 index_field = param_index_map.get(param, param)
                 query_parts.append('{0}:{1}'.format(index_field, value))
+
+        range_format = '{field}:[{lower} TO {upper}]'
+
+        salary_range = range_format.format(
+            field='salary_d',
+            lower=salary_kwargs.get('salary_above', '*'),
+            upper=salary_kwargs.get('salary_below', '*')
+        )
+
+        expenditure_range = range_format.format(
+            field='expenditure_d',
+            lower=expenditure_kwargs.get('expenditure_above', '*'),
+            upper=expenditure_kwargs.get('expenditure_below', '*')
+        )
+
+        query_parts += [salary_range, expenditure_range]
 
         return ' AND '.join(query_parts)

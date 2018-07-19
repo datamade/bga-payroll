@@ -1,9 +1,8 @@
-from itertools import chain
 import json
 import math
 
 from django.db import connection
-from django.db.models import Q, Sum, FloatField
+from django.db.models import Q, FloatField
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -494,7 +493,7 @@ class EntityLookup(ListView, PayrollSearchMixin):
         extra_search_kwargs = {
             'expenditure_d': '[1000000 TO *]',
             'salary_d': '[100000 TO *]',
-            'rows': 10,
+            'rows': '10',
         }
 
         entities = []
