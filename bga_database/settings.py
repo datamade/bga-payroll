@@ -115,6 +115,8 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "bga_database", "static"),
 )
 
+STATIC_ROOT = os.path.join(BASE_DIR, "bga_database", "static")
+
 # Remote storage options
 
 if not DEBUG:  # noqa
