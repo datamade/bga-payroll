@@ -167,7 +167,7 @@ class Command(BaseCommand):
 
         documents = []
 
-        people = Person.objects.prefetch_related('jobs').all()[:1000]
+        people = Person.objects.prefetch_related('jobs').all()
 
         for person in people:
             name = str(person)
