@@ -52,15 +52,15 @@ class PayrollSearchMixin(object):
 
     # Cross-walk of URL parameters to Solr index fields
     param_index_map = {
-            'expenditure': 'expenditure_d',
-            'headcount': 'headcount_i',
-            'taxonomy': 'taxonomy_s_fct',
-            'size': 'size_class_s_fct',
-            'parent': 'parent_s_fct',
-            'universe': 'universe_s_fct',
-            'employer': 'employer_ss_fct',
-            'salary': 'salary_d',
-        }
+        'expenditure': 'expenditure_d',
+        'headcount': 'headcount_i',
+        'taxonomy': 'taxonomy_s_fct',
+        'size': 'size_class_s_fct',
+        'parent': 'parent_s_fct',
+        'universe': 'universe_s_fct',
+        'employer': 'employer_ss_fct',
+        'salary': 'salary_d',
+    }
 
     # Fields to query as a numeric range
     range_fields = [
