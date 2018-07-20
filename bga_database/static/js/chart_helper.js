@@ -79,5 +79,44 @@ var ChartHelper = {
                 enabled: false,
             }
         });
+    },
+    make_composition_chart: function(data) {
+      element = 'department-composition-chart';
+
+      Highcharts.chart(element, {
+        title: '',
+        chart: {
+          type: 'bar'
+        },
+        colors: ['#343a40', '#6c757c', '#007aff', '#ffc107', '#f8f9fa', '#28a845'],
+        plotOptions: {
+          series: {
+            stacking: 'percent',
+            dataLabels: {
+              align: 'right',
+              enabled: true,
+              format: '{percentage:.1f}%'
+            }
+          }
+        },
+        xAxis: {
+          title: {
+            text: ''
+          },
+          labels: {
+            enabled: false
+          }
+        },
+        yAxis: {
+          title: {
+            text: 'Percent of total unit payroll expenditure',
+            labels: {
+              enabled: false
+            },
+          },
+          reversedStacks: false
+        },
+        series: data
+      });
     }
 };

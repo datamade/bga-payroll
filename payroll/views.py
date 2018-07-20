@@ -137,6 +137,7 @@ class UnitView(EmployerView):
             'department_salaries': department_statistics[:5],
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
+            'composition_json': self.composition_data(),
         })
         return context
 
@@ -166,9 +167,37 @@ class UnitView(EmployerView):
                     'total_budget': budget,
                     'headcount': headcount,
                     'slug': slug,
+                    'percentage': (float(budget / sum(self.employee_salaries())) * 100)  # Percentage of total expenditure
                 })
 
         return department_salaries
+
+    def composition_data(self):
+        '''
+        Returns the data required to make the composition chart of top spending departments
+        '''
+        all_departments = self.aggregate_department_statistics()
+        top_departments = all_departments[:5]
+
+        composition_json = []
+        percentage_tracker = 0
+
+        for i, value in enumerate(top_departments):
+            composition_json.append({
+                'name': value['department'],
+                'data': [value['percentage']],
+                'index': i
+            })
+            percentage_tracker += value['percentage']
+
+        composition_json.append({
+            'name': 'All else',
+            'data': [100 - percentage_tracker],
+            'index': 5
+
+        })
+
+        return composition_json
 
     def population_percentile(self):
         if (self.object.get_population() is None):
