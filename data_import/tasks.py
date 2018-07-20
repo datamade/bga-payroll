@@ -1,7 +1,11 @@
 from __future__ import absolute_import, unicode_literals
 
+from contextlib import redirect_stdout
+from io import StringIO
+
 from celery import shared_task, Task
 from celery.signals import task_prerun
+from django.core.management import call_command
 from django.db import connection
 
 from data_import.utils import CsvMeta, ImportUtility, queues
@@ -217,3 +221,13 @@ def insert_salary(self, *, s_file_id):
     self.update_status('complete')
 
     return 'Inserted salaries'
+
+
+@shared_task(bind=True, base=DataImportTask)
+def build_solr_index(self):
+    io_out = StringIO()
+
+    with redirect_stdout(io_out):
+        call_command('build_solr_index', '--recreate')
+
+    return io_out.getvalue()

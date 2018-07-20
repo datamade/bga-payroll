@@ -32,6 +32,17 @@ class Command(BaseCommand):
             default=False,
             help='Delete all existing documents before creating the search index'
         )
+        '''
+        TO-DO: Implement these selective index building args, for version 2.
+        If we're adding units and departments, we're going to want to rebuild
+        the index for the entire year, since it's possible to receive employer
+        data in more than one upload, i.e., the calculated expenditure and
+        headcount fields may change & need updating. Conversely, people are
+        always treated as distinct within a reporting year, so we could feasibly
+        do that by upload, i.e., standardized file. Since we're only handling
+        one year of data up front, however, let's just drop and rebuild the
+        whole shebang when we import new data.
+        '''
         parser.add_argument(
             '--s_file',
             dest='s_file_id',
