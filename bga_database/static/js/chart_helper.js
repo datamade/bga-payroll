@@ -89,9 +89,6 @@ var ChartHelper = {
           type: 'bar'
         },
         colors: ['#343a40', '#6c757c', '#007aff', '#ffc107', '#f8f9fa', '#28a845'],
-        legend: {
-          verticalAlign: 'top'
-        },
         plotOptions: {
           series: {
             stacking: 'percent',
