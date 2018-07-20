@@ -54,10 +54,10 @@ class PayrollSearchMixin(object):
     param_index_map = {
         'expenditure': 'expenditure_d',
         'headcount': 'headcount_i',
-        'taxonomy': 'taxonomy_s_fct',
-        'size': 'size_class_s_fct',
+        'taxonomy': 'taxonomy_s',
+        'size': 'size_class_s',
         'parent': 'parent_s_fct',
-        'universe': 'universe_s_fct',
+        'universe': 'universe_s',
         'employer': 'employer_ss_fct',
         'salary': 'salary_d',
     }
