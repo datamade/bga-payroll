@@ -30,7 +30,7 @@ class UnitSearch(EmployerSearch):
 class DepartmentSearch(EmployerSearch):
     model = Employer
     search_kwargs = dict(EmployerSearch.search_kwargs, **{
-        'facet.field': 'parent_s',
+        'facet.field': ['parent_s', 'universe_s'],
     })
 
 
@@ -49,6 +49,25 @@ class PersonSearch(object):
 class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
     facets = {}
+
+    # Cross-walk of URL parameters to Solr index fields
+    param_index_map = {
+            'expenditure': 'expenditure_d',
+            'headcount': 'headcount_i',
+            'taxonomy': 'taxonomy_s_fct',
+            'size': 'size_class_s_fct',
+            'parent': 'parent_s_fct',
+            'universe': 'universe_s_fct',
+            'employer': 'employer_ss_fct',
+            'salary': 'salary_d',
+        }
+
+    # Fields to query as a numeric range
+    range_fields = [
+        'salary',
+        'expenditure',
+        'headcount'
+    ]
 
     def search(self, params, *args):
         if params.get('entity_type'):
@@ -108,35 +127,44 @@ class PayrollSearchMixin(object):
         return result['id'].split('.')[1]
 
     def _make_querystring(self, params):
+        range_params = {k: v for k, v in params.items()
+                        if k.split('_')[0] in self.range_fields}
+
+        value_params = {k: v for k, v in params.items()
+                        if k not in range_params}
+
+        query_parts = chain(self._value_q(value_params), self._range_q(range_params))
+
+        return ' AND '.join(query_parts)
+
+    def _value_q(self, params):
         query_parts = []
 
-        param_index_map = {
-            'parent': 'parent_s_fct',
-            'employer': 'employer_ss_fct',
-        }
-
-        salary_kwargs = {k: v for k, v in params.items() if k.startswith('salary')}
-        expenditure_kwargs = {k: v for k, v in params.items() if k.startswith('expenditure')}
-
         for param, value in params.items():
-            if param not in chain(salary_kwargs, expenditure_kwargs):
-                index_field = param_index_map.get(param, param)
-                query_parts.append('{0}:{1}'.format(index_field, value))
+            index_field = self.param_index_map.get(param, param)
+            query_parts.append('{0}:{1}'.format(index_field, value))
+
+        return query_parts
+
+    def _range_q(self, params):
+        query_parts = []
 
         range_format = '{field}:[{lower} TO {upper}]'
 
-        salary_range = range_format.format(
-            field='salary_d',
-            lower=salary_kwargs.get('salary_above', '*'),
-            upper=salary_kwargs.get('salary_below', '*')
-        )
+        for field in self.range_fields:
+            # Only issue a range query if it at least one boundary came as a
+            # parameter. Do this, because issuing both salary and expenditure
+            # queries, even with asterisks, leads to 0 results, since none of
+            # our documents include both a salary and an expenditure.
+            if any(p.startswith(field) for p in params):
+                fmt_kwargs = {
+                    'field': self.param_index_map[field],
+                    'lower': params.get('{}_above'.format(field), '*'),
+                    'upper': params.get('{}_below'.format(field), '*'),
+                }
 
-        expenditure_range = range_format.format(
-            field='expenditure_d',
-            lower=expenditure_kwargs.get('expenditure_above', '*'),
-            upper=expenditure_kwargs.get('expenditure_below', '*')
-        )
+                range_q = range_format.format(**fmt_kwargs)
 
-        query_parts += [salary_range, expenditure_range]
+                query_parts.append(range_q)
 
-        return ' AND '.join(query_parts)
+        return query_parts
