@@ -38,6 +38,7 @@
             <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'department' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-building"></i> Department</a>
             <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'person' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-address-card"></i> Person</a>
             <a class="badge {% if 'entity_type' not in request.GET %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="fas fa-globe"></i> All</a>
+            <a class="badge" href="{{ request.path }}"><i class="fas fa-times"></i> Clear filters</a>
         </div>
     </div>
 
@@ -45,19 +46,27 @@
         <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
-                    {% for entity, entity_facets in facets.items() %}
-                        <strong>{{ entity }}</strong><br />
-                        {% for facet_type, facet_values in entity_facets.items() %}
-                            {% if facet_values %}
-                                {% for facet in facet_values %}
-                                    {{ facet }}<br />
-                                    {% for x in facet_values[facet] %}
-                                        {{ x }}<br />
+                    {% for entity_type, entity_facets in facets.items() %}
+                        <div class="card-header">
+                            <strong>{{ entity_type }}</strong>
+                        </div>
+
+                        <ul class="list-group list-group-flush">
+                            {% for facet, value_counts in entity_facets.items() %}
+                                <li class="list-group-item">
+                                    {{ facet.split(',')[0]|param_from_index }}<br />
+
+                                    {% for vc in value_counts %}
+                                        <a href="/search/{{ vc['value']|url_from_facet(facet.split(',')[0]) }}">{{ vc['value'] }}</a> <span class="badge">{{ vc['count'] }}</span><br />
+                                        {% if vc.get('pivot') %}
+                                            {% for pc in vc['pivot'] %}
+                                                {{ pc['value'] }}: {{ pc['count'] }}<br />
+                                            {% endfor %}
+                                        {% endif %}
                                     {% endfor %}
-                                {% endfor %}
-                            {% endif %}
-                        {% endfor %}
-                        <br />
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endfor %}
                 </div>
             </div>

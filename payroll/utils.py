@@ -1,3 +1,6 @@
+import re
+import urllib.parse
+
 from titlecase import titlecase
 
 
@@ -82,3 +85,29 @@ def format_percentile(i):
         return i
 
     return "{:,.2f}".format(i) + '%'
+
+
+def param_from_index(index_field):
+    from payroll.search import PayrollSearchMixin
+
+    index_param_map = {v: k for k, v in PayrollSearchMixin.param_index_map.items()}
+
+    return index_param_map[index_field]
+
+
+def url_from_facet(value, index_field):
+    from payroll.search import PayrollSearchMixin
+
+    param = param_from_index(index_field)
+
+    if param in PayrollSearchMixin.range_fields:
+        match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>(\d+|\*))\)', value)
+        params = {
+            '{}_above'.format(param): match.group('lower_bound'),
+            '{}_below'.format(param): match.group('upper_bound'),
+        }
+
+    else:
+        params = {param: value}
+
+    return '?' + urllib.parse.urlencode(params)
