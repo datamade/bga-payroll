@@ -97,22 +97,24 @@ class Employer(SluggedModel, VintagedModel):
             ('Township', False): (10, 50),  # Downstate township
         }
 
-        lookup_key = (self.taxonomy.entity_type, self.taxonomy.is_special)
+        if self.taxonomy:
+            lookup_key = (self.taxonomy.entity_type, self.taxonomy.is_special)
 
-        bounds = class_lookup.get(lookup_key)
+            bounds = class_lookup.get(lookup_key)
 
-        if bounds:
-            lower_bound, upper_bound = bounds
-            population = self.get_population()
+            if bounds:
+                lower_bound, upper_bound = bounds
+                population = self.get_population()
 
-            if population >= upper_bound * 1000:
-                return 'Large'
+                if population:
+                    if population >= upper_bound * 1000:
+                        return 'Large'
 
-            elif population >= lower_bound * 1000:
-                return 'Medium'
+                    elif population >= lower_bound * 1000:
+                        return 'Medium'
 
-            else:
-                return 'Small'
+                    else:
+                        return 'Small'
 
         else:
             return None

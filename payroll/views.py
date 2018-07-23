@@ -1,21 +1,18 @@
-from itertools import chain
 import json
 import math
 
-from django.contrib.postgres.search import SearchVector
 from django.db import connection
-from django.db.models import Q, Sum, FloatField
+from django.db.models import Q, FloatField
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+import numpy as np
 from postgres_stats.aggregates import Percentile
 
-
-import numpy as np
-
 from payroll.models import Employer, Job, Person, Salary
+from payroll.search import PayrollSearchMixin
 from payroll.utils import format_ballpark_number
 
 
@@ -496,7 +493,7 @@ class DepartmentView(EmployerView):
         return result[0] * 100
 
 
-class SearchView(ListView):
+class SearchView(ListView, PayrollSearchMixin):
     queryset = []
     template_name = 'search_results.html'
     context_object_name = 'results'
@@ -505,102 +502,50 @@ class SearchView(ListView):
     def get_queryset(self, **kwargs):
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
-        if params.get('entity_type'):
-            if params.get('entity_type') == 'person':
-                return self._get_person_queryset(params)
+        return list(self.search(params))
 
-            elif params.get('entity_type') == 'employer':
-                return self._get_employer_queryset(params)
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
 
-        else:
-            matching_employers = self._get_employer_queryset(params)
-            matching_people = self._get_person_queryset(params)
+        context['facets'] = self.facets
 
-            return list(matching_employers) + list(matching_people)
-
-    def _get_person_queryset(self, params):
-        condition = Q()
-
-        if params:
-            if params.get('name'):
-                name = Q(search_vector=params.get('name'))
-                condition &= name
-
-            if params.get('employer'):
-                child_employer = Q(jobs__position__employer__slug=params.get('employer'))
-                parent_employer = Q(jobs__position__employer__parent__slug=params.get('employer'))
-                condition &= child_employer | parent_employer
-
-        return Person.objects.filter(condition)\
-                             .order_by('-jobs__salaries__amount')
-
-    def _get_employer_queryset(self, params):
-        condition = Q()
-
-        employers = Employer.objects.all()
-
-        if params:
-            if params.get('name'):
-                employers = employers.annotate(search_vector=SearchVector('name'))
-                name = Q(search_vector=params.get('name'))
-                condition &= name
-
-            if params.get('employer'):
-                name = Q(slug=params.get('employer'))
-                condition &= name
-
-            if params.get('parent'):
-                parent = Q(parent__slug=params.get('parent'))
-                condition &= parent
-
-        return employers.filter(condition)\
-                        .select_related('parent')\
-                        .annotate(budget=Sum('positions__jobs__salaries__amount'))\
-                        .order_by('-budget')
+        return context
 
 
-def entity_lookup(request):
-    q = request.GET['term']
-
-    top_level = Q(parent_id__isnull=True)
-    high_budget = Q(budget__gt=1000000)
-
-    employers = Employer.objects\
-                        .annotate(budget=Sum('position__job__salaries__amount'))\
-                        .filter(top_level | high_budget)
-
-    people = Person.objects.filter(jobs__salaries__amount__gt=100000)
-
-    if q:
-        employers = employers.filter(name__istartswith=q)[:10]
-
-        last_token = q.split(' ')[-1]
-
-        people = people.filter(
-            Q(search_vector=q) | Q(last_name__istartswith=last_token)
-        )[:10]
-
-    entities = []
-
-    for e in chain(employers, people):
-        data = {
-            'label': str(e),
-            'value': str(e),
+class EntityLookup(ListView, PayrollSearchMixin):
+    def get_queryset(self, *args, **kwargs):
+        params = {
+            'entity_type': 'unit,person',
+            'name': self.request.GET['term'],
         }
 
-        if isinstance(e, Person):
-            url = '/person/{slug}'
-            category = 'Person'
+        extra_search_kwargs = {
+            'expenditure_d': '[1000000 TO *]',
+            'salary_d': '[100000 TO *]',
+            'rows': '10',
+        }
 
-        else:
-            url = '/employer/{slug}'
-            category = 'Employer'
+        entities = []
 
-        data.update({
-            'url': url.format(slug=e.slug),
-            'category': category,
-        })
+        for result in self.search(params, extra_search_kwargs):
+            data = {
+                'label': str(result),
+                'value': str(result),
+            }
 
-        entities.append(data)
+            url = '{0}/{1}'.format(result.endpoint, result.slug)
+            category = result.__class__.__name__
 
-    return JsonResponse(entities, safe=False)
+            data.update({
+                'url': url,
+                'category': category,
+            })
+
+            entities.append(data)
+
+        return entities
+
+    def render_to_response(self, *args, **kwargs):
+        results = self.get_queryset(*args, **kwargs)
+
+        return JsonResponse(results, safe=False)

@@ -31,3 +31,5 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 CENSUS_API_KEY = '<A KEY>'
+
+SOLR_URL = 'http://127.0.0.1:8983/solr/bga'
