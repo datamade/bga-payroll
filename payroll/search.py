@@ -105,11 +105,7 @@ class PayrollSearchMixin(object):
             self.facets.update({entity_type: results.facets})
 
         # Retain ordering from Solr results when filtering the model objects.
-        sorted_results = OrderedDict()
-
-        for result in results:
-            sorted_results[self._id_from_result(result)] = result
-
+        sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
         sort_order = list(sorted_results.keys())
 
         model = getattr(self._search_class(entity_type), 'model')
