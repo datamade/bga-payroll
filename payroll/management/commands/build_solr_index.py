@@ -32,6 +32,12 @@ class Command(BaseCommand):
             default=False,
             help='Delete all existing documents before creating the search index'
         )
+        parser.add_argument(
+            '--chunksize',
+            dest='chunksize',
+            default=1000,
+            help='Number of documents to add at once'
+        )
         '''
         TO-DO: Implement these selective index building args, for version 2.
         If we're adding units and departments, we're going to want to rebuild
@@ -58,6 +64,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.recreate = options['recreate']
+        self.chunksize = int(options['chunksize'])
 
         entities = options['entity_types'].split(',')
 
@@ -73,6 +80,7 @@ class Command(BaseCommand):
         self.stdout.write('Indexing units')
 
         documents = []
+        document_count = 0
 
         units = Employer.objects.filter(parent_id__isnull=True)
 
@@ -102,14 +110,16 @@ class Command(BaseCommand):
                     'text': name,
                 })
 
-                if len(documents) % 1000 == 0:
+                if len(documents) == self.chunksize:
                     self.searcher.add(documents)
+                    document_count += len(documents)
                     documents = []
 
         if documents:
             self.searcher.add(documents)
+            document_count += len(documents)
 
-        success_message = 'Added {0} documents for {1} units to the index'.format(len(documents),
+        success_message = 'Added {0} documents for {1} units to the index'.format(document_count,
                                                                                   units.count())
 
         self.stdout.write(self.style.SUCCESS(success_message))
@@ -123,6 +133,7 @@ class Command(BaseCommand):
         self.stdout.write('Indexing departments')
 
         documents = []
+        document_count = 0
 
         departments = Employer.objects.filter(parent_id__isnull=False)
 
@@ -155,14 +166,16 @@ class Command(BaseCommand):
 
                 documents.append(document)
 
-                if len(documents) % 1000 == 0:
+                if len(documents) == self.chunksize:
                     self.searcher.add(documents)
+                    document_count += len(documents)
                     documents = []
 
         if documents:
             self.searcher.add(documents)
+            document_count += len(documents)
 
-        success_message = 'Added {0} documents for {1} departments to the index'.format(len(documents),
+        success_message = 'Added {0} documents for {1} departments to the index'.format(document_count,
                                                                                         departments.count())
 
         self.stdout.write(self.style.SUCCESS(success_message))
@@ -176,6 +189,7 @@ class Command(BaseCommand):
         self.stdout.write('Indexing people')
 
         documents = []
+        document_count = 0
 
         people = Person.objects.all()
 
@@ -236,7 +250,7 @@ class Command(BaseCommand):
                         'name': name,
                         'entity_type': 'Person',
                         'year': year,
-                        'title_s': job.title,
+                        'title_s': job.position.title,
                         'salary_d': job.salaries.get().amount,
                         'employer_ss': employer_slug,
                         'text': text,
@@ -244,14 +258,16 @@ class Command(BaseCommand):
 
                     documents.append(document)
 
-                if len(documents) % 1000 == 0:
+                if len(documents) == self.chunksize:
                     self.searcher.add(documents)
+                    document_count += len(documents)
                     documents = []
 
         if documents:
             self.searcher.add(documents)
+            document_count += len(documents)
 
-        success_message = 'Added {0} documents for {1} people to the index'.format(len(documents),
+        success_message = 'Added {0} documents for {1} people to the index'.format(document_count,
                                                                                    people.count())
 
         self.stdout.write(self.style.SUCCESS(success_message))
