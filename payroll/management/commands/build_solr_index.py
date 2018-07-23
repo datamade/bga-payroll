@@ -102,7 +102,12 @@ class Command(BaseCommand):
                     'text': name,
                 })
 
-        self.searcher.add(documents)
+                if len(documents) % 1000 == 0:
+                    self.searcher.add(documents)
+                    documents = []
+
+        if documents:
+            self.searcher.add(documents)
 
         success_message = 'Added {0} documents for {1} units to the index'.format(len(documents),
                                                                                   units.count())
@@ -150,7 +155,12 @@ class Command(BaseCommand):
 
                 documents.append(document)
 
-        self.searcher.add(documents)
+                if len(documents) % 1000 == 0:
+                    self.searcher.add(documents)
+                    documents = []
+
+        if documents:
+            self.searcher.add(documents)
 
         success_message = 'Added {0} documents for {1} departments to the index'.format(len(documents),
                                                                                         departments.count())
