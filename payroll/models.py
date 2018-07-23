@@ -139,6 +139,44 @@ class Employer(SluggedModel, VintagedModel):
             return self.population.get(data_year=closest).population
 
 
+class UnitManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(parent_id__isnull=True)
+
+
+class Unit(Employer):
+    class Meta:
+        proxy = True
+
+    objects = UnitManager()
+
+    search_meta_fields = [
+        'expenditure_d',
+        'headcount_i',
+        'taxonomy_s',
+        'year',
+    ]
+
+
+class DepartmentManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(parent_id__isnull=False)
+
+
+class Department(Employer):
+    class Meta:
+        proxy = True
+
+    objects = DepartmentManager()
+
+    search_meta_fields = [
+        'expenditure_d',
+        'headcount_i',
+        'universe_s',
+        'year',
+    ]
+
+
 class EmployerTaxonomy(models.Model):
     '''
     Classification of unit, e.g., municipal.
@@ -194,6 +232,12 @@ class EmployerUniverse(models.Model):
 
 
 class Person(SluggedModel, VintagedModel):
+    search_meta_fields = [
+        'salary_d',
+        'employer_ss',
+        'year',
+    ]
+
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     search_vector = SearchVectorField(max_length=255, null=True)
