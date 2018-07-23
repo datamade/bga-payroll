@@ -111,3 +111,22 @@ def url_from_facet(value, index_field):
         params = {param: value}
 
     return '?' + urllib.parse.urlencode(params)
+
+
+def employer_from_slug(slug):
+    from payroll.models import Employer
+
+    return Employer.objects.get(slug=slug)
+
+
+def format_range(range, salary=True):
+    match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>(\d+|\*))\)', range)
+    lower_bound = match.group('lower_bound')
+    upper_bound = match.group('upper_bound')
+
+    if lower_bound == '0':
+        return 'Less than {}'.format(upper_bound)
+    elif upper_bound != '*':
+        return '{} to {}'.format(lower_bound, upper_bound)
+    else:
+        return 'More than {}'.format(lower_bound)
