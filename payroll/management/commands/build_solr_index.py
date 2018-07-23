@@ -236,6 +236,7 @@ class Command(BaseCommand):
                         'name': name,
                         'entity_type': 'Person',
                         'year': year,
+                        'title_s': job.title,
                         'salary_d': job.salaries.get().amount,
                         'employer_ss': employer_slug,
                         'text': text,
