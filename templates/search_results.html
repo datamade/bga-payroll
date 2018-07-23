@@ -65,7 +65,7 @@
                                                 {{ vc.value }}
                                             {% endif %}
                                         </a>
-                                        <span class="badge">{{ vc.count }}</span><br />
+                                        <span class="badge badge-pill badge-light">{{ vc.count }}</span><br />
 
                                         {% if vc.get('pivot') %}
                                             {% for pc in vc.pivot %}
@@ -82,22 +82,20 @@
         </div>
         <div class="col-md-8">
             <div class="card">
-                <div class="card-body">
-                    <table class="table table-striped table-hover">
-                        <tbody>
-                            {% for result in results %}
-                                <tr>
-                                    <td>
-                                        {{ loop.index0 + page_obj.start_index() }}.
-                                        {% include 'partials/search_result.html' %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <table class="table table-hover">
+                    <tbody>
+                        {% for result in results %}
+                            <tr>
+                                <td>
+                                    {{ loop.index0 + page_obj.start_index() }}.
+                                    {% include 'partials/search_result.html' %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 
-                    {% include 'partials/pagination.html' %}
-                </div>
+                {% include 'partials/pagination.html' %}
             </div>
         </div>
     </div>
