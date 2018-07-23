@@ -6,11 +6,10 @@ import sys
 from django.conf import settings
 import pysolr
 
-from payroll.models import Employer, Person
+from payroll.models import Unit, Department, Person
 
 
 class EmployerSearch(object):
-    model = Employer
     search_kwargs = {
         'rows': '99999999',
         'facet': 'true',
@@ -23,14 +22,14 @@ class EmployerSearch(object):
 
 
 class UnitSearch(EmployerSearch):
-    model = Employer
+    model = Unit
     search_kwargs = dict(EmployerSearch.search_kwargs, **{
         'facet.pivot': 'taxonomy_s_fct,size_class_s_fct',
     })
 
 
 class DepartmentSearch(EmployerSearch):
-    model = Employer
+    model = Department
     search_kwargs = dict(EmployerSearch.search_kwargs, **{
         'facet.field': ['parent_s_fct', 'universe_s_fct'],
     })
@@ -46,6 +45,7 @@ class PersonSearch(object):
         'facet.field': 'employer_ss_fct',  # TO-DO: Is this the right way to facet multi-valued fields?
         'facet.interval': ['salary_d'],
         'f.salary_d.facet.interval.set': ['[0,25000)', '[25000,75000)', '[75000,150000)', '[150000,*)'],
+        'sort': 'salary_d desc',
     }
 
 

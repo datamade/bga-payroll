@@ -150,13 +150,6 @@ class Unit(Employer):
 
     objects = UnitManager()
 
-    search_meta_fields = [
-        'expenditure_d',
-        'headcount_i',
-        'taxonomy_s',
-        'year',
-    ]
-
 
 class DepartmentManager(models.Manager):
     def get_queryset(self):
@@ -168,13 +161,6 @@ class Department(Employer):
         proxy = True
 
     objects = DepartmentManager()
-
-    search_meta_fields = [
-        'expenditure_d',
-        'headcount_i',
-        'universe_s',
-        'year',
-    ]
 
 
 class EmployerTaxonomy(models.Model):
@@ -232,12 +218,6 @@ class EmployerUniverse(models.Model):
 
 
 class Person(SluggedModel, VintagedModel):
-    search_meta_fields = [
-        'salary_d',
-        'employer_ss',
-        'year',
-    ]
-
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     search_vector = SearchVectorField(max_length=255, null=True)

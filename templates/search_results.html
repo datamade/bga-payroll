@@ -15,7 +15,7 @@
 <div class="col-md-12">
     <div class="row">
         <div class="col">
-            <h2>Search results</h2>
+            <h2>Search results: {{ request.GET.name or request.GET.entity_type }}</h2>
         </div>
     </div>
 
@@ -79,17 +79,8 @@
                             {% for result in results %}
                                 <tr>
                                     <td>
-                                        <a href="/{{ result.endpoint }}/{{ result.slug }}/">{{ result }}</a>
-                                        <span class="badge badge-light">
-                                            {% if result.endpoint == 'person' %}
-                                                <i class="far fa-address-card"></i> Person
-                                            {% elif result.endpoint == 'department' %}
-                                                    <i class="far fa-building"></i> Department
-                                            {% elif result.endpoint == 'unit' %}
-                                                <i class="fas fa-building"></i> Unit
-                                            {% endif %}
-                                        </span><br />
-                                        {{ result.search_meta }}
+                                        {{ loop.index0 + page_obj.start_index() }}.
+                                        {% include 'partials/search_result.html' %}
                                     </td>
                                 </tr>
                             {% endfor %}
