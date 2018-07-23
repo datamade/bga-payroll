@@ -15,7 +15,7 @@
 <div class="col-md-12">
     <div class="row">
         <div class="col">
-            <h2>Search results: {{ request.GET.name or request.GET.entity_type or request.GET.employer|employer_from_slug }}</h2>
+            <h2>Search results: {{ ' + '.join(request.GET|query_content) }}</h2>
         </div>
     </div>
 
