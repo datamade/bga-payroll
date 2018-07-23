@@ -504,16 +504,11 @@ class EntityLookup(ListView, PayrollSearchMixin):
                 'value': str(result),
             }
 
-            if isinstance(result, Person):
-                url = '/person/{slug}'
-                category = 'Person'
-
-            else:
-                url = '/unit/{slug}'
-                category = 'Employer'
+            url = '{0}/{1}'.format(result.endpoint, result.slug)
+            category = result.__class__.__name__
 
             data.update({
-                'url': url.format(slug=result.slug),
+                'url': url,
                 'category': category,
             })
 

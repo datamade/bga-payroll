@@ -1,6 +1,5 @@
 from __future__ import absolute_import, unicode_literals
 
-from contextlib import redirect_stdout
 from io import StringIO
 
 from celery import shared_task, Task
@@ -226,8 +225,6 @@ def insert_salary(self, *, s_file_id):
 @shared_task(bind=True, base=DataImportTask)
 def build_solr_index(self):
     io_out = StringIO()
-
-    with redirect_stdout(io_out):
-        call_command('build_solr_index', '--recreate')
+    call_command('build_solr_index', '--recreate', stdout=io_out)
 
     return io_out.getvalue()
