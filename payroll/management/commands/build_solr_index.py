@@ -167,7 +167,7 @@ class Command(BaseCommand):
 
         documents = []
 
-        people = Person.objects.prefetch_related('jobs').all()
+        people = Person.objects.all()
 
         for person in people:
             name = str(person)
@@ -209,7 +209,7 @@ class Command(BaseCommand):
                                      .prefetch_related('salaries')\
                                      .first()
 
-                else:
+                finally:
                     position = job.position
                     employer = position.employer
 
@@ -233,7 +233,12 @@ class Command(BaseCommand):
 
                     documents.append(document)
 
-        self.searcher.add(documents)
+                if len(documents) % 1000 == 0:
+                    self.searcher.add(documents)
+                    documents = []
+
+        if documents:
+            self.searcher.add(documents)
 
         success_message = 'Added {0} documents for {1} people to the index'.format(len(documents),
                                                                                    people.count())
