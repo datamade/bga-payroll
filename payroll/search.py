@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from functools import partialmethod
 from itertools import chain
 import sys
@@ -104,12 +105,23 @@ class PayrollSearchMixin(object):
             self.facets.update({entity_type: results.facets})
 
         # Retain ordering from Solr results when filtering the model objects.
-        sort_order = [self._id_from_result(result) for result in results]
+        sorted_results = OrderedDict()
+
+        for result in results:
+            sorted_results[self._id_from_result(result)] = result
+
+        sort_order = list(sorted_results.keys())
 
         model = getattr(self._search_class(entity_type), 'model')
+        objects = []
 
-        return sorted(model.objects.filter(id__in=sort_order),
-                      key=lambda x: sort_order.index(str(x.id)))
+        for o in sorted(model.objects.filter(id__in=sort_order),
+                        key=lambda o: sort_order.index(o.id)):
+
+            o.search_meta = sorted_results[o.id]
+            objects.append(o)
+
+        return objects
 
     _search_unit = partialmethod(_search, 'unit')
     _search_department = partialmethod(_search, 'department')
@@ -127,7 +139,7 @@ class PayrollSearchMixin(object):
         '''
         Return model object ID from result id like "unit.<ID>.<REPORTING YEAR>"
         '''
-        return result['id'].split('.')[1]
+        return int(result['id'].split('.')[1])
 
     def _make_querystring(self, params):
         range_params = {k: v for k, v in params.items()

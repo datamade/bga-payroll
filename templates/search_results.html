@@ -88,7 +88,8 @@
                                             {% elif result.endpoint == 'unit' %}
                                                 <i class="fas fa-building"></i> Unit
                                             {% endif %}
-                                        </span>
+                                        </span><br />
+                                        {{ result.search_meta }}
                                     </td>
                                 </tr>
                             {% endfor %}
