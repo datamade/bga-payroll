@@ -4,7 +4,8 @@ from django.urls import reverse
 from jinja2 import Environment
 
 from payroll.utils import format_ballpark_number, format_salary, \
-    titlecase_standalone, query_transform, format_percentile
+    titlecase_standalone, query_transform, format_percentile, url_from_facet, \
+    param_from_index, employer_from_slug, format_range
 
 
 def environment(**options):
@@ -21,6 +22,10 @@ def environment(**options):
         'titlecase_standalone': titlecase_standalone,
         'query_transform': query_transform,
         'format_percentile': format_percentile,
+        'url_from_facet': url_from_facet,
+        'param_from_index': param_from_index,
+        'employer_from_slug': employer_from_slug,
+        'format_range': format_range,
     })
 
     return env

@@ -34,17 +34,17 @@
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script type="text/javascript">
   $('#submit-button').click(function submitSearch(e) {
-    e.preventDefault();
+      e.preventDefault();
 
-    var url;
+      var url;
 
-    if ( $('#entity-lookup').val() ) {
-      url = '/search/?name=' + $('#entity-lookup').val();
-    } else {
-      url = '/search/';
-    }
+      if ( $('#entity-lookup').val() ) {
+        url = '/search/?name=' + $('#entity-lookup').val();
+      } else {
+        url = '/search/';
+      }
 
-    window.location = url;
+      window.location = url;
   });
 </script>
 {% endblock %}

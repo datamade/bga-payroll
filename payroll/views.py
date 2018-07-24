@@ -12,7 +12,7 @@ import numpy as np
 from postgres_stats.aggregates import Percentile
 
 from payroll.models import Employer, Job, Person, Salary
-from payroll.search import PayrollSearchMixin
+from payroll.search import PayrollSearchMixin, FacetingMixin
 from payroll.utils import format_ballpark_number
 
 
@@ -493,7 +493,7 @@ class DepartmentView(EmployerView):
         return result[0] * 100
 
 
-class SearchView(ListView, PayrollSearchMixin):
+class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
     queryset = []
     template_name = 'search_results.html'
     context_object_name = 'results'
@@ -507,7 +507,9 @@ class SearchView(ListView, PayrollSearchMixin):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        context['facets'] = self.facets
+        facets = self.parse_facets(self.facets)
+
+        context['facets'] = facets
 
         return context
 

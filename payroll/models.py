@@ -139,6 +139,30 @@ class Employer(SluggedModel, VintagedModel):
             return self.population.get(data_year=closest).population
 
 
+class UnitManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(parent_id__isnull=True)
+
+
+class Unit(Employer):
+    class Meta:
+        proxy = True
+
+    objects = UnitManager()
+
+
+class DepartmentManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(parent_id__isnull=False)
+
+
+class Department(Employer):
+    class Meta:
+        proxy = True
+
+    objects = DepartmentManager()
+
+
 class EmployerTaxonomy(models.Model):
     '''
     Classification of unit, e.g., municipal.
