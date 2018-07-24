@@ -105,19 +105,25 @@
         </div>
         <div class="col-md-8">
             <div class="card">
-                <table class="table table-hover">
-                    <tbody>
-                        {% for result in results %}
-                            <tr>
-                                <td>
-                                    {{ loop.index0 + page_obj.start_index() }}.
-                                    {% include 'partials/search_result.html' %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
+                {% if results %}
+                    <table class="table table-hover">
+                        <tbody>
+                            {% for result in results %}
+                                <tr>
+                                    <td>
+                                        {{ loop.index0 + page_obj.start_index() }}.
+                                        {% include 'partials/search_result.html' %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="card-body">
+                        <h4>No results match your query.</h4>
+                        Enter a different search term, <a href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}">clear your filters</a> or select a different facet to try again.
+                    </div>
+                {% endif %}
                 {% include 'partials/pagination.html' %}
             </div>
         </div>
