@@ -1,23 +1,59 @@
 import json
-import math
 
 from django.db import connection
 from django.db.models import Q, FloatField
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-import numpy as np
 from postgres_stats.aggregates import Percentile
 
-from payroll.models import Employer, Job, Person, Salary
+from payroll.charts import ChartHelperMixin
+from payroll.models import Employer, Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin
-from payroll.utils import format_ballpark_number
 
 
-def index(request):
-    return render(request, 'index.html')
+class IndexView(TemplateView, ChartHelperMixin):
+    template_name = 'index.html'
+
+    def get_context_data(self):
+        context = super().get_context_data()
+
+        salary_count = Salary.objects.all().count()
+        unit_count = Unit.objects.all().count()
+        department_count = Department.objects.all().count()
+
+        # Note: These try/except blocks can be removed, once we import data into
+        # this thing.
+
+        try:
+            illinois_slug = Unit.objects.get(name__iexact='Illinois').slug
+        except Unit.DoesNotExist:
+            illinois_slug = None
+
+        try:
+            chicago_slug = Unit.objects.get(name__iexact='Chicago').slug
+        except:
+            chicago_slug = None
+
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT amount FROM payroll_salary')
+            all_salaries = [x[0] for x in cursor]
+
+        binned_salaries = self.bin_salary_data(all_salaries)
+
+        context.update({
+            'salary_count': salary_count,
+            'unit_count': unit_count,
+            'department_count': department_count,
+            'illinois_slug': illinois_slug,
+            'chicago_slug': chicago_slug,
+            'salary_json': json.dumps(binned_salaries),
+        })
+
+        return context
 
 
 def error(request, error_code):
@@ -37,7 +73,7 @@ def person(request, slug):
     })
 
 
-class EmployerView(DetailView):
+class EmployerView(DetailView, ChartHelperMixin):
     model = Employer
     context_object_name = 'entity'
 
@@ -93,35 +129,6 @@ class EmployerView(DetailView):
 
         return employee_salaries
 
-    def bin_salary_data(self, data):
-        float_data = np.asarray(data, dtype='float')
-
-        # Size of the bins
-        multiplier = 25000
-
-        # This is to make the appropriate number of bins
-        max_value = np.amax(float_data)
-        bin_num = math.ceil(max_value / multiplier)  # rounding up to capture max value
-        bin_edges = np.array([], dtype='float')
-
-        for i in range(bin_num + 1):  # adding 1 to get appropriate number of bins
-            bin_edges = np.append(bin_edges, i * multiplier)
-
-        values, edges = np.histogram(float_data, bins=bin_edges)
-
-        salary_json = []
-
-        for i, value in enumerate(values):
-            lower, upper = int(edges[i]), int(edges[i + 1])
-
-            salary_json.append({
-                'value': int(value),  # number of salaries in given bin
-                'lower_edge': format_ballpark_number(lower),
-                'upper_edge': format_ballpark_number(upper),
-            })
-
-        return salary_json
-
 
 class UnitView(EmployerView):
     template_name = 'unit.html'
@@ -153,6 +160,8 @@ class UnitView(EmployerView):
         '''.format(from_clause=self.from_clause,
                    id=self.object.id)
 
+        total_expenditure = sum(self.employee_salaries())
+
         with connection.cursor() as cursor:
             cursor.execute(query)
 
@@ -164,7 +173,7 @@ class UnitView(EmployerView):
                     'total_budget': budget,
                     'headcount': headcount,
                     'slug': slug,
-                    'percentage': (float(budget / sum(self.employee_salaries())) * 100)  # Percentage of total expenditure
+                    'percentage': (float(budget / total_expenditure) * 100)  # Percentage of total expenditure
                 })
 
         return department_salaries
