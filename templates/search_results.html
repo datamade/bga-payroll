@@ -38,13 +38,17 @@
             <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'department' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-building"></i> Department</a>
             <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'person' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-address-card"></i> Person</a>
             <a class="badge {% if 'entity_type' not in request.GET %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="fas fa-globe"></i> All</a>
-            <a class="badge" href="{{ request.path }}"><i class="fas fa-times"></i> Clear filters</a>
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-4">
-            {% for entity_type, entity_facets in facets.items() %}
+            {% if request.GET.entity_type %}
+                {% set requested_entities = request.GET.entity_type.split(',') %}
+            {% else %}
+                {% set requested_entities = ['unit', 'department', 'person'] %}
+            {% endif %}
+            {% for entity_type, entity_facets in facets.items() if entity_type in requested_entities %}
                 <div id="accordian">
                     <div class="card mb-3">
                         <div class="card-header">
@@ -64,7 +68,7 @@
                                             <strong>{{ current_facet.title() }}</strong><br />
 
                                             {% for vc in value_counts %}
-                                                <a href="/search/?{{ vc['value']|url_from_facet(facet.split(',')[0], request) }}">
+                                                <a href="/search/?entity_type={{ entity_type }}&{{ vc['value']|url_from_facet(facet.split(',')[0], request) }}">
                                                     {% if current_facet in ('employer', 'parent') %}
                                                         {{ vc.value|employer_from_slug }}
                                                     {% elif current_facet in ('headcount', 'salary', 'expenditure') %}
