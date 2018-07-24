@@ -32,8 +32,8 @@
         </div>
     </form>
 
-    <div class="row mb-3 mt-3">
-        <div class="col">
+    <div class="row mb-5 mt-3">
+        <div class="col ml-2">
             Filter by: <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'unit' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=unit&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="fas fa-building"></i> Unit</a>
             <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'department' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-building"></i> Department</a>
             <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'person' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-address-card"></i> Person</a>
@@ -45,38 +45,48 @@
     <div class="row">
         <div class="col-md-4">
             {% for entity_type, entity_facets in facets.items() %}
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <strong>{{ entity_type.title() }}</strong>
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        {% for facet, value_counts in entity_facets.items() %}
-                            <li class="list-group-item">
-                                {% with current_facet=facet.split(',')[0]|param_from_index %}
-                                    <strong>{{ current_facet.title() }}</strong><br />
+                <div id="accordian">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5>
+                                Filter <strong>{{ entity_type.title() }}</strong> by
+                                <button id="{{ entity_type }}-facet-toggle" class="btn btn-sm btn-link float-right" align="right" data-toggle="collapse" data-target="#{{ entity_type }}-facets" aria-expanded="false">
+                                    <i class="fa fa-chevron-circle-down" aria-hidden="true"></i>
+                                    Expand
+                                </button>
+                            </h5>
+                        </div>
+                        <div class="collapse collapsed" id="{{ entity_type }}-facets" data-parent="#accordion">
+                            <ul class="list-group list-group-flush">
+                                {% for facet, value_counts in entity_facets.items() %}
+                                    <li class="list-group-item">
+                                        {% with current_facet=facet.split(',')[0]|param_from_index %}
+                                            <strong>{{ current_facet.title() }}</strong><br />
 
-                                    {% for vc in value_counts %}
-                                        <a href="/search/{{ vc['value']|url_from_facet(facet.split(',')[0]) }}">
-                                            {% if current_facet in ('employer', 'parent') %}
-                                                {{ vc.value|employer_from_slug }}
-                                            {% elif current_facet in ('headcount', 'salary', 'expenditure') %}
-                                                {{ vc.value|format_range }}
-                                            {% else %}
-                                                {{ vc.value }}
-                                            {% endif %}
-                                        </a>
-                                        <span class="badge badge-pill badge-light">{{ vc.count }}</span><br />
+                                            {% for vc in value_counts %}
+                                                <a href="/search/?{{ vc['value']|url_from_facet(facet.split(',')[0], request) }}">
+                                                    {% if current_facet in ('employer', 'parent') %}
+                                                        {{ vc.value|employer_from_slug }}
+                                                    {% elif current_facet in ('headcount', 'salary', 'expenditure') %}
+                                                        {{ vc.value|format_range }}
+                                                    {% else %}
+                                                        {{ vc.value }}
+                                                    {% endif %}
+                                                </a>
+                                                <span class="badge badge-pill badge-light">{{ vc.count }}</span><br />
 
-                                        {% if vc.get('pivot') %}
-                                            {% for pc in vc.pivot %}
-                                                {{ pc.value }}: {{ pc.count }}<br />
+                                                {% if vc.get('pivot') %}
+                                                    {% for pc in vc.pivot %}
+                                                        {{ pc.value }}: {{ pc.count }}<br />
+                                                    {% endfor %}
+                                                {% endif %}
                                             {% endfor %}
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endwith %}
-                            </li>
-                        {% endfor %}
-                    </ul>
+                                        {% endwith %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -125,6 +135,22 @@
         }
 
         window.location = url;
+    });
+
+    $('[id*="facet-toggle"]').click(function toggleClick(e) {
+        // On click, content has not yet been expanded, i.e., if aria-expanded
+        // is false, the element is about to be expanded, so we need to update
+        // the button to collapse accordingly.
+        var expanding = $(this).attr('aria-expanded') == 'false';
+
+        var expand_text = '<i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Expand';
+        var collapse_text = '<i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Collapse';
+
+        if (expanding) {
+            $(this).html(collapse_text);
+        } else {
+            $(this).html(expand_text);
+        }
     });
 </script>
 {% endblock %}

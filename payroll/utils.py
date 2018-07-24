@@ -95,7 +95,7 @@ def param_from_index(index_field):
     return index_param_map[index_field]
 
 
-def url_from_facet(value, index_field):
+def url_from_facet(value, index_field, request):
     from payroll.search import PayrollSearchMixin
 
     param = param_from_index(index_field)
@@ -108,9 +108,19 @@ def url_from_facet(value, index_field):
         }
 
     else:
+        if param in ('universe', 'taxonomy'):
+            value = '"{}"'.format(value)
+
         params = {param: value}
 
-    return '?' + urllib.parse.urlencode(params)
+    request_params = request.GET.dict()
+
+    if 'page' in request_params:
+        request_params.pop('page')
+
+    request_params.update(params)
+
+    return urllib.parse.urlencode(request_params)
 
 
 def employer_from_slug(slug):
