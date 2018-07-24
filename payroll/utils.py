@@ -140,39 +140,3 @@ def format_range(range, salary=True):
         return '{} to {}'.format(lower_bound, upper_bound)
     else:
         return 'More than {}'.format(lower_bound)
-
-def query_content(request):
-    query_parts = []
-
-    for param in request.keys():
-        value = request[param]
-
-        if param in ('name', 'entity_type'):
-            query_parts.append(value)
-
-        elif param == 'employer':
-            query_parts.append('employees of ' + str(employer_from_slug(value)))
-
-        elif param == 'parent':
-            query_parts.append('departments in ' + str(employer_from_slug(value)))
-
-        else:
-            for p in ('expenditure', 'headcount'):
-                p_keys = [k for k in request.keys() if k.startswith(p)]
-                if p_keys:
-                    lower, upper = '{}_above'.format(p), '{}_below'.format(p)
-
-                    if len(p_keys) == 2:
-                        part = '{0} between {1} and {2}'.format(p,
-                                                                request.get(lower),
-                                                                request.get(upper))
-
-                    elif request.get(upper):
-                        part = '{0} below {1}'.format(p, request.get(upper))
-
-                    elif request.get(lower):
-                        part = '{0} above {1}'.format(p, request.get(lower))
-
-                    query_parts.append(part)
-
-    return set(query_parts)
