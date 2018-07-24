@@ -95,23 +95,26 @@ def param_from_index(index_field):
     return index_param_map[index_field]
 
 
-def url_from_facet(value, index_field, request):
+def url_from_facet(facet_data, request):
     from payroll.search import PayrollSearchMixin
 
-    param = param_from_index(index_field)
+    params = {}
 
-    if param in PayrollSearchMixin.range_fields:
-        match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>(\d+|\*))\)', value)
-        params = {
-            '{}_above'.format(param): match.group('lower_bound'),
-            '{}_below'.format(param): match.group('upper_bound'),
-        }
+    for index_field, value in facet_data:
+        param = param_from_index(index_field)
 
-    else:
-        if param in ('universe', 'taxonomy'):
-            value = '"{}"'.format(value)
+        if param in PayrollSearchMixin.range_fields:
+            match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>(\d+|\*))\)', value)
+            params.update({
+                '{}_above'.format(param): match.group('lower_bound'),
+                '{}_below'.format(param): match.group('upper_bound'),
+            })
 
-        params = {param: value}
+        else:
+            if param in ('universe', 'taxonomy'):
+                value = '"{}"'.format(value)
+
+            params[param] = value
 
     request_params = request.GET.dict()
 

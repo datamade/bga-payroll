@@ -25,7 +25,7 @@ def environment(**options):
         'url_from_facet': url_from_facet,
         'param_from_index': param_from_index,
         'employer_from_slug': employer_from_slug,
-        'format_range': format_range
+        'format_range': format_range,
     })
 
     return env

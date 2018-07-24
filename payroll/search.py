@@ -58,7 +58,7 @@ class PayrollSearchMixin(object):
         'expenditure': 'expenditure_d',
         'headcount': 'headcount_i',
         'taxonomy': 'taxonomy_s_fct',
-        'size': 'size_class_s',
+        'size': 'size_class_s_fct',
         'parent': 'parent_s_fct',
         'universe': 'universe_s_fct',
         'employer': 'employer_ss_fct',
