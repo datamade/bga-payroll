@@ -15,7 +15,7 @@ var ChartHelper = {
 
         var tooltip_format = function(point) {
             var edges = data[this.x];
-            return this.y + ' ' + entity_type + 's earn between $' + edges.lower_edge + ' and $' + edges.upper_edge;
+            return this.y.toLocaleString() + ' ' + entity_type + 's earn between $' + edges.lower_edge + ' and $' + edges.upper_edge;
         };
 
         var axis_format = function() {
@@ -26,21 +26,33 @@ var ChartHelper = {
               return '$' + edges.upper_edge;
             }
 
-            return '$' + edges.lower_edge;
+            // Occurs when Highcharts wants to add an extra label
+            try {
+              return '$' + edges.lower_edge;
+            } catch (err) {
+              return '';
+            }
         };
 
         var element = entity_type + '-distribution-chart';
 
+        Highcharts.setOptions({
+            lang: {
+              thousandsSep: ',',
+            }
+        });
+
         Highcharts.chart(element, {
             title: {
-                text: '', // Done in template
+              text: '', // Done in template
             },
             plotOptions: {
               column: {
                 maxPointWidth: 80,
                 minPointLength: 2,
                 dataLabels: {
-                  enabled: true
+                  enabled: true,
+                  color: '#000',
                 },
                 pointPlacement: 'between',
                 pointPadding: 0,
