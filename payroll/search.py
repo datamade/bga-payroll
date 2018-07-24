@@ -13,7 +13,7 @@ class EmployerSearch(object):
     search_kwargs = {
         'rows': '99999999',
         'facet': 'true',
-        'facet.mincount': '1',
+        'facet.mincount': '3',
         'facet.interval': ['expenditure_d', 'headcount_i'],
         'f.expenditure_d.facet.interval.set': ['[0,500000)', '[500000,1500000)', '[1500000,5000000)', '[5000000,*)'],
         'f.headcount_i.facet.interval.set': ['[0,25)', '[25,100)', '[100,500)', '[500,*)'],
@@ -41,7 +41,7 @@ class PersonSearch(object):
         'q.op': 'AND',
         'rows': '99999999',
         'facet': 'true',
-        'facet.mincount': '1',
+        'facet.mincount': '3',
         'facet.field': 'employer_ss_fct',  # TO-DO: Is this the right way to facet multi-valued fields?
         'facet.interval': ['salary_d'],
         'f.salary_d.facet.interval.set': ['[0,25000)', '[25000,75000)', '[75000,150000)', '[150000,*)'],
