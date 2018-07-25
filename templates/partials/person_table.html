@@ -16,10 +16,10 @@
   <tbody>
   {% for job in jobs %}
     <tr>
-      <td><a href="/person/{{ job.person.slug }}">{{ job.person }}</a></td>
+      <td><a href="{{ url('person', kwargs={'slug': job.person.slug}) }}">{{ job.person }}</a></td>
       <td>{{ job.position }}</td>
       {% if not entity.is_department and department_salaries %}
-      <td><a href="/department/{{ job.position.employer.slug }}">{{ job.position.employer }}</a></td>
+      <td><a href="{{ url('department', kwargs={'slug': job.position.employer.slug}) }}">{{ job.position.employer }}</a></td>
       {% endif %}
       {% with salary_at_hand = job.salaries.get().amount %}
       <td class="text-right">
