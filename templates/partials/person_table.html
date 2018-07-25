@@ -8,6 +8,9 @@
       <th scope="col">Department</th>
       {% endif %}
       <th scope="col">Salary</th>
+      {% if show_start_date %}
+      <th scope="col">Start Date</th>
+      {% endif %}
     </tr>
   </thead>
   <tbody>
@@ -19,6 +22,9 @@
       <td><a href="/department/{{ job.position.employer.slug }}">{{ job.position.employer }}</a></td>
       {% endif %}
       <td>{{ job.salaries.get().amount|format_salary }}</td>
+      {% if show_start_date %}
+      <td>{{ job.start_date }}</td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>
