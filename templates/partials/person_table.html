@@ -27,8 +27,11 @@
         {% if current_salary %}
           {% if current_salary < salary_at_hand %}
             <span class="text-success"><i class="fas fa-arrow-up"></i></span>
-          {% else %}
+          {% elif current_salary > salary_at_hand %}
             <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
+          {% else %}
+            <!-- Empty placeholder for equal salaries -->
+            <i class="fas invisible"></i>
           {% endif %}
         {% endif %}
       {% endwith %}
