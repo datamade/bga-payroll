@@ -3,8 +3,7 @@ import json
 from django.db import connection
 from django.db.models import Q, FloatField
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
