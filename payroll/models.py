@@ -350,6 +350,7 @@ class Salary(VintagedModel):
               JOIN payroll_employer as employer
               ON position.employer_id = employer.id
               WHERE employer.id = {employer_id}
+              OR employer.parent_id = {employer_id}
             )
             SELECT percentile
             FROM salary_percentiles
