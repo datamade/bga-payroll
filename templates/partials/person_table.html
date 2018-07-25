@@ -7,9 +7,9 @@
       {% if not entity.is_department and department_salaries %}
       <th scope="col">Department</th>
       {% endif %}
-      <th scope="col">Salary</th>
+      <th scope="col" class="text-right">Salary</th>
       {% if show_start_date %}
-      <th scope="col">Start Date</th>
+      <th scope="col" class="text-right">Start Date</th>
       {% endif %}
     </tr>
   </thead>
@@ -21,9 +21,19 @@
       {% if not entity.is_department and department_salaries %}
       <td><a href="/department/{{ job.position.employer.slug }}">{{ job.position.employer }}</a></td>
       {% endif %}
-      <td>{{ job.salaries.get().amount|format_salary }}</td>
+      {% with salary_at_hand = job.salaries.get().amount %}
+      <td class="text-right">
+        {{ salary_at_hand|format_salary }}
+        {% if current_salary %}
+          {% if current_salary < salary_at_hand %}
+            <span class="text-success"><i class="fas fa-arrow-up"></i></span>
+          {% else %}
+            <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
+          {% endif %}
+        {% endif %}
+      {% endwith %}
       {% if show_start_date %}
-      <td>{{ job.start_date }}</td>
+      <td class="text-right">{{ job.start_date or 'N/A' }}</td>
       {% endif %}
     </tr>
   {% endfor %}
