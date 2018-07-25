@@ -1,27 +1,29 @@
-<table class="table table-striped table-hover">
-  <thead class="bg-warning">
-  <tr>
-    <th scope="col">Name</th>
-    <th scope="col">Position</th>
-    {% if not entity.is_department and department_salaries %}
-    <th scope="col">Department</th>
-    {% endif %}
-    <th scope="col">Salary</th>
-  </tr>
-</thead>
-<tbody>
-{% for job in jobs %}
-  <tr>
-    <td><a href="/person/{{ job.person.slug }}">{{ job.person }}</a></td>
-    <td>{{ job.position }}</td>
-    {% if not entity.is_department and department_salaries %}
-    <td><a href="/department/{{ job.position.employer.slug }}">{{ job.position.employer }}</a></td>
-    {% endif %}
-    <td>{{ job.salaries.get().amount|format_salary }}</td>
-  </tr>
-{% endfor %}
-</tbody>
-</table>
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead class="bg-warning">
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Position</th>
+      {% if not entity.is_department and department_salaries %}
+      <th scope="col">Department</th>
+      {% endif %}
+      <th scope="col">Salary</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for job in jobs %}
+    <tr>
+      <td><a href="/person/{{ job.person.slug }}">{{ job.person }}</a></td>
+      <td>{{ job.position }}</td>
+      {% if not entity.is_department and department_salaries %}
+      <td><a href="/department/{{ job.position.employer.slug }}">{{ job.position.employer }}</a></td>
+      {% endif %}
+      <td>{{ job.salaries.get().amount|format_salary }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+</div>
 <p class="text-right">
   <small><strong>Data year:</strong> 2017 (<a href="#">Source</a>)</small>
 </p>

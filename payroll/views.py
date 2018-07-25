@@ -60,19 +60,6 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-def person(request, slug):
-    try:
-        person = Person.objects.get(slug=slug)
-
-    except Employer.DoesNotExist:
-        error_page = reverse(error, kwargs={'error_code': 404})
-        return redirect(error_page)
-
-    return render(request, 'person.html', {
-        'entity': person,
-    })
-
-
 class EmployerView(DetailView, ChartHelperMixin):
     model = Employer
     context_object_name = 'entity'
@@ -91,7 +78,7 @@ class EmployerView(DetailView, ChartHelperMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        employee_salaries = self.employee_salaries()
+        employee_salaries = self.object.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
         context.update({
@@ -111,23 +98,6 @@ class EmployerView(DetailView, ChartHelperMixin):
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
         return results['median']
-
-    def employee_salaries(self):
-        query = '''
-            SELECT
-              salary.amount
-            {from_clause}
-            WHERE employer.id = {id}
-            OR employer.parent_id = {id}
-        '''.format(from_clause=self.from_clause,
-                   id=self.object.id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-
-            employee_salaries = [row[0] for row in cursor]
-
-        return employee_salaries
 
 
 class UnitView(EmployerView):
@@ -160,7 +130,7 @@ class UnitView(EmployerView):
         '''.format(from_clause=self.from_clause,
                    id=self.object.id)
 
-        total_expenditure = sum(self.employee_salaries())
+        total_expenditure = sum(self.object.employee_salaries)
 
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -378,7 +348,7 @@ class DepartmentView(EmployerView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        department_expenditure = sum(self.employee_salaries())
+        department_expenditure = sum(self.object.employee_salaries)
         parent_expediture = self.total_parent_expenditure()
         percentage = department_expenditure / parent_expediture
         context.update({
@@ -500,6 +470,71 @@ class DepartmentView(EmployerView):
             result = cursor.fetchone()
 
         return result[0] * 100
+
+
+class PersonView(DetailView, ChartHelperMixin):
+    model = Person
+    context_object_name = 'entity'
+    template_name = 'person.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        current_job = self.object.jobs\
+                                 .select_related('position', 'position__employer', 'position__employer__parent')\
+                                 .first()
+
+        current_salary = current_job.salaries.get()
+
+        employer_percentile = current_salary.employer_percentile
+        like_employer_percentile = current_salary.like_employer_percentile
+
+        current_employer = current_job.position.employer
+
+        if not current_employer.is_unclassified:
+            if current_employer.is_department:
+                employer_type = '{0} {1}'.format(current_employer.parent.taxonomy,
+                                                 current_employer.universe)
+
+            else:
+                employer_type = current_employer.taxonomy
+
+        else:
+            employer_type = None
+
+        salary_amount = current_salary.amount
+
+        salary_data = current_job.position.employer.employee_salaries
+        binned_salary_data = self.bin_salary_data(salary_data)
+
+        for salary_range in binned_salary_data:
+            lower = int(salary_range['lower_edge'].rstrip('k')) * 1000
+            upper = int(salary_range['upper_edge'].rstrip('k')) * 1000
+
+            if lower < salary_amount < upper:
+                salary_range['color'] = '#007aff'
+            else:
+                salary_range['color'] = '#6c757c'
+
+        context.update({
+            'data_year': 2017,
+            'current_job': current_job,
+            'current_salary': salary_amount,
+            'current_employer': current_employer,
+            'employer_type': employer_type,
+            'employer_salary_json': json.dumps(binned_salary_data),
+            'employer_percentile': employer_percentile,
+            'like_employer_percentile': like_employer_percentile,
+        })
+
+        return context
+
+    def employer_salaries(self):
+        with cursor.connection() as cursor:
+            cursor.execute('''
+                SELECT amount
+                FROM payroll_salary
+            ''')
 
 
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):

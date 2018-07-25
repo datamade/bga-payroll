@@ -1,6 +1,6 @@
 from django.contrib.postgres.search import SearchVectorField
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.utils.translation import gettext_lazy as _
 
 from titlecase import titlecase
@@ -137,6 +137,29 @@ class Employer(SluggedModel, VintagedModel):
             closest = min(population_years, key=lambda x: target_year - x)
 
             return self.population.get(data_year=closest).population
+
+    @property
+    def employee_salaries(self):
+        query = '''
+            SELECT
+              salary.amount
+            FROM payroll_job AS job
+            JOIN payroll_salary AS salary
+            ON salary.job_id = job.id
+            JOIN payroll_position AS position
+            ON job.position_id = position.id
+            JOIN payroll_employer as employer
+            ON position.employer_id = employer.id
+            WHERE employer.id = {id}
+            OR employer.parent_id = {id}
+        '''.format(id=self.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+            employee_salaries = [row[0] for row in cursor]
+
+        return employee_salaries
 
 
 class UnitManager(models.Manager):
@@ -309,3 +332,117 @@ class Salary(VintagedModel):
         salary amount is less than 1000, False otherwise.
         '''
         return self.amount < 1000
+
+    @property
+    def employer_percentile(self):
+        employer = self.job.position.employer
+
+        query = '''
+            WITH salary_percentiles AS (
+              SELECT
+                percent_rank() OVER (ORDER BY amount ASC) AS percentile,
+                job.person_id
+              FROM payroll_job AS job
+              JOIN payroll_salary AS salary
+              ON salary.job_id = job.id
+              JOIN payroll_position AS position
+              ON job.position_id = position.id
+              JOIN payroll_employer as employer
+              ON position.employer_id = employer.id
+              WHERE employer.id = {employer_id}
+            )
+            SELECT percentile
+            FROM salary_percentiles
+            WHERE person_id = {id}
+        '''.format(employer_id=employer.id,
+                   id=self.job.person.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return result[0] * 100
+
+    @property
+    def like_employer_percentile(self):
+        employer = self.job.position.employer
+
+        if employer.is_unclassified:
+            return 'N/A'
+
+        elif employer.is_department:
+            return self._like_department_percentile(employer)
+
+        else:
+            return self._like_unit_percentile(employer)
+
+    def _like_unit_percentile(self, employer):
+        query = '''
+            WITH employer_parent_lookup AS (
+              SELECT
+                id,
+                COALESCE(parent_id, id) AS parent_id
+              FROM payroll_employer
+            ), salary_percentiles AS (
+              SELECT
+                percent_rank() OVER (ORDER BY amount ASC) AS percentile,
+                job.person_id
+              FROM payroll_job AS job
+              JOIN payroll_salary AS salary
+              ON salary.job_id = job.id
+              JOIN payroll_position AS position
+              ON job.position_id = position.id
+              JOIN employer_parent_lookup AS lookup
+              ON position.employer_id = lookup.id
+              JOIN payroll_employer AS employer
+              ON lookup.parent_id = employer.id
+              WHERE employer.taxonomy_id = {taxonomy}
+            )
+            SELECT percentile
+            FROM salary_percentiles
+            WHERE person_id = {id}
+        '''.format(taxonomy=employer.taxonomy.id,
+                   id=self.job.person.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return result[0] * 100
+
+    def _like_department_percentile(self, employer):
+        query = '''
+            WITH taxonomy_members AS (
+              SELECT
+                department.id,
+                department.universe_id
+              FROM payroll_employer AS unit
+              JOIN payroll_employer AS department
+              ON unit.id = department.parent_id
+              WHERE unit.taxonomy_id = {taxonomy}
+            ),
+            salary_percentiles AS (
+              SELECT
+                percent_rank() OVER (ORDER BY amount ASC) AS percentile,
+                job.person_id
+              FROM payroll_job AS job
+              JOIN payroll_salary AS salary
+              ON salary.job_id = job.id
+              JOIN payroll_position AS position
+              ON job.position_id = position.id
+              JOIN taxonomy_members AS department
+              ON position.employer_id = department.id
+              WHERE department.universe_id = {universe}
+            )
+            SELECT percentile
+            FROM salary_percentiles
+            WHERE person_id = {id}
+        '''.format(taxonomy=employer.parent.taxonomy.id,
+                   universe=employer.universe.id,
+                   id=self.job.person.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return result[0] * 100

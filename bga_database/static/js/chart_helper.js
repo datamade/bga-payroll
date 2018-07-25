@@ -5,7 +5,14 @@ var ChartHelper = {
         var values = Array();
 
         data.forEach(function(bin) {
-            values.push(bin.value);
+          var bin_object = {};
+
+          bin_object['y'] = bin.value;
+          if ( bin.color ) {
+            bin_object['color'] = bin.color;
+          }
+
+          values.push(bin_object);
         });
 
         return values;
