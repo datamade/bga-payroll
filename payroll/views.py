@@ -479,16 +479,11 @@ class PersonView(DetailView, ChartHelperMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        current_job = self.object.jobs\
-                                 .select_related('position', 'position__employer', 'position__employer__parent')\
-                                 .first()
-
         all_jobs = self.object.jobs.all()
-
+        current_job = self.object.most_recent_job
+        current_salary = current_job.salaries.get()
         fellow_job_holders = Job.objects.filter(position=current_job.position)\
                                         .exclude(person=self.object)
-
-        current_salary = current_job.salaries.get()
 
         employer_percentile = current_salary.employer_percentile
         like_employer_percentile = current_salary.like_employer_percentile

@@ -255,6 +255,13 @@ class Person(SluggedModel, VintagedModel):
     def endpoint(self):
         return 'person'
 
+    @property
+    def most_recent_job(self):
+        return self.jobs\
+                   .select_related('position', 'position__employer', 'position__employer__parent')\
+                   .order_by('vintage__standardized_file__reporting_year')\
+                   .first()
+
 
 class Job(VintagedModel):
     person = models.ForeignKey('Person',
