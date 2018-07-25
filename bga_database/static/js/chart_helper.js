@@ -7,9 +7,9 @@ var ChartHelper = {
         data.forEach(function(bin) {
           var bin_object = {};
 
-          bin_object['y'] = bin.value;
+          bin_object.y = bin.value;
           if ( bin.color ) {
-            bin_object['color'] = bin.color;
+            bin_object.y = bin.color;
           }
 
           values.push(bin_object);
