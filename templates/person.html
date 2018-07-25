@@ -3,14 +3,16 @@
 {% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    {% with entity = current_job.position.employer %}
-      {% include 'partials/breadcrumbs.html' %}
-    {% endwith %}
-    <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
-  </ol>
-</nav>
+<div class="row">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      {% with entity = current_job.position.employer %}
+        {% include 'partials/breadcrumbs.html' %}
+      {% endwith %}
+      <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
+    </ol>
+  </nav>
+</div>
 
 <div class="row">
   <div class="col-md">
