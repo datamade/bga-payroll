@@ -484,6 +484,11 @@ class PersonView(DetailView, ChartHelperMixin):
                                  .select_related('position', 'position__employer', 'position__employer__parent')\
                                  .first()
 
+        all_jobs = self.object.jobs.all()
+
+        fellow_job_holders = Job.objects.filter(position=current_job.position)\
+                                        .exclude(person=self.object)
+
         current_salary = current_job.salaries.get()
 
         employer_percentile = current_salary.employer_percentile
@@ -507,6 +512,8 @@ class PersonView(DetailView, ChartHelperMixin):
         salary_data = current_job.position.employer.employee_salaries
         binned_salary_data = self.bin_salary_data(salary_data)
 
+        # Add colors to the binned data, so the bin in which the person falls
+        # is highlighted.
         for salary_range in binned_salary_data:
             lower = int(salary_range['lower_edge'].rstrip('k')) * 1000
             upper = int(salary_range['upper_edge'].rstrip('k')) * 1000
@@ -519,22 +526,17 @@ class PersonView(DetailView, ChartHelperMixin):
         context.update({
             'data_year': 2017,
             'current_job': current_job,
+            'all_jobs': all_jobs,
             'current_salary': salary_amount,
             'current_employer': current_employer,
             'employer_type': employer_type,
             'employer_salary_json': json.dumps(binned_salary_data),
             'employer_percentile': employer_percentile,
             'like_employer_percentile': like_employer_percentile,
+            'fellow_job_holders': fellow_job_holders,
         })
 
         return context
-
-    def employer_salaries(self):
-        with cursor.connection() as cursor:
-            cursor.execute('''
-                SELECT amount
-                FROM payroll_salary
-            ''')
 
 
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):

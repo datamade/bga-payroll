@@ -45,6 +45,7 @@
   </div>
 </div>
 
+{% if all_jobs.count() > 1 %}
 <div class="row">
   <div class="col-md">
     <div class="card mb-4">
@@ -52,7 +53,23 @@
         <h3 class="card-title mb-4">
           <i class="fas fa-briefcase"></i> All positions
         </h3>
-        {% with jobs = entity.jobs.all(), entity = namespace(is_department=false) %}
+        {% with jobs = all_jobs, entity = namespace(is_department=false) %}
+          {% include 'partials/person_table.html' %}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h3 class="card-title mb-4">
+          <i class="fas fa-users"></i> Other <strong>{{ current_job.position }}s</strong> at <strong>{{ current_job.position.employer }}</strong>
+        </h3>
+        {% with jobs = fellow_job_holders, entity = namespace(is_department=false) %}
           {% include 'partials/person_table.html' %}
         {% endwith %}
       </div>
