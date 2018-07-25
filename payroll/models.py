@@ -257,9 +257,13 @@ class Person(SluggedModel, VintagedModel):
 
     @property
     def most_recent_job(self):
+        '''
+        Get the fully loaded job object for the most recent reporting year of
+        the given Person.
+        '''
         return self.jobs\
                    .select_related('position', 'position__employer', 'position__employer__parent')\
-                   .order_by('vintage__standardized_file__reporting_year')\
+                   .order_by('-vintage__standardized_file__reporting_year')\
                    .first()
 
 

@@ -483,7 +483,8 @@ class PersonView(DetailView, ChartHelperMixin):
         current_job = self.object.most_recent_job
         current_salary = current_job.salaries.get()
         fellow_job_holders = Job.objects.filter(position=current_job.position)\
-                                        .exclude(person=self.object)
+                                        .exclude(person=self.object)\
+                                        .order_by('-salaries__amount')
 
         employer_percentile = current_salary.employer_percentile
         like_employer_percentile = current_salary.like_employer_percentile
