@@ -5,28 +5,30 @@
   </h3>
 
   <h4 class="card-subtitle mb-3">Top-spending departments in {{ entity }}</h4>
-  <table class="table table-striped table-hover">
-    <thead class="bg-warning">
-      <tr>
-        <th scope="col">Department</th>
-        <th scope="col">Number of employees</th>
-        <th scope="col">Median salary</th>
-        <th scope="col">Total expenditure</th>
-        <th scope="col">Percent of unit expenditure</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for department in department_salaries %}
-      <tr>
-        <td><a href="/department/{{ department['slug'] }}">{{ department['department']|titlecase_standalone }}</a></td>
-        <td>{{ department['headcount'] }}</td>
-        <td>{{ department['amount']|format_salary }}</td>
-        <td>${{ department['total_budget']|format_ballpark_number }}</td>
-        <td>placeholder</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="bg-warning">
+        <tr>
+          <th scope="col">Department</th>
+          <th scope="col" class="text-right">Number of employees</th>
+          <th scope="col" class="text-right">Median salary</th>
+          <th scope="col" class="text-right">Total expenditure</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for department in department_salaries %}
+        <tr>
+          <td><a href="{{ url('department', kwargs={'slug': department.slug}) }}">{{ department.department|titlecase_standalone }}</a></td>
+          <td class="text-right">{{ department.headcount }}</td>
+          <td class="text-right">{{ department.amount|format_salary }}</td>
+          <td class="text-right">${{ department.total_budget|format_ballpark_number }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
   <p class="text-right">
     <small><strong>Data year:</strong> 2017 (<a href="#">Source</a>)</small>
   </p>

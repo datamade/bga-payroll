@@ -3,33 +3,91 @@
 {% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    {% with entity = entity.jobs.first().position.employer %}
-      {% include 'partials/breadcrumbs.html' %}
-    {% endwith %}
-    <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
-  </ol>
-</nav>
-
-<div class="col-md-12">
-  <h2 class="mb-3">
-    <i class="far fa-address-card"></i>
-    {{ entity }}
-    {% with position = entity.jobs.first().position %}
-      <small>{{ position }} at {{ position.employer }}</small>
-    {% endwith %}
-  </h2>
-
-  <div class="card mb-4">
-    <div class="card-body">
-      <h3 class="card-title mb-4">
-        <i class="fas fa-briefcase"></i> All positions
-      </h3>
-      {% with jobs = entity.jobs.all(), entity = namespace(is_department=false) %}
-        {% include 'partials/person_table.html' %}
+<div class="row">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      {% with entity = current_job.position.employer %}
+        {% include 'partials/breadcrumbs.html' %}
       {% endwith %}
+      <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="row">
+  <div class="col-md">
+    <h2 class="mb-3">
+      <i class="far fa-address-card"></i>
+      {{ entity }}
+    </h2>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6" id="intro-text">
+            <h3 class="card-title mb-4">
+              <i class="fas fa-list"></i> Summary
+            </h3>
+            <p><strong>{{ entity }}</strong> earned <strong class="text-primary">{{ current_salary|format_salary }}</strong> in {{ data_year }} as a <strong>{{ current_job.position }}</strong> for <strong>{{ current_job.position.employer }}</strong>. {% if current_job.start_date %}{{ entity.last_name|titlecase_standalone }} has worked in this position since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
+
+            <p>{{ entity.last_name|titlecase_standalone }} earned more than <strong>{{ employer_percentile|format_percentile }}</strong> of employees in <strong>{{ current_employer }}</strong>.</p>
+
+            {% if not current_job.position.employer.is_unclassified %}
+              <p>{{ entity.last_name|titlecase_standalone }} earned more than <strong>{{ like_employer_percentile|format_percentile }}</strong> of employees across all <strong>{{ employer_type }}s</strong>.</p>
+            {% endif %}
+          </div>
+          <div id="employee-distribution-chart" class="col-lg-6"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+{% if all_jobs.count() > 1 %}
+  <div class="row">
+    <div class="col-md">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="card-title mb-4">
+            <i class="fas fa-briefcase"></i> All positions
+          </h3>
+          {% with jobs = all_jobs, entity = namespace(is_department=false), show_start_date = true %}
+            {% include 'partials/person_table.html' %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% if fellow_job_holders %}
+  <div class="row">
+    <div class="col-md">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="card-title mb-4">
+            <i class="fas fa-users"></i> Other <strong>{{ current_job.position }}s</strong> at <strong>{{ current_job.position.employer }}</strong>
+          </h3>
+          {% with jobs = fellow_job_holders, entity = namespace(is_department=false), show_start_date = true %}
+            {% include 'partials/person_table.html' %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ static('js/chart_helper.js') }}"></script>
+
+<script type="text/javascript">
+  ChartHelper.make_salary_chart({{ employer_salary_json|safe }}, 'employee');
+</script>
 {% endblock %}

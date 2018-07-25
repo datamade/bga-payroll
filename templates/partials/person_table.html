@@ -1,27 +1,48 @@
-<table class="table table-striped table-hover">
-  <thead class="bg-warning">
-  <tr>
-    <th scope="col">Name</th>
-    <th scope="col">Position</th>
-    {% if not entity.is_department and department_salaries %}
-    <th scope="col">Department</th>
-    {% endif %}
-    <th scope="col">Salary</th>
-  </tr>
-</thead>
-<tbody>
-{% for job in jobs %}
-  <tr>
-    <td><a href="/person/{{ job.person.slug }}">{{ job.person }}</a></td>
-    <td>{{ job.position }}</td>
-    {% if not entity.is_department and department_salaries %}
-    <td><a href="/department/{{ job.position.employer.slug }}">{{ job.position.employer }}</a></td>
-    {% endif %}
-    <td>{{ job.salaries.get().amount|format_salary }}</td>
-  </tr>
-{% endfor %}
-</tbody>
-</table>
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead class="bg-warning">
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Position</th>
+      {% if not entity.is_department and department_salaries %}
+      <th scope="col">Department</th>
+      {% endif %}
+      <th scope="col" class="text-right">Salary</th>
+      {% if show_start_date %}
+      <th scope="col" class="text-right">Start Date</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+  {% for job in jobs %}
+    <tr>
+      <td><a href="{{ url('person', kwargs={'slug': job.person.slug}) }}">{{ job.person }}</a></td>
+      <td>{{ job.position }}</td>
+      {% if not entity.is_department and department_salaries %}
+      <td><a href="{{ url('department', kwargs={'slug': job.position.employer.slug}) }}">{{ job.position.employer }}</a></td>
+      {% endif %}
+      {% with salary_at_hand = job.salaries.get().amount %}
+      <td class="text-right">
+        {{ salary_at_hand|format_salary }}
+        {% if current_salary %}
+          {% if current_salary < salary_at_hand %}
+            <span class="text-success"><i class="fas fa-arrow-up"></i></span>
+          {% elif current_salary > salary_at_hand %}
+            <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
+          {% else %}
+            <!-- Empty placeholder for equal salaries -->
+            <i class="fas invisible"></i>
+          {% endif %}
+        {% endif %}
+      {% endwith %}
+      {% if show_start_date %}
+      <td class="text-right">{{ job.start_date or 'N/A' }}</td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+</div>
 <p class="text-right">
   <small><strong>Data year:</strong> 2017 (<a href="#">Source</a>)</small>
 </p>
