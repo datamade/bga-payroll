@@ -71,8 +71,8 @@ class SourceFile(models.Model):
         on_delete=models.CASCADE
     )
     reporting_year = models.IntegerField()
-    reporting_period_start_date = models.DateField()
-    reporting_period_end_date = models.DateField()
+    reporting_period_start_date = models.DateField(help_text='Leave blank for Jan. 1 of reporting year')
+    reporting_period_end_date = models.DateField(help_text='Leave blank for Dec. 31 of reporting year')
     response_date = models.DateField(null=True)
     upload = models.ForeignKey(
         'Upload',
@@ -93,7 +93,7 @@ class SourceFile(models.Model):
     def __str__(self):
         # For FieldFile API:
         # https://docs.djangoproject.com/en/2.0/ref/models/fields/#django.db.models.fields.files.FieldFile
-        return self.source_file.name
+        return '{0} – {1}'.format(self.responding_agency, self.reporting_year)
 
 
 def standardized_file_upload_name(instance, filename):
