@@ -29,6 +29,7 @@ urlpatterns = [
     path('person/<str:slug>/', payroll_views.PersonView.as_view(), name='person'),
     path('entity-lookup/', payroll_views.EntityLookup.as_view(), name='entity-lookup'),
     path('search/', payroll_views.SearchView.as_view(), name='search'),
+    path('source-file/', payroll_views.SourceFileView.as_view(), name='source-file'),
     path('<int:error_code>', payroll_views.error, name='error'),
 
     # admin

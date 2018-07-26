@@ -4,14 +4,28 @@ from django.db import connection
 from django.db.models import Q, FloatField, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.generic.base import TemplateView
+from django.urls import reverse
+from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
 
+from data_import.models import RespondingAgency, SourceFile
+
 from payroll.charts import ChartHelperMixin
 from payroll.models import Employer, Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin
+
+
+class SourceFileView(RedirectView):
+    def get_redirect_url(self):
+        responding_agency = self.request.GET['responding_agency']
+        reporting_year = self.request.GET['reporting_year']
+
+        file = SourceFile.objects.get(responding_agency__id=responding_agency,
+                                      reporting_year=reporting_year)
+
+        return file.source_file.url
 
 
 class IndexView(TemplateView, ChartHelperMixin):
@@ -80,6 +94,28 @@ class EmployerView(DetailView, ChartHelperMixin):
         employee_salaries = self.object.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
+        from urllib.parse import urlencode
+
+        if self.object.is_department:
+            responding_agency = self.object.parent.name
+        else:
+            responding_agency = self.object.name
+
+        # This is super not gonna work. StandardizedFiles are related to many
+        # RespondingAgencies; but Employers are _not_ associated with any file,
+        # i.e., there's not a way to know which file we're talking about from
+        # the standardized data in the current implementation...
+        #
+        # I think we need to somehow store a cross-walk of employers to responding
+        # agencies.
+
+        source_params = {
+            'responding_agency': RespondingAgency.objects.get(name__iexact=responding_agency).id,
+            'reporting_year': 2017,
+        }
+
+        source_link = reverse('source-file') + '?' + urlencode(source_params)
+
         context.update({
             'jobs': Job.of_employer(self.object.id, n=5),
             'median_salary': self.median_entity_salary(),
@@ -89,7 +125,9 @@ class EmployerView(DetailView, ChartHelperMixin):
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
             'data_year': 2017,
+            'source_link': source_link,
         })
+
         return context
 
     def median_entity_salary(self):
