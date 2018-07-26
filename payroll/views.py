@@ -1,7 +1,7 @@
 import json
 
 from django.db import connection
-from django.db.models import Q, FloatField
+from django.db.models import Q, FloatField, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -88,6 +88,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             'salary_percentile': self.salary_percentile(),
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
+            'data_year': 2017,
         })
         return context
 
@@ -111,6 +112,7 @@ class UnitView(EmployerView):
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
             'composition_json': self.composition_data(),
+            'size_class': self.object.size_class,
         })
         return context
 
@@ -482,8 +484,19 @@ class PersonView(DetailView, ChartHelperMixin):
         all_jobs = self.object.jobs.all()
         current_job = self.object.most_recent_job
         current_salary = current_job.salaries.get()
-        fellow_job_holders = Job.objects.filter(position=current_job.position)\
+
+        given_year = Q(vintage__standardized_file__reporting_year=current_job.vintage.standardized_file.get().reporting_year)
+
+        salary_prefetch = Prefetch(
+            'salaries',
+            queryset=Salary.objects.filter(given_year),
+            to_attr='salary',
+        )
+
+        fellow_job_holders = Job.objects.filter(Q(position=current_job.position) & given_year)\
                                         .exclude(person=self.object)\
+                                        .select_related('person', 'position')\
+                                        .prefetch_related(salary_prefetch)\
                                         .order_by('-salaries__amount')
 
         employer_percentile = current_salary.employer_percentile

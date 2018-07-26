@@ -32,7 +32,7 @@
             <h3 class="card-title mb-4">
               <i class="fas fa-list"></i> Summary
             </h3>
-            <p><strong>{{ entity }}</strong> earned <strong class="text-primary">{{ current_salary|format_salary }}</strong> in {{ data_year }} as a <strong>{{ current_job.position }}</strong> for <strong>{{ current_job.position.employer }}</strong>. {% if current_job.start_date %}{{ entity.last_name|titlecase_standalone }} has worked in this position since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
+            <p><strong>{{ entity }}</strong> earned <strong class="text-primary">{{ current_salary|format_salary }}</strong> in {{ data_year }} as a <strong>{{ current_job.position }}</strong> for <strong>{{ current_employer }}</strong>. {% if current_job.start_date %}{{ entity.last_name|titlecase_standalone }} had worked in this position since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
 
             <p>{{ entity.last_name|titlecase_standalone }} earned more than <strong>{{ employer_percentile|format_percentile }}</strong> of employees in <strong>{{ current_employer }}</strong>.</p>
 

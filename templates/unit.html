@@ -40,13 +40,13 @@
           {% endif %}
 
           {% if not entity.is_unclassified %}
-            {% if entity.size_class %}
-              <p><strong>{{ entity }}</strong> is classified as <strong>{{ entity.size_class }}</strong> because it is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> populations in Illinois.</p>
+            {% if size_class %}
+              <p>With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong>{{ size_class }}</strong>. It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> populations in Illinois.</p>
             {% endif %}
 
-            <p>The median salary in <strong>{{ entity }}</strong> is <strong>{{ median_salary|format_salary }}</strong>, which is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> median salaries in Illinois.</p>
+            <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> median salaries in Illinois.</p>
 
-            <p><strong>{{ entity }}</strong> has a total payroll expenditure higher than <strong>{{ expenditure_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> expenditures in Illinois.</p>
+            <p><strong>{{ entity }}</strong> spent more on payroll in {{ data_year }} than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other employers in the <strong>{{ entity.taxonomy }}</strong> category.</p>
           {% endif %}
         </div>
         <div id="employee-distribution-chart" class="col-lg-6"></div>
