@@ -194,6 +194,8 @@ class EmployerTaxonomy(models.Model):
     chicago = models.BooleanField()
     cook_or_collar = models.BooleanField()
 
+    api_param = 'taxonomy'
+
     def __str__(self):
         kwargs = {
             'type': self.entity_type,
@@ -235,6 +237,8 @@ class EmployerUniverse(models.Model):
     Classification of a department, e.g., police department.
     '''
     name = models.CharField(max_length=255)
+
+    api_param = 'universe'
 
     def __str__(self):
         return self.name

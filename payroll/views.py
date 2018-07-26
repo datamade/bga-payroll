@@ -1,7 +1,7 @@
 import json
 
 from django.db import connection
-from django.db.models import Q, FloatField
+from django.db.models import Q, FloatField, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -88,6 +88,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             'salary_percentile': self.salary_percentile(),
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
+            'data_year': 2017,
         })
         return context
 
@@ -111,6 +112,7 @@ class UnitView(EmployerView):
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
             'composition_json': self.composition_data(),
+            'size_class': self.object.size_class,
         })
         return context
 
@@ -316,7 +318,8 @@ class UnitView(EmployerView):
           )
           SELECT
             employer.name,
-            dept_budget
+            dept_budget,
+            employer.slug
           FROM parent_department_expenditures
           JOIN payroll_employer as employer
           ON parent_department_expenditures.dept_id = employer.id
@@ -329,15 +332,15 @@ class UnitView(EmployerView):
             result = cursor.fetchone()
 
         if result is None:
-            name = 'N/A'
-            amount = 'N/A'
+            name, amount, slug = ['N/A'] * 3
+
         else:
-            name = result[0]
-            amount = result[1]
+            name, amount, slug = result
 
         highest_spending_department = {
             'name': name,
-            'amount': amount
+            'amount': amount,
+            'slug': slug,
         }
         return highest_spending_department
 
@@ -482,8 +485,13 @@ class PersonView(DetailView, ChartHelperMixin):
         all_jobs = self.object.jobs.all()
         current_job = self.object.most_recent_job
         current_salary = current_job.salaries.get()
+
+        salary_prefetch = Prefetch('salaries', to_attr='salary')
+
         fellow_job_holders = Job.objects.filter(position=current_job.position)\
                                         .exclude(person=self.object)\
+                                        .select_related('person', 'position')\
+                                        .prefetch_related(salary_prefetch)\
                                         .order_by('-salaries__amount')
 
         employer_percentile = current_salary.employer_percentile
@@ -493,11 +501,10 @@ class PersonView(DetailView, ChartHelperMixin):
 
         if not current_employer.is_unclassified:
             if current_employer.is_department:
-                employer_type = '{0} {1}'.format(current_employer.parent.taxonomy,
-                                                 current_employer.universe)
+                employer_type = [current_employer.universe, current_employer.parent.taxonomy]
 
             else:
-                employer_type = current_employer.taxonomy
+                employer_type = [current_employer.taxonomy]
 
         else:
             employer_type = None
@@ -514,7 +521,7 @@ class PersonView(DetailView, ChartHelperMixin):
             upper = int(salary_range['upper_edge'].rstrip('k')) * 1000
 
             if lower < salary_amount < upper:
-                salary_range['color'] = '#007aff'
+                salary_range['color'] = '#ffc107'
             else:
                 salary_range['color'] = '#6c757c'
 

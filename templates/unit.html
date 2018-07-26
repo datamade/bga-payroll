@@ -3,73 +3,95 @@
 {% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    {% include 'partials/breadcrumbs.html' %}
-  </ol>
-</nav>
 
-<div class="col-md-12">
-  <h2 class="mb-3"><i class="fas fa-building"></i> {{ entity }}</h2>
+<div class="row">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      {% include 'partials/breadcrumbs.html' %}
+    </ol>
+  </nav>
+</div>
 
-  <div class="badge badge-primary">
-    {% if entity.taxonomy %}{{ entity.taxonomy }}{% else %}Unit{% endif %}
+<div class="row">
+  <div class="col-md">
+    <h2 class="mb-3"><i class="fas fa-building"></i> {{ entity }}</h2>
+
+    <div class="badge badge-primary">
+      {% if entity.taxonomy %}{{ entity.taxonomy }}{% else %}Unit{% endif %}
+    </div>
+
+    {% if size_class %}
+    <div class="badge badge-secondary">
+      {{ size_class }}
+    </div>
+    {% endif %}
   </div>
+</div>
 
-  {% if entity.size_class %}
-  <div class="badge badge-secondary">
-    {{ entity.size_class }}
-  </div>
-  {% endif %}
+<div class="row mb-4">
+  {% with context = aggregate_stats %}
+    {% include 'partials/baseball_stats.html' %}
+  {% endwith %}
+</div>
 
-  <div class="row mb-4">
-    {% with context = aggregate_stats %}
-      {% include 'partials/baseball_stats.html' %}
-    {% endwith %}
-  </div>
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-lg-6" id="intro-text">
+            <h3 class="card-title mb-4">
+              <i class="fas fa-list"></i> Summary
+            </h3>
+            {% if not entity.is_unclassified %}
+              {% if size_class %}
+                <p>With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>. It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.</p>
+              {% endif %}
 
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row">
-        <div class="col-lg-6" id="intro-text">
-          <h3 class="card-title mb-4">
-            <i class="fas fa-list"></i> Summary
-          </h3>
-          {% if departments %}
-            <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong>{{ highest_spending_department.name|titlecase_standalone }}</strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
-          {% endif %}
+              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
 
-          {% if not entity.is_unclassified %}
-            {% if entity.size_class %}
-              <p><strong>{{ entity }}</strong> is classified as <strong>{{ entity.size_class }}</strong> because it is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> populations in Illinois.</p>
+              <p><strong>{{ entity }}</strong> spent more on payroll in {{ data_year }} than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
             {% endif %}
 
-            <p>The median salary in <strong>{{ entity }}</strong> is <strong>{{ median_salary|format_salary }}</strong>, which is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> median salaries in Illinois.</p>
-
-            <p><strong>{{ entity }}</strong> has a total payroll expenditure higher than <strong>{{ expenditure_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> expenditures in Illinois.</p>
-          {% endif %}
+            {% if department_salaries %}
+              <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong><a href="{{ url('department', kwargs={'slug': highest_spending_department.slug}) }}">{{ highest_spending_department.name|titlecase_standalone }}</a></strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
+            {% endif %}
+          </div>
+          <div id="employee-distribution-chart" class="col-lg-6"></div>
         </div>
-        <div id="employee-distribution-chart" class="col-lg-6"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="card mb-4">
-    {% include 'partials/employee_card.html' %}
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      {% include 'partials/employee_card.html' %}
+    </div>
   </div>
+</div>
 
-  {% if elected_officials %}
-  <div class="card mb-4">
-    {% include 'partials/elected_officials_card.html' %}
+{% if elected_officials %}
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      {% include 'partials/elected_officials_card.html' %}
+    </div>
   </div>
-  {% endif %}
+</div>
+{% endif %}
 
-  {% if department_salaries %}
-  <div class="card mb-4">
-    {% include 'partials/department_card.html' %}
-    <div id="department-composition-chart"></div>
+{% if department_salaries %}
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      {% include 'partials/department_card.html' %}
+      <div id="department-composition-chart"></div>
+    </div>
   </div>
-  {% endif %}
+</div>
+{% endif %}
 
 </div>
 {% endblock %}
