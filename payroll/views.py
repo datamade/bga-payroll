@@ -318,7 +318,8 @@ class UnitView(EmployerView):
           )
           SELECT
             employer.name,
-            dept_budget
+            dept_budget,
+            employer.slug
           FROM parent_department_expenditures
           JOIN payroll_employer as employer
           ON parent_department_expenditures.dept_id = employer.id
@@ -331,15 +332,15 @@ class UnitView(EmployerView):
             result = cursor.fetchone()
 
         if result is None:
-            name = 'N/A'
-            amount = 'N/A'
+            name, amount, slug = ['N/A'] * 3
+
         else:
-            name = result[0]
-            amount = result[1]
+            name, amount, slug = result
 
         highest_spending_department = {
             'name': name,
-            'amount': amount
+            'amount': amount,
+            'slug': slug,
         }
         return highest_spending_department
 
@@ -500,11 +501,10 @@ class PersonView(DetailView, ChartHelperMixin):
 
         if not current_employer.is_unclassified:
             if current_employer.is_department:
-                employer_type = '{0} {1}'.format(current_employer.parent.taxonomy,
-                                                 current_employer.universe)
+                employer_type = [current_employer.universe, current_employer.parent.taxonomy]
 
             else:
-                employer_type = current_employer.taxonomy
+                employer_type = [current_employer.taxonomy]
 
         else:
             employer_type = None
@@ -521,7 +521,7 @@ class PersonView(DetailView, ChartHelperMixin):
             upper = int(salary_range['upper_edge'].rstrip('k')) * 1000
 
             if lower < salary_amount < upper:
-                salary_range['color'] = '#007aff'
+                salary_range['color'] = '#ffc107'
             else:
                 salary_range['color'] = '#6c757c'
 

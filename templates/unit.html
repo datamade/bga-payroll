@@ -43,18 +43,18 @@
             <h3 class="card-title mb-4">
               <i class="fas fa-list"></i> Summary
             </h3>
-            {% if departments %}
-              <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong>{{ highest_spending_department.name|titlecase_standalone }}</strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
-            {% endif %}
-
             {% if not entity.is_unclassified %}
               {% if size_class %}
-                <p>With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong>{{ size_class }}</strong>. It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> populations in Illinois.</p>
+                <p>With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>. It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.</p>
               {% endif %}
 
-              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong>{{ entity.taxonomy }}</strong> median salaries in Illinois.</p>
+              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
 
-              <p><strong>{{ entity }}</strong> spent more on payroll in {{ data_year }} than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other employers in the <strong>{{ entity.taxonomy }}</strong> category.</p>
+              <p><strong>{{ entity }}</strong> spent more on payroll in {{ data_year }} than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
+            {% endif %}
+
+            {% if department_salaries %}
+              <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong><a href="{{ url('department', kwargs={'slug': highest_spending_department.slug}) }}">{{ highest_spending_department.name|titlecase_standalone }}</a></strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
             {% endif %}
           </div>
           <div id="employee-distribution-chart" class="col-lg-6"></div>
