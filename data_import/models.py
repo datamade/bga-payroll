@@ -67,6 +67,7 @@ class SourceFile(models.Model):
     )
     responding_agency = models.ForeignKey(
         'RespondingAgency',
+        related_name='source_files',
         on_delete=models.CASCADE
     )
     reporting_year = models.IntegerField()
@@ -117,7 +118,7 @@ class StandardizedFile(models.Model):
     )
     responding_agency = models.ManyToManyField(
         'RespondingAgency',
-        related_name='responding_agencies'
+        related_name='standardized_files'
     )
     reporting_year = models.IntegerField()
     upload = models.ForeignKey(

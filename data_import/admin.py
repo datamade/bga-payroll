@@ -3,8 +3,7 @@ import datetime
 from django.contrib import admin
 from django.db.models import Q
 
-from data_import.models import SourceFile
-from payroll.models import Salary
+from data_import.models import SourceFile, StandardizedFile
 
 
 class AdminSourceFile(admin.ModelAdmin):
@@ -18,25 +17,24 @@ class AdminSourceFile(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        obj.reporting_period_start_date = (obj.reporting_year, 1, 1)
-        obj.reporting_period_end_date = (obj.reporting_year, 12, 31)
+        obj.reporting_period_start_date = datetime(obj.reporting_year, 1, 1)
+        obj.reporting_period_end_date = datetime(obj.reporting_year, 12, 31)
 
         obj = self._link_standardized_file(obj)
 
         super().save_model(request, obj, form, change)
 
     def _link_standardized_file(self, obj):
-        in_reporting_year = Q(vintage__standardized_file__reporting_year=obj.reporting_year)
-        of_responding_agency = Q(vintage__standardized_file__responding_agency=obj.responding_agency)
+        in_reporting_year = Q(reporting_year=obj.reporting_year)
+        of_responding_agency = Q(responding_agency=obj.responding_agency)
 
-        salary = Salary.objects.filter(in_reporting_year & of_responding_agency).first()
+        s_file = StandardizedFile.objects.filter(in_reporting_year & of_responding_agency).get()
 
-        if salary:
-            obj.standardized_file = salary.vintage.standardized_file
+        if s_file:
+            obj.standardized_file = s_file
 
         else:
             raise
-
 
 
 admin.site.register(SourceFile, AdminSourceFile)
