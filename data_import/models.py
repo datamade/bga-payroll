@@ -63,8 +63,7 @@ class SourceFile(models.Model):
     '''
     source_file = models.FileField(
         max_length=1000,
-        upload_to=source_file_upload_name,
-        null=True
+        upload_to=source_file_upload_name
     )
     responding_agency = models.ForeignKey(
         'RespondingAgency',
@@ -73,13 +72,12 @@ class SourceFile(models.Model):
     reporting_year = models.IntegerField()
     reporting_period_start_date = models.DateField()
     reporting_period_end_date = models.DateField()
-    response_date = models.DateField()
+    response_date = models.DateField(null=True)
     upload = models.ForeignKey(
         'Upload',
         on_delete=models.CASCADE,
         related_name='source_file'
     )
-    google_drive_file_id = models.CharField(max_length=255)
     standardized_file = models.ForeignKey(
         'StandardizedFile',
         on_delete=models.SET_NULL,
@@ -94,21 +92,7 @@ class SourceFile(models.Model):
     def __str__(self):
         # For FieldFile API:
         # https://docs.djangoproject.com/en/2.0/ref/models/fields/#django.db.models.fields.files.FieldFile
-        if self.source_file:
-            return self.source_file.name
-
-        else:
-            agency = str(self.responding_agency)
-            year = self.reporting_year
-            return 'Pending file for {year} from {agency}'.format(agency=agency,
-                                                                  year=year)
-
-    def download_from_drive(self):
-        '''
-        Download file from Google Drive and save it to S3 via the source_file
-        field of this model. Do this in a delayed task, rather than on save.
-        '''
-        raise NotImplementedError
+        return self.source_file.name
 
 
 def standardized_file_upload_name(instance, filename):
@@ -130,6 +114,10 @@ class StandardizedFile(models.Model):
     standardized_file = models.FileField(
         max_length=1000,
         upload_to=standardized_file_upload_name
+    )
+    responding_agency = models.ManyToManyField(
+        'RespondingAgency',
+        related_name='responding_agencies'
     )
     reporting_year = models.IntegerField()
     upload = models.ForeignKey(

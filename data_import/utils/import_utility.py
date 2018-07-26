@@ -67,6 +67,26 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
+        self._associate_responding_agencies()
+
+    def _associate_responding_agencies(self):
+        insert = '''
+            INSERT INTO data_import_standardizedfile_responding_agency (
+                standardizedfile_id,
+                respondingagency_id
+            )
+            SELECT DISTINCT ON (agency.id)
+              {s_file_id},
+              agency.id
+            FROM {raw_payroll} AS raw
+            JOIN data_import_respondingagency AS agency
+            ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(agency.name))
+        '''.format(s_file_id=self.s_file_id,
+                   raw_payroll=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
+
     def reshape_raw_payroll(self):
         select = '''
             CREATE TABLE {intermediate_payroll} AS (
