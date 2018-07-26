@@ -485,15 +485,9 @@ class PersonView(DetailView, ChartHelperMixin):
         current_job = self.object.most_recent_job
         current_salary = current_job.salaries.get()
 
-        given_year = Q(vintage__standardized_file__reporting_year=current_job.vintage.standardized_file.get().reporting_year)
+        salary_prefetch = Prefetch('salaries', to_attr='salary')
 
-        salary_prefetch = Prefetch(
-            'salaries',
-            queryset=Salary.objects.filter(given_year),
-            to_attr='salary',
-        )
-
-        fellow_job_holders = Job.objects.filter(Q(position=current_job.position) & given_year)\
+        fellow_job_holders = Job.objects.filter(position=current_job.position)\
                                         .exclude(person=self.object)\
                                         .select_related('person', 'position')\
                                         .prefetch_related(salary_prefetch)\
