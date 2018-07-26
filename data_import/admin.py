@@ -44,11 +44,9 @@ class AdminSourceFile(admin.ModelAdmin):
 
     def _link_standardized_file(self, obj):
         '''
-        This method identifies the StandardizedFile object containing data for
-        the given year.
-
-        TO-DO: Decide whether we want to support uploading files in either
-        order, or require standard data be uploaded first.
+        Identify the StandardizedFile object for the given year and responding
+        agency, if it exists. Note: Standardized data is linked to pre-existing
+        source files on import.
         '''
         in_reporting_year = Q(reporting_year=obj.reporting_year)
         of_responding_agency = Q(responding_agency=obj.responding_agency)
@@ -57,9 +55,6 @@ class AdminSourceFile(admin.ModelAdmin):
 
         if s_file:
             obj.standardized_file = s_file
-
-        else:
-            raise
 
         return obj
 

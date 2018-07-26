@@ -67,11 +67,12 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
-        self._associate_responding_agencies()
+        self._link_responding_agency_with_standardized_file()
+        self._link_standardized_file_with_source_file()
 
-    def _associate_responding_agencies(self):
+    def _link_responding_agency_with_standardized_file(self):
         insert = '''
-            INSERT INTO data_import_standardizedfile_responding_agency (
+            INSERT INTO data_import_standardizedfile_responding_agencies (
                 standardizedfile_id,
                 respondingagency_id
             )
@@ -86,6 +87,25 @@ class ImportUtility(TableNamesMixin):
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
+
+    def _link_standardized_file_with_source_file(self):
+        '''
+        Link standard data to any source files we already have. Note: Source
+        files added later are linked on upload.
+        '''
+        update = '''
+            UPDATE data_import_sourcefile AS src
+            SET standardized_file_id = std.id
+            FROM data_import_standardizedfile AS std
+            JOIN data_import_standardizedfile_responding_agencies AS xwalk
+            ON std.id = xwalk.standardizedfile_id
+            WHERE xwalk.respondingagency_id = src.responding_agency_id
+            AND std.reporting_year = src.reporting_year
+            AND src.standardized_file_id IS NULL
+        '''
+
+        with connection.cursor() as cursor:
+            cursor.execute(update)
 
     def reshape_raw_payroll(self):
         select = '''

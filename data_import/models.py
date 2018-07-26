@@ -116,7 +116,7 @@ class StandardizedFile(models.Model):
         max_length=1000,
         upload_to=standardized_file_upload_name
     )
-    responding_agency = models.ManyToManyField(
+    responding_agencies = models.ManyToManyField(
         'RespondingAgency',
         related_name='standardized_files'
     )
