@@ -3,11 +3,24 @@ import datetime
 from django.contrib import admin
 from django.db.models import Q
 
-from data_import.models import SourceFile, StandardizedFile, Upload, RespondingAgency
+from data_import.models import SourceFile, StandardizedFile, Upload, \
+    RespondingAgency
+
+
+class AdminRespondingAgency(admin.ModelAdmin):
+    search_fields = ('name',)
+    fields = ('name',)
+    ordering = ('name',)
+
+    def get_model_perms(self, request):
+        '''
+        A hack to hide the standalone RespondingAgency from the admin.
+        '''
+        return {}
 
 
 class AdminSourceFile(admin.ModelAdmin):
-    search_fields = ('responding_agency__name', 'reporting_year',)
+    model = SourceFile
 
     fields = (
         'source_file',
@@ -16,6 +29,10 @@ class AdminSourceFile(admin.ModelAdmin):
         'reporting_period_start_date',
         'reporting_period_end_date',
     )
+
+    autocomplete_fields = ['responding_agency']
+
+    search_fields = ('responding_agency__name', 'reporting_year',)
 
     def get_readonly_fields(self, request, obj=None):
         '''
@@ -69,3 +86,4 @@ class AdminSourceFile(admin.ModelAdmin):
 
 
 admin.site.register(SourceFile, AdminSourceFile)
+admin.site.register(RespondingAgency, AdminRespondingAgency)
