@@ -68,8 +68,7 @@ class SourceFile(models.Model):
     responding_agency = models.ForeignKey(
         'RespondingAgency',
         related_name='source_files',
-        on_delete=models.CASCADE,
-        help_text='If your responding agency is not in the list, click the green plus sign to add it'
+        on_delete=models.CASCADE
     )
     reporting_year = models.IntegerField()
     # Date fields are blank so they are not required in the admin interface.

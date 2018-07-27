@@ -18,6 +18,14 @@ class AdminRespondingAgency(admin.ModelAdmin):
         '''
         return {}
 
+    def get_search_results(self, request, queryset, search_term):
+        '''
+        Only show responding agencies without a source file.
+        '''
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset = queryset.exclude(source_files__reporting_year=2017)
+        return queryset, use_distinct
+
 
 class AdminSourceFile(admin.ModelAdmin):
     model = SourceFile
@@ -42,17 +50,6 @@ class AdminSourceFile(admin.ModelAdmin):
             return ['responding_agency']
         else:
             return []
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        '''
-        Only show responding agencies without a source file.
-        '''
-        if db_field.name == 'responding_agency':
-            kwargs['queryset'] = RespondingAgency.objects\
-                                                 .exclude(source_files__reporting_year=2017)\
-                                                 .order_by('name')
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
         obj.upload = Upload.objects.create(created_by=request.user)
