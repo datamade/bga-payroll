@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from titlecase import titlecase
 
 from bga_database.base_models import SluggedModel
-from data_import.models import Upload
+from data_import.models import Upload, RespondingAgency
 from payroll.utils import format_name, format_numeral
 
 
@@ -184,6 +184,23 @@ class Department(Employer):
         proxy = True
 
     objects = DepartmentManager()
+
+
+class UnitRespondingAgency(VintagedModel):
+    '''
+    For each vintage (upload), associate the responding agency and unit,
+    so the appropriate source file can be mapped to the data point.
+    '''
+    unit = models.ForeignKey(
+        'Employer',
+        related_name='responding_agencies',
+        on_delete=models.CASCADE
+    )
+    responding_agency = models.ForeignKey(
+        RespondingAgency,
+        related_name='units',
+        on_delete=models.CASCADE
+    )
 
 
 class EmployerTaxonomy(models.Model):

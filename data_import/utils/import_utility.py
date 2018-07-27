@@ -112,6 +112,7 @@ class ImportUtility(TableNamesMixin):
             CREATE TABLE {intermediate_payroll} AS (
               SELECT
                 record_id,
+                responding_agency,
                 employer,
                 department,
                 title,
@@ -124,6 +125,7 @@ class ImportUtility(TableNamesMixin):
               UNION ALL
               SELECT
                 record_id,
+                responding_agency,
                 department AS employer,
                 NULL as department,
                 title,
@@ -189,6 +191,7 @@ class ImportUtility(TableNamesMixin):
 
         self._classify_parent_employers()
         self._insert_parent_employer_population()
+        self._insert_unit_responding_agency()
 
     def _classify_parent_employers(self):
         '''
@@ -278,6 +281,26 @@ class ImportUtility(TableNamesMixin):
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
+
+    def _insert_unit_responding_agency(self):
+        insert = '''
+            INSERT INTO payroll_unitrespondingagency (
+              unit_id,
+              responding_agency_id,
+              vintage_id
+            )
+            SELECT DISTINCT ON (emp.id, agency.id)
+              emp.id,
+              agency.id,
+              {vintage}
+            FROM {intermediate_payroll} AS raw
+            JOIN payroll_employer AS emp
+            ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(emp.name))
+            JOIN data_import_respondingagency AS agency
+            ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(agency.name))
+            WHERE emp.parent_id IS NULL
+        '''.format(vintage=self.vintage,
+                   intermediate_payroll=self.intermediate_payroll_table)
 
     def select_unseen_child_employer(self):
         '''
