@@ -71,8 +71,17 @@ class SourceFile(models.Model):
         on_delete=models.CASCADE
     )
     reporting_year = models.IntegerField()
-    reporting_period_start_date = models.DateField(help_text='Leave blank for Jan. 1 of reporting year')
-    reporting_period_end_date = models.DateField(help_text='Leave blank for Dec. 31 of reporting year')
+    # Date fields are blank so they are not required in the admin interface.
+    # A default is set as described in the help text, if they are not
+    # provided.
+    reporting_period_start_date = models.DateField(
+        help_text='Leave blank for Jan. 1 of reporting year',
+        blank=True
+    )
+    reporting_period_end_date = models.DateField(
+        help_text='Leave blank for Dec. 31 of reporting year',
+        blank=True
+    )
     response_date = models.DateField(null=True)
     upload = models.ForeignKey(
         'Upload',

@@ -17,6 +17,15 @@ class AdminSourceFile(admin.ModelAdmin):
         'reporting_period_end_date',
     )
 
+    def get_readonly_fields(self, request, obj=None):
+        '''
+        Disable editing of responding agency for existing source files.
+        '''
+        if obj:
+            return ['responding_agency']
+        else:
+            return []
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         '''
         Only show responding agencies without a source file.
@@ -49,7 +58,7 @@ class AdminSourceFile(admin.ModelAdmin):
         source files on import.
         '''
         in_reporting_year = Q(reporting_year=obj.reporting_year)
-        of_responding_agency = Q(responding_agency=obj.responding_agency)
+        of_responding_agency = Q(responding_agencies=obj.responding_agency)
 
         s_file = StandardizedFile.objects.filter(in_reporting_year & of_responding_agency).get()
 
