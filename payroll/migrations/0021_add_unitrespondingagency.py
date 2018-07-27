@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('data_import', '0006_respondingagency_help_text'),
+        ('data_import', '0005_blankable_dates'),
         ('payroll', '0020_meta_models'),
     ]
 
