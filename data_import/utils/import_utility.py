@@ -302,6 +302,9 @@ class ImportUtility(TableNamesMixin):
         '''.format(reporting_year=self.s_file.reporting_year,
                    intermediate_payroll=self.intermediate_payroll_table)
 
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
+
     def select_unseen_child_employer(self):
         '''
         If the parent is new as of this vintage, don't force the

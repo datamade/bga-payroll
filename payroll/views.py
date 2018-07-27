@@ -4,16 +4,13 @@ from django.db import connection
 from django.db.models import Q, FloatField, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.urls import reverse
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
 
-from data_import.models import RespondingAgency, SourceFile
-
 from payroll.charts import ChartHelperMixin
-from payroll.models import Employer, Job, Person, Salary, Unit, Department
+from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin
 
 
