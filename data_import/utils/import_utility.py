@@ -287,19 +287,19 @@ class ImportUtility(TableNamesMixin):
             INSERT INTO payroll_unitrespondingagency (
               unit_id,
               responding_agency_id,
-              vintage_id
+              reporting_year
             )
             SELECT DISTINCT ON (emp.id, agency.id)
               emp.id,
               agency.id,
-              {vintage}
+              {reporting_year}
             FROM {intermediate_payroll} AS raw
             JOIN payroll_employer AS emp
             ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(emp.name))
             JOIN data_import_respondingagency AS agency
             ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(agency.name))
             WHERE emp.parent_id IS NULL
-        '''.format(vintage=self.vintage,
+        '''.format(reporting_year=self.s_file.reporting_year,
                    intermediate_payroll=self.intermediate_payroll_table)
 
     def select_unseen_child_employer(self):

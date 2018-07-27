@@ -5,7 +5,7 @@ from django.db.models import Q, FloatField, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.views.generic.base import TemplateView, RedirectView
+from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
@@ -15,17 +15,6 @@ from data_import.models import RespondingAgency, SourceFile
 from payroll.charts import ChartHelperMixin
 from payroll.models import Employer, Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin
-
-
-class SourceFileView(RedirectView):
-    def get_redirect_url(self):
-        responding_agency = self.request.GET['responding_agency']
-        reporting_year = self.request.GET['reporting_year']
-
-        file = SourceFile.objects.get(responding_agency__id=responding_agency,
-                                      reporting_year=reporting_year)
-
-        return file.source_file.url
 
 
 class IndexView(TemplateView, ChartHelperMixin):
@@ -74,7 +63,6 @@ def error(request, error_code):
 
 
 class EmployerView(DetailView, ChartHelperMixin):
-    model = Employer
     context_object_name = 'entity'
 
     # from_clause connects salaries and employers through a series of joins.
@@ -94,27 +82,12 @@ class EmployerView(DetailView, ChartHelperMixin):
         employee_salaries = self.object.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
-        from urllib.parse import urlencode
+        source_file = self.object.source_file(2017)
 
-        if self.object.is_department:
-            responding_agency = self.object.parent.name
+        if source_file:
+            source_link = source_file.url
         else:
-            responding_agency = self.object.name
-
-        # This is super not gonna work. StandardizedFiles are related to many
-        # RespondingAgencies; but Employers are _not_ associated with any file,
-        # i.e., there's not a way to know which file we're talking about from
-        # the standardized data in the current implementation...
-        #
-        # I think we need to somehow store a cross-walk of employers to responding
-        # agencies.
-
-        source_params = {
-            'responding_agency': RespondingAgency.objects.get(name__iexact=responding_agency).id,
-            'reporting_year': 2017,
-        }
-
-        source_link = reverse('source-file') + '?' + urlencode(source_params)
+            source_link = None
 
         context.update({
             'jobs': Job.of_employer(self.object.id, n=5),
@@ -139,6 +112,7 @@ class EmployerView(DetailView, ChartHelperMixin):
 
 
 class UnitView(EmployerView):
+    model = Unit
     template_name = 'unit.html'
 
     def get_context_data(self, **kwargs):
@@ -152,6 +126,7 @@ class UnitView(EmployerView):
             'composition_json': self.composition_data(),
             'size_class': self.object.size_class,
         })
+
         return context
 
     def aggregate_department_statistics(self):
@@ -384,6 +359,7 @@ class UnitView(EmployerView):
 
 
 class DepartmentView(EmployerView):
+    model = Department
     template_name = 'department.html'
 
     def get_context_data(self, **kwargs):
@@ -563,6 +539,13 @@ class PersonView(DetailView, ChartHelperMixin):
             else:
                 salary_range['color'] = '#6c757c'
 
+        source_file = self.object.source_file(2017)
+
+        if source_file:
+            source_link = source_file.url
+        else:
+            source_link = None
+
         context.update({
             'data_year': 2017,
             'current_job': current_job,
@@ -574,6 +557,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'employer_percentile': employer_percentile,
             'like_employer_percentile': like_employer_percentile,
             'fellow_job_holders': fellow_job_holders,
+            'source_link': source_link,
         })
 
         return context
