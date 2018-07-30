@@ -18,6 +18,15 @@ class VintagedModel(models.Model):
 
 
 class SourceFileMixin(object):
+    '''
+    This mixin provides a method to return a SourceFile if it exists for a
+    given year. To use, inherit this class, and define a responding_agency
+    method that accepts a year argument and returns a handle on the responding
+    agency for that year. Responding agencies are associated with units for
+    each reporting year; see `Person.responding_agency` for an example of
+    getting a handle on the appropriate responding agency from a model further
+    removed from the unit.
+    '''
     def source_file(self, year):
         responding_agency = self.responding_agency(year)
 
