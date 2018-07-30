@@ -16,7 +16,8 @@ class ImportUtility(TableNamesMixin):
         from data_import.models import StandardizedFile
         s_file = StandardizedFile.objects.get(id=s_file_id)
 
-        self.vintage = s_file.upload.id
+        self.reporting_year = s_file.reporting_year  # Actual year
+        self.vintage = s_file.upload.id  # Standard file upload
 
     def populate_models_from_raw_data(self):
         self.insert_responding_agency()
@@ -299,7 +300,7 @@ class ImportUtility(TableNamesMixin):
             JOIN data_import_respondingagency AS agency
             ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(agency.name))
             WHERE emp.parent_id IS NULL
-        '''.format(reporting_year=self.s_file.reporting_year,
+        '''.format(reporting_year=self.reporting_year,
                    intermediate_payroll=self.intermediate_payroll_table)
 
         with connection.cursor() as cursor:
