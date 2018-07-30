@@ -10,7 +10,7 @@ from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
 
 from payroll.charts import ChartHelperMixin
-from payroll.models import Employer, Job, Person, Salary, Unit, Department
+from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin
 
 
@@ -60,7 +60,6 @@ def error(request, error_code):
 
 
 class EmployerView(DetailView, ChartHelperMixin):
-    model = Employer
     context_object_name = 'entity'
 
     # from_clause connects salaries and employers through a series of joins.
@@ -80,6 +79,13 @@ class EmployerView(DetailView, ChartHelperMixin):
         employee_salaries = self.object.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
+        source_file = self.object.source_file(2017)
+
+        if source_file:
+            source_link = source_file.url
+        else:
+            source_link = None
+
         context.update({
             'jobs': Job.of_employer(self.object.id, n=5),
             'median_salary': self.median_entity_salary(),
@@ -89,7 +95,9 @@ class EmployerView(DetailView, ChartHelperMixin):
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
             'data_year': 2017,
+            'source_link': source_link,
         })
+
         return context
 
     def median_entity_salary(self):
@@ -101,6 +109,7 @@ class EmployerView(DetailView, ChartHelperMixin):
 
 
 class UnitView(EmployerView):
+    model = Unit
     template_name = 'unit.html'
 
     def get_context_data(self, **kwargs):
@@ -114,6 +123,7 @@ class UnitView(EmployerView):
             'composition_json': self.composition_data(),
             'size_class': self.object.size_class,
         })
+
         return context
 
     def aggregate_department_statistics(self):
@@ -346,6 +356,7 @@ class UnitView(EmployerView):
 
 
 class DepartmentView(EmployerView):
+    model = Department
     template_name = 'department.html'
 
     def get_context_data(self, **kwargs):
@@ -525,6 +536,13 @@ class PersonView(DetailView, ChartHelperMixin):
             else:
                 salary_range['color'] = '#6c757c'
 
+        source_file = self.object.source_file(2017)
+
+        if source_file:
+            source_link = source_file.url
+        else:
+            source_link = None
+
         context.update({
             'data_year': 2017,
             'current_job': current_job,
@@ -536,6 +554,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'employer_percentile': employer_percentile,
             'like_employer_percentile': like_employer_percentile,
             'fellow_job_holders': fellow_job_holders,
+            'source_link': source_link,
         })
 
         return context

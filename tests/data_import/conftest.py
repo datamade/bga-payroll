@@ -5,17 +5,8 @@ from django.core.files import File
 from django.db import connection
 import pytest
 
-from data_import.models import RespondingAgency, StandardizedFile
 from data_import.tasks import copy_to_database
 from data_import.utils import ImportUtility
-
-
-@pytest.fixture
-def mock_file(mocker):
-    mock_file = mocker.MagicMock(spec=File)
-    mock_file.name = 'mock_file.csv'
-
-    return mock_file
 
 
 @pytest.fixture
@@ -57,38 +48,6 @@ def standardized_data_upload_blob(mock_file):
     }
 
     return blob
-
-
-@pytest.fixture
-@pytest.mark.django_db
-def standardized_file(mock_file, upload):
-    class StandardizedFileFactory():
-        def build(self, **kwargs):
-            data = {
-                'reporting_year': 2016,
-                'standardized_file': mock_file,
-                'upload': upload.build(),
-            }
-            data.update(kwargs)
-
-            return StandardizedFile.objects.create(**data)
-
-    return StandardizedFileFactory()
-
-
-@pytest.fixture
-@pytest.mark.django_db(transaction=True)
-def responding_agency(transactional_db):
-    class RespondingAgencyFactory():
-        def build(self, **kwargs):
-            data = {
-                'name': 'Half Acre Beer Co',
-            }
-            data.update(kwargs)
-
-            return RespondingAgency.objects.create(**data)
-
-    return RespondingAgencyFactory()
 
 
 @pytest.fixture

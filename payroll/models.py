@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from titlecase import titlecase
 
 from bga_database.base_models import SluggedModel
-from data_import.models import Upload
+from data_import.models import Upload, RespondingAgency, SourceFile
 from payroll.utils import format_name, format_numeral
 
 
@@ -15,6 +15,30 @@ class VintagedModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class SourceFileMixin(object):
+    '''
+    This mixin provides a method to return a SourceFile if it exists for a
+    given year. To use, inherit this class, and define a responding_agency
+    method that accepts a year argument and returns a handle on the responding
+    agency for that year. Responding agencies are associated with units for
+    each reporting year; see `Person.responding_agency` for an example of
+    getting a handle on the appropriate responding agency from a model further
+    removed from the unit.
+    '''
+    def source_file(self, year):
+        responding_agency = self.responding_agency(year)
+
+        try:
+            source_file = responding_agency.source_files\
+                                           .get(reporting_year=year)\
+                                           .source_file
+
+        except SourceFile.DoesNotExist:
+            source_file = None
+
+        return source_file
 
 
 class Employer(SluggedModel, VintagedModel):
@@ -167,11 +191,16 @@ class UnitManager(models.Manager):
         return super().get_queryset().filter(parent_id__isnull=True)
 
 
-class Unit(Employer):
+class Unit(Employer, SourceFileMixin):
     class Meta:
         proxy = True
 
     objects = UnitManager()
+
+    def responding_agency(self, year):
+        return self.responding_agencies\
+                   .get(reporting_year=year)\
+                   .responding_agency
 
 
 class DepartmentManager(models.Manager):
@@ -179,11 +208,35 @@ class DepartmentManager(models.Manager):
         return super().get_queryset().filter(parent_id__isnull=False)
 
 
-class Department(Employer):
+class Department(Employer, SourceFileMixin):
     class Meta:
         proxy = True
 
     objects = DepartmentManager()
+
+    def responding_agency(self, year):
+        return self.parent\
+                   .responding_agencies\
+                   .get(reporting_year=year)\
+                   .responding_agency
+
+
+class UnitRespondingAgency(models.Model):
+    '''
+    Associate units and responding agencies for a given year, so data from
+    that year can be linked to a specific source file.
+    '''
+    unit = models.ForeignKey(
+        'Employer',
+        related_name='responding_agencies',
+        on_delete=models.CASCADE
+    )
+    responding_agency = models.ForeignKey(
+        RespondingAgency,
+        related_name='units',
+        on_delete=models.CASCADE
+    )
+    reporting_year = models.IntegerField()
 
 
 class EmployerTaxonomy(models.Model):
@@ -244,7 +297,7 @@ class EmployerUniverse(models.Model):
         return self.name
 
 
-class Person(SluggedModel, VintagedModel):
+class Person(SluggedModel, VintagedModel, SourceFileMixin):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     search_vector = SearchVectorField(max_length=255, null=True)
@@ -269,6 +322,22 @@ class Person(SluggedModel, VintagedModel):
                    .select_related('position', 'position__employer', 'position__employer__parent')\
                    .order_by('-vintage__standardized_file__reporting_year')\
                    .first()
+
+    def responding_agency(self, year):
+        employer = self.jobs\
+                       .get(vintage__standardized_file__reporting_year=year)\
+                       .position\
+                       .employer
+
+        if employer.is_department:
+            unit = employer.parent
+
+        else:
+            unit = employer
+
+        return unit.responding_agencies\
+                   .get(reporting_year=year)\
+                   .responding_agency
 
 
 class Job(VintagedModel):

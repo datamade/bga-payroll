@@ -35,9 +35,6 @@ class Upload(models.Model):
 
 
 class RespondingAgency(SluggedModel):
-    '''
-    Model for keeping track of reporting agencies.
-    '''
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -53,14 +50,6 @@ def source_file_upload_name(instance, filename):
 
 
 class SourceFile(models.Model):
-    '''
-    Model for keeping track of source files.
-
-    Add a SourceFile foreign key to each model. For models whose objects can
-    appear in many years of data – i.e., Employer, Person – this should be
-    a ManyToManyField. As a bonus, the data is connected to Upload/s via its
-    related SourceFile/s.
-    '''
     source_file = models.FileField(
         max_length=1000,
         upload_to=source_file_upload_name

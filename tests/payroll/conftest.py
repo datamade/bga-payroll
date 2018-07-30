@@ -7,13 +7,15 @@ from payroll.models import Person, Position, Job, Salary
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def person(upload):
+def person(standardized_file):
     class PersonFactory():
         def build(self, **kwargs):
+            s_file = standardized_file.build()
+
             data = {
                 'first_name': 'Joe',
                 'last_name': 'Dirt',
-                'vintage': upload.build(),
+                'vintage': s_file.upload,
             }
             data.update(kwargs)
 
@@ -24,13 +26,15 @@ def person(upload):
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def position(upload, employer):
+def position(standardized_file, employer):
     class PositionFactory():
         def build(self, **kwargs):
+            s_file = standardized_file.build()
+
             data = {
                 'employer': employer.build(),
                 'title': 'Brewmaster',
-                'vintage': upload.build(),
+                'vintage': s_file.upload,
             }
             data.update(kwargs)
 
@@ -41,14 +45,16 @@ def position(upload, employer):
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def job(upload, person, position):
+def job(standardized_file, person, position):
     class JobFactory():
         def build(self, **kwargs):
+            s_file = standardized_file.build()
+
             data = {
                 'person': person.build(),
                 'position': position.build(),
                 'start_date': datetime.datetime(2010, 5, 5),
-                'vintage': upload.build(),
+                'vintage': s_file.upload,
             }
             data.update(kwargs)
 
@@ -59,14 +65,17 @@ def job(upload, person, position):
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def salary(upload, job):
+def salary(standardized_file, job):
     class SalaryFactory():
         def build(self, **kwargs):
+            s_file = standardized_file.build()
+
             data = {
                 'amount': '25000',
                 'job': job.build(),
-                'vintage': upload.build(),
+                'vintage': s_file.upload,
             }
+
             data.update(kwargs)
 
             return Salary.objects.create(**data)
