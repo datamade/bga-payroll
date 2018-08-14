@@ -46,6 +46,11 @@ var ChartHelper = {
         Highcharts.setOptions({
             lang: {
               thousandsSep: ',',
+            },
+            chart: {
+              style: {
+                  fontFamily: '"Acumin Pro Condensed", "Arial Narrow", Helvetica, sans-serif',
+              }
             }
         });
 
@@ -107,7 +112,7 @@ var ChartHelper = {
         chart: {
           type: 'bar'
         },
-        colors: ['#343a40', '#6c757c', '#007aff', '#ffc107', '#f8f9fa', '#28a845'],
+        colors: ['#343a40', '#6c757c', '#003a63', '#fd0', '#fffadb', '#c00'],
         plotOptions: {
           series: {
             stacking: 'percent',

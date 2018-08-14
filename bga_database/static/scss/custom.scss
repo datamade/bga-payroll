@@ -1,0 +1,20 @@
+@import url("//use.typekit.net/mqd7hhp.css");
+
+$bga-blue: #003a63;
+$bga-yellow: #fff200;
+
+$dark: $bga-blue;
+$light: #eaebee;
+
+$red: #c00;
+$blue: #4580bb;
+$yellow: $bga-yellow;
+
+$body-bg: #f7f7f7;
+$body-color: #333333;
+$link-color: $blue;
+
+$font-family-base: Georgia, "Times New Roman", "DejaVu Serif", serif;
+$headings-font-family: "Acumin Pro Condensed", "Arial Narrow", Helvetica, sans-serif;
+
+@import '../bootstrap/scss/bootstrap';
