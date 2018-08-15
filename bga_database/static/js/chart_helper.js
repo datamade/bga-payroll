@@ -46,6 +46,11 @@ var ChartHelper = {
         Highcharts.setOptions({
             lang: {
               thousandsSep: ',',
+            },
+            chart: {
+              style: {
+                  fontFamily: '"acumin-pro", "Arial", Helvetica, sans-serif',
+              }
             }
         });
 
@@ -59,7 +64,7 @@ var ChartHelper = {
                 minPointLength: 2,
                 dataLabels: {
                   enabled: true,
-                  color: '#000',
+                  color: '#333',
                 },
                 pointPlacement: 'between',
                 pointPadding: 0,
@@ -92,7 +97,7 @@ var ChartHelper = {
                   headerFormat: '', // Remove header
                   pointFormatter: tooltip_format
                 },
-                color: '#6c757c',
+                color: '#294d71',
             }],
             legend: {
                 enabled: false,
@@ -107,7 +112,7 @@ var ChartHelper = {
         chart: {
           type: 'bar'
         },
-        colors: ['#343a40', '#6c757c', '#007aff', '#ffc107', '#f8f9fa', '#28a845'],
+        colors: ['#004c76', '#c84747', '#fd0', '#67488b', '#1a9b5b', '#343a40'],
         plotOptions: {
           series: {
             stacking: 'percent',

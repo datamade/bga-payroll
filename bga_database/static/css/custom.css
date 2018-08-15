@@ -1,20 +1,20 @@
-body {
-    background-color: #dedee0;
+ul.ui-autocomplete > li {
+  font-family: Georgia, "Times New Roman", "DejaVu Serif", serif;
 }
 
 .ui-autocomplete-category {
-    font-weight: bold;
-    padding: .2em .4em;
-    margin: .8em 0 .2em;
-    line-height: 1.5;
+  font-weight: bold;
+  padding: .2em .4em;
+  margin: .8em 0 .2em;
+  line-height: 1.5;
 }
 
 ol.breadcrumb {
-    background-color:unset;
+  background-color:unset;
 }
 
 .invalid-feedback {
-    display: unset;
+  display: unset;
 }
 
 div.row.intro {
@@ -35,7 +35,26 @@ div[id*="chart"] {
   height: 100%;
 }
 
+.breadcrumb, .lead, .navbar-brand {
+  font-family: "acumin-pro-condensed", "Arial Narrow", Helvetica, sans-serif;
+}
+
+.badge, small, div#intro-text, .btn {
+  font-family: "acumin-pro", Helvetica, Arial, sans-serif;
+}
+
 div#intro-text {
-  font-size: 125%;
-  font-weight: lighter;
+  font-size: 1.2em;
+  letter-spacing: -0.01em;
+  color: #555;
+}
+
+.header__site-slogan {
+  color: #fff;
+}
+
+.btn-primary:hover {
+  color: #fff200;
+  background-color: #003a63;
+  border-color: #003a63;
 }
