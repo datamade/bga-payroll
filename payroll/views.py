@@ -534,7 +534,7 @@ class PersonView(DetailView, ChartHelperMixin):
             if lower < salary_amount < upper:
                 salary_range['color'] = '#fff200'
             else:
-                salary_range['color'] = '#6c757c'
+                salary_range['color'] = '#004c76'
 
         source_file = self.object.source_file(2017)
 
