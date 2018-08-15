@@ -64,7 +64,7 @@ var ChartHelper = {
                 minPointLength: 2,
                 dataLabels: {
                   enabled: true,
-                  color: '#000',
+                  color: '#333',
                 },
                 pointPlacement: 'between',
                 pointPadding: 0,
@@ -97,7 +97,7 @@ var ChartHelper = {
                   headerFormat: '', // Remove header
                   pointFormatter: tooltip_format
                 },
-                color: '#6c757c',
+                color: '#294d71',
             }],
             legend: {
                 enabled: false,
@@ -112,7 +112,7 @@ var ChartHelper = {
         chart: {
           type: 'bar'
         },
-        colors: ['#003a63', '#c84747', '#fd0', '#67488b', '#1a9b5b', '#343a40'],
+        colors: ['#004c76', '#c84747', '#fd0', '#67488b', '#1a9b5b', '#343a40'],
         plotOptions: {
           series: {
             stacking: 'percent',
