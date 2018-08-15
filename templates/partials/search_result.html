@@ -1,12 +1,14 @@
-<a href="/{{ result.endpoint }}/{{ result.slug }}/">{{ result }}</a><br />
+<a href="/{{ result.endpoint }}/{{ result.slug }}/" class="search-result">{{ result }}</a>
 
 {% if result.endpoint == 'person' %}
     <span class="badge badge-primary">
         <i class="far fa-address-card"></i> Person
-    </span><br />
+    </span><br /><br />
 
-    <strong>Position:</strong> {{ result.search_meta.title_s }} at {{ result.search_meta.employer_ss[-1]|employer_from_slug }}<br />
-    <strong>Salary:</strong> {{ result.search_meta.salary_d|format_salary }}<br />
+    <p>
+        <strong>Position:</strong> {{ result.search_meta.title_s }} at {{ result.search_meta.employer_ss[-1]|employer_from_slug }}<br />
+        <strong>Salary:</strong> {{ result.search_meta.salary_d|format_salary }}<
+    </p>
 
 {% elif result.endpoint == 'department' %}
     <span class="badge badge-primary">
@@ -17,10 +19,12 @@
         <span class="badge badge-light">
             {{ result.search_meta.universe_s }}
         </span>
-    {% endif %}<br />
+    {% endif %}<br /><br />
 
-    <strong>Salary expenditure:</strong> ${{ result.search_meta.expenditure_d|format_ballpark_number }}<br />
-    <strong>Number of positions:</strong> {{ result.search_meta.headcount_i|format_ballpark_number }}<br />
+    <p>
+        <strong>Salary expenditure:</strong> ${{ result.search_meta.expenditure_d|format_ballpark_number }}<br />
+        <strong>Number of positions:</strong> {{ result.search_meta.headcount_i|format_ballpark_number }}
+    </p>
 
 {% elif result.endpoint == 'unit' %}
     <span class="badge badge-primary">
@@ -31,10 +35,12 @@
         <span class="badge badge-light">
             {{ result.search_meta.taxonomy_s }}
         </span>
-    {% endif %}<br />
+    {% endif %}<br /><br />
 
-    <strong>Salary expenditure:</strong> ${{ result.search_meta.expenditure_d|format_ballpark_number }}<br />
-    <strong>Number of positions:</strong> {{ result.search_meta.headcount_i|format_ballpark_number }}<br />
+    <p>
+        <strong>Salary expenditure:</strong> ${{ result.search_meta.expenditure_d|format_ballpark_number }}<br />
+        <strong>Number of positions:</strong> {{ result.search_meta.headcount_i|format_ballpark_number }}
+    </p>
 
 {% endif %}
 

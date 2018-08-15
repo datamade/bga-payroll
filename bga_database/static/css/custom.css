@@ -39,7 +39,7 @@ div[id*="chart"] {
   font-family: "acumin-pro-condensed", "Arial Narrow", Helvetica, sans-serif;
 }
 
-.badge, small, div#intro-text, .btn {
+.badge, small, div#intro-text, .btn, .list-group, .page-link {
   font-family: "acumin-pro", Helvetica, Arial, sans-serif;
 }
 
@@ -57,4 +57,24 @@ div#intro-text {
   color: #fff200;
   background-color: #003a63;
   border-color: #003a63;
+}
+
+.btn-link:hover, .btn-link:focus {
+  background-color: unset;
+  color: #003a63;
+  text-decoration: none;
+}
+
+.search-results > .table {
+  margin: -1px;
+  font-size: unset;
+}
+
+li.list-group-item {
+  margin: unset;
+  margin-top: -1px;
+}
+
+.search-result {
+  font-weight: 700;
 }

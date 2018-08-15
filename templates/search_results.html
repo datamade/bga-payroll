@@ -39,12 +39,12 @@
 
         <div class="row mb-4 mt-3">
             <div class="col ml-2">
-                Result type: <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'unit' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=unit&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="fas fa-building"></i> Unit</a>
-                <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'department' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-building"></i> Department</a>
-                <a class="badge {% if 'entity_type' in request.GET and request.GET['entity_type'] == 'person' %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-address-card"></i> Person</a>
-                <a class="badge {% if 'entity_type' not in request.GET %}badge-primary{% else %}badge-light{% endif %}" href="{{ request.path }}?{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="fas fa-globe"></i> All</a>
+                <strong>Result type:</strong> <a class="{% if 'entity_type' in request.GET and request.GET['entity_type'] == 'unit' %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?entity_type=unit&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="fas fa-building"></i> Unit</a> &nbsp;
+                <a class="{% if 'entity_type' in request.GET and request.GET['entity_type'] == 'department' %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-building"></i> Department</a> &nbsp;
+                <a class="{% if 'entity_type' in request.GET and request.GET['entity_type'] == 'person' %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="far fa-address-card"></i> Person</a> &nbsp;
+                <a class="{% if 'entity_type' not in request.GET %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?{{ request|query_transform(drop_keys=['entity_type']) }}"><i class="fas fa-globe"></i> All</a> &nbsp;
                 {% set drop_keys=request.GET.keys() | reject('in', ['entity_type', 'name']) | list %}
-                <a class="badge" href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}"><i class="fas fa-times"></i> Clear filters</a>
+                <a class="p-1 text-danger" href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}"><i class="fas fa-times"></i> Clear filters</a>
             </div>
         </div>
 
@@ -58,7 +58,7 @@
                 {% for entity_type, entity_facets in facets.items() if entity_type in requested_entities %}
                     <div id="accordian">
                         <div class="card mb-3">
-                            <div class="card-header">
+                            <div class="card-header bg-warning">
                                 <h5>
                                     Filter <strong>{{ entity_type.title() }}</strong> by
                                     <button id="{{ entity_type }}-facet-toggle" class="btn btn-sm btn-link float-right" align="right" data-toggle="collapse" data-target="#{{ entity_type }}-facets" aria-expanded="{% if requested_entities|length > 1 %}false{% else %}true{% endif %}">
@@ -109,7 +109,7 @@
                 {% endfor %}
             </div>
             <div class="col-md-8">
-                <div class="card">
+                <div class="card search-results">
                     {% if results %}
                         <table class="table table-hover">
                             <tbody>
@@ -129,8 +129,8 @@
                             Enter a different search term, <a href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}">clear your filters</a> or select a different facet to try again.
                         </div>
                     {% endif %}
-                    {% include 'partials/pagination.html' %}
                 </div>
+                {% include 'partials/pagination.html' %}
             </div>
         </div>
     </div>
