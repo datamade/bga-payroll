@@ -3,7 +3,7 @@
 $bga-blue: #003a63;
 $bga-yellow: #fff200;
 
-$dark: $bga-blue;
+$dark: #004c76;
 $light: #eaebee;
 
 $red: #c00;
@@ -13,8 +13,17 @@ $yellow: $bga-yellow;
 $body-bg: #f7f7f7;
 $body-color: #333333;
 $link-color: $blue;
+$text-muted: #666666;
 
 $font-family-base: Georgia, "Times New Roman", "DejaVu Serif", serif;
-$headings-font-family: "Acumin Pro Condensed", "Arial Narrow", Helvetica, sans-serif;
+$headings-font-family: "acumin-pro-condensed", "Arial Narrow", Helvetica, sans-serif;
+$headings-font-weight: bold;
+$headings-color: $bga-blue;
+
+$breadcrumb-divider-color: #666666;
+$breadcrumb-active-color: #666666;
+
+$lead-font-size: 150%;
+$lead-font-weight: 400;
 
 @import '../bootstrap/scss/bootstrap';

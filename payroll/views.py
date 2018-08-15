@@ -532,7 +532,7 @@ class PersonView(DetailView, ChartHelperMixin):
             upper = int(salary_range['upper_edge'].rstrip('k')) * 1000
 
             if lower < salary_amount < upper:
-                salary_range['color'] = '#ffc107'
+                salary_range['color'] = '#fff200'
             else:
                 salary_range['color'] = '#6c757c'
 

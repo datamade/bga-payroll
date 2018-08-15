@@ -49,7 +49,7 @@ var ChartHelper = {
             },
             chart: {
               style: {
-                  fontFamily: '"Acumin Pro Condensed", "Arial Narrow", Helvetica, sans-serif',
+                  fontFamily: '"acumin-pro", "Arial", Helvetica, sans-serif',
               }
             }
         });
@@ -112,7 +112,7 @@ var ChartHelper = {
         chart: {
           type: 'bar'
         },
-        colors: ['#343a40', '#6c757c', '#003a63', '#fd0', '#fffadb', '#c00'],
+        colors: ['#003a63', '#c84747', '#fd0', '#67488b', '#1a9b5b', '#343a40'],
         plotOptions: {
           series: {
             stacking: 'percent',
