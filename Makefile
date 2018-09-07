@@ -9,4 +9,4 @@ $(PG_DB) :
 	psql -U postgres -d $(PG_DB) -c "\d" > /dev/null 2>&1 || \
 	createdb -U postgres $@
 
-include data/data_samples.mk
+include data/formatted_data.mk

@@ -1,0 +1,719 @@
+﻿Employer,ID
+Chicago Housing Authority,1
+Chicago Park District,2
+Chicago Public Schools,3
+Chicago State University,4
+Chicago Transit Authority,5
+City Colleges of Chicago,6
+Alton,7
+Belleville,9
+Berwyn,10
+Bloomington,11
+Bourbonnais,12
+Carbondale,13
+Charleston,15
+City of Chicago,16
+Crystal Lake,17
+Danville,18
+DeKalb,19
+Effingham,20
+Elgin,21
+Galena,22
+Galesburg,23
+Hoffman Estates,24
+Jacksonville,25
+Joliet,26
+Kankakee,27
+Macomb,29
+Marion,30
+Naperville,31
+Ottawa,32
+Peoria,33
+Rockford,34
+Skokie,35
+Springfield,36
+Urbana,37
+Cook County,38
+Cook County Forest Preserve,39
+DuPage County,40
+DuPage County Forest Preserve,41
+Evanston,43
+Governors State University,44
+ISBE,45
+Kane County,46
+Kane County Forest Preserve,47
+Lake County,48
+Lake County Forest Preserve,49
+McHenry County,50
+McHenry County Conservation,51
+METRA,52
+Metropolitan Pier and Exposition Authority,53
+Metropolitan Water Reclamation District,54
+Oak Park,55
+Pace Suburban Bus Service,56
+Public Building Commission of Chicago,57
+Barrington Township,66
+Berwyn Township,67
+Bremen Township,69
+Calumet Township,70
+Elk Grove Township,71
+Hanover Township,73
+Lemont Township,74
+Leyden Township,75
+Maine Township,77
+New Trier Township,78
+Niles Township,79
+Northfield Township,80
+Oak Park Township,82
+Orland Township,83
+Palatine Township,84
+Palos Township,85
+Proviso Township,86
+River Forest Township,88
+Riverside Township,89
+Schaumburg Township,90
+Stickney Township,91
+Thornton Township,92
+Waukegan,93
+Wheeling Township,94
+Worth Township,95
+Orland Park,97
+Tinley Park,98
+Will County,99
+Will County Forest Preserve,100
+Adams County,101
+Algonquin,102
+Alsip,103
+Antioch,104
+Bannockburn,105
+Barrington Hills,106
+Barrington,107
+Batavia,109
+Bedford Park,110
+Beecher,111
+Bellwood,112
+Bensenville,113
+Berkeley,114
+Big Rock,115
+Bloomingdale,116
+Blue Island,117
+Bolingbrook,118
+Boone County,120
+Brookfield,123
+Brown County,124
+Buffalo Grove,125
+Bull Valley,126
+Bureau County,127
+Burnham,129
+Burr Ridge,130
+Calhoun County,131
+Calumet Park,132
+Carol Stream,134
+Carpentersville,135
+Carroll County,136
+Cary,137
+Cass County,138
+Champaign County,139
+Channahon,140
+Chicago Ridge,142
+Christian County,143
+Clarendon Hills,144
+Clark County,145
+Clay County,146
+Coal City,147
+Coles County,148
+Country Club Hills,149
+Countryside,150
+Crest Hill,152
+CRETE,153
+Cumberland County,154
+Darien,155
+Deer Park,156
+Deerfield,157
+DeKalb County,158
+DeWitt County,159
+Diamond,160
+Dixmoor,161
+Dolton,162
+Douglas County,163
+Edgar County,166
+Edwards County,167
+Effingham County,168
+Elk Grove Village,171
+Elmhurst,172
+Elmwood Park,173
+Evergreen Park,175
+Fairmont,176
+Fayette County,177
+Ford County,179
+Forest Park,180
+Fox Lake,182
+Fox River Grove,183
+Frankfort,184
+Franklin Park,186
+Fulton County,187
+Gallatin County,188
+Geneva,189
+Gilberts,190
+Glen Ellyn,191
+Glencoe,192
+Glenview,194
+Glenwood,195
+Godley,196
+Golf,197
+Grayslake,198
+Hamilton County,201
+Harwood Heights,206
+Hawthorn Woods,207
+Hazel Crest,208
+Hebron,209
+Henderson County,210
+Henry County,211
+Hickory Hills,212
+Hillside,213
+Hodgkins,215
+Hometown,217
+Homewood,218
+Huntley,219
+Indian Head Park,220
+Inverness,221
+Iroquois County,222
+Itasca,223
+Jersey County,225
+Jo Daviess County,226
+Johnsburg,227
+Kaneville,229
+Kankakee County,230
+Kendall County,231
+Kildeer,233
+La Grange,235
+Lake Barrington,236
+Lake Bluff,237
+Lake Forest,238
+Lake in the Hills,239
+Lake Zurich,240
+Lakemoor,241
+Lansing,243
+Lemont,245
+Lincolnwood,249
+Lindenhurst,250
+Lisle,251
+Livingston County,252
+Lockport,253
+Lynwood,257
+Macon County,258
+Macoupin County,259
+Madison County,261
+Manhattan,262
+Maple Park,263
+Markham,264
+Mason County,266
+Matteson,268
+McCullom Lake,269
+McHenry,271
+McLean County,272
+Melrose Park,273
+Merrionette Park,275
+Midlothian,276
+Minooka,277
+Mokena,278
+Monee,279
+Monroe County,280
+Montgomery County,281
+Montgomery,282
+Moultrie County,285
+Mundelein,287
+New Lenox,288
+North Aurora,290
+North Barrington,291
+North Chicago,292
+Northbrook,294
+Northfield,295
+Oak Lawn,300
+Oakwood Hills,301
+Olympia Fields,303
+Palatine,304
+Palos Heights,305
+Palos Hills,306
+Park Forest,308
+Park Ridge,309
+Peoria County,310
+Peotone,311
+Piatt County,314
+Pike County,315
+Plainfield,317
+Posen,319
+Prairie Grove,320
+Prospect Heights,321
+Randolph County,322
+Richmond,323
+Richton Park,324
+River Forest,326
+Riverdale,327
+Riverside,328
+Riverwoods,329
+Robbins,330
+Rolling Meadows,333
+Rosemont,336
+Round Lake Beach,337
+Round Lake Heights,338
+Round Lake Park,339
+Round Lake,340
+Rutland Township,341
+Sauk Village,342
+Schiller Park,343
+Schuyler County,344
+Scott County,345
+Shelby County,346
+Shorewood,347
+Sleepy Hollow,348
+South Barrington,349
+South Chicago Heights,350
+South Elgin,351
+South Holland,352
+St. Charles,353
+St. Clair County,354
+Stark County,355
+Steger,356
+Stephenson County,357
+Streamwood,360
+Sugar Grove,361
+Summit,362
+Tazewell County,363
+Third Lake,364
+Tower Lakes,366
+Union County,367
+University Park,368
+Vermilion County,369
+Vernon Hills,370
+Villa Park,371
+Virgil,372
+Volo,373
+Wadsworth,374
+Warrenville,376
+Wauconda,377
+Wayne,378
+West Chicago,379
+Broadview,380
+Western Springs,385
+Westmont,387
+Wheaton,389
+Greene County,390
+Wheeling,391
+Gurnee,392
+Highwood,393
+White County,394
+Island Lake,395
+Whiteside County,396
+Jackson County,397
+La Grange Park,398
+Marengo,399
+Willowbrook,400
+Wilmette,402
+Orland Hills,403
+Wilmington,404
+Winfield,405
+PulaskI County,406
+Winnebago County,407
+Putnam County,408
+Winnetka,409
+Winthrop Harbor,411
+Wonder Lake,413
+Wood Dale,414
+Spring Grove,415
+Woodford County,416
+McCook,417
+Woodridge,418
+Woodstock,420
+Worth,421
+Lee County,422
+Alexander County,424
+Beach Park,425
+Highland Park,428
+Plato Township,432
+Port Barrington,433
+Williamson County,434
+Chicago Heights,437
+Jasper County,440
+Palos Park,443
+Pope County,444
+Union,447
+Washington County,449
+Addison,450
+Illinois,458
+Virgil Township,460
+Wayne County,461
+Lyons,467
+Addison Park District,469
+Alsip Park District,470
+Barrington Park District,472
+Barrington Hills Park District,473
+Bartlett Park District,474
+Batavia Park District,475
+Bedford Park District,476
+Berkeley Park District,479
+Berwyn Park District,480
+Bloomingdale Park District,482
+Blue Island Park District,483
+Braidwood Park District,486
+Bridgeview Park District,487
+Broadview Park District,488
+Buffalo Grove Park District,490
+Carol Stream Park District,495
+Cary Park District,496
+Chicago Heights Park District,499
+Chicago Ridge Park District,500
+Clarendon Hills Park District,501
+Clyde Park District,502
+Crete Park District,504
+Crystal Lake Park District,505
+Darien Park District,506
+Deerfield Park District,507
+Des Plaines Park District,508
+Dolton Park District,509
+Downers Grove Park District,510
+Elk Grove Park District,512
+Elmhurst Park District,513
+Evanston Lighthouse Park District,514
+Forest Park Park District,516
+Forest View Park District,517
+Foss Park District,518
+Fox Valley  Park District,519
+Franklin Park Park District,522
+Glen Ellyn Park District,524
+Glencoe Park District,525
+Glenview Park District,526
+Golf Maine Park District,527
+Grandwood Park District,529
+Grayslake Park District,530
+Hampshire Park District,532
+Hanover Park Park District,533
+Harvey Park District,534
+Hawthorne Park District,535
+Hazel Crest Park District,536
+Hickory Hills Park District,537
+Highland Park Park District,538
+Hodgkins Park District,539
+Homewood Flossmoor Park District,541
+Inverness Park District,543
+Itasca Park District,544
+Joliet Park District,546
+Justice Park District,547
+Kenilworth Park District,548
+LaGrange Park District,549
+Lake Bluff Park District,550
+Lan-Oak Park District,551
+Lindenhurst Park District,553
+Lockport Park District,555
+Long Grove Park District,557
+Manhattan Park District,558
+Markham Park District,560
+McCook Park District,561
+Medinah Park District,562
+Memorial Park District,563
+Midlothian Park District,564
+Morton Grove Park District,566
+Mount Prospect Park District,567
+Mundelein Park District,568
+Naperville Park District,569
+Norridge Park District,572
+North Berwyn Park District,573
+Northbrook Park District,574
+Northfield Park District,575
+Oak Forest Park District,577
+Oak Park Park District,579
+Oakbrook Terrace Park District,580
+Olympia Fields Park District,581
+Park Ridge Park District,583
+Peotone Park District,584
+Plainfield Park District,586
+Pleasant Dale Park District,587
+Posen Park District,588
+Prospect Heights Park District,589
+Ridgeville Park District,590
+River Forest Park District,591
+River Trails Park District,592
+Rosemont Park District,595
+Round Lake Area Park District,596
+Salt Creek Rural Park District,597
+Schaumburg Park District,598
+Skokie Park District,599
+Skokie Park District,600
+St. Charles Park District,601
+Streamwood Park District,602
+Sugar Grove Park District,603
+Summit Park District,604
+Tinley Park Park District,605
+Veterans Park District,608
+Warrenville Park District,610
+Wauconda Park District,611
+Waukegan Park District,612
+West Chicago Park District,613
+Westchester Park District,614
+Western Springs Park District,615
+Westmont Park District,616
+Wheaton Park District,617
+Wheeling Park District,618
+Wildwood Park District,619
+Wilmette Park District,620
+Wilmington Island Park District,621
+Winfield Park District,622
+Winnetka Park District,623
+Woodridge Park District,625
+Worth Park District,626
+York Center Park District,627
+Zion Park District,628
+Addison Library District,630
+Algonquin Library District,631
+Alsip-Merrionette Library District,632
+Antioch Library District,633
+Barrington Library District,634
+Bartlett Library District,635
+Batavia Library District,636
+Bedford Park Library District,637
+Beecher Library District,638
+Bellwood Library District,639
+Beecher Library District,640
+Bellwood Library District,641
+Bensenville Library District,644
+Carol Stream Library District,645
+Cary Area Library District,646
+Cook Memorial Library District,647
+Crestwood Library District,648
+Crete Library District,649
+Deerfield Library District,650
+Dolton Library District,651
+Eisenhower Library District,653
+Ela Area Library District,654
+Ella Johnson Library District,655
+Flossmoor Library District,656
+Fossil Ridge Library District,657
+Fountaindale Library District,658
+Fox Lake Library District,659
+Fox River Grove Library District,660
+Fox River Valley Library District,661
+Frankfort Library District,662
+Franklin Park Library District,663
+Fremont Library District,664
+Geneva Library District,666
+Glen Ellyn Library District,667
+Glenside Library District,668
+Glenwood-Lynwood Library District,669
+Grande Prairie Library District,670
+Grayslake Library District,671
+Green Hills Library District,672
+Hinsdale Library District,675
+Hodgkins Library District,676
+Huntley Library District,679
+Indian Prairie Library District,680
+Indian Trails Library District,681
+Johnsburg Library District,682
+Justice Library District,683
+Kaneville Library District,684
+LaGrange Library District,686
+LaGrange Park Library District,687
+Lake Villa Library District,688
+Lemont Library District,689
+Lincolnwood Library District,690
+Lisle Library District,691
+Manhattan-Elwood Library District,692
+Marengo - Union Library District,693
+Maywood Library District,694
+McHenry Library District,695
+Messenger Library District,696
+Mokena Library District,697
+Mount Prospect Library District,698
+McConathy Public Library,699
+New Lennox Library District,700
+Niles Library District,701
+Nippersink Library District,702
+North Riverside Library District,703
+Northlake Library District,704
+Orland Park Library District,705
+Palatine Library District,706
+Park Forest Library District,707
+Peotone Library District,708
+Phoenix Library District,709
+Plainfield Library District,710
+Poplar Creek Library District,711
+Prairie Trails Library District,713
+Prospect Heights Library District,714
+Richton Park Library District,715
+River East Library District,716
+River Forest Library District,717
+River Grove Library District,718
+Roselle Library District,720
+Round Lake Area Library District,721
+Schaumburg Library District,723
+Shorewood Troy Library District,724
+Skokie Library District,725
+St. Charles Library District,726
+Steger-South Chicago Heights Library District,727
+Sugar Grove Library District,729
+Summit Library District,730
+University Park Library District,733
+Vernon Area Library District,734
+Warrenville Library District,736
+Wauconda Library District,737
+West Chicago Library District,738
+Westmont Library District,740
+White Oak Library District,741
+William Leonard Library District,742
+Wilmette Library District,743
+Wilmington Library District,744
+Winnetka-Northfield Library District,745
+Wood Dale Library District,746
+Woodridge Library District,747
+Worth Library District,748
+Zion-Benton Library District,749
+Antioch FPD,752
+Bartlett FPD,757
+Beach Park FPD,759
+Beecher FPD,760
+Bensenville FPD,761
+Carol Stream FPD,766
+Central Stickney FPD,768
+Countryside FPD,770
+Crete FPD,771
+Darien Woodridge FPD,774
+Deerfield-Bannockburn FPD,775
+East Dundee Countryside FPD,776
+East Joliet FPD,777
+Elwood FPD,780
+Fairview FPD,781
+Fox Lake FPD,784
+Fox River Countryside FPD,785
+Frankfort FPD,787
+Glenbard FPD,789
+Glenside FPD,791
+Grayslake FPD,793
+Greater Round Lake FPD,794
+Harvard FPD,796
+Homer FPD,800
+Itasca FPD,802
+Lemont FPD,806
+Leyden FPD,807
+Lisle Woodridge FPD,810
+Long Grove Rural FPD,812
+Manhattan FPD,813
+Maple Park Countryside FPD,814
+McHenry FPD,817
+Mokena FPD,819
+Montgomery Countryside FPD,821
+New Lenox FPD,822
+Newport FPD,823
+North Palos FPD,826
+Northlake FPD,829
+Northwest Homer FPD,830
+Norwood Park FPD,831
+Nunda Rural FPD,832
+Oakbrook Terrace FPD,833
+Palatine Rural FPD,835
+Palos FPD,836
+Palos Heights FPD,837
+Peotone FPD,838
+Plainfield FPD,840
+Prospect Heights FPD,842
+Roberts Park FPD,845
+Rutland-Dundee Township FPD,848
+South Elgin Countryside FPD,849
+Spring Grove FPD,851
+Steger Estates FPD,852
+Sugar Grove FPD,853
+Tri-State FPD,855
+Troy FPD,856
+Warrenville FPD,858
+Wauconda FPD,860
+West Chicago FPD,861
+Wilmington FPD,863
+Winfield FPD,864
+Wonder Lake FPD,866
+Wood Dale FPD,867
+Woodstock FPD,868
+York Center FPD,869
+Alden Township,872
+Algonquin Township,873
+Antioch Township,874
+Aurora Township,875
+Avon Township,876
+Benton Township,878
+Big Rock Township,879
+Blackberry Township,880
+Bloomingdale Township,881
+Burlington Township,882
+Burton Township,883
+Campton Township,884
+Channahon Township,885
+Chemung Township,886
+Coral Township,887
+Crete Township,888
+Cuba Township,889
+Custer Township,890
+Downers Grove Township,892
+Dundee Township,893
+Dunham Township,894
+DuPage Township,895
+Ela Township,896
+Elgin Township,897
+Frankfort Township,899
+Fremont Township,900
+Geneva Township,901
+Grant Township,903
+Hartland Township,907
+Hebron Township,908
+Jackson Township,910
+Joliet Township,911
+Kaneville Township,912
+Lake Villa Township,913
+Libertyville Township,914
+Manhattan Township,917
+McHenry Township,919
+Monee Township,921
+Naperville Township,923
+Newport Township,925
+Nunda Township,926
+Peotone Township,927
+Plainfield Township,928
+Reed Township,929
+Richmond Township,930
+Riley Township,931
+Seneca Township,932
+Shields Township,933
+St. Charles Township,934
+Sugar Grove Township,935
+Troy Township,936
+Vernon Township,937
+Warren Township,938
+Washington Township,939
+Wauconda Township,940
+Waukegan Township,941
+Wayne Township,942
+Wesley Township,943
+West Deerfield Township,944
+Wheatland Township,945
+Will Township,946
+Wilmington Township,947
+Wilton Township,948
+Winfield Township,949
+York Township,950
+Zion Township,951
+Crystal Lake FPD,955
+Fox River Grove FPD,956
+Illinois Community Colleges Board,957
+Illinois Sports Facilities Authority,958
+ISBE,959
+Norwood Township,960
+Union FPD,964
+Elbum Countryside FPD,966
+Marywood FPD,967
+Old Mill Creek,968
+Riverdale Library District,969
+Riverdale Park District,970
+Symerton,971
+Algonquin Lake In the Hills FPD,972
+Addison Township,973
+Godley Park District,974
+Rockland FPD,975
+Town-Country Library District,976
+Pleasantview FPD,977
+Johnsburg Library District,978
