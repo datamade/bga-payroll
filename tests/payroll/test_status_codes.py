@@ -30,6 +30,8 @@ def test_child_employer(client,
     parent_employer = salary.job.position.employer
     child_employer = employer.build(name='Brew Staff', parent=parent_employer)
 
+    child_employer.refresh_from_db()  # Get slug generated on insert
+
     # Make the job attached to the salary, a job of the child employer.
     child_employer.positions.add(salary.job.position)
     child_employer.save()
