@@ -17,12 +17,12 @@ class Migration(migrations.Migration):
             DROP TRIGGER employer_slug ON payroll_employer
         '''),
         migrations.RunSQL('''
-            CREATE TRIGGER person_slug AFTER INSERT
+            CREATE TRIGGER person_slug BEFORE INSERT
             ON payroll_person FOR EACH ROW EXECUTE PROCEDURE
             person_slug_trigger()
         ''', reverse_sql='DROP TRIGGER person_slug ON payroll_person'),
         migrations.RunSQL('''
-            CREATE TRIGGER employer_slug AFTER INSERT
+            CREATE TRIGGER employer_slug BEFORE INSERT
             ON payroll_employer FOR EACH ROW EXECUTE PROCEDURE
             employer_slug_trigger()
         ''', reverse_sql='DROP TRIGGER employer_slug ON payroll_employer'),
