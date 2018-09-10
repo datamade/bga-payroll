@@ -3,9 +3,12 @@ SAMPLE_HEADER=responding_agency,employer,department,last_name,first_name,title,\
 	salary,date_started,data_year
 
 
-2017-actual-pt-1.csv : 2017-with-valid-start-dates.csv
+2017-actual-pt-1.csv : 2017-no-salary-omitted.csv
 	(echo employer,last_name,first_name,title,department,salary,extra_pay,date_started,id,_,responding_agency,data_year; \
 	tail -n +2 $<) > $@
+
+2017-no-salary-omitted.csv : 2017-with-valid-start-dates.csv
+	csvgrep -c base_salary -r '^$$' -i $< > $@
 
 2017-with-valid-start-dates.csv : 2017-with-data-year.csv
 	# Remove invalid dates. (Only two in the first round.)
