@@ -190,9 +190,9 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert_parents)
 
+        self._insert_unit_responding_agency()
         self._classify_parent_employers()
         self._insert_parent_employer_population()
-        self._insert_unit_responding_agency()
 
     def _classify_parent_employers(self):
         '''
@@ -211,17 +211,25 @@ class ImportUtility(TableNamesMixin):
         '''
 
         update_school_districts = '''
-            WITH school_district_taxonomy AS (
+            UPDATE payroll_employer
+            SET taxonomy_id = (
               SELECT id FROM payroll_employertaxonomy
               WHERE entity_type ilike 'school district'
             )
-            UPDATE payroll_employer
-            SET taxonomy_id = (SELECT id FROM school_district_taxonomy)
-            FROM {raw_payroll} AS raw
-            WHERE TRIM(LOWER(raw.employer)) = 'all elementary/high school employees'
-              AND TRIM(LOWER(payroll_employer.name)) = TRIM(LOWER(raw.department))
-              AND payroll_employer.parent_id IS NULL
-        '''.format(raw_payroll=self.raw_payroll_table)
+            /* ISBE reports school district salaries. The state
+            reports ISBE salaries. Record keeping is fun! */
+            FROM (
+              SELECT
+                unit.id AS unit_id
+              FROM payroll_employer AS unit
+              JOIN payroll_unitrespondingagency AS ura
+              ON unit.id = ura.unit_id
+              JOIN data_import_respondingagency AS ra
+              ON ura.responding_agency_id = ra.id
+              WHERE ra.name ilike 'isbe'
+            ) AS isbe_reported
+            WHERE payroll_employer.id = isbe_reported.unit_id
+        '''
 
         with connection.cursor() as cursor:
             cursor.execute(update_non_school_districts)

@@ -28,10 +28,10 @@ def test_copy_to_database(raw_table_setup):
 
         n_records = cursor.fetchone()[0]
 
-        # There are 101 records in the standard data fixture. If that
+        # There are 60 records in the standard data fixture. If that
         # changes, this will fail.
 
-        assert n_records == 101
+        assert n_records == 60
 
         # We auto-generate record ID when copying raw data into the table,
         # so it is not a "required" field, e.g., omit it for comparison.
