@@ -190,9 +190,9 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert_parents)
 
+        self._insert_unit_responding_agency()
         self._classify_parent_employers()
         self._insert_parent_employer_population()
-        self._insert_unit_responding_agency()
 
     def _classify_parent_employers(self):
         '''
@@ -228,8 +228,8 @@ class ImportUtility(TableNamesMixin):
               ON ura.responding_agency_id = ra.id
               WHERE ra.name ilike 'isbe'
             ) AS isbe_reported
-            WHERE payroll_employer.id = unit_id
-        '''.format(raw_payroll=self.raw_payroll_table)
+            WHERE payroll_employer.id = isbe_reported.unit_id
+        '''
 
         with connection.cursor() as cursor:
             cursor.execute(update_non_school_districts)

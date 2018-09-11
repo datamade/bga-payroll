@@ -29,16 +29,10 @@ def test_import_utility_init(raw_table_setup,
             WITH parents AS (
               SELECT DISTINCT employer
               FROM {raw_payroll}
-              WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
-              UNION
-              SELECT DISTINCT department
-              FROM {raw_payroll}
-              WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             ), children AS (
               SELECT DISTINCT ON (employer, department) *
               FROM {raw_payroll}
               WHERE department IS NOT NULL
-              AND TRIM(LOWER(employer)) != 'all elementary/high school employees'
             )
             SELECT
               (SELECT COUNT(*) FROM parents) + (SELECT COUNT(*) FROM children) AS raw_count,
