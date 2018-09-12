@@ -215,6 +215,7 @@ class ImportUtility(TableNamesMixin):
             SET taxonomy_id = (
               SELECT id FROM payroll_employertaxonomy
               WHERE entity_type ilike 'school district'
+              AND chicago = FALSE
             )
             /* ISBE reports school district salaries. The state
             reports ISBE salaries. Record keeping is fun! */
