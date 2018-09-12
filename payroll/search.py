@@ -11,6 +11,7 @@ from payroll.models import Unit, Department, Person
 
 class EmployerSearch(object):
     search_kwargs = {
+        'q.op': 'AND',
         'rows': '99999999',
         'facet': 'true',
         'facet.mincount': '3',
