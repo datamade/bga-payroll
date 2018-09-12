@@ -18,7 +18,7 @@ class PayrollDatabaseScraper(object):
         'Downstate Counties': 'County',
         'Fire Protection Districts': 'Fire Protection District',
         'Library Districts': 'Library District',
-        'Park Districts': 'Parks District',
+        'Park Districts': 'Park District',
         'Public Education': 'Education',
         'Regional': 'Regional',
         'State': 'State',
@@ -82,6 +82,14 @@ class PayrollDatabaseScraper(object):
                         # their own class of entity in this app.
                         formatted_entity_type = 'Forest Preserve'
                         cook_or_collar = False
+
+                    entity_name = entity.text
+
+                    if entity_name == 'Chicago Public Schools':
+                        formatted_entity_type = 'School District'
+
+                    elif entity_name == 'Chicago Park District':
+                        formatted_entity_type = 'Park District'
 
                     writer.writerow([
                         entity.text,
