@@ -441,6 +441,9 @@ class ImportUtility(TableNamesMixin):
               ) OR (
                 TRIM(LOWER(raw.employer)) = TRIM(LOWER(existing.employer_name))
                 AND raw.department IS NULL
+                /* Only allow for matches on top-level employers, i.e., where
+                there is no parent. */
+                AND existing.parent_name IS NULL
               )
             ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
