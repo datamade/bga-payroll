@@ -7,7 +7,7 @@
 
     <p>
         <strong>Position:</strong> {{ result.search_meta.title_s }} at {{ result.search_meta.employer_ss[-1]|employer_from_slug }}<br />
-        <strong>Salary:</strong> {{ result.search_meta.salary_d|format_salary }}<
+        <strong>Salary:</strong> {{ result.search_meta.salary_d|format_salary }}
     </p>
 
 {% elif result.endpoint == 'department' %}
@@ -15,9 +15,9 @@
         <i class="far fa-building"></i> Department
     </span>
 
-    {% if result.search_meta.universe_s %}
+    {% if result.universe %}
         <span class="badge badge-light">
-            {{ result.search_meta.universe_s }}
+            {{ result.universe }}
         </span>
     {% endif %}<br /><br />
 
@@ -31,9 +31,9 @@
         <i class="fas fa-building"></i> Unit
     </span>
 
-    {% if result.search_meta.taxonomy_s %}
+    {% if result.taxonomy %}
         <span class="badge badge-light">
-            {{ result.search_meta.taxonomy_s }}
+            {{ result.taxonomy }}
         </span>
     {% endif %}<br /><br />
 
