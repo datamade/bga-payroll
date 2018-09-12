@@ -49,8 +49,6 @@ def test_import_utility_init(raw_table_setup,
         validate_taxonomy = '''
             SELECT taxonomy_id FROM payroll_employer
             WHERE parent_id IS NULL
-            /* Omit dummy parent added for regression testing. */
-            AND name != 'BAILIFFS, DEPUTIES, CORRECTION OFF'
         '''
 
         cursor.execute(validate_taxonomy)
