@@ -15,9 +15,9 @@
         <i class="far fa-building"></i> Department
     </span>
 
-    {% if result.universe %}
+    {% if result.search_meta.universe_s %}
         <span class="badge badge-light">
-            {{ result.universe }}
+            {{ result.search_meta.universe_s }}
         </span>
     {% endif %}<br /><br />
 
@@ -31,9 +31,9 @@
         <i class="fas fa-building"></i> Unit
     </span>
 
-    {% if result.taxonomy %}
+    {% if result.search_meta.taxonomy_s %}
         <span class="badge badge-light">
-            {{ result.taxonomy }}
+            {{ result.search_meta.taxonomy_s }}
         </span>
     {% endif %}<br /><br />
 

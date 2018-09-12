@@ -24,7 +24,6 @@ class EmployerSearch(object):
 
 class UnitSearch(EmployerSearch):
     model = Unit
-    select_related = ('taxonomy',)
     search_kwargs = dict(EmployerSearch.search_kwargs, **{
         'facet.pivot': 'taxonomy_s_fct,size_class_s_fct',
     })
@@ -32,7 +31,6 @@ class UnitSearch(EmployerSearch):
 
 class DepartmentSearch(EmployerSearch):
     model = Department
-    select_related = ('universe',)
     search_kwargs = dict(EmployerSearch.search_kwargs, **{
         'facet.field': ['parent_s_fct', 'universe_s_fct'],
     })
@@ -112,19 +110,12 @@ class PayrollSearchMixin(object):
         sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
         sort_order = list(sorted_results.keys())
 
-        search_class = self._search_class(entity_type)
-
-        model = getattr(search_class, 'model')
-        select_related = getattr(search_class, 'select_related', None)
-
-        filtered_objects = model.objects.filter(id__in=sort_order)
-
-        if select_related:
-            filtered_objects = filtered_objects.select_related(*select_related)
-
+        model = getattr(self._search_class(entity_type), 'model')
         objects = []
 
-        for o in sorted(filtered_objects, key=lambda o: sort_order.index(o.id)):
+        for o in sorted(model.objects.filter(id__in=sort_order),
+                        key=lambda o: sort_order.index(o.id)):
+
             o.search_meta = sorted_results[o.id]
             objects.append(o)
 
