@@ -1,8 +1,8 @@
 entity,entity_type,chicago,cook_or_collar
 Chicago,Municipal,True,False
 Chicago Housing Authority,Municipal,True,False
-Chicago Park District,Municipal,True,False
-Chicago Public Schools,Municipal,True,False
+Chicago Park District,Park District,True,False
+Chicago Public Schools,School District,True,False
 Chicago Transit Authority,Municipal,True,False
 City Colleges of Chicago,Municipal,True,False
 Metropolitan Pier and Exposition Authority,Municipal,True,False
@@ -341,7 +341,7 @@ Peotone,Municipal,False,False
 Phoenix,Municipal,False,False
 Pingree Grove,Municipal,False,False
 Plainfield,Municipal,False,False
-Plato Township,Municipal,False,False
+Plato Township,Township,False,False
 Port Barrington,Municipal,False,False
 Posen,Municipal,False,False
 Prairie Grove,Municipal,False,False
@@ -365,7 +365,7 @@ Round Lake,Municipal,False,False
 Round Lake Beach,Municipal,False,False
 Round Lake Heights,Municipal,False,False
 Round Lake Park,Municipal,False,False
-Rutland Township,Municipal,False,False
+Rutland Township,Township,False,False
 Sauk Village,Municipal,False,False
 Schaumburg,Municipal,False,False
 Schiller Park,Municipal,False,False
@@ -395,7 +395,7 @@ Urbana,Municipal,False,False
 Vernon Hills,Municipal,False,False
 Villa Park,Municipal,False,False
 Virgil,Municipal,False,False
-Virgil Township,Municipal,False,False
+Virgil Township,Township,False,False
 Volo,Municipal,False,False
 Wadsworth,Municipal,False,False
 Warrenville,Municipal,False,False
@@ -524,7 +524,7 @@ Missouri,State,False,False
 Wisconsin,State,False,False
 All Elementary/High School Employees,Education,False,False
 All Higher Ed Employees,Education,False,False
-Chicago Public Schools,Education,False,False
+Chicago Public Schools,School District,False,False
 Chicago State University,Education,False,False
 City Colleges of Chicago,Education,False,False
 Governors State University,Education,False,False
@@ -535,157 +535,157 @@ Metra,Regional,False,False
 Metropolitan Water Reclamation District,Regional,False,False
 Pace Suburban Bus Service,Regional,False,False
 Regional Transportation Authority,Regional,False,False
-Addison Park District,Parks District,False,False
-Alsip Park District,Parks District,False,False
-Arlington Heights Park District,Parks District,False,False
-Barrington Park District,Parks District,False,False
-Barrington Hills Park District,Parks District,False,False
-Bartlett Park District,Parks District,False,False
-Batavia Park District,Parks District,False,False
-Bedford Park District,Parks District,False,False
-Bensenville Park District,Parks District,False,False
-Berkeley Park District,Parks District,False,False
-Berwyn Park District,Parks District,False,False
-Bloomingdale Park District,Parks District,False,False
-Blue Island Park District,Parks District,False,False
-Bolingbrook Park District,Parks District,False,False
-Braidwood Park District,Parks District,False,False
-Bridgeview Park District,Parks District,False,False
-Broadview Park District,Parks District,False,False
-Buffalo Grove Park District,Parks District,False,False
-Burbank Park District,Parks District,False,False
-Burr Ridge Park District,Parks District,False,False
-Butterfield Park District,Parks District,False,False
-Calumet Memorial Park District,Parks District,False,False
-Carol Stream Park District,Parks District,False,False
-Cary Park District,Parks District,False,False
-Channahon Park District,Parks District,False,False
-Chicago Park District,Parks District,False,False
-Chicago Heights Park District,Parks District,False,False
-Chicago Ridge Park District,Parks District,False,False
-Clarendon Hills Park District,Parks District,False,False
-Clyde Park District,Parks District,False,False
-Crete Park District,Parks District,False,False
-Crystal Lake Park District,Parks District,False,False
-Darien Park District,Parks District,False,False
-Deerfield Park District,Parks District,False,False
-Des Plaines Park District,Parks District,False,False
-Dolton Park District,Parks District,False,False
-Downers Grove Park District,Parks District,False,False
-Dundee Park District,Parks District,False,False
-Elk Grove Park District,Parks District,False,False
-Elmhurst Park District,Parks District,False,False
-Evanston Lighthouse Park District,Parks District,False,False
-Forest Park Park District,Parks District,False,False
-Forest View Park District,Parks District,False,False
-Foss Park District,Parks District,False,False
-Fox Valley Park District,Parks District,False,False
-Frankfort Park District,Parks District,False,False
-Frankfort Square Park District,Parks District,False,False
-Franklin Park Park District,Parks District,False,False
-Geneva Park District,Parks District,False,False
-Glen Ellyn Park District,Parks District,False,False
-Glencoe Park District,Parks District,False,False
-Glenview Park District,Parks District,False,False
-Golf Maine Park District,Parks District,False,False
-Grandwood Park District,Parks District,False,False
-Grayslake Park District,Parks District,False,False
-Gurnee Park District,Parks District,False,False
-Hampshire Park District,Parks District,False,False
-Hanover Park Park District,Parks District,False,False
-Harvey Park District,Parks District,False,False
-Hawthorne Park District,Parks District,False,False
-Hazel Crest Park District,Parks District,False,False
-Hickory Hills Park District,Parks District,False,False
-Highland Park Park District,Parks District,False,False
-Hodgkins Park District,Parks District,False,False
-Hoffman Estates Park District,Parks District,False,False
-Homewood-Flossmoor Park District,Parks District,False,False
-Huntley Park District,Parks District,False,False
-Inverness Park District,Parks District,False,False
-Itasca Park District,Parks District,False,False
-Joliet Park District,Parks District,False,False
-Justice Park District,Parks District,False,False
-Kenilworth Park District,Parks District,False,False
-La Grange Park District,Parks District,False,False
-Lake Bluff Park District,Parks District,False,False
-Lan Oak Park District,Parks District,False,False
-Lemont Park District,Parks District,False,False
-Lindenhurst Park District,Parks District,False,False
-Lisle Park District,Parks District,False,False
-Lockport Park District,Parks District,False,False
-Lombard Park District,Parks District,False,False
-Long Grove Park District,Parks District,False,False
-Manhattan Park District,Parks District,False,False
-Marengo Park District,Parks District,False,False
-Markham Park District,Parks District,False,False
-McCook Park District,Parks District,False,False
-Medinah Park District,Parks District,False,False
-Memorial Park District,Parks District,False,False
-Midlothian Park District,Parks District,False,False
-Mokena Park District,Parks District,False,False
-Morton Grove Park District,Parks District,False,False
-Mt. Prospect Park District,Parks District,False,False
-Mundelein Park District,Parks District,False,False
-Naperville Park District,Parks District,False,False
-New Lenox Community Park District,Parks District,False,False
-Niles Park District,Parks District,False,False
-Norridge Park District,Parks District,False,False
-North Berwyn Park District,Parks District,False,False
-Northbrook Park District,Parks District,False,False
-Northfield Park District,Parks District,False,False
-Oak Brook Park District,Parks District,False,False
-Oak Forest Park District,Parks District,False,False
-Oak Lawn Park District,Parks District,False,False
-Oakbrook Terrace Park District,Parks District,False,False
-Oak Park Park District,Parks District,False,False
-Olympia Fields Park District,Parks District,False,False
-Palatine Park District,Parks District,False,False
-Park RIdge Park District,Parks District,False,False
-Peotone Park District,Parks District,False,False
-Plainfield Park District,Parks District,False,False
-Pleasant Dale Park District,Parks District,False,False
-Posen Park District,Parks District,False,False
-Prospect Heights Park District,Parks District,False,False
-Ridgeville Park District,Parks District,False,False
-Riverdale Park District,Parks District,False,False
-Riverside Park District,Parks District,False,False
-RIver Forest Park District,Parks District,False,False
-River Trails Park District,Parks District,False,False
-Rolling Meadows Park District,Parks District,False,False
-Roselle Park District,Parks District,False,False
-Rosemont Park District,Parks District,False,False
-Round Lake Area Park District,Parks District,False,False
-Salt Creek Rural Park District,Parks District,False,False
-Schaumburg Park District,Parks District,False,False
-Skokie Park District,Parks District,False,False
-South Barrington Park District,Parks District,False,False
-St. Charles Park District,Parks District,False,False
-Streamwood Park District,Parks District,False,False
-Sugar Grove Park District,Parks District,False,False
-Summit Park District,Parks District,False,False
-Tinley Park Park District,Parks District,False,False
-Vernon Hills Park District,Parks District,False,False
-Veterans Park District,Parks District,False,False
-Warrenville Park District,Parks District,False,False
-Wauconda Park District,Parks District,False,False
-Waukegan Park District,Parks District,False,False
-West Chicago Park District,Parks District,False,False
-Westchester Park District,Parks District,False,False
-Western Springs Park District,Parks District,False,False
-Westmont Park District,Parks District,False,False
-Wheaton Park District,Parks District,False,False
-Wheeling Park District,Parks District,False,False
-Wildwood Park District,Parks District,False,False
-Wilmette Park District,Parks District,False,False
-Wilmington Island Park District,Parks District,False,False
-Winfield Park District,Parks District,False,False
-Winnetka Park District,Parks District,False,False
-Wood Dale Park District,Parks District,False,False
-Woodridge Park District,Parks District,False,False
-Worth Park District,Parks District,False,False
-York Center Park District,Parks District,False,False
-Zion Park District,Parks District,False,False
+Addison Park District,Park District,False,False
+Alsip Park District,Park District,False,False
+Arlington Heights Park District,Park District,False,False
+Barrington Park District,Park District,False,False
+Barrington Hills Park District,Park District,False,False
+Bartlett Park District,Park District,False,False
+Batavia Park District,Park District,False,False
+Bedford Park District,Park District,False,False
+Bensenville Park District,Park District,False,False
+Berkeley Park District,Park District,False,False
+Berwyn Park District,Park District,False,False
+Bloomingdale Park District,Park District,False,False
+Blue Island Park District,Park District,False,False
+Bolingbrook Park District,Park District,False,False
+Braidwood Park District,Park District,False,False
+Bridgeview Park District,Park District,False,False
+Broadview Park District,Park District,False,False
+Buffalo Grove Park District,Park District,False,False
+Burbank Park District,Park District,False,False
+Burr Ridge Park District,Park District,False,False
+Butterfield Park District,Park District,False,False
+Calumet Memorial Park District,Park District,False,False
+Carol Stream Park District,Park District,False,False
+Cary Park District,Park District,False,False
+Channahon Park District,Park District,False,False
+Chicago Park District,Park District,False,False
+Chicago Heights Park District,Park District,False,False
+Chicago Ridge Park District,Park District,False,False
+Clarendon Hills Park District,Park District,False,False
+Clyde Park District,Park District,False,False
+Crete Park District,Park District,False,False
+Crystal Lake Park District,Park District,False,False
+Darien Park District,Park District,False,False
+Deerfield Park District,Park District,False,False
+Des Plaines Park District,Park District,False,False
+Dolton Park District,Park District,False,False
+Downers Grove Park District,Park District,False,False
+Dundee Park District,Park District,False,False
+Elk Grove Park District,Park District,False,False
+Elmhurst Park District,Park District,False,False
+Evanston Lighthouse Park District,Park District,False,False
+Forest Park Park District,Park District,False,False
+Forest View Park District,Park District,False,False
+Foss Park District,Park District,False,False
+Fox Valley Park District,Park District,False,False
+Frankfort Park District,Park District,False,False
+Frankfort Square Park District,Park District,False,False
+Franklin Park Park District,Park District,False,False
+Geneva Park District,Park District,False,False
+Glen Ellyn Park District,Park District,False,False
+Glencoe Park District,Park District,False,False
+Glenview Park District,Park District,False,False
+Golf Maine Park District,Park District,False,False
+Grandwood Park District,Park District,False,False
+Grayslake Park District,Park District,False,False
+Gurnee Park District,Park District,False,False
+Hampshire Park District,Park District,False,False
+Hanover Park Park District,Park District,False,False
+Harvey Park District,Park District,False,False
+Hawthorne Park District,Park District,False,False
+Hazel Crest Park District,Park District,False,False
+Hickory Hills Park District,Park District,False,False
+Highland Park Park District,Park District,False,False
+Hodgkins Park District,Park District,False,False
+Hoffman Estates Park District,Park District,False,False
+Homewood-Flossmoor Park District,Park District,False,False
+Huntley Park District,Park District,False,False
+Inverness Park District,Park District,False,False
+Itasca Park District,Park District,False,False
+Joliet Park District,Park District,False,False
+Justice Park District,Park District,False,False
+Kenilworth Park District,Park District,False,False
+La Grange Park District,Park District,False,False
+Lake Bluff Park District,Park District,False,False
+Lan Oak Park District,Park District,False,False
+Lemont Park District,Park District,False,False
+Lindenhurst Park District,Park District,False,False
+Lisle Park District,Park District,False,False
+Lockport Park District,Park District,False,False
+Lombard Park District,Park District,False,False
+Long Grove Park District,Park District,False,False
+Manhattan Park District,Park District,False,False
+Marengo Park District,Park District,False,False
+Markham Park District,Park District,False,False
+McCook Park District,Park District,False,False
+Medinah Park District,Park District,False,False
+Memorial Park District,Park District,False,False
+Midlothian Park District,Park District,False,False
+Mokena Park District,Park District,False,False
+Morton Grove Park District,Park District,False,False
+Mt. Prospect Park District,Park District,False,False
+Mundelein Park District,Park District,False,False
+Naperville Park District,Park District,False,False
+New Lenox Community Park District,Park District,False,False
+Niles Park District,Park District,False,False
+Norridge Park District,Park District,False,False
+North Berwyn Park District,Park District,False,False
+Northbrook Park District,Park District,False,False
+Northfield Park District,Park District,False,False
+Oak Brook Park District,Park District,False,False
+Oak Forest Park District,Park District,False,False
+Oak Lawn Park District,Park District,False,False
+Oakbrook Terrace Park District,Park District,False,False
+Oak Park Park District,Park District,False,False
+Olympia Fields Park District,Park District,False,False
+Palatine Park District,Park District,False,False
+Park RIdge Park District,Park District,False,False
+Peotone Park District,Park District,False,False
+Plainfield Park District,Park District,False,False
+Pleasant Dale Park District,Park District,False,False
+Posen Park District,Park District,False,False
+Prospect Heights Park District,Park District,False,False
+Ridgeville Park District,Park District,False,False
+Riverdale Park District,Park District,False,False
+Riverside Park District,Park District,False,False
+RIver Forest Park District,Park District,False,False
+River Trails Park District,Park District,False,False
+Rolling Meadows Park District,Park District,False,False
+Roselle Park District,Park District,False,False
+Rosemont Park District,Park District,False,False
+Round Lake Area Park District,Park District,False,False
+Salt Creek Rural Park District,Park District,False,False
+Schaumburg Park District,Park District,False,False
+Skokie Park District,Park District,False,False
+South Barrington Park District,Park District,False,False
+St. Charles Park District,Park District,False,False
+Streamwood Park District,Park District,False,False
+Sugar Grove Park District,Park District,False,False
+Summit Park District,Park District,False,False
+Tinley Park Park District,Park District,False,False
+Vernon Hills Park District,Park District,False,False
+Veterans Park District,Park District,False,False
+Warrenville Park District,Park District,False,False
+Wauconda Park District,Park District,False,False
+Waukegan Park District,Park District,False,False
+West Chicago Park District,Park District,False,False
+Westchester Park District,Park District,False,False
+Western Springs Park District,Park District,False,False
+Westmont Park District,Park District,False,False
+Wheaton Park District,Park District,False,False
+Wheeling Park District,Park District,False,False
+Wildwood Park District,Park District,False,False
+Wilmette Park District,Park District,False,False
+Wilmington Island Park District,Park District,False,False
+Winfield Park District,Park District,False,False
+Winnetka Park District,Park District,False,False
+Wood Dale Park District,Park District,False,False
+Woodridge Park District,Park District,False,False
+Worth Park District,Park District,False,False
+York Center Park District,Park District,False,False
+Zion Park District,Park District,False,False
 Acorn Library District,Library District,False,False
 Addision Library District,Library District,False,False
 Algonquin Library District,Library District,False,False

@@ -53,7 +53,7 @@ class Command(BaseCommand):
         self.refresh = options['refresh']
 
         if not self.refresh:  # use the cached taxonomy file
-            self.taxonomy_file = self.taxonomy_file_fmt.format(date='2018-05-30')
+            self.taxonomy_file = self.taxonomy_file_fmt.format(date='2018-09-12')
 
         for endpoint in self.endpoints:
             getattr(self, '{}_etl'.format(endpoint))()
