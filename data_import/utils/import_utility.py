@@ -431,7 +431,7 @@ class ImportUtility(TableNamesMixin):
               )
               SELECT
                 employer_id,
-                COALESCE(title, 'EMPLOYEE'),
+                COALESCE(title, 'Employee'),
                 {vintage}
               FROM {intermediate_payroll} AS raw
               JOIN employer_ids AS existing
@@ -530,7 +530,7 @@ class ImportUtility(TableNamesMixin):
             )
             JOIN payroll_position AS position
             ON position.employer_id = emp.employer_id
-            AND TRIM(LOWER(position.title)) = TRIM(LOWER(COALESCE(raw.title, 'EMPLOYEE')))
+            AND TRIM(LOWER(position.title)) = TRIM(LOWER(COALESCE(raw.title, 'Employee')))
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
                    intermediate_payroll=self.intermediate_payroll_table)
