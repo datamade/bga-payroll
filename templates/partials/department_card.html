@@ -19,7 +19,7 @@
       <tbody>
       {% for department in department_salaries %}
         <tr>
-          <td><a href="{{ url('department', kwargs={'slug': department.slug}) }}">{{ department.department|titlecase_standalone }}</a></td>
+          <td><a href="{{ url('department', kwargs={'slug': department.slug}) }}">{{ department.department }}</a></td>
           <td class="text-right">{{ department.headcount }}</td>
           <td class="text-right">{{ department.amount|format_salary }}</td>
           <td class="text-right">${{ department.total_budget|format_ballpark_number }}</td>
