@@ -11,11 +11,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL('''
-            CREATE UNIQUE INDEX single_reporting_agency
+            CREATE UNIQUE INDEX single_responding_agency
             ON payroll_unitrespondingagency (
               reporting_year,
               responding_agency_id,
               unit_id
             )
-        ''', reverse_sql='DROP INDEX single_reporting_agency')
+        ''', reverse_sql='DROP INDEX single_responding_agency')
     ]
