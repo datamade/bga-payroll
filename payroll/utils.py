@@ -1,30 +1,6 @@
 import re
 import urllib.parse
 
-from titlecase import titlecase
-
-
-def format_name(word, **kwargs):
-    '''
-    Callback for titlecase lib. Capitalize initials and numeral suffixes.
-    '''
-    if len(word) == 1 or format_numeral(word):
-        return word.upper()
-
-
-def format_numeral(word, **kwargs):
-    '''
-    Callback for titlecase lib. Capitalize numeral suffix.
-    '''
-    numerals = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x']
-
-    if word.lower() in numerals:
-        return word.upper()
-
-
-def titlecase_standalone(entity):
-    return titlecase(entity)
-
 
 def query_transform(request, drop_keys=['page']):
     updated = request.GET.copy()

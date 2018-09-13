@@ -53,7 +53,7 @@
             {% endif %}
 
             {% if department_salaries %}
-              <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong><a href="{{ url('department', kwargs={'slug': highest_spending_department.slug}) }}">{{ highest_spending_department.name|titlecase_standalone }}</a></strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
+              <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong><a href="{{ url('department', kwargs={'slug': highest_spending_department.slug}) }}">{{ highest_spending_department.name }}</a></strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
             {% endif %}
           </div>
           <div id="employee-distribution-chart" class="col-lg-6"></div>

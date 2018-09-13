@@ -3,11 +3,8 @@ from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import gettext_lazy as _
 
-from titlecase import titlecase
-
 from bga_database.base_models import SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
-from payroll.utils import format_name, format_numeral
 
 
 class VintagedModel(models.Model):
@@ -64,7 +61,7 @@ class Employer(SluggedModel, VintagedModel):
         if self.parent and self.parent.name.lower() not in self.name.lower():
             name = '{} {}'.format(self.parent, self.name)
 
-        return titlecase(name.lower())
+        return name
 
     def clean(self):
         if self.is_department:
@@ -306,7 +303,7 @@ class Person(SluggedModel, VintagedModel, SourceFileMixin):
         name = '{0} {1}'.format(self.first_name, self.last_name)\
                         .lstrip('-')
 
-        return titlecase(name.lower(), callback=format_name)
+        return name
 
     @property
     def endpoint(self):
@@ -380,12 +377,9 @@ class Position(VintagedModel):
     employer = models.ForeignKey('Employer', on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255, null=True)
 
-    def __repr__(self):
-        position = '{0} {1}'.format(self.employer, self.title)
-        return titlecase(position.lower())
-
     def __str__(self):
-        return titlecase(self.title.lower(), callback=format_numeral)
+        position = '{0} {1}'.format(self.employer, self.title)
+        return position
 
 
 class Salary(VintagedModel):
