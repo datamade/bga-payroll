@@ -308,7 +308,10 @@ class ImportUtility(TableNamesMixin):
             ON TRIM(LOWER(raw.employer)) = TRIM(LOWER(emp.name))
             JOIN data_import_respondingagency AS agency
             ON TRIM(LOWER(raw.responding_agency)) = TRIM(LOWER(agency.name))
+            LEFT JOIN payroll_unitrespondingagency AS ura
+            ON emp.id = ura.unit_id
             WHERE emp.parent_id IS NULL
+            ON CONFLICT DO NOTHING
         '''.format(reporting_year=self.reporting_year,
                    intermediate_payroll=self.intermediate_payroll_table)
 
