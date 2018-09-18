@@ -6,7 +6,7 @@ VPATH=data
 	%-amendment-no-salary-omitted.csv
 
 %-amendment.csv : %-amendment-no-salary-omitted.csv
-	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,_,responding_agency,data_year,salary; \
+	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,responding_agency,data_year,salary; \
 	tail -n +2 $<) > $@
 
 %-amendment-no-salary-omitted.csv : %-amendment-salary-summed.csv
