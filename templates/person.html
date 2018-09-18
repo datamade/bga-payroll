@@ -70,7 +70,7 @@
       <div class="card mb-4">
         <div class="card-body">
           <h3 class="card-title mb-4">
-            <i class="fas fa-users"></i> Other <strong>{{ current_job.position }}s</strong> at <strong>{{ current_job.position.employer }}</strong>
+            <i class="fas fa-users"></i> Other <strong>{{ current_job.position.title }}s</strong> at <strong>{{ current_job.position.employer }}</strong>
           </h3>
           {% with jobs = fellow_job_holders, entity = namespace(is_department=false), show_start_date = true %}
             {% include 'partials/person_table.html' %}
