@@ -17,7 +17,7 @@
   {% for job in jobs %}
     <tr>
       <td><a href="{{ url('person', kwargs={'slug': job.person.slug}) }}">{{ job.person }}</a></td>
-      <td>{{ job.position }}</td>
+      <td>{{ job.position.title }}</td>
       {% if not entity.is_department and department_salaries %}
       <td><a href="{{ url('department', kwargs={'slug': job.position.employer.slug}) }}">{{ job.position.employer }}</a></td>
       {% endif %}
