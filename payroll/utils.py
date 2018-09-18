@@ -1,3 +1,4 @@
+import math
 import re
 import urllib.parse
 
@@ -21,11 +22,22 @@ def format_salary(i):
     return "${:,.0f}".format(i)
 
 
-def format_ballpark_number(i):
+def order_of_magnitude(floating_point):
     '''
-    Given an integer, i, return a shortened form of the number, i.e.,
-    10,000 = 10k, 2,000,000 = 2.0 million, etc. Return a string.
+    If it's been a long time since high school math for you, too, the log,
+    base 10, of a number is equal to the exponent to which 10 must be raised
+    to equal that number. For example:
+
+        math.log10(100) = 2.0
+        math.log10(10) = 1.0
+        math.log10(5) = 0.6989700043360189
+
+    See also: https://davidhamann.de/2018/02/06/basics-of-logarithms-examples-python/
     '''
+    return math.log10(floating_point)
+
+
+def get_ballpark_parts(i):
     buckets = [
         (1000, 'k'),
         (1000000, ' million'),
@@ -33,26 +45,38 @@ def format_ballpark_number(i):
         (1000000000000, ' trillion'),
     ]
 
-    def n_sig_figs(floating_point):
-        integer = int(floating_point)
-        return len(str(integer))
+    for bucket, suffix in buckets:
+        ballpark = float(i / bucket)
 
-    for b, suffix in buckets:
-        quotient = float(i / b)
-
-        if quotient >= 1000:
+        if ballpark >= 1000:
+            # Move up to the next bucket.
             continue
 
-        elif quotient < 1:
-            return str(i)
+        elif ballpark < 1:
+            # Return numbers less than 1,000 as they are.
+            return i, ''
 
         else:
-            if n_sig_figs(quotient) > 1:
-                number = int(quotient)
-            else:
-                number = round(quotient, 1)
+            return ballpark, suffix
 
-            return '{0}{1}'.format(number, suffix)
+
+def format_ballpark_number(i):
+    '''
+    Given an integer, i, return a shortened form of the number, e.g.,
+    10,000 = 10k, 2,000,000 = 2.0 million, etc. Return a string.
+    '''
+    ballpark, suffix = get_ballpark_parts(i)
+
+    if suffix:
+        if order_of_magnitude(ballpark) > 1:
+            ballpark = int(ballpark)
+        else:
+            # Include an extra digit of precision for ballparks with less
+            # than one order of magnitude, e.g., 3.3 million instead of
+            # 3 million.
+            ballpark = round(ballpark, 1)
+
+    return '{0}{1}'.format(ballpark, suffix)
 
 
 def format_percentile(i):
