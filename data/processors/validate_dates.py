@@ -33,7 +33,6 @@ for row in reader:
                     sys.stderr.write('FUTURE DATE: {}\n'.format(row['date_started']))
 
                     precise_date = start_date.replace(year=start_date.year - 100).strftime('%m/%d/%Y')
-                    sys.stderr.write('VALID DATE: {}\n'.format(precise_date))
 
                     row['date_started'] = precise_date
 
