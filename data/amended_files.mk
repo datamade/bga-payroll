@@ -3,7 +3,7 @@ VPATH=data
 
 .INTERMEDIATE : %-amendment-with-data-year.csv \
 	%-amendment-with-valid-start-dates.csv %-amendment-salary-summed.csv \
-	%-amendment-no-salary-omitted.csv
+	%-amendment-no-salary-omitted.csv group-%.csv
 
 %-amendment.csv : %-amendment-no-salary-omitted.csv
 	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,responding_agency,data_year,salary; \
@@ -16,13 +16,18 @@ VPATH=data
 	cat $< | python data/processors/sum_salary.py > $@
 
 %-amendment-with-valid-start-dates.csv : %-amendment-with-data-year.csv
-	# Remove invalid dates. (Only two in the first round.)
+	# Remove invalid dates.
 	cat $< | python data/processors/validate_dates.py > $@
 
 %-amendment-with-data-year.csv : %-amendment-with-agencies.csv
 	# Add required data year field.
 	perl -pe 's/$$/,2017/' $< > $@
 
-%-amendment-with-agencies.csv : raw/%-amendment.csv raw/foia-source-lookup.csv
+.SECONDEXPANSION :
+%-amendment-with-agencies.csv : $$(wildcard raw/$$*-amendment.csv $$*.csv) raw/foia-source-lookup.csv
 	# Join standard data with agency lookup.
 	csvjoin -c id,ID -e IBM852 $^ > $@
+
+group-%.csv : raw/amendments-%
+	# Combine a group of amended files.
+	csvstack $</* > $@
