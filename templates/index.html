@@ -202,6 +202,8 @@
       }
   });
 
-  $('#emailModal').modal();
+  $('#emailModal').modal({
+    'backdrop': 'static'  // Disallow close on click
+  });
 </script>
 {% endblock %}
