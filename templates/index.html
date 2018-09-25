@@ -158,6 +158,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ static('js/email_collection.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script src="{{ static('js/chart_helper.js') }}"></script>
@@ -200,10 +201,6 @@
       } else {
         $('#name-warning').collapse('show');
       }
-  });
-
-  $('#emailModal').modal({
-    'backdrop': 'static'  // Disallow close on click
   });
 </script>
 {% endblock %}
