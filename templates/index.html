@@ -145,6 +145,18 @@
 </div>
 {% endblock %}
 
+{% block modals %}
+<div class="modal" tabindex="-1" role="dialog" id="emailModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div id="fbf1d375-61ec-433d-943f-8d4e6e3ae35a"><script type="text/javascript" src="https://default.salsalabs.org/api/widget/template/82a20ce0-6591-4a90-a77d-d73599ec9b43/?tId=fbf1d375-61ec-433d-943f-8d4e6e3ae35a" ></script></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
@@ -189,5 +201,7 @@
         $('#name-warning').collapse('show');
       }
   });
+
+  $('#emailModal').modal();
 </script>
 {% endblock %}
