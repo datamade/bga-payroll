@@ -1,3 +1,10 @@
+var AUTHENTICATION_COOKIE = 'sessionAuthenticated';
+var COUNTER_COOKIE = 'searchCount';
+
+var SIGNUP_FORM_ID = '#fbf1d375-61ec-433d-943f-8d4e6e3ae35a';
+var SUBMIT_BUTTON_SELECTOR = SIGNUP_FORM_ID + ' button';
+var $target;
+
 function setCookie(cname, cvalue, exdays) {
   var d = new Date();
   d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
@@ -16,6 +23,17 @@ function readCookie(name) {
   return null;
 }
 
+function incrementCounterCookie() {
+  var search_count = readCookie(COUNTER_COOKIE);
+
+  if (search_count === null) {
+    search_count = 0;
+  }
+
+  search_count++;
+  setCookie(COUNTER_COOKIE, search_count, 3000);
+}
+
 function showEmailModal(settings) {
   $('#emailModal').modal({
       'backdrop': 'static'  // Disallow close on click
@@ -26,15 +44,10 @@ function showEmailModal(settings) {
 
 function hideEmailModal(settings) {
   $('#emailModal').modal('hide');
-
   $('body').removeClass('modal-open');
 }
 
-var SIGNUP_FORM_ID = '#fbf1d375-61ec-433d-943f-8d4e6e3ae35a';
-var SELECTOR = SIGNUP_FORM_ID + ' button';
-var $target;
-
-function checkExistThen(selector, callback) {
+function checkExistsThen(selector, callback) {
   var checkExist = setInterval(function() {
     $target = $(selector);
 
@@ -45,20 +58,34 @@ function checkExistThen(selector, callback) {
   }, 1000);
 }
 
-if (!readCookie('SESSpopupsearchlockoutbypass')) {
+function sessionAuthenticated() {
+  return readCookie(AUTHENTICATION_COOKIE);
+}
+
+function unauthenticatedSearchExceeded(n=3) {
+  return parseInt(readCookie(COUNTER_COOKIE)) > n;
+}
+
+if (!sessionAuthenticated() & unauthenticatedSearchExceeded()) {
   showEmailModal();
 
-  checkExistThen(SELECTOR, function overrideClickEvent() {
+  // When the submit button is shown, extend its click function to add an
+  // authentication cookie and hide the modal, given a successful email
+  // submission.
+  checkExistsThen(SUBMIT_BUTTON_SELECTOR, function overrideClickEvent() {
     var $button = $target;
-    var $onClickFunc = $button.attr('onclick');
+    var submitFunc = $button.attr('onclick');
 
     $button.attr('onclick', null);
 
     $button.on('click', function(event) {
       event.preventDefault();
 
-      if (eval($onClickFunc) != false) {
-        setCookie('SESSpopupsearchlockoutbypass', '1', 3000);
+      var validSubmission = eval(submitFunc) != false;
+
+      if (validSubmission) {
+        setCookie(AUTHENTICATION_COOKIE, '1', 3000);
+
         setTimeout(function() {
           hideEmailModal();
         }, 3000);
