@@ -78,3 +78,13 @@ li.list-group-item {
 .search-result {
   font-weight: 700;
 }
+
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+body.viewport-lg {
+  position: absolute;
+}
