@@ -1,5 +1,6 @@
 var AUTHENTICATION_COOKIE = 'sessionAuthenticated';
 var COUNTER_COOKIE = 'searchCount';
+var N_SEARCHES = 3;
 
 var SIGNUP_FORM_ID = '#fbf1d375-61ec-433d-943f-8d4e6e3ae35a';
 var SUBMIT_BUTTON_SELECTOR = SIGNUP_FORM_ID + ' button';
@@ -62,8 +63,8 @@ function sessionAuthenticated() {
   return readCookie(AUTHENTICATION_COOKIE);
 }
 
-function unauthenticatedSearchExceeded(n=3) {
-  return parseInt(readCookie(COUNTER_COOKIE)) > n;
+function unauthenticatedSearchExceeded() {
+  return parseInt(readCookie(COUNTER_COOKIE)) > N_SEARCHES;
 }
 
 if (!sessionAuthenticated() & unauthenticatedSearchExceeded()) {
@@ -81,7 +82,7 @@ if (!sessionAuthenticated() & unauthenticatedSearchExceeded()) {
     $button.on('click', function(event) {
       event.preventDefault();
 
-      var validSubmission = eval(submitFunc) != false;
+      var validSubmission = eval(submitFunc) != false; // jshint ignore:line
 
       if (validSubmission) {
         setCookie(AUTHENTICATION_COOKIE, '1', 3000);
