@@ -69,7 +69,7 @@ def format_ballpark_number(i):
 
     if suffix:
         if order_of_magnitude(ballpark) > 1:
-            ballpark = int(ballpark)
+            ballpark = int(round(ballpark))
         else:
             # Include an extra digit of precision for ballparks with less
             # than one order of magnitude, e.g., 3.3 million instead of
