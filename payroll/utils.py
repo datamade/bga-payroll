@@ -1,3 +1,4 @@
+from decimal import Decimal, ROUND_HALF_UP
 import math
 import re
 import urllib.parse
@@ -19,7 +20,8 @@ def format_salary(i):
     '''
     if isinstance(i, str):
         return i
-    return "${:,.0f}".format(i)
+    rounded_i = Decimal(i).quantize(0, ROUND_HALF_UP)
+    return "${:,.0f}".format(rounded_i)
 
 
 def order_of_magnitude(floating_point):
@@ -69,12 +71,12 @@ def format_ballpark_number(i):
 
     if suffix:
         if order_of_magnitude(ballpark) > 1:
-            ballpark = int(ballpark)
+            ballpark = Decimal(ballpark).quantize(0, ROUND_HALF_UP)
         else:
             # Include an extra digit of precision for ballparks with less
             # than one order of magnitude, e.g., 3.3 million instead of
             # 3 million.
-            ballpark = round(ballpark, 1)
+            ballpark = Decimal(ballpark).quantize(1, ROUND_HALF_UP)
 
     return '{0}{1}'.format(ballpark, suffix)
 
