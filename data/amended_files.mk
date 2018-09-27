@@ -33,6 +33,6 @@ VPATH=data
 	csvjoin -c id,ID -e IBM852 $^ > $@
 
 group-%.csv : raw/amendments-%
-	# Combine a group of amended files. Remove lines all-null lines, i.e.,
-	# those starting with a comma.
+	# Combine a group of amended files. Remove all-null lines, i.e., those
+	# starting with a comma.
 	csvstack $</* | grep -E '^,' -v > $@
