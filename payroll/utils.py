@@ -3,6 +3,8 @@ import math
 import re
 import urllib.parse
 
+import inflect
+
 
 def query_transform(request, drop_keys=['page']):
     updated = request.GET.copy()
@@ -144,3 +146,22 @@ def format_range(range, salary=True):
         return '{} to {}'.format(lower_bound, upper_bound)
     else:
         return 'More than {}'.format(lower_bound)
+
+def pluralize(singular):
+    inf = inflect.engine()
+
+    words = str(singular).split(' ')
+    last_word = words.pop(-1)
+
+    # For some reason, plural does not work for capitalized nouns, maybe
+    # because it doesn't want to mess up proper nouns? That's not our use
+    # case, so circumvent it.
+    plural_last_word = inf.plural(last_word.lower())
+
+    if last_word[0].isupper():
+        plural_last_word = '{0}{1}'.format(plural_last_word[0].upper(),
+                                           plural_last_word[1:])
+
+    words.append(plural_last_word)
+
+    return ' '.join(words)
