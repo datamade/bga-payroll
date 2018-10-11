@@ -112,7 +112,6 @@ scratch.txt
 /keyrings/live/pubring.kbx~
 /keyrings/live/secring.gpg
 /configs/local_settings.staging.py
-/configs/bga-payroll.conf.nginx
 /configs/bga-payroll.conf.supervisor
 /scripts/after_install.sh
 /scripts/app_start.sh
@@ -124,3 +123,6 @@ data/output/*
 !data/output/illinois_place_population.json
 !data/output/illinois_county_population.json
 !data/output/illinois_county_subdivision_population.json
+/configs/bga-payroll.conf.production.nginx
+/configs/bga-payroll.conf.staging.nginx
+/configs/local_settings.production.py
