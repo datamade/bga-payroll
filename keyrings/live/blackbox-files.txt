@@ -1,4 +1,5 @@
 configs/bga-payroll.conf.production.nginx
+configs/bga-payroll.conf.staging.nginx
 configs/bga-payroll.conf.supervisor
 configs/local_settings.staging.py
 scripts/after_install.sh
