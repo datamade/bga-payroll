@@ -31,11 +31,19 @@ script:
 - jshint bga_database/static/js/*.js
 
 deploy:
-  provider: codedeploy
-  access_key_id: AKIAJNYGDLOJKHOUWCAA
-  secret_access_key:
-    secure: FLOEAq6nXJUtikztiUq/+61hiBhaovR+n/pZTgXZePGGvWpGFTRWXQJP5PtCrjMd0Yy75lI01Mu3shmx+BmICN8RKFgMH65I5AaRxVUkyLz8ltUyyW8ghji9f282j8/8NUyFzrX6narzKKn1aAwIHgP5S/DQRr3IfKwtkepvG+Dk76wSqUq31rsVK3bjML+3EfSuWa2I7hCBqs4puV6iSDS3pC1802ZQs2X3TB5kqBbYR1mj7l8PTY1HoZsArOb3CVQOY8l56KQqGxjL3GbZd8CsDR2YULcCxyNpLvwUA5SGpbAYVdkTPBw+JfLQk/UTZ1SQD6ECSzVyOeV0ApbGZ3dCmmTKMIZfIn/E79RWKrQHNUIAoYM2048chwqbiSfq5dftPkLVNfpWSjtPPWx6tNG/Kc85wLdyUn5sEsOsBOobQHrWYLaMNBlrwsmHCOVP/pQ+TILR6xeb8nrRP7SEC/mHBpE754n5aDdHy7gT40fzqxR1+Npdx8Ff8hZ+TSjAuT7Lj78Up0moqJm2LD67GAV1rMaHSFJRwC1xP/Z5KJE+aIdMhwsisCB/B+mLLfipDAOggMxBq3lqkt2r/rziY4KqmVwoRIQUQ9N+DuktC1bkOatVD02y3cpqXlX3ER2aJOCeW6ndM22Mm1OfXji+8rt9bjAPSjREjQO2IeB7Zbk=
-  application: bga-payroll
-  deployment_group: staging
-  on:
-    branch: master
+  - provider: codedeploy
+    access_key_id: AKIAJNYGDLOJKHOUWCAA
+    secret_access_key:
+      secure: FLOEAq6nXJUtikztiUq/+61hiBhaovR+n/pZTgXZePGGvWpGFTRWXQJP5PtCrjMd0Yy75lI01Mu3shmx+BmICN8RKFgMH65I5AaRxVUkyLz8ltUyyW8ghji9f282j8/8NUyFzrX6narzKKn1aAwIHgP5S/DQRr3IfKwtkepvG+Dk76wSqUq31rsVK3bjML+3EfSuWa2I7hCBqs4puV6iSDS3pC1802ZQs2X3TB5kqBbYR1mj7l8PTY1HoZsArOb3CVQOY8l56KQqGxjL3GbZd8CsDR2YULcCxyNpLvwUA5SGpbAYVdkTPBw+JfLQk/UTZ1SQD6ECSzVyOeV0ApbGZ3dCmmTKMIZfIn/E79RWKrQHNUIAoYM2048chwqbiSfq5dftPkLVNfpWSjtPPWx6tNG/Kc85wLdyUn5sEsOsBOobQHrWYLaMNBlrwsmHCOVP/pQ+TILR6xeb8nrRP7SEC/mHBpE754n5aDdHy7gT40fzqxR1+Npdx8Ff8hZ+TSjAuT7Lj78Up0moqJm2LD67GAV1rMaHSFJRwC1xP/Z5KJE+aIdMhwsisCB/B+mLLfipDAOggMxBq3lqkt2r/rziY4KqmVwoRIQUQ9N+DuktC1bkOatVD02y3cpqXlX3ER2aJOCeW6ndM22Mm1OfXji+8rt9bjAPSjREjQO2IeB7Zbk=
+    application: bga-payroll
+    deployment_group: staging
+    on:
+      branch: master
+  - provider: codedeploy
+    access_key_id: AKIAJNYGDLOJKHOUWCAA
+    secret_access_key:
+      secure: FLOEAq6nXJUtikztiUq/+61hiBhaovR+n/pZTgXZePGGvWpGFTRWXQJP5PtCrjMd0Yy75lI01Mu3shmx+BmICN8RKFgMH65I5AaRxVUkyLz8ltUyyW8ghji9f282j8/8NUyFzrX6narzKKn1aAwIHgP5S/DQRr3IfKwtkepvG+Dk76wSqUq31rsVK3bjML+3EfSuWa2I7hCBqs4puV6iSDS3pC1802ZQs2X3TB5kqBbYR1mj7l8PTY1HoZsArOb3CVQOY8l56KQqGxjL3GbZd8CsDR2YULcCxyNpLvwUA5SGpbAYVdkTPBw+JfLQk/UTZ1SQD6ECSzVyOeV0ApbGZ3dCmmTKMIZfIn/E79RWKrQHNUIAoYM2048chwqbiSfq5dftPkLVNfpWSjtPPWx6tNG/Kc85wLdyUn5sEsOsBOobQHrWYLaMNBlrwsmHCOVP/pQ+TILR6xeb8nrRP7SEC/mHBpE754n5aDdHy7gT40fzqxR1+Npdx8Ff8hZ+TSjAuT7Lj78Up0moqJm2LD67GAV1rMaHSFJRwC1xP/Z5KJE+aIdMhwsisCB/B+mLLfipDAOggMxBq3lqkt2r/rziY4KqmVwoRIQUQ9N+DuktC1bkOatVD02y3cpqXlX3ER2aJOCeW6ndM22Mm1OfXji+8rt9bjAPSjREjQO2IeB7Zbk=
+    application: bga-payroll
+    deployment_group: production
+    on:
+      tags: true

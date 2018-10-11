@@ -11,6 +11,18 @@ services:
       - '127.0.0.1:8986:8983'
     environment:
       SOLR_LOG_LEVEL: ERROR
-
+  redis:
+    image: redis
+    container_name: bga-payroll-redis
+    ports:
+      - '127.0.0.1:6380:6379'
+  postgres:
+    image: postgres
+    container_name: bga-payroll-postgres
+    environment:
+      POSTGRES_DB: bga_payroll
+    ports:
+      - '127.0.0.1:5433:5432'
+      
 volumes:
   data:
