@@ -34,5 +34,8 @@ VPATH=data
 
 group-%.csv : raw/amendments-%
 	# Combine a group of amended files. Remove all-null lines, i.e., those
-	# starting with a comma.
-	csvstack $</* | grep -E '^,' -v > $@
+	# starting with a comma. All rows should end with the id of the responding
+	# agency. Remove stray, trailing empty fields.
+	csvstack $</* | \
+	grep -E '^,' -v | \
+	perl -pe 's/,+$$//' > $@
