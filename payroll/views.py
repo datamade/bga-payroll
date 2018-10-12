@@ -55,6 +55,10 @@ class IndexView(TemplateView, ChartHelperMixin):
         return context
 
 
+class UserGuideView(TemplateView):
+    template_name = 'user_guide.html'
+
+
 def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 

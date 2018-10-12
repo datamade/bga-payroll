@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Illinois Salaries Database{% endblock %}
+{% block title %}Illinois Salary Database{% endblock %}
 
 {% block extra_css %}
 <link href="{{ static('css/jquery-ui.min.css') }}" rel="stylesheet">
@@ -12,13 +12,11 @@
   <div class="col-md-10 offset-md-1">
     <div class="row">
       <div class="jumbotron bg-light">
-        <div class="row">
+        <div class="row mb-3">
           <div class="col-md">
-              <h1>Illinois Salaries Database</h1>
+              <h1>Illinois Salary Database</h1>
 
-              <p class="lead">The <strong>most comprehensive</strong> place to find out how government employees are paid, statewide.</p>
-
-              <p>With the BGA's searchable database of public payrolls across Illinois, you can easily access information relating to the spending of state, county, and local units of government.</p>
+              <p class="lead">Every year, the Better Government Association compiles Illinois’ most comprehensive database to <strong>review, explore and compare compensation for public employees throughout Illinois</strong>. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
           </div>
         </div>
 
@@ -69,7 +67,7 @@
       <div class="col-md">
         <h3>What's inside?</h3>
 
-        <p>The <strong>Illinois Salary Database</strong> contains <strong>{{ salary_count }}</strong> records of base pay for government employees in <strong>{{ department_count }}</strong> <span class="text-primary font-weight-bold"><i class="far fa-building"></i> Departments</span> across <strong>{{ unit_count }}</strong> <span class="text-primary font-weight-bold"><i class="fas fa-building"></i> Units</span> in the state of Illinois.</p>
+        <p>The <strong>Illinois Salary Database</strong> contains the base and additional pay (such as overtime) for <strong>{{ salary_count }}</strong> state, municipal, school and many other government employees across Illinois. It covers <strong>{{ unit_count }}</strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
       </div>
     </div>
 
@@ -85,12 +83,12 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md">
-        <p>Each year, the BGA gathers new data from hundreds of public agencies. Like what you see?</p>
+    <div class="row mt-4">
+      <div class="col-md-8 offset-2 alert alert-primary">
+        <p>Each year, the BGA gathers new data from hundreds of taxing bodies. It takes us nearly a year to request, compile, organize and vet the data we receive. Like what you see? <strong>Please consider making a donation to help us continue this work.</strong></p>
 
         <div class="text-center">
-          <a class="btn btn-lg btn-primary" href="https://bettergov.salsalabs.org/donationform/index.html">
+          <a class="btn btn-lg btn-success" href="https://bettergov.salsalabs.org/donationform/index.html">
             <i class="fas fa-handshake"></i> Donate to the BGA
           </a>
         </div>
@@ -99,7 +97,7 @@
 
     <div class="row mt-5">
       <div class="col-md">
-        <h3>Inspiration</h3>
+        <h3>What are you curious about?</h3>
       </div>
     </div>
 
@@ -137,8 +135,10 @@
 
     <div class="row mt-5">
       <div class="col-md">
-        <h3>Need help?</h3>
-        <p>Contact our data coordinator.</p>
+        <h3>Need help or see any problems or errors?</h3>
+        <p>While we make every reasonable effort to vet the accuracy of compensation included in the database, it is impossible to double-check all numbers in an undertaking of this magnitude. The basic building blocks of this database are reports provided by public agencies and it is possible errors in those initial reports will be reflected in the numbers we record. That is why we need help from the public to point out problems.</p>
+
+        <p>If you spot something that isn’t right, or if information is missing for a government unit you care about, <a href="https://www.bettergov.org/team/jared-rutecki" target="_blank">please contact our data coordinator</a>.</p>
       </div>
     </div>
   </div>
