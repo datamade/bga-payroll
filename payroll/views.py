@@ -33,7 +33,7 @@ class IndexView(TemplateView, ChartHelperMixin):
             illinois_slug = None
 
         try:
-            chicago_slug = Unit.objects.get(name__iexact='Chicago').slug
+            chicago_slug = Unit.objects.get(name__iexact='City of Chicago').slug
         except:
             chicago_slug = None
 
