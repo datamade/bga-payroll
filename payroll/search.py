@@ -196,7 +196,11 @@ class FacetingMixin(object):
 
             for facet_type, facet_values in facets.items():
                 for facet, values in facet_values.items():
-                    entity_facets[facet] = getattr(self, '_{}'.format(facet_type))(values)
+                    facet_counts = getattr(self, '_{}'.format(facet_type))(values)
+
+                    entity_facets[facet] = sorted(facet_counts,
+                                                  key=lambda x: x['count'],
+                                                  reverse=True)
 
             out[entity_type] = entity_facets
 
