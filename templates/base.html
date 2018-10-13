@@ -62,6 +62,16 @@
     <script src="{{ static('js/lib/bootstrap.min.js') }}"></script>
     <script src="{{ static('js/lib/fontawesome-all.min.js') }}"></script>
     <script src="{{ static('js/lib/highcharts.src.js') }}"></script>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-18960172-1"></script>
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-18960172-1');
+    </script>
+
     {% block extra_js %}{% endblock %}
   </body>
 </html>
