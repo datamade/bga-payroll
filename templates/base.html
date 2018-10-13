@@ -23,7 +23,7 @@
   <body>
     <nav class="navbar navbar-expand-sm navbar-dark bg-dark pl-2 pt-1 pb-1">
       <a class="navbar-brand" href="/">
-        <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image">
+        <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image logo-border-right">
         &nbsp;Illinois Salary Database
       </a>
     </nav>
@@ -31,6 +31,32 @@
     <div class="container" id="main-content"><br />
       {% block content %}{% endblock %}
     </div> <!-- /container -->
+    <footer class="footer bg-dark mt-5 pt-5 pb-3">
+      <div class="container-fluid text-center">
+          <h4 class="text-uppercase mb-1">Illinois Salary Database</h4>
+          <p>
+            <a href="/"><i class="fas fa-home fa-fw"></i> Home</a> |
+            <a href="/search/"><i class="fas fa-search fa-fw"></i> Search</a> |
+            <a href="{{ url('user_guide') }}"><i class="fas fa-question fa-fw"></i> User Guide</a>
+          </p>
+
+          <a href="https://bettergov.org" class="navbar-brand mt-3">
+            <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image" />
+          </a><br />
+          <p>
+            <strong>Better Government Association</strong>
+          </p>
+          <p>
+            223 W Jackson Blvd, Suite 300<br />
+            Chicago, IL 60606<br />
+            TEL (312) 427-8330
+          </p>
+
+          <p class="mt-5">
+            Website by <a href="https://datamade.us"><img src="{{ static('img/datamade_logo.png') }}" alt="Home" class="datamade-logo align-top ml-1" /></a>
+          </p>
+      </div>
+    </footer>
     {% block modals %}{% endblock %}
     <script src="{{ static('js/lib/jquery-3.3.1.min.js') }}"></script>
     <script src="{{ static('js/lib/bootstrap.min.js') }}"></script>
