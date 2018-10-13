@@ -1,15 +1,15 @@
 function makeQuerystring(params, term) {
-    params['name'] = term;
+    params.name = term;
 
     var entity_types = [];
 
     $('.entity-type-check').filter('input:checked').each(function entityTypes() {
         entity_types.push($(this).val());
-    })
+    });
 
     // for the homepage
     if ( entity_types.length ) {
-        params['entity_type'] = entity_types.join(',');
+        params.entity_type = entity_types.join(',');
     }
 
     // for search results
