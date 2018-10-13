@@ -101,7 +101,6 @@ def employer(standardized_file, responding_agency, employer_taxonomy, transactio
                 data['vintage'] = data['parent'].vintage
 
             else:
-                taxonomy = employer_taxonomy.build()
                 data['taxonomy'] = employer_taxonomy.build()
 
             employer = Employer.objects.create(**data)
