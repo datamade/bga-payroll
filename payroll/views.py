@@ -120,12 +120,15 @@ class UnitView(EmployerView):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
 
+        comparable = self.object.taxonomy.employers.count() > 1
+
         context.update({
             'department_salaries': department_statistics[:5],
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
             'composition_json': self.composition_data(),
             'size_class': self.object.size_class,
+            'comparable': comparable,
         })
 
         return context

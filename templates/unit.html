@@ -47,9 +47,11 @@
                 <p>With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>. It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.</p>
               {% endif %}
 
-              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
+              {% if comparable %}
+                <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
 
-              <p><strong>{{ entity }}</strong> spent more on payroll in {{ data_year }} than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
+                <p><strong>{{ entity }}</strong> spent more on payroll in {{ data_year }} than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
+              {% endif %}
             {% endif %}
 
             {% if department_salaries %}
