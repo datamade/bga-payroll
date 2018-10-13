@@ -37,14 +37,22 @@
             </div>
         </form>
 
+        <div class="row">
+            <div class="col-md collapse mt-3" id="name-warning">
+                <div class="alert alert-danger" role="alert">
+                  <i class="fas fa-exclamation-circle"></i> Please enter the name of a <strong>Unit, Department, or Person</strong> you'd like to look up.
+                </div>
+            </div>
+          </div>
+
         <div class="row mb-4 mt-3">
             <div class="col ml-2">
-                <strong>Result type:</strong> <a class="{% if 'entity_type' in request.GET and 'unit' in request.GET['entity_type'] %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?entity_type=unit&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="fas fa-building"></i> Unit</a> &nbsp;
-                <a class="{% if 'entity_type' in request.GET and 'department' in request.GET['entity_type'] %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="far fa-building"></i> Department</a> &nbsp;
-                <a class="{% if 'entity_type' in request.GET and 'person' in request.GET['entity_type'] %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="far fa-address-card"></i> Person</a> &nbsp;
-                <a class="{% if 'entity_type' not in request.GET %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="fas fa-globe"></i> All</a> &nbsp;
+                <strong>Result type:</strong> <a class="btn {% if 'entity_type' in request.GET and 'unit' in request.GET['entity_type'] %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?entity_type=unit&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="fas fa-building"></i> Unit</a> &nbsp;
+                <a class="btn {% if 'entity_type' in request.GET and 'department' in request.GET['entity_type'] %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="far fa-building"></i> Department</a> &nbsp;
+                <a class="btn {% if 'entity_type' in request.GET and 'person' in request.GET['entity_type'] %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="far fa-address-card"></i> Person</a> &nbsp;
+                <a class="btn {% if 'entity_type' not in request.GET %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="fas fa-globe"></i> All</a> &nbsp;
                 {% set drop_keys=request.GET.keys() | reject('in', ['entity_type', 'name']) | list %}
-                <a class="p-1 text-danger"{% if request.GET['name'] %} href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}"{% endif %}><i class="fas fa-times"></i> Clear filters</a>
+                <a class="p-1 btn {% if request.GET['name'] %}text-danger" href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}"{% else %}disabled"{% endif %}><i class="fas fa-times"></i> Clear filters</a>
             </div>
         </div>
 
@@ -56,56 +64,7 @@
                     {% set requested_entities = ['unit', 'department', 'person'] %}
                 {% endif %}
                 {% for entity_type, entity_facets in facets.items() if entity_type in requested_entities %}
-                    <div id="accordian">
-                        <div class="card mb-3">
-                            <div class="card-header bg-dark">
-                                <h5 class="text-light">
-                                    Filter <strong>{{ entity_type.title() }}</strong> by
-                                    <button id="{{ entity_type }}-facet-toggle" class="btn btn-sm btn-link bg-dark text-warning float-right" align="right" data-toggle="collapse" data-target="#{{ entity_type }}-facets" aria-expanded="{% if requested_entities|length > 1 %}false{% else %}true{% endif %}">
-                                        {% if requested_entities|length > 1 %}
-                                            <i class="fa fa-chevron-circle-down" aria-hidden="true"></i>
-                                            Expand
-                                        {% else %}
-                                            <i class="fa fa-chevron-circle-up" aria-hidden="true"></i>
-                                            Collapse
-                                        {% endif %}
-                                    </button>
-                                </h5>
-                            </div>
-                            <div class="collapse {% if requested_entities|length > 1 %}collapsed{% else %}show{% endif %}" id="{{ entity_type }}-facets" data-parent="#accordion">
-                                <ul class="list-group list-group-flush">
-                                    {% for facet, value_counts in entity_facets.items() %}
-                                        <li class="list-group-item">
-                                            {% with current_facet=facet.split(',')[0]|param_from_index %}
-                                                <strong>{{ current_facet.title() }}</strong><br />
-
-                                                {% for vc in value_counts %}
-                                                    <a href="/search/?{% if not requested_entities %}entity_type={{ entity_type }}&{% endif %}{{ [(facet.split(',')[0], vc.value)]|url_from_facet(request) }}">
-                                                        {% if current_facet in ('employer', 'parent') %}
-                                                            {{ vc.value|employer_from_slug }}
-                                                        {% elif current_facet in ('headcount', 'salary', 'expenditure') %}
-                                                            {{ vc.value|format_range }}
-                                                        {% else %}
-                                                            {{ vc.value }}
-                                                        {% endif %}
-                                                    </a>
-                                                    <span class="badge badge-pill badge-light float-right">{{ vc.count }}</span><br />
-
-                                                    {% if vc.get('pivot') %}
-                                                        <div class="pivot ml-4">
-                                                        {% for pc in vc.pivot %}
-                                                            <a href="/search/?{% if not requested_entities %}entity_type={{ entity_type }}&{% endif %}{{ [(facet.split(',')[0], vc.value), (facet.split(',')[-1], pc.value)]|url_from_facet(request) }}">{{ pc.value }}</a> <span class="badge badge-pill badge-light float-right">{{ pc.count }}</span><br />
-                                                        {% endfor %}
-                                                        </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            {% endwith %}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                    {% include 'partials/facets.html' %}
                 {% endfor %}
             </div>
             <div class="col-md-8">
@@ -170,15 +129,15 @@
 
         if ( $('#entity-lookup').val() ) {
             url = '/search/?' + querystring;
+
+            if (!sessionAuthenticated()) {
+              incrementCounterCookie();
+            }
+
+            window.location = url;
         } else {
-            url = '/search/';
+            $('#name-warning').collapse('show');
         }
-
-        if (!sessionAuthenticated()) {
-          incrementCounterCookie();
-        }
-
-        window.location = url;
     });
 
     $('[id*="facet-toggle"]').click(function toggleClick(e) {

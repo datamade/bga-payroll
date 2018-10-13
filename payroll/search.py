@@ -81,8 +81,12 @@ class PayrollSearchMixin(object):
 
         query_string = self._make_querystring(params)
 
-        for entity_type in entity_types:
-            yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+        if query_string:
+            for entity_type in entity_types:
+                yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+
+        else:
+            return None
 
     def _search(self, entity_type, *args):
         # Don't edit the actual static attribute
