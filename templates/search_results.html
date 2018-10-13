@@ -70,7 +70,7 @@
             <div class="col-md-8">
                 <div class="card search-results">
                     {% if results %}
-                        <table class="table table-hover">
+                        <table class="table">
                             <tbody>
                                 {% for result in results %}
                                     <tr>
@@ -109,36 +109,11 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ static('js/search.js') }}"></script>
 <script src="{{ static('js/email_collection.js') }}"></script>
 
 <script type="text/javascript">
-    $('#submit-button').click(function submitSearch(e) {
-        e.preventDefault();
-
-        var url;
-
-        var params = {{ request.GET.dict()|safe }};
-
-        if ( $('#entity-lookup').val() ) {
-            params['name'] = $('#entity-lookup').val();
-        }
-
-        delete params.page;
-
-        var querystring = $.param(params);
-
-        if ( $('#entity-lookup').val() ) {
-            url = '/search/?' + querystring;
-
-            if (!sessionAuthenticated()) {
-              incrementCounterCookie();
-            }
-
-            window.location = url;
-        } else {
-            $('#name-warning').collapse('show');
-        }
-    });
+    initSearch({{ request.GET.dict()|safe }});
 
     $('[id*="facet-toggle"]').click(function toggleClick(e) {
         // On click, content has not yet been expanded, i.e., if aria-expanded

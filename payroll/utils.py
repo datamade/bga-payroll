@@ -135,7 +135,7 @@ def employer_from_slug(slug):
     return Employer.objects.get(slug=slug)
 
 
-def format_bound(i):
+def format_exact_number(i):
     return "{:,.0f}".format(int(i))
 
 
@@ -145,11 +145,14 @@ def format_range(range, salary=True):
     upper_bound = match.group('upper_bound')
 
     if lower_bound == '0':
-        return 'Less than {}'.format(format_bound(upper_bound))
+        return 'Less than {}'.format(format_exact_number(upper_bound))
+
     elif upper_bound != '*':
-        return '{} to {}'.format(format_bound(lower_bound), format_bound(upper_bound))
+        return '{} to {}'.format(format_exact_number(lower_bound),
+                                 format_exact_number(upper_bound))
+
     else:
-        return 'More than {}'.format(format_bound(lower_bound))
+        return 'More than {}'.format(format_exact_number(lower_bound))
 
 
 def pluralize(singular):
