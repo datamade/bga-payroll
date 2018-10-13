@@ -41,7 +41,13 @@
         {% endif %}
       </td>
       {% if show_start_date %}
-      <td class="text-right">{{ job.start_date or 'N/A' }}</td>
+      <td class="text-right">
+        {% if job.start_date %}
+          {{ job.start_date.strftime('%m-%d-%Y') }}
+        {% else %}
+          N/A
+        {% endif %}
+      </td>
       {% endif %}
     </tr>
   {% endfor %}

@@ -147,6 +147,7 @@ def format_range(range, salary=True):
     else:
         return 'More than {}'.format(lower_bound)
 
+
 def pluralize(singular):
     inf = inflect.engine()
 
@@ -165,3 +166,15 @@ def pluralize(singular):
     words.append(plural_last_word)
 
     return ' '.join(words)
+
+
+def an_or_a(word, bold=False):
+    if word[0].lower() in 'aeiou':
+        phrase = 'an {}'
+    else:
+        phrase = 'a {}'
+
+    if bold:
+        word = '<strong>' + word + '</strong>'
+
+    return phrase.format(word)
