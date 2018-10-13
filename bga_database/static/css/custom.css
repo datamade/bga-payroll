@@ -46,8 +46,6 @@ div[id*="chart"] {
 
 .header__logo-image {
   height: 30px;
-  padding-right: 10px;
-  border-right: 1.5px solid;
 }
 
 .badge, small, div#intro-text, .btn, .list-group, .page-link {
@@ -98,4 +96,19 @@ body.modal-open {
 
 body.viewport-lg {
   position: absolute;
+}
+
+.logo-border-right {
+  padding-right: 10px;
+  border-right: 1.5px solid;
+}
+
+.datamade-logo {
+  -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+  filter: grayscale(100%) brightness(175%);
+  height: 20px;
+}
+
+footer, footer a, footer h4 {
+  color: #fff!important;
 }

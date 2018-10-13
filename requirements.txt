@@ -5,6 +5,7 @@ csvkit==1.0.2
 cchardet==2.1.1
 census==0.8.7
 us==1.0.0
+inflect==1.0.1
 jinja2==2.10
 lxml==4.2.1
 django-debug-toolbar==1.9.1

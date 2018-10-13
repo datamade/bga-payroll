@@ -67,7 +67,7 @@
       <div class="col-md">
         <h3>What's inside?</h3>
 
-        <p>The <strong>Illinois Salary Database</strong> contains the base and additional pay (such as overtime) for <strong>{{ salary_count }}</strong> state, municipal, school and many other government employees across Illinois. It covers <strong>{{ unit_count }}</strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
+        <p>The <strong>Illinois Salary Database</strong> contains the base and additional pay (such as overtime) for <strong>{{ salary_count|format_exact_number }}</strong> state, municipal, school and many other government employees across Illinois. It covers <strong>{{ unit_count|format_exact_number }}</strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
       </div>
     </div>
 
@@ -84,7 +84,7 @@
     </div>
 
     <div class="row mt-4">
-      <div class="col-md-8 offset-2 alert alert-primary">
+      <div class="col-md-8 offset-md-2 alert alert-primary">
         <p>Each year, the BGA gathers new data from hundreds of taxing bodies. It takes us nearly a year to request, compile, organize and vet the data we receive. Like what you see? <strong>Please consider making a donation to help us continue this work.</strong></p>
 
         <div class="text-center">
@@ -107,7 +107,7 @@
           <div class="card-body text-center">
             <h4><i class="fas fa-dollar-sign"></i></h4>
             <h5>Highest paid people in Illinois</h5><br />
-            <a href="/search/?entity_type=person&employer={{ illinois_slug }}" class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
+            <a href="/search/?entity_type=person&employer={{ illinois_slug }}&salary_above=150000" class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
           </div>
         </div>
       </div>
@@ -159,6 +159,7 @@
 
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
+<script src="{{ static('js/search.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script src="{{ static('js/chart_helper.js') }}"></script>
 <script src="{{ static('js/email_collection.js') }}"></script>
@@ -178,33 +179,6 @@
 
   ChartHelper.make_salary_chart({{ salary_json|safe }}, 'employee');
 
-  $('#submit-button').click(function submitSearch(e) {
-      e.preventDefault();
-
-      var url;
-
-      var entity_types = [];
-
-      $('.entity-type-check').filter('input:checked').each(function entityTypes() {
-        entity_types.push($(this).val());
-      })
-
-      var params = {
-        'name': $('#entity-lookup').val(),
-        'entity_type': entity_types.join(','),
-      }
-
-      if ( $('#entity-lookup').val() ) {
-        url = '/search/?' + $.param(params);
-
-        if (!sessionAuthenticated()) {
-          incrementCounterCookie();
-        }
-
-        window.location = url;
-      } else {
-        $('#name-warning').collapse('show');
-      }
-  });
+  initSearch({{ request.GET.dict()|safe }});
 </script>
 {% endblock %}

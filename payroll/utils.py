@@ -3,6 +3,8 @@ import math
 import re
 import urllib.parse
 
+import inflect
+
 
 def query_transform(request, drop_keys=['page']):
     updated = request.GET.copy()
@@ -133,14 +135,53 @@ def employer_from_slug(slug):
     return Employer.objects.get(slug=slug)
 
 
+def format_exact_number(i):
+    return "{:,.0f}".format(int(i))
+
+
 def format_range(range, salary=True):
     match = re.match(r'\[(?P<lower_bound>\d+),(?P<upper_bound>(\d+|\*))\)', range)
     lower_bound = match.group('lower_bound')
     upper_bound = match.group('upper_bound')
 
     if lower_bound == '0':
-        return 'Less than {}'.format(upper_bound)
+        return 'Less than {}'.format(format_exact_number(upper_bound))
+
     elif upper_bound != '*':
-        return '{} to {}'.format(lower_bound, upper_bound)
+        return '{} to {}'.format(format_exact_number(lower_bound),
+                                 format_exact_number(upper_bound))
+
     else:
-        return 'More than {}'.format(lower_bound)
+        return 'More than {}'.format(format_exact_number(lower_bound))
+
+
+def pluralize(singular):
+    inf = inflect.engine()
+
+    words = str(singular).split(' ')
+    last_word = words.pop(-1)
+
+    # For some reason, plural does not work for capitalized nouns, maybe
+    # because it doesn't want to mess up proper nouns? That's not our use
+    # case, so circumvent it.
+    plural_last_word = inf.plural(last_word.lower())
+
+    if last_word[0].isupper():
+        plural_last_word = '{0}{1}'.format(plural_last_word[0].upper(),
+                                           plural_last_word[1:])
+
+    words.append(plural_last_word)
+
+    return ' '.join(words)
+
+
+def an_or_a(word, bold=False):
+    if word[0].lower() in 'aeiou':
+        phrase = 'an {}'
+    else:
+        phrase = 'a {}'
+
+    if bold:
+        word = '<strong>' + word + '</strong>'
+
+    return phrase.format(word)

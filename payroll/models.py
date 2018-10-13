@@ -257,7 +257,7 @@ class EmployerTaxonomy(models.Model):
             kwargs['special'] = 'Cook or Collar'
 
         if 'special' in kwargs:
-            str_taxonomy = '{type} ({special})'.format(**kwargs)
+            str_taxonomy = '{special} {type}'.format(**kwargs)
         else:
             str_taxonomy = '{type}'.format(**kwargs)
 

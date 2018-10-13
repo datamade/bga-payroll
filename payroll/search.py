@@ -81,8 +81,12 @@ class PayrollSearchMixin(object):
 
         query_string = self._make_querystring(params)
 
-        for entity_type in entity_types:
-            yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+        if query_string:
+            for entity_type in entity_types:
+                yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+
+        else:
+            return None
 
     def _search(self, entity_type, *args):
         # Don't edit the actual static attribute
@@ -196,7 +200,11 @@ class FacetingMixin(object):
 
             for facet_type, facet_values in facets.items():
                 for facet, values in facet_values.items():
-                    entity_facets[facet] = getattr(self, '_{}'.format(facet_type))(values)
+                    facet_counts = getattr(self, '_{}'.format(facet_type))(values)
+
+                    entity_facets[facet] = sorted(facet_counts,
+                                                  key=lambda x: x['count'],
+                                                  reverse=True)
 
             out[entity_type] = entity_facets
 
