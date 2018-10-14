@@ -36,7 +36,7 @@
 
             <p>{{ entity.last_name }} earned more than <strong>{{ employer_percentile|format_percentile }}</strong> of employees in <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer }}</a></strong>.</p>
 
-            {% if not current_job.position.employer.is_unclassified %}
+            {% if current_job.position.employer.is_comparable %}
               <p>{{ entity.last_name }} earned more than <strong>{{ like_employer_percentile|format_percentile }}</strong> of employees across all <strong><a href='{{ url("search") }}?{{ employer_type[0].api_param }}="{{ employer_type[0] }}"'>{{ employer_type[0]|pluralize }}</a></strong>{% if employer_type[0] != employer_type[-1] %} in the <strong><a href='{{ url("search") }}?{{ employer_type[1].api_param }}="{{ employer_type[1] }}"'>{{ employer_type[1] }}</a></strong> category{% endif %}.</p>
             {% endif %}
           </div>

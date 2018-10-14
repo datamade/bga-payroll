@@ -120,15 +120,12 @@ class UnitView(EmployerView):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
 
-        comparable = self.object.taxonomy.employers.count() > 1
-
         context.update({
             'department_salaries': department_statistics[:5],
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
             'composition_json': self.composition_data(),
             'size_class': self.object.size_class,
-            'comparable': comparable,
         })
 
         return context
@@ -368,12 +365,15 @@ class DepartmentView(EmployerView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         department_expenditure = sum(self.object.employee_salaries)
         parent_expediture = self.total_parent_expenditure()
         percentage = department_expenditure / parent_expediture
+
         context.update({
-            'percent_of_total_expenditure': percentage * 100,  # MIGHT NEED TO HANDLE EXCEPTIONS
+            'percent_of_total_expenditure': percentage * 100,
         })
+
         return context
 
     def total_parent_expenditure(self):
