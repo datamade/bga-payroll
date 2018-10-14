@@ -402,6 +402,8 @@ class ImportUtility(TableNamesMixin):
               FROM payroll_employer
               /* Only add departments to universes. */
               WHERE parent_id IS NOT NULL
+              /* Only classify unclassified departments. */
+              AND universe_id IS NULL
             )
             UPDATE payroll_employer
             SET universe_id = xwalk.universe_id FROM (
