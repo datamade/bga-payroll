@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.core.management import call_command
 
 from payroll.models import Employer, EmployerUniverse, EmployerTaxonomy
@@ -26,3 +27,4 @@ class AdminEmployerTaxonomy(admin.ModelAdmin):
 admin.site.register(Employer, AdminEmployer)
 admin.site.register(EmployerUniverse, AdminEmployerUniverse)
 admin.site.register(EmployerTaxonomy, AdminEmployerTaxonomy)
+admin.site.register(LogEntry)
