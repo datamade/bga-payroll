@@ -78,6 +78,9 @@ class Employer(SluggedModel, VintagedModel):
 
     @property
     def is_unclassified(self):
+        '''
+        Whether there is a group for comparison.
+        '''
         return (self.is_department and not self.universe) \
             or (not self.is_department and not self.taxonomy)
 
@@ -199,6 +202,16 @@ class Unit(Employer, SourceFileMixin):
                    .get(reporting_year=year)\
                    .responding_agency
 
+    @property
+    def is_comparable(self):
+        '''
+        Whether there is more than one to compare within the group.
+        '''
+        if not self.is_unclassified:
+            return self.taxonomy.employers.count() > 1
+        else:
+            return False
+
 
 class DepartmentManager(models.Manager):
     def get_queryset(self):
@@ -216,6 +229,20 @@ class Department(Employer, SourceFileMixin):
                    .responding_agencies\
                    .get(reporting_year=year)\
                    .responding_agency
+
+    @property
+    def is_comparable(self):
+        '''
+        Whether there is more than one to compare within the group.
+        '''
+        if not self.is_unclassified and not self.parent.is_unclassified:
+            return self.universe\
+                       .employers\
+                       .filter(parent__taxonomy=self.parent.taxonomy)\
+                       .count() > 1
+
+        else:
+            return False
 
 
 class UnitRespondingAgency(models.Model):

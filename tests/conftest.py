@@ -4,7 +4,8 @@ from django.core.files import File
 import pytest
 
 from data_import.models import Upload, RespondingAgency, StandardizedFile
-from payroll.models import Employer, UnitRespondingAgency, EmployerTaxonomy
+from payroll.models import Employer, UnitRespondingAgency, EmployerTaxonomy, \
+    EmployerUniverse
 
 
 @pytest.fixture
@@ -84,8 +85,28 @@ def employer_taxonomy():
 
 
 @pytest.fixture
+@pytest.mark.django_db
+def employer_universe():
+    class UniverseFactory():
+        def build(self, **kwargs):
+            data = {
+                'name': 'Brewery',
+            }
+            data.update(kwargs)
+
+            return EmployerUniverse.objects.create(**data)
+
+    return UniverseFactory()
+
+
+@pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def employer(standardized_file, responding_agency, employer_taxonomy, transactional_db):
+def employer(standardized_file,
+             responding_agency,
+             employer_taxonomy,
+             employer_universe,
+             transactional_db):
+
     class EmployerFactory():
         def build(self, **kwargs):
             s_file = standardized_file.build()
@@ -99,6 +120,7 @@ def employer(standardized_file, responding_agency, employer_taxonomy, transactio
 
             if data.get('parent'):
                 data['vintage'] = data['parent'].vintage
+                data['universe'] = employer_universe.build()
 
             else:
                 data['taxonomy'] = employer_taxonomy.build()
