@@ -208,6 +208,7 @@ class ImportUtility(TableNamesMixin):
             USING (entity_type, chicago, cook_or_collar)
             WHERE TRIM(LOWER(payroll_employer.name)) = TRIM(LOWER(raw_taxonomy.entity))
               AND payroll_employer.parent_id IS NULL
+              AND payroll_employer.taxonomy_id IS NULL
         '''
 
         update_school_districts = '''
@@ -230,6 +231,7 @@ class ImportUtility(TableNamesMixin):
               WHERE ra.name ilike 'isbe'
             ) AS isbe_reported
             WHERE payroll_employer.id = isbe_reported.unit_id
+              AND payroll_employer.taxonomy_id IS NULL
         '''
 
         with connection.cursor() as cursor:
