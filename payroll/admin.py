@@ -25,7 +25,8 @@ class AdminEmployerTaxonomy(admin.ModelAdmin):
 
 
 class LogEntryAdmin(admin.ModelAdmin):
-    readonly_fields = ('content_type',
+    readonly_fields = (
+        'content_type',
         'user',
         'action_time',
         'object_id',
