@@ -52,7 +52,6 @@ class PersonSearch(object):
 
 class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
-    facets = {}
 
     # Cross-walk of URL parameters to Solr index fields
     param_index_map = {
