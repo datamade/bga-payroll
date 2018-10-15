@@ -3,8 +3,8 @@
         <div class="card-header bg-dark">
             <h5 class="text-light">
                 Filter <strong>{{ entity_type.title() }}</strong> by
-                <button id="{{ entity_type }}-facet-toggle" class="btn btn-sm btn-link bg-dark text-light float-right" align="right" data-toggle="collapse" data-target="#{{ entity_type }}-facets" aria-expanded="{% if requested_entities|length > 1 %}false{% else %}true{% endif %}">
-                    {% if requested_entities|length > 1 %}
+                <button id="{{ entity_type }}-facet-toggle" class="btn btn-sm btn-link bg-dark text-light float-right" align="right" data-toggle="collapse" data-target="#{{ entity_type }}-facets" aria-expanded="{% if facets|length > 1 %}false{% else %}true{% endif %}">
+                    {% if facets|length > 1 %}
                         <i class="fa fa-chevron-circle-down" aria-hidden="true"></i>
                         Expand
                     {% else %}
@@ -14,7 +14,7 @@
                 </button>
             </h5>
         </div>
-        <div class="collapse {% if requested_entities|length > 1 %}collapsed{% else %}show{% endif %}" id="{{ entity_type }}-facets" data-parent="#accordion">
+        <div class="collapse {% if facets|length > 1 %}collapsed{% else %}show{% endif %}" id="{{ entity_type }}-facets" data-parent="#accordion">
             <ul class="list-group list-group-flush">
                 {% for facet, value_counts in entity_facets.items() %}
                     {% if value_counts %}

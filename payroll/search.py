@@ -78,6 +78,8 @@ class PayrollSearchMixin(object):
         else:
             entity_types = ['unit', 'department', 'person']
 
+        self.facets = {}
+
         query_string = self._make_querystring(params)
 
         if query_string:
@@ -105,8 +107,6 @@ class PayrollSearchMixin(object):
             query_string = entity_filter
 
         results = self.searcher.search(query_string, **search_kwargs)
-
-        self.facets = {}
 
         if results:
             self.facets.update({entity_type: results.facets})
