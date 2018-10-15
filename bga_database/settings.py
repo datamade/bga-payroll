@@ -18,6 +18,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '.datamade.us',
+    'salary.bettergov.org',
 ]
 
 # Application definition
