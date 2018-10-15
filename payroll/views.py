@@ -28,11 +28,6 @@ class IndexView(TemplateView, ChartHelperMixin):
         # this thing.
 
         try:
-            illinois_slug = Unit.objects.get(name__iexact='Illinois').slug
-        except Unit.DoesNotExist:
-            illinois_slug = None
-
-        try:
             chicago_slug = Unit.objects.get(name__iexact='City of Chicago').slug
         except:
             chicago_slug = None
@@ -47,7 +42,6 @@ class IndexView(TemplateView, ChartHelperMixin):
             'salary_count': salary_count,
             'unit_count': unit_count,
             'department_count': department_count,
-            'illinois_slug': illinois_slug,
             'chicago_slug': chicago_slug,
             'salary_json': json.dumps(binned_salaries),
         })
