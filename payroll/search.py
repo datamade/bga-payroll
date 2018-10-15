@@ -159,6 +159,11 @@ class PayrollSearchMixin(object):
 
         for param, value in params.items():
             index_field = self.param_index_map.get(param, param)
+
+            if index_field == 'name':
+                # Allow for terms to appear in any order
+                value = '({})'.format(value)
+
             query_parts.append('{0}:{1}'.format(index_field, value))
 
         return query_parts
