@@ -52,7 +52,6 @@ class PersonSearch(object):
 
 class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
-    facets = {}
 
     # Cross-walk of URL parameters to Solr index fields
     param_index_map = {
@@ -107,6 +106,8 @@ class PayrollSearchMixin(object):
 
         results = self.searcher.search(query_string, **search_kwargs)
 
+        self.facets = {}
+
         if results:
             self.facets.update({entity_type: results.facets})
 
@@ -159,6 +160,11 @@ class PayrollSearchMixin(object):
 
         for param, value in params.items():
             index_field = self.param_index_map.get(param, param)
+
+            if index_field == 'name':
+                # Allow for terms to appear in any order
+                value = '({})'.format(value)
+
             query_parts.append('{0}:{1}'.format(index_field, value))
 
         return query_parts

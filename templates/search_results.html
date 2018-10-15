@@ -52,7 +52,7 @@
                 <a class="btn {% if 'entity_type' in request.GET and 'person' in request.GET['entity_type'] %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="far fa-address-card"></i> Person</a> &nbsp;
                 <a class="btn {% if 'entity_type' not in request.GET %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="fas fa-globe"></i> All</a> &nbsp;
                 {% set drop_keys=request.GET.keys() | reject('in', ['entity_type', 'name']) | list %}
-                <a class="p-1 btn {% if request.GET['name'] %}text-danger" href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}"{% else %}disabled"{% endif %}><i class="fas fa-times"></i> Clear filters</a>
+                <a class="p-1 btn {% if drop_keys %}text-danger" href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}"{% else %}disabled"{% endif %}><i class="fas fa-times"></i> Clear filters</a>
             </div>
         </div>
 
