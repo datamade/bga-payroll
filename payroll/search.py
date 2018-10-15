@@ -107,6 +107,8 @@ class PayrollSearchMixin(object):
 
         results = self.searcher.search(query_string, **search_kwargs)
 
+        self.facets = {}
+
         if results:
             self.facets.update({entity_type: results.facets})
 
