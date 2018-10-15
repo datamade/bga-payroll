@@ -148,7 +148,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(success_message))
 
     def _make_department_index(self, department):
-        name = department.name
+        name = str(department)
 
         of_department = Q(job__position__employer=department)
 
