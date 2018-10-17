@@ -77,12 +77,6 @@ class SourceFile(models.Model):
         on_delete=models.CASCADE,
         related_name='source_file'
     )
-    standardized_file = models.ForeignKey(
-        'StandardizedFile',
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='source_files'
-    )
 
     def save(self, *args, **kwargs):
         self.reporting_year = self.reporting_period_start_date.year
