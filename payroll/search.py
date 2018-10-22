@@ -55,6 +55,9 @@ class PayrollSearchMixin(object):
 
     # Cross-walk of URL parameters to Solr index fields
     param_index_map = {
+        'name': 'name',
+        'entity_type': 'entity_type',
+        'year': 'year',
         'expenditure': 'expenditure_d',
         'headcount': 'headcount_i',
         'taxonomy': 'taxonomy_s_fct',
@@ -159,7 +162,11 @@ class PayrollSearchMixin(object):
         query_parts = []
 
         for param, value in params.items():
-            index_field = self.param_index_map.get(param, param)
+            try:
+                index_field = self.param_index_map[param]
+            except KeyError:
+                # Ignore invalid parameters
+                continue
 
             if index_field == 'name':
                 # Allow for terms to appear in any order
