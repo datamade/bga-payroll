@@ -8,8 +8,9 @@
 <div class="row">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">All</a></li>
-            <li class="breadcrumb-item">Search</li>
+            {% with entity = None %}
+                {% include 'partials/breadcrumbs.html' %}
+            {% endwith %}
         </ol>
     </nav>
 </div>
@@ -26,7 +27,7 @@
             <div class="row">
                 <div class="col-md">
                     <div class="input-group">
-                        <input type="text" id="entity-lookup" class="form-control form-control-lg" placeholder="Cook County" value="{{ request.GET.get('name', '') }}" />
+                        <input type="text" id="entity-lookup" class="form-control form-control-lg" value="{{ request.GET.get('name', '') }}" autofocus />
                         <div class="input-group-append">
                             <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
                                 <i class="fas fa-search"></i> Search
@@ -84,8 +85,8 @@
                         </table>
                     {% else %}
                         <div class="card-body">
-                            <h4>No results match your query.</h4>
-                            Enter a different search term, <a href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}">clear your filters</a> or select a different facet to try again.
+                            <h4>Dang! We have no results for your search.</h4>
+                            Here’s why: You searched for an employee or government unit or department in Illinois that doesn’t exist or that we don’t yet have data on. Want to know more? See our note below.
                         </div>
                     {% endif %}
                 </div>

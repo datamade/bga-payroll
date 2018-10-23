@@ -21,19 +21,54 @@
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-sm navbar-dark bg-dark pl-2 pt-1 pb-1">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark pl-2 pt-0 pb-0 mb-3 mb-lg-5">
       <a class="navbar-brand" href="/">
-        <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image logo-border-right">
-        &nbsp;Illinois Salary Database
+        <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image align-baseline">
+        <div id="navbar-series" class="d-none d-md-inline-block">
+          Data &<br />Tools
+        </div>
+        <div class="d-inline-block vertical-divider ml-1 mr-1">
+          &nbsp;
+        </div>
+        <div id="navbar-title" class="d-inline-block">
+          Illinois Public Salaries Database
+        </div>
       </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/"><i class="fas fa-home fa-fw"></i> Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/search/"><i class="fas fa-search fa-fw"></i> Search</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/user-guide/"><i class="fas fa-question fa-fw"></i> User Guide</a>
+          </li>
+        </ul>
+      </div>
     </nav>
 
     <div class="container" id="main-content"><br />
       {% block content %}{% endblock %}
+
+      <div class="row mt-4">
+        <div class="col-md-6 offset-md-3 text-smaller">
+          <h4>Need help or see any problems or errors?</h4>
+          <p>This database is a living document. We update it regularly and are always on the lookout to make it more robust and precise. If you think we are missing a government unit we should include, please let us know.</p>
+
+          <p>While we make every reasonable effort to vet the accuracy of compensation included in the database, it is impossible to double-check all numbers in an undertaking of this magnitude. The basic building blocks of this database are reports provided by public agencies and it is possible errors in those initial reports or others made along the way will be reflected in the numbers we publish. That is why we need help from the public to point out problems.</p>
+
+          <p>If you spot something that isn’t right, or if information is missing for a government unit you care about, <a href="https://www.bettergov.org/team/jared-rutecki" target="_blank">please contact our data coordinator</a>.</p>
+        </div>
+      </div>
     </div> <!-- /container -->
     <footer class="footer bg-dark mt-5 pt-5 pb-3">
       <div class="container-fluid text-center">
-          <h4 class="text-uppercase mb-1">Illinois Salary Database</h4>
+          <h4 class="text-uppercase mb-1">Illinois Public Salaries Database</h4>
           <p>
             <a href="/"><i class="fas fa-home fa-fw"></i> Home</a> |
             <a href="/search/"><i class="fas fa-search fa-fw"></i> Search</a> |
