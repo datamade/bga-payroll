@@ -22,7 +22,7 @@ function initSearch(get_object) {
     $('#submit-button').click(function submitSearch(e) {
         e.preventDefault();
 
-        var term = $('#entity-lookup').val();
+        var term = $.trim($('#entity-lookup').val());
 
         if ( term ) {
             var querystring = makeQuerystring(get_object, term);

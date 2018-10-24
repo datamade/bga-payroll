@@ -24,14 +24,6 @@ class IndexView(TemplateView, ChartHelperMixin):
         unit_count = Unit.objects.all().count()
         department_count = Department.objects.all().count()
 
-        # Note: These try/except blocks can be removed, once we import data into
-        # this thing.
-
-        try:
-            chicago_slug = Unit.objects.get(name__iexact='City of Chicago').slug
-        except:
-            chicago_slug = None
-
         with connection.cursor() as cursor:
             cursor.execute('SELECT amount FROM payroll_salary')
             all_salaries = [x[0] for x in cursor]
@@ -42,7 +34,6 @@ class IndexView(TemplateView, ChartHelperMixin):
             'salary_count': salary_count,
             'unit_count': unit_count,
             'department_count': department_count,
-            'chicago_slug': chicago_slug,
             'salary_json': json.dumps(binned_salaries),
         })
 

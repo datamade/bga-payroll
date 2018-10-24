@@ -26,7 +26,7 @@
           <div class="col-md align-self-center">
               <h1>Search Illinois public employee salary data</h1>
 
-              <p class="lead">Every year, the Better Government Association compiles Illinois’ <strong class="bg-warning">most comprehensive database</strong> to review, explore and compare compensation for public employees throughout Illinois. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
+              <p class="lead">Every year, the Better Government Association compiles <strong class="bg-warning">Illinois’ most comprehensive database</strong> to review, explore and compare compensation for public employees throughout Illinois. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
           </div>
         </div>
 
@@ -121,33 +121,7 @@
     </div>
 
     <div class="row mt-2">
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body text-center">
-            <h4><i class="fas fa-dollar-sign"></i></h4>
-            <h5>Highest paid people in Illinois</h5><br />
-            <a href="/search/?entity_type=person&salary_above=150000" class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body text-center">
-            <h4><i class="fas fa-users"></i></h4>
-            <h5 class="text-center">Highest spending departments in Chicago</h5><br />
-            <a href="/search/?entity_type=department&parent={{ chicago_slug }}" class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body text-center">
-            <h4><i class="fas fa-star"></i></h4>
-            <h5>Highest spending police departments</h5><br />
-            <a href='/search/?entity_type=department&universe="Police+Department"' class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
-          </div>
-        </div>
-      </div>
+      {% include 'partials/inspiration.html' %}
     </div>
 
     <div class="mt-4"></div>
