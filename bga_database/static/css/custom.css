@@ -155,6 +155,10 @@ footer, footer a, footer h4 {
     vertical-align: 10%;
     text-transform: none;
   }
+
+  .navbar-toggler {
+    font-size: .75rem;
+  }
 }
 
 @media screen and (max-width: 992px) {
