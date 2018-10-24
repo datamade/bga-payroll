@@ -71,6 +71,9 @@ TEMPLATES = [
         'APP_DIRS': False,
         'OPTIONS': {
             'environment': 'bga_database.jinja2.environment',
+            'context_processors': [
+                'payroll.context_processors.inspiration_slugs',
+            ],
         },
     },
 ]
