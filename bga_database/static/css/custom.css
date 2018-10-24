@@ -111,6 +111,7 @@ body.viewport-lg {
   background-color: #fff;
   width: 2px;
   overflow: hidden;
+  height: 2rem;
 }
 
 .datamade-logo {
@@ -146,6 +147,7 @@ footer, footer a, footer h4 {
 
   .vertical-divider {
     vertical-align: -10%;
+    height: unset;
   }
 
   .navbar-brand #navbar-title {
@@ -172,4 +174,12 @@ footer, footer a, footer h4 {
 
 .navbar-dark .navbar-nav .nav-link {
   color: #fff;
+}
+
+.navbar-brand {
+  margin-right: unset;
+}
+
+h5 {
+  letter-spacing: unset;
 }
