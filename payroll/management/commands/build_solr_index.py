@@ -247,32 +247,32 @@ class Command(BaseCommand):
                                  .prefetch_related('salaries')\
                                  .first()
 
-            finally:
-                if job is not None:
+            if job is not None:
+                continue
 
-                    position = job.position
-                    employer = position.employer
-                    
-                    text = '{0} {1} {2}'.format(name, employer, position)
-                    
-                    if employer.is_department:
-                        employer_slug = [employer.parent.slug, employer.slug]
-                    else:
-                        employer_slug = [employer.slug]
-                    
-                    document = {
-                        'id': 'person.{0}.{1}'.format(person.id, year),
-                        'slug': person.slug,
-                        'name': name,
-                        'entity_type': 'Person',
-                        'year': year,
-                        'title_s': job.position.title,
-                        'salary_d': job.salaries.get().amount,
-                        'employer_ss': employer_slug,
-                        'text': text,
-                    }
-                    
-                    yield document
+            position = job.position
+            employer = position.employer
+
+            text = '{0} {1} {2}'.format(name, employer, position)
+
+            if employer.is_department:
+                employer_slug = [employer.parent.slug, employer.slug]
+            else:
+                employer_slug = [employer.slug]
+
+            document = {
+                'id': 'person.{0}.{1}'.format(person.id, year),
+                'slug': person.slug,
+                'name': name,
+                'entity_type': 'Person',
+                'year': year,
+                'title_s': job.position.title,
+                'salary_d': job.salaries.get().amount,
+                'employer_ss': employer_slug,
+                'text': text,
+            }
+
+            yield document
 
     def index_people(self):
         if self.recreate:
