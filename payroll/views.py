@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+from django.views.generic import FormView
 from postgres_stats.aggregates import Percentile
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import login as auth_login
@@ -14,6 +15,7 @@ from django.contrib.auth import login as auth_login
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin
+from payroll.forms import SignupForm
 
 
 class IndexView(TemplateView, ChartHelperMixin):
@@ -635,26 +637,49 @@ class EntityLookup(ListView, PayrollSearchMixin):
 
 
 class UserLoginView(LoginView):
-
     def form_valid(self, form):
         user = auth_login(self.request, form.get_user())
-
-        print(user)
 
         context = self.get_context_data(form=form)
 
         return self.render_to_response(context)
 
     def render_to_response(self, context, **kwargs):
-
         response = {}
+
         errors = context['form'].errors
+
         if errors:
             response['redirect_url'] = None
             response['errors'] = errors['__all__']
         else:
             response['redirect_url'] = context['next']
 
-        print(response)
+        return JsonResponse(response)
+
+
+class UserSignupView(FormView):
+
+    form_class = SignupForm
+
+    def form_valid(self, form):
+        user = form.make_user()
+
+        auth_login(self.request, user)
+
+        context = self.get_context_data(form=form)
+
+        return self.render_to_response(context)
+
+    def render_to_response(self, context, **kwargs):
+        response = {}
+
+        errors = context['form'].errors
+
+        if errors:
+            response['redirect_url'] = None
+            response['errors'] = errors
+        else:
+            response['redirect_url'] = self.request.POST['next']
 
         return JsonResponse(response)
