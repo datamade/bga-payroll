@@ -156,7 +156,23 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
-                <h3>Login form goes here</h3>
+                <h3>Login</h3>
+                <form class="form" id="login-form">
+                    <input type="hidden" value="{{ csrf_token }}" name="csrfmiddlewaretoken" />
+                    <input type="hidden" value="{{ request.get_full_path() }}" name="next" />
+                    <div class="form-group">
+                        <label for="id_username">Email</label>
+                        <input type="text" class="form-control" id="id_username" name="username" placeholder="Email" />
+                    </div>
+                    <div class="form-group">
+                        <label for="id_password">Password</label>
+                        <input type="password" class="form-control" id="id_password" name="password" placeholder="Password" />
+                        <div class="invalid-feedback" id="login-form-errors"></div>
+                    </div>
+                    <div class="form-group">
+                        <button id="submit-login" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
                 <p>
                     <a href="javascript://" class="toggle-login-signup" data-parent_modal="loginModal">
                         Need to create an account?
@@ -171,7 +187,7 @@
 {% block extra_js %}
 
 <script type="text/javascript">
-    {% if request.session.search_count > 3 %}
+    {% if not request.user.is_authenticated and request.session.search_count > 3 %}
         $('#signupModal').modal();
         $('.toggle-login-signup').on('click', function(e){
             var parent_modal = $(e.target).data('parent_modal');
@@ -183,7 +199,27 @@
                 $('#signupModal').modal('hide');
                 $('#loginModal').modal();
             }
-        })
+        });
+        function getFormData(form){
+            var form_array = form.serializeArray();
+            var form_obj = {};
+
+            $.map(form_array, function(n, i){
+                form_obj[n['name']] = n['value'];
+            });
+
+            return form_obj;
+        }
+        $('#submit-login').on('click', function(e){
+            e.preventDefault();
+            var form_data = getFormData($('#login-form'));
+            $.post("{{ url('login') }}", form_data, function(resp){
+                if (resp['redirect_url']){
+                    window.location = resp['redirect_url'];
+                }
+                $('#login-form-errors').html(resp['errors']);
+            });
+        });
     {% else %}
     $('#submit-button').click(function submitSearch(e) {
         e.preventDefault();

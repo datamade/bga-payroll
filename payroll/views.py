@@ -8,6 +8,8 @@ from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
+from django.contrib.auth.views import LoginView
+from django.contrib.auth import login as auth_login
 
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
@@ -576,11 +578,10 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
         else:
             self.request.session['search_count'] = 1
 
-        if self.request.session['search_count'] > 3:
-            results = []
-
-        elif self.request.session['search_count'] <= 3 or self.request.user.is_authenticated:
+        if self.request.user.is_authenticated or self.request.session['search_count'] <= 3:
             results = list(self.search(params))
+        else:
+            results = []
 
         return results
 
@@ -634,4 +635,26 @@ class EntityLookup(ListView, PayrollSearchMixin):
 
 
 class UserLoginView(LoginView):
-    pass
+
+    def form_valid(self, form):
+        user = auth_login(self.request, form.get_user())
+
+        print(user)
+
+        context = self.get_context_data(form=form)
+
+        return self.render_to_response(context)
+
+    def render_to_response(self, context, **kwargs):
+
+        response = {}
+        errors = context['form'].errors
+        if errors:
+            response['redirect_url'] = None
+            response['errors'] = errors['__all__']
+        else:
+            response['redirect_url'] = context['next']
+
+        print(response)
+
+        return JsonResponse(response)
