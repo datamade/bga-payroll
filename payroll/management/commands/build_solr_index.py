@@ -219,7 +219,7 @@ class Command(BaseCommand):
             except Job.DoesNotExist:
                 # It's reasonable to expect every person won't appear in
                 # every year of data.
-                continue
+                job = None
 
             except Job.MultipleObjectsReturned:
                 # A very, very small minority of people (less than 20) in
@@ -248,6 +248,9 @@ class Command(BaseCommand):
                                  .first()
 
             finally:
+                if job is None:
+                    continue
+
                 position = job.position
                 employer = position.employer
 
