@@ -219,7 +219,7 @@ class Command(BaseCommand):
             except Job.DoesNotExist:
                 # It's reasonable to expect every person won't appear in
                 # every year of data.
-                job = None
+                continue
 
             except Job.MultipleObjectsReturned:
                 # A very, very small minority of people (less than 20) in
@@ -246,9 +246,6 @@ class Command(BaseCommand):
                 job = person.jobs.select_related('position', 'position__employer')\
                                  .prefetch_related('salaries')\
                                  .first()
-
-            if job is not None:
-                continue
 
             position = job.position
             employer = position.employer
