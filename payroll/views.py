@@ -567,9 +567,21 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
     paginate_by = 25
 
     def get_queryset(self, **kwargs):
+
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
-        return list(self.search(params))
+        if self.request.session.get('search_count') and self.request.session['search_count'] > 3:
+            results = []
+
+        elif self.request.session.get('search_count'):
+            self.request.session['search_count'] += 1
+            results = list(self.search(params))
+
+        else:
+            self.request.session['search_count'] = 1
+            results = list(self.search(params))
+
+        return results
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
