@@ -570,15 +570,16 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
-        if self.request.session.get('search_count') and self.request.session['search_count'] > 3:
-            results = []
-
-        elif self.request.session.get('search_count'):
+        if self.request.session.get('search_count'):
             self.request.session['search_count'] += 1
-            results = list(self.search(params))
 
         else:
             self.request.session['search_count'] = 1
+
+        if self.request.session['search_count'] > 3:
+            results = []
+
+        elif self.request.session['search_count'] <= 3 or self.request.user.is_authenticated:
             results = list(self.search(params))
 
         return results
@@ -630,3 +631,7 @@ class EntityLookup(ListView, PayrollSearchMixin):
         results = self.get_queryset(*args, **kwargs)
 
         return JsonResponse(results, safe=False)
+
+
+class UserLoginView(LoginView):
+    pass
