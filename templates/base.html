@@ -21,26 +21,109 @@
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-sm navbar-dark bg-dark pl-4 pt-1 pb-1">
-      <a href="/" title="Home" rel="home" class="header__logo">
-        <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image">
-      </a>
-      <div class="header__name-and-slogan">
-        <h1 class="header__site-name">
-          <a href="/" title="Home" class="header__site-link" rel="home"><strong>Better Government Association</strong></a>
-        </h1>
-        <div class="header__site-slogan">Illinois’ Non-Partisan Full-Service Watchdog</div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark pl-2 pl-md-4 pt-0 pb-0 mb-3 mb-lg-5">
+      <div class="justify-content-left">
+        <a class="navbar-brand" href="https://www.bettergov.org/data-tools">
+          <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image align-baseline">
+          <div id="navbar-series" class="d-none d-md-inline-block">
+            Data &<br />Tools
+          </div>
+        </a>
+        <div class="d-inline-block vertical-divider mx-1 mx-sm-2">
+          &nbsp;
+        </div>
+        <a class="navbar-brand" href="/">
+          <div id="navbar-title" class="d-inline-block">
+            <span class="d-none d-sm-inline">Illinois </span>Public Salaries Database
+          </div>
+        </a>
+      </div>
+      <div class="justify-content-right">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/"><i class="fas fa-home fa-fw"></i> Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/search/?entity_type=unit,department,person"><i class="fas fa-search fa-fw"></i> Search</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/user-guide/"><i class="fas fa-question fa-fw"></i> User Guide</a>
+          </li>
+        </ul>
       </div>
     </nav>
 
     <div class="container" id="main-content"><br />
       {% block content %}{% endblock %}
+
+      {% if request.path != '/' %}
+        <div class="row mt-4">
+          <div class="col-md-8 offset-md-2 text-smaller">
+            <h4 class="text-center">What are you interested in?</h4>
+            <div class="row mt-3">
+              {% include 'partials/inspiration.html' %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="row mt-4">
+        <div class="col-md-6 offset-md-3 text-smaller">
+          <h4 class="text-center">Need help or see any problems or errors?</h4>
+          <p>This database is a living document. We update it regularly and are always on the lookout to make it more robust and precise. If you think we are missing a government unit we should include, please let us know.</p>
+
+          <p>While we make every reasonable effort to vet the accuracy of compensation included in the database, it is impossible to double-check all numbers in an undertaking of this magnitude. The basic building blocks of this database are reports provided by public agencies and it is possible errors in those initial reports or others made along the way will be reflected in the numbers we publish. That is why we need help from the public to point out problems.</p>
+
+          <p>If you spot something that isn’t right, or if information is missing for a government unit you care about, <a href="https://www.bettergov.org/team/jared-rutecki" target="_blank">please contact our data coordinator</a>.</p>
+        </div>
+      </div>
     </div> <!-- /container -->
+    <footer class="footer bg-dark mt-5 pt-5 pb-3">
+      <div class="container-fluid text-center">
+          <h4 class="text-uppercase mb-1">Illinois Public Salaries Database</h4>
+          <p>
+            <a href="/"><i class="fas fa-home fa-fw"></i> Home</a> |
+            <a href="/search/?entity_type=unit,department,person"><i class="fas fa-search fa-fw"></i> Search</a> |
+            <a href="{{ url('user_guide') }}"><i class="fas fa-question fa-fw"></i> User Guide</a>
+          </p>
+
+          <a href="https://bettergov.org" class="navbar-brand mt-3">
+            <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image" />
+          </a><br />
+          <p>
+            <strong>Better Government Association</strong>
+          </p>
+          <p>
+            223 W Jackson Blvd, Suite 300<br />
+            Chicago, IL 60606<br />
+            TEL (312) 427-8330
+          </p>
+
+          <p class="mt-5">
+            Website by <a href="https://datamade.us"><img src="{{ static('img/datamade_logo.png') }}" alt="Home" class="datamade-logo align-top ml-1" /></a>
+          </p>
+      </div>
+    </footer>
     {% block modals %}{% endblock %}
     <script src="{{ static('js/lib/jquery-3.3.1.min.js') }}"></script>
     <script src="{{ static('js/lib/bootstrap.min.js') }}"></script>
     <script src="{{ static('js/lib/fontawesome-all.min.js') }}"></script>
     <script src="{{ static('js/lib/highcharts.src.js') }}"></script>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-18960172-1"></script>
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-18960172-1');
+    </script>
+
     {% block extra_js %}{% endblock %}
   </body>
 </html>

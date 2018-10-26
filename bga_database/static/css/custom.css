@@ -1,5 +1,5 @@
 ul.ui-autocomplete > li {
-  font-family: Georgia, "Times New Roman", "DejaVu Serif", serif;
+  font-family: "acumin-pro", Helvetica, Arial, sans-serif;
 }
 
 .ui-autocomplete-category {
@@ -39,6 +39,25 @@ div[id*="chart"] {
   font-family: "acumin-pro-condensed", "Arial Narrow", Helvetica, sans-serif;
 }
 
+.navbar-brand {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.navbar-brand #navbar-series {
+  line-height: 80%;
+}
+
+.navbar-brand #navbar-title {
+  font-size: 1.75rem;
+  vertical-align: 15%;
+  text-transform: none;
+}
+
+.header__logo-image {
+  height: 30px;
+}
+
 .badge, small, div#intro-text, .btn, .list-group, .page-link {
   font-family: "acumin-pro", Helvetica, Arial, sans-serif;
 }
@@ -46,7 +65,6 @@ div[id*="chart"] {
 div#intro-text {
   font-size: 1.2em;
   letter-spacing: -0.01em;
-  color: #555;
 }
 
 .header__site-slogan {
@@ -87,4 +105,85 @@ body.modal-open {
 
 body.viewport-lg {
   position: absolute;
+}
+
+.vertical-divider {
+  background-color: #fff;
+  width: 2px;
+  overflow: hidden;
+  height: 2rem;
+}
+
+.datamade-logo {
+  -webkit-filter: grayscale(100%) brightness(175%); /* Safari 6.0 - 9.0 */
+  filter: grayscale(100%) brightness(175%);
+  height: 20px;
+}
+
+.bga-blue-filter {
+  /* Hacky filter from https://codepen.io/sosuke/pen/Pjoqqp */
+  -webkit-filter: brightness(0) saturate(100%) invert(14%) sepia(84%) saturate(1900%) hue-rotate(185deg) brightness(92%) contrast(102%);
+  filter: brightness(0) saturate(100%) invert(14%) sepia(84%) saturate(1900%) hue-rotate(185deg) brightness(92%) contrast(102%);
+}
+
+footer, footer a, footer h4 {
+  color: #fff!important;
+}
+
+.text-smaller {
+  font-size: 85%;
+}
+
+@media screen and (max-width: 576px) {
+  .card {
+    margin-left: -15px;
+    margin-right: -15px;
+    border-radius: 0;
+  }
+
+  .header__logo-image {
+    height: 20px;
+  }
+
+  .vertical-divider {
+    vertical-align: -10%;
+    height: unset;
+  }
+
+  .navbar-brand #navbar-title {
+    font-size: 1.3rem;
+    vertical-align: 10%;
+    text-transform: none;
+  }
+
+  .navbar-toggler {
+    font-size: .75rem;
+  }
+}
+
+@media screen and (max-width: 992px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  p.lead {
+    font-size: 1.3rem;
+  }
+}
+
+.breadcrumb-item {
+  margin: .25rem 0;
+  line-height: 1.1;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: #fff;
+}
+
+.navbar-brand {
+  margin-right: unset;
+}
+
+h5 {
+  letter-spacing: unset;
 }

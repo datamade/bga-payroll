@@ -7,8 +7,8 @@
   <h4 class="card-subtitle">Top-spending departments in {{ entity }}</h4>
 
   <div class="table-responsive">
-    <table class="table table-striped table-hover">
-      <thead class="bg-warning">
+    <table class="table table-striped">
+      <thead class="bg-dark text-light">
         <tr>
           <th scope="col">Department</th>
           <th scope="col" class="text-right">Number of employees</th>
@@ -20,7 +20,7 @@
       {% for department in department_salaries %}
         <tr>
           <td><a href="{{ url('department', kwargs={'slug': department.slug}) }}">{{ department.department }}</a></td>
-          <td class="text-right">{{ department.headcount }}</td>
+          <td class="text-right">{{ department.headcount|format_exact_number }}</td>
           <td class="text-right">{{ department.amount|format_salary }}</td>
           <td class="text-right">${{ department.total_budget|format_ballpark_number }}</td>
         </tr>

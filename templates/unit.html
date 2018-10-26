@@ -42,7 +42,7 @@
             <h3 class="card-title mb-4">
               <i class="fas fa-list"></i> Summary
             </h3>
-            {% if not entity.is_unclassified %}
+            {% if entity.is_comparable %}
               {% if size_class %}
                 <p>With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>. It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.</p>
               {% endif %}
@@ -92,7 +92,6 @@
 </div>
 {% endif %}
 
-</div>
 {% endblock %}
 
 {% block extra_js %}

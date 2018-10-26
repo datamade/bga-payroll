@@ -28,19 +28,6 @@ class IndexView(TemplateView, ChartHelperMixin):
         unit_count = Unit.objects.all().count()
         department_count = Department.objects.all().count()
 
-        # Note: These try/except blocks can be removed, once we import data into
-        # this thing.
-
-        try:
-            illinois_slug = Unit.objects.get(name__iexact='Illinois').slug
-        except Unit.DoesNotExist:
-            illinois_slug = None
-
-        try:
-            chicago_slug = Unit.objects.get(name__iexact='Chicago').slug
-        except:
-            chicago_slug = None
-
         with connection.cursor() as cursor:
             cursor.execute('SELECT amount FROM payroll_salary')
             all_salaries = [x[0] for x in cursor]
@@ -51,12 +38,14 @@ class IndexView(TemplateView, ChartHelperMixin):
             'salary_count': salary_count,
             'unit_count': unit_count,
             'department_count': department_count,
-            'illinois_slug': illinois_slug,
-            'chicago_slug': chicago_slug,
             'salary_json': json.dumps(binned_salaries),
         })
 
         return context
+
+
+class UserGuideView(TemplateView):
+    template_name = 'user_guide.html'
 
 
 def error(request, error_code):
@@ -365,12 +354,15 @@ class DepartmentView(EmployerView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         department_expenditure = sum(self.object.employee_salaries)
         parent_expediture = self.total_parent_expenditure()
         percentage = department_expenditure / parent_expediture
+
         context.update({
-            'percent_of_total_expenditure': percentage * 100,  # MIGHT NEED TO HANDLE EXCEPTIONS
+            'percent_of_total_expenditure': percentage * 100,
         })
+
         return context
 
     def total_parent_expenditure(self):

@@ -1,6 +1,6 @@
 <div class="table-responsive">
-  <table class="table table-striped table-hover">
-    <thead class="bg-warning">
+  <table class="table table-striped">
+    <thead class="bg-dark text-light">
     <tr>
       <th scope="col">Name</th>
       <th scope="col">Position</th>
@@ -41,7 +41,13 @@
         {% endif %}
       </td>
       {% if show_start_date %}
-      <td class="text-right">{{ job.start_date or 'N/A' }}</td>
+      <td class="text-right">
+        {% if job.start_date %}
+          {{ job.start_date.strftime('%m-%d-%Y') }}
+        {% else %}
+          N/A
+        {% endif %}
+      </td>
       {% endif %}
     </tr>
   {% endfor %}

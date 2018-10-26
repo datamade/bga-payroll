@@ -1,10 +1,8 @@
 import datetime
 
 from django.contrib import admin
-from django.db.models import Q
 
-from data_import.models import SourceFile, StandardizedFile, Upload, \
-    RespondingAgency
+from data_import.models import SourceFile, Upload, RespondingAgency
 
 
 class AdminRespondingAgency(admin.ModelAdmin):
@@ -61,25 +59,7 @@ class AdminSourceFile(admin.ModelAdmin):
         if not obj.reporting_period_end_date:
             obj.reporting_period_end_date = datetime.datetime(obj.reporting_year, 12, 31)
 
-        obj = self._link_standardized_file(obj)
-
         super().save_model(request, obj, form, change)
-
-    def _link_standardized_file(self, obj):
-        '''
-        Identify the StandardizedFile object for the given year and responding
-        agency, if it exists. Note: Standardized data is linked to pre-existing
-        source files on import.
-        '''
-        in_reporting_year = Q(reporting_year=obj.reporting_year)
-        of_responding_agency = Q(responding_agencies=obj.responding_agency)
-
-        s_file = StandardizedFile.objects.filter(in_reporting_year & of_responding_agency).get()
-
-        if s_file:
-            obj.standardized_file = s_file
-
-        return obj
 
 
 admin.site.register(SourceFile, AdminSourceFile)

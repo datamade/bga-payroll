@@ -1,17 +1,25 @@
 <li class="breadcrumb-item">
-  <a href="/">All</a>
+  <a href='/'>Home</a>
 </li>
 
-{% if entity.parent %}
-  <li class="breadcrumb-item">
-    <a href="/{{ entity.parent.endpoint }}/{{ entity.parent.slug }}">{{ entity.parent }}</a>
-  </li>
-{% endif %}
+{% if entity %}
 
-<li class="breadcrumb-item active" aria-current="page">
-  {% if '/person/' in request.path %} {# Link if shown on person page #}
-    <a href="/{{ entity.endpoint }}/{{ entity.slug }}">{{ entity }}</a>
-  {% else %}
-    {{ entity }}
+  {% if entity.parent %}
+    <li class="breadcrumb-item">
+      <a href="/{{ entity.parent.endpoint }}/{{ entity.parent.slug }}">{{ entity.parent }}</a>
+    </li>
   {% endif %}
-</li>
+
+  <li class="breadcrumb-item active" aria-current="page">
+    {% if '/person/' in request.path %} {# Link if shown on person page #}
+      <a href="/{{ entity.endpoint }}/{{ entity.slug }}">{{ entity }}</a>
+    {% else %}
+      {{ entity }}
+    {% endif %}
+  </li>
+
+{% else %}
+
+<li class="breadcrumb-item">Search</li>
+
+{% endif %}

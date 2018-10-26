@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.core.management import call_command
 
 from payroll.models import Employer, EmployerUniverse, EmployerTaxonomy
@@ -23,6 +24,27 @@ class AdminEmployerTaxonomy(admin.ModelAdmin):
     pass
 
 
+class LogEntryAdmin(admin.ModelAdmin):
+    readonly_fields = (
+        'content_type',
+        'user',
+        'action_time',
+        'object_id',
+        'object_repr',
+        'action_flag',
+        'change_message'
+    )
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_actions(self, request):
+        actions = super(LogEntryAdmin, self).get_actions(request)
+        del actions['delete_selected']
+        return actions
+
+
 admin.site.register(Employer, AdminEmployer)
 admin.site.register(EmployerUniverse, AdminEmployerUniverse)
 admin.site.register(EmployerTaxonomy, AdminEmployerTaxonomy)
+admin.site.register(LogEntry, LogEntryAdmin)

@@ -18,6 +18,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '.datamade.us',
+    'salary.bettergov.org',
 ]
 
 # Application definition
@@ -70,6 +71,9 @@ TEMPLATES = [
         'APP_DIRS': False,
         'OPTIONS': {
             'environment': 'bga_database.jinja2.environment',
+            'context_processors': [
+                'payroll.context_processors.inspiration_slugs',
+            ],
         },
     },
 ]

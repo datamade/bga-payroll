@@ -52,10 +52,12 @@ class PersonSearch(object):
 
 class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
-    facets = {}
 
     # Cross-walk of URL parameters to Solr index fields
     param_index_map = {
+        'name': 'name',
+        'entity_type': 'entity_type',
+        'year': 'year',
         'expenditure': 'expenditure_d',
         'headcount': 'headcount_i',
         'taxonomy': 'taxonomy_s_fct',
@@ -79,10 +81,16 @@ class PayrollSearchMixin(object):
         else:
             entity_types = ['unit', 'department', 'person']
 
+        self.facets = {}
+
         query_string = self._make_querystring(params)
 
-        for entity_type in entity_types:
-            yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+        if query_string:
+            for entity_type in entity_types:
+                yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+
+        else:
+            return None
 
     def _search(self, entity_type, *args):
         # Don't edit the actual static attribute
@@ -154,7 +162,16 @@ class PayrollSearchMixin(object):
         query_parts = []
 
         for param, value in params.items():
-            index_field = self.param_index_map.get(param, param)
+            try:
+                index_field = self.param_index_map[param]
+            except KeyError:
+                # Ignore invalid parameters
+                continue
+
+            if index_field == 'name':
+                # Allow for terms to appear in any order
+                value = '({})'.format(value)
+
             query_parts.append('{0}:{1}'.format(index_field, value))
 
         return query_parts
@@ -196,7 +213,11 @@ class FacetingMixin(object):
 
             for facet_type, facet_values in facets.items():
                 for facet, values in facet_values.items():
-                    entity_facets[facet] = getattr(self, '_{}'.format(facet_type))(values)
+                    facet_counts = getattr(self, '_{}'.format(facet_type))(values)
+
+                    entity_facets[facet] = sorted(facet_counts,
+                                                  key=lambda x: x['count'],
+                                                  reverse=True)
 
             out[entity_type] = entity_facets
 
