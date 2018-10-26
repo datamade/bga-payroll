@@ -57,7 +57,7 @@ class SignupForm(forms.Form):
                 "contactMethods": {
                     "Email": {
                         "label": "Email",
-                        "optedIn":	True
+                        "optedIn": True
                     }
                 },
                 "contentChannels": {
@@ -65,11 +65,11 @@ class SignupForm(forms.Form):
                         "label": "Advocacy",
                         "optedIn": True
                     },
-                    "3ec33e32-e774-4f22-9904-e8d4e67ce636":	{
+                    "3ec33e32-e774-4f22-9904-e8d4e67ce636": {
                         "label": "Fundraising",
                         "optedIn": True
                     },
-                    "af9c6537-7ad2-4d6f-8ecb-7b386dbaff11":	{
+                    "af9c6537-7ad2-4d6f-8ecb-7b386dbaff11": {
                         "label": "General",
                         "optedIn": True
                     }
@@ -103,8 +103,8 @@ class SignupForm(forms.Form):
                 "pid": "c1868391-9dcc-49bf-8eff-00c18d867bea",
                 "salsaTrack": None,
                 "userInteractionId": "8d04604b-a237-4873-990f-689d218312bd"
-                }
             }
+        }
 
         salsa_url = 'https://org-557dfa6a-8ce6-4e82-85c2-abd6c61f8767.salsalabs.org/api/activity/submission/subscription'
 
