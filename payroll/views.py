@@ -11,6 +11,7 @@ from django.views.generic import FormView
 from postgres_stats.aggregates import Percentile
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import login as auth_login
+from django.conf import settings
 
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
@@ -572,7 +573,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
         else:
             self.request.session['search_count'] = 1
 
-        if self.request.user.is_authenticated or self.request.session['search_count'] <= 3:
+        if self.request.user.is_authenticated or self.request.session['search_count'] <= settings.SEARCH_LIMIT:
             results = list(self.search(params))
         else:
             results = []
@@ -585,6 +586,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
         facets = self.parse_facets(self.facets)
 
         context['facets'] = facets
+        context['search_limit'] = settings.SEARCH_LIMIT
 
         return context
 

@@ -182,7 +182,7 @@
 <script src="{{ static('js/search.js') }}"></script>
 
 <script type="text/javascript">
-    {% if not request.user.is_authenticated and request.session.search_count > 3 %}
+    {% if not request.user.is_authenticated and request.session.search_count > search_limit %}
         $('#signupModal').modal();
         $('.toggle-login-signup').on('click', function(e){
             var parent_modal = $(e.target).data('parent_modal');
