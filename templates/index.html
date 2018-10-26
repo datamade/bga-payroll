@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Illinois Salaries Database{% endblock %}
+{% block title %}Illinois Public Salaries Database{% endblock %}
 
 {% block extra_css %}
 <link href="{{ static('css/jquery-ui.min.css') }}" rel="stylesheet">
@@ -10,15 +10,23 @@
 
 <div class="row">
   <div class="col-md-10 offset-md-1">
+    {% if 'welcome' in request.GET %}
+    <div class="row mb-3">
+      <div class="alert alert-warning" role="alert">
+        <i class="fas fa-info-circle fa-fw"></i> <strong>Looking for the Better Government Association’s Payroll Database?</strong> We’ve updated and made it better. The old one isn’t currently available, but in the meantime check out our new work.
+      </div>
+    </div>
+    {% endif %}
     <div class="row">
       <div class="jumbotron bg-light">
-        <div class="row">
-          <div class="col-md">
-              <h1>Illinois Salaries Database</h1>
+        <div class="row mb-lg-5">
+          <div class="col-md-3 align-self-center d-none d-lg-block">
+            <img src="{{ static('img/capitol-dome.png') }}" class="pr-2 img-fluid bga-blue-filter" />
+          </div>
+          <div class="col-md align-self-center">
+              <h1>Search Illinois public employee salary data</h1>
 
-              <p class="lead">The <strong>most comprehensive</strong> place to find out how government employees are paid, statewide.</p>
-
-              <p>With the BGA's searchable database of public payrolls across Illinois, you can easily access information relating to the spending of state, county, and local units of government.</p>
+              <p class="lead">Every year, the Better Government Association compiles <strong class="bg-warning">Illinois’ most comprehensive database</strong> to review, explore and compare compensation for public employees throughout Illinois. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
           </div>
         </div>
 
@@ -31,7 +39,7 @@
                 <label class="form-check-label" for="unit-check"><i class="fas fa-building"></i> Unit</label>
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input entity-type-check" type="checkbox" id="department-check" value="department">
+                <input class="form-check-input entity-type-check" type="checkbox" id="department-check" value="department" checked>
                 <label class="form-check-label" for="department-check"><i class="far fa-building"></i> Department</label>
               </div>
               <div class="form-check form-check-inline">
@@ -44,13 +52,22 @@
           <div class="row">
             <div class="col-md">
               <div class="input-group">
-                <input type="text" id="entity-lookup" class="form-control form-control-lg" placeholder="Cook County" />
+                <input type="text" id="entity-lookup" class="form-control form-control-lg" autofocus />
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
                     <i class="fas fa-search"></i> Search
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md mt-3 text-smaller">
+              <strong class="pr-2">For example,</strong>
+              <a href="/search/?name=Cook County&entity_types=unit" class="pr-2"><i class="fa-fw fas fa-building"></i> Cook County</a>
+              <a href="/search/?name=Chicago Police Department&entity_types=department" class="pr-2"><i class="fa-fw far fa-building"></i> Chicago Police Department</a>
+              <a href="/search/?name=Rahm Emanuel&entity_types=person" class="pr-2"><i class="fa-fw far fa-address-card"></i> Rahm Emanuel</a>
             </div>
           </div>
 
@@ -69,7 +86,7 @@
       <div class="col-md">
         <h3>What's inside?</h3>
 
-        <p>The <strong>Illinois Salary Database</strong> contains <strong>{{ salary_count }}</strong> records of base pay for government employees in <strong>{{ department_count }}</strong> <span class="text-primary font-weight-bold"><i class="far fa-building"></i> Departments</span> across <strong>{{ unit_count }}</strong> <span class="text-primary font-weight-bold"><i class="fas fa-building"></i> Units</span> in the state of Illinois.</p>
+        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong>{{ salary_count|format_exact_number }}</strong> state, municipal, school and many other government employees across Illinois. It covers <strong>{{ unit_count|format_exact_number }}</strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
       </div>
     </div>
 
@@ -85,12 +102,12 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md">
-        <p>Each year, the BGA gathers new data from hundreds of public agencies. Like what you see?</p>
+    <div class="row mt-4">
+      <div class="col-md-8 offset-md-2 alert alert-primary">
+        <p>It takes the BGA nearly a year to request, compile, organize and check data we receive from hundreds of taxing bodies across Illinois. Like what you see? <strong>Please consider making a donation to help us continue this work.</strong></p>
 
         <div class="text-center">
-          <a class="btn btn-lg btn-primary" href="https://bettergov.salsalabs.org/donationform/index.html">
+          <a class="btn btn-lg btn-success" href="https://bettergov.salsalabs.org/donationform/index.html">
             <i class="fas fa-handshake"></i> Donate to the BGA
           </a>
         </div>
@@ -99,48 +116,15 @@
 
     <div class="row mt-5">
       <div class="col-md">
-        <h3>Inspiration</h3>
+        <h3>What are you curious about?</h3>
       </div>
     </div>
 
     <div class="row mt-2">
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body text-center">
-            <h4><i class="fas fa-dollar-sign"></i></h4>
-            <h5>Highest paid people in Illinois</h5><br />
-            <a href="/search/?entity_type=person&employer={{ illinois_slug }}" class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body text-center">
-            <h4><i class="fas fa-users"></i></h4>
-            <h5 class="text-center">Highest spending departments in Chicago</h5><br />
-            <a href="/search/?entity_type=department&parent={{ chicago_slug }}" class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body text-center">
-            <h4><i class="fas fa-gavel"></i></h4>
-            <h5>Highest spending police departments</h5><br />
-            <a href='/search/?entity_type=department&universe="Police+Department"' class="btn btn-primary"><i class="fas fa-search"></i> Explore</a>
-          </div>
-        </div>
-      </div>
+      {% include 'partials/inspiration.html' %}
     </div>
 
-    <div class="clearfix"></div>
-
-    <div class="row mt-5">
-      <div class="col-md">
-        <h3>Need help?</h3>
-        <p>Contact our data coordinator.</p>
-      </div>
-    </div>
+    <div class="mt-4"></div>
   </div>
 </div>
 {% endblock %}
@@ -159,6 +143,7 @@
 
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
+<script src="{{ static('js/search.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script src="{{ static('js/chart_helper.js') }}"></script>
 <script src="{{ static('js/email_collection.js') }}"></script>
@@ -178,33 +163,6 @@
 
   ChartHelper.make_salary_chart({{ salary_json|safe }}, 'employee');
 
-  $('#submit-button').click(function submitSearch(e) {
-      e.preventDefault();
-
-      var url;
-
-      var entity_types = [];
-
-      $('.entity-type-check').filter('input:checked').each(function entityTypes() {
-        entity_types.push($(this).val());
-      })
-
-      var params = {
-        'name': $('#entity-lookup').val(),
-        'entity_type': entity_types.join(','),
-      }
-
-      if ( $('#entity-lookup').val() ) {
-        url = '/search/?' + $.param(params);
-
-        if (!sessionAuthenticated()) {
-          incrementCounterCookie();
-        }
-
-        window.location = url;
-      } else {
-        $('#name-warning').collapse('show');
-      }
-  });
+  initSearch({{ request.GET.dict()|safe }});
 </script>
 {% endblock %}

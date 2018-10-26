@@ -148,7 +148,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(success_message))
 
     def _make_department_index(self, department):
-        name = department.name
+        name = str(department)
 
         of_department = Q(job__position__employer=department)
 
@@ -247,30 +247,29 @@ class Command(BaseCommand):
                                  .prefetch_related('salaries')\
                                  .first()
 
-            finally:
-                position = job.position
-                employer = position.employer
+            position = job.position
+            employer = position.employer
 
-                text = '{0} {1} {2}'.format(name, employer, position)
+            text = '{0} {1} {2}'.format(name, employer, position)
 
-                if employer.is_department:
-                    employer_slug = [employer.parent.slug, employer.slug]
-                else:
-                    employer_slug = [employer.slug]
+            if employer.is_department:
+                employer_slug = [employer.parent.slug, employer.slug]
+            else:
+                employer_slug = [employer.slug]
 
-                document = {
-                    'id': 'person.{0}.{1}'.format(person.id, year),
-                    'slug': person.slug,
-                    'name': name,
-                    'entity_type': 'Person',
-                    'year': year,
-                    'title_s': job.position.title,
-                    'salary_d': job.salaries.get().amount,
-                    'employer_ss': employer_slug,
-                    'text': text,
-                }
+            document = {
+                'id': 'person.{0}.{1}'.format(person.id, year),
+                'slug': person.slug,
+                'name': name,
+                'entity_type': 'Person',
+                'year': year,
+                'title_s': job.position.title,
+                'salary_d': job.salaries.get().amount,
+                'employer_ss': employer_slug,
+                'text': text,
+            }
 
-                yield document
+            yield document
 
     def index_people(self):
         if self.recreate:

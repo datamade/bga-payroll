@@ -69,7 +69,6 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
         self._link_responding_agency_with_standardized_file()
-        self._link_standardized_file_with_source_file()
 
     def _link_responding_agency_with_standardized_file(self):
         insert = '''
@@ -88,25 +87,6 @@ class ImportUtility(TableNamesMixin):
 
         with connection.cursor() as cursor:
             cursor.execute(insert)
-
-    def _link_standardized_file_with_source_file(self):
-        '''
-        Link standard data to any source files we already have. Note: Source
-        files added later are linked on upload.
-        '''
-        update = '''
-            UPDATE data_import_sourcefile AS src
-            SET standardized_file_id = std.id
-            FROM data_import_standardizedfile AS std
-            JOIN data_import_standardizedfile_responding_agencies AS xwalk
-            ON std.id = xwalk.standardizedfile_id
-            WHERE xwalk.respondingagency_id = src.responding_agency_id
-            AND std.reporting_year = src.reporting_year
-            AND src.standardized_file_id IS NULL
-        '''
-
-        with connection.cursor() as cursor:
-            cursor.execute(update)
 
     def reshape_raw_payroll(self):
         select = '''
@@ -208,6 +188,7 @@ class ImportUtility(TableNamesMixin):
             USING (entity_type, chicago, cook_or_collar)
             WHERE TRIM(LOWER(payroll_employer.name)) = TRIM(LOWER(raw_taxonomy.entity))
               AND payroll_employer.parent_id IS NULL
+              AND payroll_employer.taxonomy_id IS NULL
         '''
 
         update_school_districts = '''
@@ -230,6 +211,7 @@ class ImportUtility(TableNamesMixin):
               WHERE ra.name ilike 'isbe'
             ) AS isbe_reported
             WHERE payroll_employer.id = isbe_reported.unit_id
+              AND payroll_employer.taxonomy_id IS NULL
         '''
 
         with connection.cursor() as cursor:
@@ -402,6 +384,8 @@ class ImportUtility(TableNamesMixin):
               FROM payroll_employer
               /* Only add departments to universes. */
               WHERE parent_id IS NOT NULL
+              /* Only classify unclassified departments. */
+              AND universe_id IS NULL
             )
             UPDATE payroll_employer
             SET universe_id = xwalk.universe_id FROM (
