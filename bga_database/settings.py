@@ -124,7 +124,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_ROOT = BASE_DIR
 MEDIA_URL = '/media/'
 
-# Remote storage options
+# Session settings
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 31557600
 
+SEARCH_LIMIT = 5
+
+# Remote storage options
 if not DEBUG:  # noqa
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
