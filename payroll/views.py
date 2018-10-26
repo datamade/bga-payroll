@@ -632,7 +632,7 @@ class EntityLookup(ListView, PayrollSearchMixin):
 
 class UserLoginView(LoginView):
     def form_valid(self, form):
-        user = auth_login(self.request, form.get_user())
+        auth_login(self.request, form.get_user())
 
         context = self.get_context_data(form=form)
 
