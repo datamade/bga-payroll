@@ -1,8 +1,11 @@
+import json
+
+import requests
+
 from django import forms
 from django.contrib.auth.models import User
 
 from .models import UserZipcode
-
 
 class SignupForm(forms.Form):
     email = forms.EmailField(label='Email')
@@ -38,3 +41,70 @@ class SignupForm(forms.Form):
         user.save()
 
         return user
+
+    def add_to_salsa(self, user):
+        payload = {
+            "header": {},
+            "payload":	{
+            "activityId": "73cf9597-3992-4256-b0a2-fa893a65caff",
+            "aid": "f3f7d6cd-d5a0-4814-938e-23a97a2ccad6",
+            "cid": "",
+            "contactMethods":{
+                "Email": {
+                    "label": "Email",
+                    "optedIn":	true
+                }
+            },
+            "contentChannels": {
+                "38c6c0e0-862a-427d-8fd7-13ab6e2c9824": {
+                    "label": "Advocacy",
+                    "optedIn": true
+                },
+                "3ec33e32-e774-4f22-9904-e8d4e67ce636":	{
+                    "label": "Fundraising",
+                    "optedIn": true
+                },
+                "af9c6537-7ad2-4d6f-8ecb-7b386dbaff11":	{
+                    "label": "General",
+                    "optedIn": true
+                }
+            },
+            "data": {
+                "Address@Home@Zip": {
+                    "label": "Zip Code",
+                    "required": true,
+                    "value": user.userzipcode.zipcode
+                },
+                "PersonCensus@FirstName": {
+                    "label": "First Name",
+                    "required": true,
+                    "value": user.first_name
+                },
+                "PersonCensus@LastName": {
+                    "label": "Last Name",
+                    "required": true,
+                    "value": user.last_name
+                },
+                "PersonContact@Email@Value": {
+                    "label": "Email Address",
+                    "required": true,
+                    "value": user.email
+                },
+                "termsAndConditions": {}
+            },
+            "eid": "82a20ce0-6591-4a90-a77d-d73599ec9b43",
+            "eType": "Template",
+            "oid": "557dfa6a-8ce6-4e82-85c2-abd6c61f8767",
+            "pid": "c1868391-9dcc-49bf-8eff-00c18d867bea",
+            "salsaTrack": null,
+            "userInteractionId": "8d04604b-a237-4873-990f-689d218312bd"
+            }
+        }
+
+        salsa_url = 'https://org-557dfa6a-8ce6-4e82-85c2-abd6c61f8767.salsalabs.org/api/activity/submission/subscription'
+
+        signup = requests.post(salsa_url,
+                               data=json.dumps(payload),
+                               headers={'content-type':
+                                        'application/json; charset=utf-8'})
+
