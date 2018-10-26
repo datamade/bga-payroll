@@ -577,6 +577,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
             results = list(self.search(params))
         else:
             results = []
+            self.facets = {}
 
         return results
 
