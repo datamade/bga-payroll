@@ -31,8 +31,6 @@ urlpatterns = [
     path('entity-lookup/', payroll_views.EntityLookup.as_view(), name='entity-lookup'),
     path('search/', payroll_views.SearchView.as_view(), name='search'),
     path('<int:error_code>', payroll_views.error, name='error'),
-    path('login/', payroll_views.UserLoginView.as_view(), name='login'),
-    path('signup/', payroll_views.UserSignupView.as_view(), name='signup'),
 
     # admin
     path('admin/', admin.site.urls),
