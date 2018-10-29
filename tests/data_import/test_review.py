@@ -12,7 +12,7 @@ from data_import.views import RespondingAgencyReview, RespondingAgencyQueue
     (0, (None, None)),
     (1, (None, None)),
 ])
-def test_review_dispatch(mocker, client, remaining, item):
+def test_review_dispatch(mocker, admin_client, remaining, item):
     mock_queue = mocker.PropertyMock(spec=ReviewQueue)
     mock_queue.remaining = remaining
     mock_queue.checkout.return_value = item
@@ -23,7 +23,7 @@ def test_review_dispatch(mocker, client, remaining, item):
     if not remaining:
         mock_transition = mocker.patch.object(RespondingAgencyReview, 'finish_review_step')
 
-    rv = client.get(reverse('review-responding-agency', kwargs={'s_file_id': 99}))
+    rv = admin_client.get(reverse('review-responding-agency', kwargs={'s_file_id': 99}))
 
     if remaining and all(item):
         assert rv.status_code == 200
@@ -37,7 +37,7 @@ def test_review_dispatch(mocker, client, remaining, item):
         assert mock_transition.call_count == 1
 
 
-def test_match(mocker, client):
+def test_match(mocker, admin_client):
     mock_queue = mocker.MagicMock(spec=RespondingAgencyQueue)
     mocker.patch('data_import.views.RespondingAgencyQueue', return_value=mock_queue)
 
@@ -48,16 +48,16 @@ def test_match(mocker, client):
     }
 
     with pytest.raises(AssertionError):
-        client.post(reverse('match-entity'), data={'data': json.dumps(data)})
+        admin_client.post(reverse('match-entity'), data={'data': json.dumps(data)})
 
     data['match'] = 'bar'
 
-    client.post(reverse('match-entity'), data={'data': json.dumps(data)})
+    admin_client.post(reverse('match-entity'), data={'data': json.dumps(data)})
 
     mock_queue.match_or_create.assert_called_once_with(data['unseen'], data['match'])
 
 
-def test_add(mocker, client):
+def test_add(mocker, admin_client):
     mock_queue = mocker.MagicMock(spec=RespondingAgencyQueue)
     mocker.patch('data_import.views.RespondingAgencyQueue', return_value=mock_queue)
 
@@ -69,10 +69,10 @@ def test_add(mocker, client):
     }
 
     with pytest.raises(AssertionError):
-        client.post(reverse('add-entity'), data={'data': json.dumps(data)})
+        admin_client.post(reverse('add-entity'), data={'data': json.dumps(data)})
 
     del data['match']
 
-    client.post(reverse('add-entity'), data={'data': json.dumps(data)})
+    admin_client.post(reverse('add-entity'), data={'data': json.dumps(data)})
 
     mock_queue.match_or_create.assert_called_once_with(data['unseen'], None)
