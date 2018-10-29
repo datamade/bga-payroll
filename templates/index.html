@@ -129,11 +129,6 @@
 </div>
 {% endblock %}
 
-{% block modals %}
-<div class="modal" tabindex="-1" role="dialog" id="signupLoginModal">
-</div>
-{% endblock %}
-
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
 <script src="{{ static('js/search.js') }}"></script>
@@ -155,34 +150,6 @@
 
   ChartHelper.make_salary_chart({{ salary_json|safe }}, 'employee');
 
-  $('#submit-button').click(function submitSearch(e) {
-      e.preventDefault();
-
-      var url;
-
-      var entity_types = [];
-
-      $('.entity-type-check').filter('input:checked').each(function entityTypes() {
-        entity_types.push($(this).val());
-      })
-
-      var params = {
-        'name': $('#entity-lookup').val(),
-        'entity_type': entity_types.join(','),
-      }
-
-      if ( $('#entity-lookup').val() ) {
-        url = '/search/?' + $.param(params);
-
-       // if (!sessionAuthenticated()) {
-       //   incrementCounterCookie();
-       // }
-
-        window.location = url;
-      } else {
-        $('#name-warning').collapse('show');
-      }
-  });
   initSearch({{ request.GET.dict()|safe }});
 </script>
 {% endblock %}

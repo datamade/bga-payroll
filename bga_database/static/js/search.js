@@ -27,10 +27,6 @@ function initSearch(get_object) {
         if ( term ) {
             var querystring = makeQuerystring(get_object, term);
 
-            if (!sessionAuthenticated()) {
-              incrementCounterCookie();
-            }
-
             window.location = '/search/?' + querystring;
         } else {
             $('#name-warning').collapse('show');

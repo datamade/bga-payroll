@@ -231,33 +231,8 @@
         });
 
     {% else %}
-    $('#submit-button').click(function submitSearch(e) {
-        e.preventDefault();
-
-            var url;
-
-            var params = {{ request.GET.dict()|safe }};
-
-            if ( $('#entity-lookup').val() ) {
-                params['name'] = $('#entity-lookup').val();
-            }
-
-            delete params.page;
-
-            var querystring = $.param(params);
-
-            if ( $('#entity-lookup').val() ) {
-                url = '/search/?' + querystring;
-            } else {
-                url = '/search/';
-            }
-
-            window.location = url;
-
-    });
+        initSearch({{ request.GET.dict()|safe }});
     {% endif %}
-
-    initSearch({{ request.GET.dict()|safe }});
 
     $('[id*="facet-toggle"]').click(function toggleClick(e) {
         // On click, content has not yet been expanded, i.e., if aria-expanded
