@@ -535,6 +535,8 @@ class PersonView(DetailView, ChartHelperMixin):
         else:
             source_link = None
 
+        noindex = salary_amount < 30000
+
         context.update({
             'data_year': 2017,
             'current_job': current_job,
@@ -547,6 +549,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'like_employer_percentile': like_employer_percentile,
             'fellow_job_holders': fellow_job_holders,
             'source_link': source_link,
+            'noindex': noindex,
         })
 
         return context
