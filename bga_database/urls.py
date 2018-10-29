@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path
+from django.views.decorators.cache import cache_page
 
 from data_import import views as import_views
 from payroll import views as payroll_views
@@ -23,17 +24,18 @@ from payroll import views as payroll_views
 
 urlpatterns = [
     # client
-    path('', payroll_views.IndexView.as_view(), name='home'),
+    path('', cache_page(60 * 15)(payroll_views.IndexView.as_view()), name='home'),
     path('user-guide/', payroll_views.UserGuideView.as_view(), name='user_guide'),
-    path('unit/<str:slug>/', payroll_views.UnitView.as_view(), name='unit'),
-    path('department/<str:slug>/', payroll_views.DepartmentView.as_view(), name='department'),
-    path('person/<str:slug>/', payroll_views.PersonView.as_view(), name='person'),
+    path('unit/<str:slug>/', cache_page(60 * 15)(payroll_views.UnitView.as_view()), name='unit'),
+    path('department/<str:slug>/', cache_page(60 * 15)(payroll_views.DepartmentView.as_view()), name='department'),
+    path('person/<str:slug>/', cache_page(60 * 15)(payroll_views.PersonView.as_view()), name='person'),
     path('entity-lookup/', payroll_views.EntityLookup.as_view(), name='entity-lookup'),
     path('search/', payroll_views.SearchView.as_view(), name='search'),
     path('<int:error_code>', payroll_views.error, name='error'),
 
     # admin
     path('admin/', admin.site.urls),
+    path('flush-cache/<str:secret_key>', payroll_views.flush_cache, name='flush_cache'),
 
     # data import
     path('data-import/', import_views.Uploads.as_view(), name='data-import'),

@@ -33,3 +33,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 CENSUS_API_KEY = '<A KEY>'
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/bga'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+
+CACHE_SECRET_KEY = 'a key'
