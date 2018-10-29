@@ -1,8 +1,9 @@
 import json
 
+from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q, FloatField, Prefetch
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
@@ -12,6 +13,8 @@ from postgres_stats.aggregates import Percentile
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin
+
+from bga_database.local_settings import CACHE_SECRET_KEY
 
 
 class IndexView(TemplateView, ChartHelperMixin):
@@ -610,3 +613,13 @@ class EntityLookup(ListView, PayrollSearchMixin):
         results = self.get_queryset(*args, **kwargs)
 
         return JsonResponse(results, safe=False)
+
+
+def flush_cache(request, secret_key):
+    if secret_key == CACHE_SECRET_KEY:
+        cache.clear()
+        status_code = 200
+    else:
+        status_code = 403
+
+    return HttpResponse(status_code)
