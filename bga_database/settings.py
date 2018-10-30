@@ -19,6 +19,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.datamade.us',
     'salary.bettergov.org',
+    'bs-local.com',  # BrowserStack local testing
 ]
 
 # Application definition
