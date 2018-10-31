@@ -60,13 +60,13 @@ class PersonSearch(object):
         '''
         slugs = []
 
-        for _, result in results.items():
+        for result in results.values():
             slugs += result['employer_ss']
 
         slug_map = employers_from_slugs(slugs)
 
-        for _, result in results.items():
-            result['employer_ss'] = [slug_map[e] for e in result['employer_ss_fct']]
+        for result in results.values():
+            result['employer_ss'] = [slug_map[e] for e in result['employer_ss']]
 
         return results
 
@@ -254,12 +254,17 @@ class FacetingMixin(object):
         '''
         When facet values are Unit or Department slugs, return the corresponding
         objects for use in the templates.
+
+        :facet_counts is a list of dictionaries containing the values and
+        counts for a given facet, e.g., [{'value': 'some-slug', 'count': 99},
+        ...]. If one value is a slug, they are all slugs. Likewise, if one
+        value is not a slug, none of them are.
         '''
         slugs = [f['value'] for f in facet_counts]
 
         # Match slugs formatted like 'winnetka-park-district-e8d69a12', i.e.,
         # lowercase letters joined by dashes, followed by the first chunk of a UUID
-        if slugs and re.match('[a-z-]*-[0-9a-f]{8}', slugs[0]):
+        if slugs and re.match('[a-z0-9_-]*-[0-9a-f]{8}', slugs[0]):
             employers = employers_from_slugs(slugs)
 
             for f in facet_counts:
