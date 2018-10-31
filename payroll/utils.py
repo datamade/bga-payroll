@@ -119,6 +119,9 @@ def url_from_facet(facet_data, request):
             if param in ('universe', 'taxonomy'):
                 value = '"{}"'.format(value)
 
+            elif isinstance(value, Unit) or isinstance(value, Department):
+                value = value.slug
+
             params[param] = value
 
     request_params = request.GET.dict()
