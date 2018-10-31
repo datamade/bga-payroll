@@ -197,6 +197,9 @@ class Unit(Employer, SourceFileMixin):
 
     objects = UnitManager()
 
+    def __str__(self):
+        return self.name
+
     def responding_agency(self, year):
         return self.responding_agencies\
                    .get(reporting_year=year)\
@@ -215,7 +218,10 @@ class Unit(Employer, SourceFileMixin):
 
 class DepartmentManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(parent_id__isnull=False)
+        # Always select the related parent, so additional queries are not
+        # needed for displaying the name.
+        return super().get_queryset().filter(parent_id__isnull=False)\
+                                     .select_related('parent')
 
 
 class Department(Employer, SourceFileMixin):
@@ -223,6 +229,13 @@ class Department(Employer, SourceFileMixin):
         proxy = True
 
     objects = DepartmentManager()
+
+    def __str__(self):
+        if self.parent.name.lower() not in self.name.lower():
+            return '{} {}'.format(self.parent, self.name)
+
+        else:
+            return self.name
 
     def responding_agency(self, year):
         return self.parent\

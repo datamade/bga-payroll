@@ -5,6 +5,8 @@ import urllib.parse
 
 import inflect
 
+from payroll.models import Unit, Department
+
 
 def query_transform(request, drop_keys=['page']):
     updated = request.GET.copy()
@@ -117,6 +119,9 @@ def url_from_facet(facet_data, request):
             if param in ('universe', 'taxonomy'):
                 value = '"{}"'.format(value)
 
+            elif isinstance(value, Unit) or isinstance(value, Department):
+                value = value.slug
+
             params[param] = value
 
     request_params = request.GET.dict()
@@ -127,12 +132,6 @@ def url_from_facet(facet_data, request):
     request_params.update(params)
 
     return urllib.parse.urlencode(request_params)
-
-
-def employer_from_slug(slug):
-    from payroll.models import Employer
-
-    return Employer.objects.get(slug=slug)
 
 
 def format_exact_number(i):
@@ -185,3 +184,13 @@ def an_or_a(word, bold=False):
         word = '<strong>' + word + '</strong>'
 
     return phrase.format(word)
+
+
+def employers_from_slugs(slugs):
+    employers = {e.slug: e for e in Unit.objects.filter(slug__in=slugs)}
+
+    employers.update(
+        {e.slug: e for e in Department.objects.filter(slug__in=slugs)}
+    )
+
+    return employers

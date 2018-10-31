@@ -5,7 +5,7 @@ from jinja2 import Environment
 
 from payroll.utils import format_ballpark_number, format_salary, \
     query_transform, format_percentile, url_from_facet, \
-    param_from_index, employer_from_slug, format_range, pluralize, an_or_a, \
+    param_from_index, format_range, pluralize, an_or_a, \
     format_exact_number
 
 
@@ -25,7 +25,6 @@ def environment(**options):
         'format_percentile': format_percentile,
         'url_from_facet': url_from_facet,
         'param_from_index': param_from_index,
-        'employer_from_slug': employer_from_slug,
         'format_range': format_range,
         'pluralize': pluralize,
         'an_or_a': an_or_a,

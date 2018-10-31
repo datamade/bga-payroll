@@ -22,7 +22,7 @@
                                     <div class="col-10">
                                     <a href="/search/?{% if not requested_entities %}entity_type={{ entity_type }}&{% endif %}{{ [(facet.split(',')[0], vc.value)]|url_from_facet(request) }}">
                                         {% if current_facet in ('employer', 'parent') %}
-                                            {{ vc.value|employer_from_slug }}
+                                            {{ vc.value }}
                                         {% elif current_facet in ('headcount', 'salary', 'expenditure') %}
                                             {{ vc.value|format_range }}
                                         {% else %}
