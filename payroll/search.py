@@ -140,8 +140,10 @@ class PayrollSearchMixin(object):
         # Retain ordering from Solr results when filtering the model objects.
         sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
 
-        if hasattr(search_class, '_format_results'):
+        try:
             sorted_results = getattr(search_class, '_format_results')(sorted_results)
+        except AttributeError:
+            pass
 
         sort_order = list(sorted_results.keys())
 
