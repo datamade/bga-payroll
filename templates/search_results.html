@@ -27,9 +27,9 @@
             <div class="row">
                 <div class="col-md">
                     <div class="input-group">
-                        <input type="text" id="entity-lookup" class="form-control form-control-lg" value="{{ request.GET.get('name', '') }}" autofocus{% if request.GET.get('name', '')|length < 3 %}disabled{% endif %} />
+                        <input type="text" id="entity-lookup" class="form-control form-control-lg" value="{{ request.GET.get('name', '') }}" autofocus />
                         <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submit-button"{% if request.GET.get('name', '')|length < 3 %} disabled{% endif %}>
                                 <i class="fas fa-search"></i> Search
                             </button>
                         </div>
