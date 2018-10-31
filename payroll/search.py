@@ -114,10 +114,10 @@ class PayrollSearchMixin(object):
             return None
 
     def _search(self, entity_type, *args):
-        # Don't edit the actual static attribute
         search_class = self._search_class(entity_type)
 
-        search_kwargs = getattr(search_class, 'search_kwargs').copy()
+        # Don't edit the actual static attribute
+        search_kwargs = search_class.search_kwargs.copy()
 
         try:
             query_string, = args
@@ -139,18 +139,18 @@ class PayrollSearchMixin(object):
 
         # Retain ordering from Solr results when filtering the model objects.
         sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
+        sort_order = list(sorted_results.keys())
 
+        # If results contain Employer slugs, replace them with the appropriate
+        # Unit and Department objects.
         try:
-            sorted_results = getattr(search_class, '_format_results')(sorted_results)
+            sorted_results = search_class._format_results(sorted_results)
         except AttributeError:
             pass
 
-        sort_order = list(sorted_results.keys())
-
-        model = getattr(search_class, 'model')
         objects = []
 
-        for o in sorted(model.objects.filter(id__in=sort_order),
+        for o in sorted(search_class.model.objects.filter(id__in=sort_order),
                         key=lambda o: sort_order.index(o.id)):
 
             o.search_meta = sorted_results[o.id]
