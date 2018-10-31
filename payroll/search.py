@@ -1,12 +1,14 @@
 from collections import OrderedDict
 from functools import partialmethod
 from itertools import chain
+import re
 import sys
 
 from django.conf import settings
 import pysolr
 
 from payroll.models import Unit, Department, Person
+from payroll.utils import employers_from_slugs
 
 
 class EmployerSearch(object):
@@ -43,11 +45,30 @@ class PersonSearch(object):
         'rows': '99999999',
         'facet': 'true',
         'facet.mincount': '3',
-        'facet.field': 'employer_ss_fct',  # TO-DO: Is this the right way to facet multi-valued fields?
+        'facet.field': 'employer_ss_fct',
         'facet.interval': ['salary_d'],
         'f.salary_d.facet.interval.set': ['[0,25000)', '[25000,75000)', '[75000,150000)', '[150000,*)'],
         'sort': 'salary_d desc',
     }
+
+    @classmethod
+    def _format_results(cls, results):
+        '''
+        Return employer information as list of model objects, such that the
+        last object is the person's employer and any preceding objects are the
+        parents of that employer, e.g., [Unit, Department], [Unit].
+        '''
+        slugs = []
+
+        for _, result in results.items():
+            slugs += result['employer_ss']
+
+        slug_map = employers_from_slugs(slugs)
+
+        for _, result in results.items():
+            result['employer_ss'] = [slug_map[e] for e in result['employer_ss_fct']]
+
+        return results
 
 
 class PayrollSearchMixin(object):
@@ -94,7 +115,9 @@ class PayrollSearchMixin(object):
 
     def _search(self, entity_type, *args):
         # Don't edit the actual static attribute
-        search_kwargs = getattr(self._search_class(entity_type), 'search_kwargs').copy()
+        search_class = self._search_class(entity_type)
+
+        search_kwargs = getattr(search_class, 'search_kwargs').copy()
 
         try:
             query_string, = args
@@ -116,9 +139,13 @@ class PayrollSearchMixin(object):
 
         # Retain ordering from Solr results when filtering the model objects.
         sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
+
+        if hasattr(search_class, '_format_results'):
+            sorted_results = getattr(search_class, '_format_results')(sorted_results)
+
         sort_order = list(sorted_results.keys())
 
-        model = getattr(self._search_class(entity_type), 'model')
+        model = getattr(search_class, 'model')
         objects = []
 
         for o in sorted(model.objects.filter(id__in=sort_order),
@@ -214,14 +241,31 @@ class FacetingMixin(object):
             for facet_type, facet_values in facets.items():
                 for facet, values in facet_values.items():
                     facet_counts = getattr(self, '_{}'.format(facet_type))(values)
-
-                    entity_facets[facet] = sorted(facet_counts,
+                    formatted_facet_counts = self._format_facets(facet_counts)
+                    entity_facets[facet] = sorted(formatted_facet_counts,
                                                   key=lambda x: x['count'],
                                                   reverse=True)
 
             out[entity_type] = entity_facets
 
         return out
+
+    def _format_facets(self, facet_counts):
+        '''
+        When facet values are Unit or Department slugs, return the corresponding
+        objects for use in the templates.
+        '''
+        slugs = [f['value'] for f in facet_counts]
+
+        # Match slugs formatted like 'winnetka-park-district-e8d69a12', i.e.,
+        # lowercase letters joined by dashes, followed by the first chunk of a UUID
+        if slugs and re.match('[a-z-]*-[0-9a-f]{8}', slugs[0]):
+            employers = employers_from_slugs(slugs)
+
+            for f in facet_counts:
+                f['value'] = employers[f['value']]
+
+        return facet_counts
 
     def _facet_fields(self, values):
         '''
