@@ -36,4 +36,20 @@ function initSearch(get_object) {
             $('#name-warning').collapse('show');
         }
     });
+
+    $('#entity-lookup').keyup(function checkTermLength(e) {
+        // Enable the search button only if the term >= 3 characters in length
+        var term = $.trim($('#entity-lookup').val());
+        var searchDisabled = $('#submit-button').attr('disabled') === 'disabled';
+
+        if ( term.length >= 3 ) {
+            if ( searchDisabled ) {
+                $('#submit-button').attr('disabled', false);
+            }
+        } else {
+            if ( !searchDisabled ) {
+                $('#submit-button').attr('disabled', 'disabled');
+            }
+        }
+    })
 }
