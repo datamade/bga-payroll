@@ -51,5 +51,5 @@ function initSearch(get_object) {
                 $('#submit-button').attr('disabled', 'disabled');
             }
         }
-    })
+    });
 }
