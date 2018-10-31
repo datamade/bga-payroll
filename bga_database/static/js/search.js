@@ -32,8 +32,6 @@ function initSearch(get_object) {
             }
 
             window.location = '/search/?' + querystring;
-        } else {
-            $('#name-warning').collapse('show');
         }
     });
 
@@ -45,10 +43,12 @@ function initSearch(get_object) {
         if ( term.length >= 3 ) {
             if ( searchDisabled ) {
                 $('#submit-button').prop('disabled', false);
+                $('#name-warning').collapse('hide');
             }
         } else {
             if ( !searchDisabled ) {
                 $('#submit-button').prop('disabled', true);
+                $('#name-warning').collapse('show');
             }
         }
     });
