@@ -28,7 +28,7 @@ services:
     restart: on-failure
   nginxlog:
     build: https://github.com/datamade/sentrylogs.git
-    command: sentrylogs --sentryconfig /configs/sentry.ini
+    command: sentrylogs --sentryconfig /configs/sentry.ini --nginxerrorpath /var/log/nginx/bga-payroll-error.log
     volumes:
       - ./configs:/configs
       
