@@ -35,7 +35,7 @@ function initSearch(get_object) {
         }
     });
 
-    $('#entity-lookup').keyup(function checkTermLength(e) {
+    $('#entity-lookup').on('input', function checkTermLength(e) {
         // Enable the search button only if the term >= 3 characters in length
         var term = $.trim($('#entity-lookup').val());
         var searchDisabled = $('#submit-button').prop('disabled') == true;
