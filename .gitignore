@@ -130,3 +130,4 @@ data/raw/amendments-*
 
 .sass-cache/
 201*/
+/configs/sentry.ini
