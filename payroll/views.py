@@ -12,7 +12,8 @@ from postgres_stats.aggregates import Percentile
 
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
-from payroll.search import PayrollSearchMixin, FacetingMixin
+from payroll.search import PayrollSearchMixin, FacetingMixin, \
+    DisallowedSearchException
 
 from bga_database.local_settings import CACHE_SECRET_KEY
 
@@ -567,13 +568,20 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
     def get_queryset(self, **kwargs):
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
-        return list(self.search(params))
+        try:
+            self.allowed = True
+            return list(self.search(params))
+
+        except DisallowedSearchException:
+            self.allowed = False
+            return []
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        facets = self.parse_facets(self.facets)
+        context['allowed'] = self.allowed
 
+        facets = self.parse_facets(self.facets)
         context['facets'] = facets
 
         return context
