@@ -11,6 +11,10 @@ from payroll.models import Unit, Department, Person
 from payroll.utils import employers_from_slugs
 
 
+class DisallowedSearchException(Exception):
+    pass
+
+
 class EmployerSearch(object):
     search_kwargs = {
         'q.op': 'AND',
@@ -97,12 +101,15 @@ class PayrollSearchMixin(object):
     ]
 
     def search(self, params, *args):
+        self.facets = {}
+
+        if params.get('name') and len(params['name']) < 3:
+            raise DisallowedSearchException
+
         if params.get('entity_type'):
             entity_types = params.pop('entity_type').split(',')
         else:
             entity_types = ['unit', 'department', 'person']
-
-        self.facets = {}
 
         query_string = self._make_querystring(params)
 
