@@ -19,13 +19,13 @@ services:
       - '127.0.0.1:6380:6379'
     restart: on-failure
   postgres:
-    image: postgres
+    image: postgres:10
     container_name: bga-payroll-postgres
     environment:
       POSTGRES_DB: bga_payroll
     ports:
       - '127.0.0.1:5433:5432'
     restart: on-failure
-      
+
 volumes:
   data:
