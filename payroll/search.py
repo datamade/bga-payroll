@@ -103,15 +103,15 @@ class PayrollSearchMixin(object):
     def search(self, params, *args):
         self.facets = {}
 
-        required_params = (
+        required_params = {
             'name',
             'employer',
             'parent',
             'taxonomy',
             'universe',
-        )
+        }
 
-        if not any(param in params for param in required_params):
+        if not set(params) & required_params:
             raise DisallowedSearchException
 
         if params.get('name') and len(params['name']) < 3:
