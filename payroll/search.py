@@ -112,7 +112,10 @@ class PayrollSearchMixin(object):
         }
 
         if not set(params) & required_params:
-            raise DisallowedSearchException
+            # we want to allow a search for top paid employees
+            salary_above = params.get('salary_above')
+            if not salary_above or int(salary_above) < 150000:
+                raise DisallowedSearchException
 
         if params.get('name') and len(params['name']) < 3:
             raise DisallowedSearchException
