@@ -3,5 +3,6 @@ configs/bga-payroll.conf.staging.nginx
 configs/bga-payroll.conf.supervisor
 configs/local_settings.production.py
 configs/local_settings.staging.py
+configs/sentry.ini
 scripts/after_install.sh
 scripts/app_start.sh
