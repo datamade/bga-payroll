@@ -13,7 +13,8 @@ django-storages==1.6.5
 django-fsm==2.6.0
 boto==2.48.0
 gunicorn==19.7.1
-celery[redis]
+celery==4.2.1
+redis>=2.10.5,<3
 saferedisqueue==3.0.0
 pysolr==3.7.0
 pytest==3.4.1

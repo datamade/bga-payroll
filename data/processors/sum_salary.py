@@ -8,6 +8,7 @@ writer = csv.DictWriter(sys.stdout, fieldnames=output_fieldnames)
 
 writer.writeheader()
 
+
 def float_from_pay(input_pay):
     if input_pay:
         try:
@@ -18,6 +19,7 @@ def float_from_pay(input_pay):
         output_pay = None
 
     return output_pay
+
 
 for row in reader:
     base_pay = float_from_pay(row['base_salary'])
