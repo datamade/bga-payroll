@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_page, never_cache
 
 from data_import import views as import_views
 from payroll import views as payroll_views
@@ -40,7 +40,7 @@ urlpatterns = [
     path('flush-cache/<str:secret_key>', payroll_views.flush_cache, name='flush_cache'),
 
     # data import
-    path('data-import/', import_views.Uploads.as_view(), name='data-import'),
+    path('data-import/', never_cache(import_views.Uploads.as_view()), name='data-import'),
     path('data-import/upload-source-file/', import_views.SourceFileHook.as_view(), name='upload-source-file'),
     path('data-import/upload-standardized-file/', import_views.StandardizedDataUpload.as_view(), name='upload-standardized-file'),
     path('data-import/review/responding-agency/<int:s_file_id>', import_views.RespondingAgencyReview.as_view(), name='review-responding-agency'),
