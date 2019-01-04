@@ -6,6 +6,9 @@ from payroll.utils import format_ballpark_number
 
 
 class ChartHelperMixin(object):
+    def _get_bar_color(self, lower_edge, upper_edge):
+        return '#004c76'
+
     def bin_salary_data(self, data):
         float_data = np.asarray(data, dtype='float')
 
@@ -31,6 +34,7 @@ class ChartHelperMixin(object):
                 'value': int(value),  # number of salaries in given bin
                 'lower_edge': format_ballpark_number(lower),
                 'upper_edge': format_ballpark_number(upper),
+                'color': self._get_bar_color(lower, upper),
             })
 
         return salary_json
