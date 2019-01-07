@@ -2,34 +2,17 @@
 
 ## Source
 
-Data in this directory were provided by [Better Government Association](https://www.bettergov.org/). More on provenance and processing tk.
+Data in this directory was gathered via FOIA and provided to DataMade by the [Better Government Association](https://www.bettergov.org/).
 
-## Fields
+## File types
 
-### 2016_payroll.csv
-1. Record
-2. Agency number
-3. First name
-4. Last name
-5. Title
-6. Department
-7. Salary
-8. Date started
-9. First null
-10. Second null
-11. Year
-12. Employer
-13. Upload date
-14. Upload date & time
-15. Upload String
+### Prospective pay
 
-### 2017_payroll.csv
-1. id
-2. Employer
-3. Last Name
-4. First Name
-5. Title
-6. Department
-7. Salary
-8. Date Started
-9. Data Year
+Until 2018, BGA gathered _prospective_ pay for public employees. This figure did not represent actual pay, nor did it include overtime or additional pay, e.g., bonuses. Prospective pay for 2016 and 2017 can be found in the `legacy/` directory.
+
+### Actual pay
+
+In 2018, the BGA began to request _actual_ pay for public employees in the previous year, as well as a separate figure for additional pay. This can be found in files named `2017-payroll-actual-pt-X.csv`.
+
+#### ‼️ Note
+In some cases, the data in these files has been amended by the responding agency or formatted by the BGA, i.e., it may differ from the data [displayed in the Public Salaries Database](https://salary.bettergov.org).

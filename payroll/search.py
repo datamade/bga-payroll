@@ -1,12 +1,18 @@
 from collections import OrderedDict
 from functools import partialmethod
 from itertools import chain
+import re
 import sys
 
 from django.conf import settings
 import pysolr
 
 from payroll.models import Unit, Department, Person
+from payroll.utils import employers_from_slugs
+
+
+class DisallowedSearchException(Exception):
+    pass
 
 
 class EmployerSearch(object):
@@ -43,11 +49,30 @@ class PersonSearch(object):
         'rows': '99999999',
         'facet': 'true',
         'facet.mincount': '3',
-        'facet.field': 'employer_ss_fct',  # TO-DO: Is this the right way to facet multi-valued fields?
+        'facet.field': 'employer_ss_fct',
         'facet.interval': ['salary_d'],
         'f.salary_d.facet.interval.set': ['[0,25000)', '[25000,75000)', '[75000,150000)', '[150000,*)'],
         'sort': 'salary_d desc',
     }
+
+    @classmethod
+    def _format_results(cls, results):
+        '''
+        Return employer information as list of model objects, such that the
+        last object is the person's employer and any preceding objects are the
+        parents of that employer, e.g., [Unit, Department], [Unit].
+        '''
+        slugs = []
+
+        for result in results.values():
+            slugs += result['employer_ss']
+
+        slug_map = employers_from_slugs(slugs)
+
+        for result in results.values():
+            result['employer_ss'] = [slug_map[e] for e in result['employer_ss']]
+
+        return results
 
 
 class PayrollSearchMixin(object):
@@ -76,12 +101,29 @@ class PayrollSearchMixin(object):
     ]
 
     def search(self, params, *args):
+        self.facets = {}
+
+        required_params = {
+            'name',
+            'employer',
+            'parent',
+            'taxonomy',
+            'universe',
+        }
+
+        if not set(params) & required_params:
+            # we want to allow a search for top paid employees
+            salary_above = params.get('salary_above')
+            if not salary_above or int(salary_above) < 150000:
+                raise DisallowedSearchException
+
+        if params.get('name') and len(params['name']) < 3:
+            raise DisallowedSearchException
+
         if params.get('entity_type'):
             entity_types = params.pop('entity_type').split(',')
         else:
             entity_types = ['unit', 'department', 'person']
-
-        self.facets = {}
 
         query_string = self._make_querystring(params)
 
@@ -93,8 +135,10 @@ class PayrollSearchMixin(object):
             return None
 
     def _search(self, entity_type, *args):
+        search_class = self._search_class(entity_type)
+
         # Don't edit the actual static attribute
-        search_kwargs = getattr(self._search_class(entity_type), 'search_kwargs').copy()
+        search_kwargs = search_class.search_kwargs.copy()
 
         try:
             query_string, = args
@@ -118,10 +162,16 @@ class PayrollSearchMixin(object):
         sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
         sort_order = list(sorted_results.keys())
 
-        model = getattr(self._search_class(entity_type), 'model')
+        # If results contain Employer slugs, replace them with the appropriate
+        # Unit and Department objects.
+        try:
+            sorted_results = search_class._format_results(sorted_results)
+        except AttributeError:
+            pass
+
         objects = []
 
-        for o in sorted(model.objects.filter(id__in=sort_order),
+        for o in sorted(search_class.model.objects.filter(id__in=sort_order),
                         key=lambda o: sort_order.index(o.id)):
 
             o.search_meta = sorted_results[o.id]
@@ -214,14 +264,36 @@ class FacetingMixin(object):
             for facet_type, facet_values in facets.items():
                 for facet, values in facet_values.items():
                     facet_counts = getattr(self, '_{}'.format(facet_type))(values)
-
-                    entity_facets[facet] = sorted(facet_counts,
+                    formatted_facet_counts = self._format_facets(facet_counts)
+                    entity_facets[facet] = sorted(formatted_facet_counts,
                                                   key=lambda x: x['count'],
                                                   reverse=True)
 
             out[entity_type] = entity_facets
 
         return out
+
+    def _format_facets(self, facet_counts):
+        '''
+        When facet values are Unit or Department slugs, return the corresponding
+        objects for use in the templates.
+
+        :facet_counts is a list of dictionaries containing the values and
+        counts for a given facet, e.g., [{'value': 'some-slug', 'count': 99},
+        ...]. If one value is a slug, they are all slugs. Likewise, if one
+        value is not a slug, none of them are.
+        '''
+        slugs = [f['value'] for f in facet_counts]
+
+        # Match slugs formatted like 'winnetka-park-district-e8d69a12', i.e.,
+        # lowercase letters joined by dashes, followed by the first chunk of a UUID
+        if slugs and re.match('[a-z0-9_-]*-[0-9a-f]{8}', slugs[0]):
+            employers = employers_from_slugs(slugs)
+
+            for f in facet_counts:
+                f['value'] = employers[f['value']]
+
+        return facet_counts
 
     def _facet_fields(self, values):
         '''

@@ -1,8 +1,9 @@
 import json
 
+from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q, FloatField, Prefetch
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
@@ -13,10 +14,14 @@ from django.contrib.auth.views import LoginView
 from django.contrib.auth import login as auth_login
 from django.conf import settings
 
+from bga_database.chart_settings import BAR_DEFAULT, BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
-from payroll.search import PayrollSearchMixin, FacetingMixin
 from payroll.forms import SignupForm
+from payroll.search import PayrollSearchMixin, FacetingMixin, \
+    DisallowedSearchException
+
+from bga_database.local_settings import CACHE_SECRET_KEY
 
 
 class IndexView(TemplateView, ChartHelperMixin):
@@ -357,7 +362,7 @@ class DepartmentView(EmployerView):
         context = super().get_context_data(**kwargs)
 
         department_expenditure = sum(self.object.employee_salaries)
-        parent_expediture = self.total_parent_expenditure()
+        parent_expediture = sum(self.object.parent.employee_salaries)
         percentage = department_expenditure / parent_expediture
 
         context.update({
@@ -365,26 +370,6 @@ class DepartmentView(EmployerView):
         })
 
         return context
-
-    def total_parent_expenditure(self):
-        query = '''
-          SELECT
-            sum(salary.amount)
-          FROM payroll_job AS job
-          JOIN payroll_salary AS salary
-          ON salary.job_id = job.id
-          JOIN payroll_position AS position
-          ON job.position_id = position.id
-          JOIN payroll_employer as employer
-          ON position.employer_id = employer.id
-          WHERE employer.parent_id = {parent_id}
-        '''.format(parent_id=self.object.parent_id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-        return result[0]
 
     def expenditure_percentile(self):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
@@ -487,6 +472,12 @@ class PersonView(DetailView, ChartHelperMixin):
     context_object_name = 'entity'
     template_name = 'person.html'
 
+    def _get_bar_color(self, lower, upper):
+        if lower < self.salary_amount < upper:
+            return BAR_HIGHLIGHT
+        else:
+            return BAR_DEFAULT
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -517,21 +508,11 @@ class PersonView(DetailView, ChartHelperMixin):
         else:
             employer_type = None
 
-        salary_amount = current_salary.amount
+        # Must be set for salary binning to work
+        self.salary_amount = current_salary.amount
 
         salary_data = current_job.position.employer.employee_salaries
         binned_salary_data = self.bin_salary_data(salary_data)
-
-        # Add colors to the binned data, so the bin in which the person falls
-        # is highlighted.
-        for salary_range in binned_salary_data:
-            lower = int(salary_range['lower_edge'].rstrip('k')) * 1000
-            upper = int(salary_range['upper_edge'].rstrip('k')) * 1000
-
-            if lower < salary_amount < upper:
-                salary_range['color'] = '#fff200'
-            else:
-                salary_range['color'] = '#004c76'
 
         source_file = self.object.source_file(2017)
 
@@ -544,7 +525,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'data_year': 2017,
             'current_job': current_job,
             'all_jobs': all_jobs,
-            'current_salary': salary_amount,
+            'current_salary': self.salary_amount,
             'current_employer': current_employer,
             'employer_type': employer_type,
             'employer_salary_json': json.dumps(binned_salary_data),
@@ -552,6 +533,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'like_employer_percentile': like_employer_percentile,
             'fellow_job_holders': fellow_job_holders,
             'source_link': source_link,
+            'noindex': self.salary_amount < 30000,
         })
 
         return context
@@ -574,7 +556,13 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
             self.request.session['search_count'] = 1
 
         if self.request.user.is_authenticated or self.request.session['search_count'] <= settings.SEARCH_LIMIT:
-            results = list(self.search(params))
+            try:
+                self.allowed = True
+                results = list(self.search(params))
+
+            except DisallowedSearchException:
+                self.allowed = False
+                results = []
         else:
             results = []
             self.facets = {}
@@ -584,8 +572,9 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        facets = self.parse_facets(self.facets)
+        context['allowed'] = self.allowed
 
+        facets = self.parse_facets(self.facets)
         context['facets'] = facets
         context['search_limit'] = settings.SEARCH_LIMIT
 
@@ -631,6 +620,7 @@ class EntityLookup(ListView, PayrollSearchMixin):
         return JsonResponse(results, safe=False)
 
 
+<<<<<<< HEAD
 class UserLoginView(LoginView):
     def form_valid(self, form):
         auth_login(self.request, form.get_user())
@@ -678,3 +668,13 @@ class UserSignupView(FormView):
             response['redirect_url'] = self.request.POST['next']
 
         return JsonResponse(response)
+=======
+def flush_cache(request, secret_key):
+    if secret_key == CACHE_SECRET_KEY:
+        cache.clear()
+        status_code = 200
+    else:
+        status_code = 403
+
+    return HttpResponse(status_code)
+>>>>>>> master

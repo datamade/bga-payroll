@@ -126,3 +126,8 @@ data/output/*
 /configs/bga-payroll.conf.production.nginx
 /configs/bga-payroll.conf.staging.nginx
 /configs/local_settings.production.py
+data/raw/amendments-*
+
+.sass-cache/
+201*/
+/configs/sentry.ini

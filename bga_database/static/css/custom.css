@@ -55,7 +55,10 @@ div[id*="chart"] {
 }
 
 .header__logo-image {
-  height: 30px;
+  height: 35px;
+  -webkit-filter: grayscale(1) brightness(10); /* unapplied in base styles */
+  vertical-align: unset;
+  padding-top: 5px; /* offset top padding for proper alignment */
 }
 
 .badge, small, div#intro-text, .btn, .list-group, .page-link {
@@ -142,11 +145,10 @@ footer, footer a, footer h4 {
   }
 
   .header__logo-image {
-    height: 20px;
+    height: 25px;
   }
 
   .vertical-divider {
-    vertical-align: -10%;
     height: unset;
   }
 
@@ -159,6 +161,10 @@ footer, footer a, footer h4 {
   .navbar-toggler {
     font-size: .75rem;
   }
+}
+
+.va-container > * {
+  vertical-align: middle;
 }
 
 @media screen and (max-width: 992px) {

@@ -19,6 +19,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.datamade.us',
     'salary.bettergov.org',
+    'bs-local.com',  # BrowserStack local testing
 ]
 
 # Application definition
@@ -33,9 +34,9 @@ INSTALLED_APPS = [
     'storages',
     'payroll',
     'data_import',
-    'debug_toolbar',
     'django.contrib.postgres',
     'postgres_stats',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -43,10 +44,10 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'bga_database.urls'
@@ -124,11 +125,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_ROOT = BASE_DIR
 MEDIA_URL = '/media/'
 
-# Session settings
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 31557600
+LOGIN_URL = '/admin/login/'
 
-SEARCH_LIMIT = 5
+# Remote storage options
 
 # Remote storage options
 if not DEBUG:  # noqa

@@ -1,6 +1,8 @@
 import datetime
 import json
 
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -57,7 +59,7 @@ class SourceFileHook(View):
         return file_metadata
 
 
-class StandardizedDataUpload(FormView):
+class StandardizedDataUpload(LoginRequiredMixin, FormView):
     template_name = 'data_import/upload.html'
     form_class = UploadForm
     success_url = '/data-import/'
@@ -82,7 +84,7 @@ class StandardizedDataUpload(FormView):
         return super().form_valid(form)
 
 
-class Uploads(ListView):
+class Uploads(LoginRequiredMixin, ListView):
     '''
     Index of data import. Display a list of standardized uploads,
     their statuses, and next steps.
@@ -97,7 +99,7 @@ class Uploads(ListView):
                              .order_by('-created_at')
 
 
-class Review(DetailView):
+class Review(LoginRequiredMixin, DetailView):
     template_name = 'data_import/review.html'
 
     def dispatch(self, request, *args, **kwargs):
@@ -191,6 +193,7 @@ class ChildEmployerReview(Review):
         return ChildEmployerQueue(self.kwargs['s_file_id'])
 
 
+@login_required
 def review(request):
     '''
     Both /match/ and /add/ resolve here.
@@ -219,6 +222,7 @@ def review(request):
     return JsonResponse({'status_code': 200})
 
 
+@login_required
 def review_entity_lookup(request, entity_type):
     q = request.GET['term']
 

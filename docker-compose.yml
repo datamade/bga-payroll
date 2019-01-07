@@ -19,13 +19,19 @@ services:
       - '127.0.0.1:6380:6379'
     restart: on-failure
   postgres:
-    image: postgres
+    image: postgres:10
     container_name: bga-payroll-postgres
     environment:
       POSTGRES_DB: bga_payroll
     ports:
       - '127.0.0.1:5433:5432'
     restart: on-failure
+  nginxlog:
+    build: https://github.com/datamade/sentrylogs.git
+    command: sentrylogs --sentryconfig /configs/sentry.ini --nginxerrorpath /var/log/nginx/bga-payroll-error.log
+    volumes:
+      - ./configs:/configs
+      - /var/log/nginx:/var/log/nginx
       
 volumes:
   data:
