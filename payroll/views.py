@@ -620,7 +620,6 @@ class EntityLookup(ListView, PayrollSearchMixin):
         return JsonResponse(results, safe=False)
 
 
-<<<<<<< HEAD
 class UserLoginView(LoginView):
     def form_valid(self, form):
         auth_login(self.request, form.get_user())
@@ -668,7 +667,8 @@ class UserSignupView(FormView):
             response['redirect_url'] = self.request.POST['next']
 
         return JsonResponse(response)
-=======
+
+
 def flush_cache(request, secret_key):
     if secret_key == CACHE_SECRET_KEY:
         cache.clear()
@@ -677,4 +677,3 @@ def flush_cache(request, secret_key):
         status_code = 403
 
     return HttpResponse(status_code)
->>>>>>> master
