@@ -10,6 +10,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
 
+from bga_database.chart_settings import BAR_DEFAULT, BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
@@ -468,9 +469,9 @@ class PersonView(DetailView, ChartHelperMixin):
 
     def _get_bar_color(self, lower, upper):
         if lower < self.salary_amount < upper:
-            return '#fff200'
+            return BAR_HIGHLIGHT
         else:
-            return '#004c76'
+            return BAR_DEFAULT
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
