@@ -41,3 +41,11 @@ CACHES = {
 }
 
 CACHE_SECRET_KEY = 'a key'
+
+# Email configuration for password reset loop
+EMAIL_HOST='smtp.example.com'
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER='testing@example.com'
+EMAIL_HOST_PASSWORD='secret password'
+DEFAULT_FROM_EMAIL='Example <example@example.com>'
