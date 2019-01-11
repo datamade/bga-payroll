@@ -36,6 +36,10 @@ urlpatterns = [
     path('<int:error_code>', payroll_views.error, name='error'),
     path('login/', payroll_views.UserLoginView.as_view(), name='login'),
     path('signup/', payroll_views.UserSignupView.as_view(), name='signup'),
+    path('reset/', payroll_views.UserPasswordResetView.as_view(), name='reset'),
+    path('reset/<str:uidb64>/<str:token>/', payroll_views.UserPasswordResetConfirmView.as_view(), name='confirm'),
+    path('done/', payroll_views.UserPasswordResetDoneView.as_view(), name='done'),
+    path('complete/', payroll_views.UserPasswordResetCompleteView.as_view(), name='complete'),
 
     # admin
     path('admin/', admin.site.urls),

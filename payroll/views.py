@@ -10,9 +10,11 @@ from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic import FormView
 from postgres_stats.aggregates import Percentile
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, PasswordResetView, \
+    PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.auth import login as auth_login
 from django.conf import settings
+from django.urls import reverse_lazy
 
 from bga_database.chart_settings import BAR_DEFAULT, BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
@@ -549,6 +551,8 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
+        print(self.request.session.get('search_count'))
+
         if self.request.session.get('search_count'):
             self.request.session['search_count'] += 1
 
@@ -564,6 +568,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
                 self.allowed = False
                 results = []
         else:
+            self.allowed = False
             results = []
             self.facets = {}
 
@@ -667,6 +672,27 @@ class UserSignupView(FormView):
             response['redirect_url'] = self.request.POST['next']
 
         return JsonResponse(response)
+
+
+class UserPasswordResetView(PasswordResetView):
+    template_name = 'user-management/password-reset.html'
+    email_template_name = 'user-management/password-reset-email.txt'
+    subject_template_name = 'user-management/password-reset-email-subject.txt'
+    html_email_template_name = 'user-management/password-reset-email.html'
+    success_url = reverse_lazy('done')
+
+
+class UserPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'user-management/password-reset-confirm.html'
+    success_url = reverse_lazy('complete')
+
+
+class UserPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'user-management/password-reset-done.html'
+
+
+class UserPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'user-management/password-reset-complete.html'
 
 
 def flush_cache(request, secret_key):
