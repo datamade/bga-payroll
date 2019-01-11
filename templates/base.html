@@ -82,6 +82,7 @@
     <div class="container" id="main-content"><br />
       {% block content %}{% endblock %}
 
+      {% block inspiration %}
       {% if request.path != '/' %}
         <div class="row mt-4">
           <div class="col-md-8 offset-md-2 text-smaller">
@@ -92,6 +93,7 @@
           </div>
         </div>
       {% endif %}
+      {% endblock %}
 
       <div class="row mt-4">
         <div class="col-md-6 offset-md-3 text-smaller">
