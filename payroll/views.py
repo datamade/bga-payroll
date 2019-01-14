@@ -685,14 +685,18 @@ class UserPasswordResetView(PasswordResetView):
 class UserPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'user-management/password-reset-confirm.html'
     success_url = reverse_lazy('complete')
+    post_reset_login = True
+    success_url = reverse_lazy('home')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.user
+
+        return context
 
 
 class UserPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'user-management/password-reset-done.html'
-
-
-class UserPasswordResetCompleteView(PasswordResetCompleteView):
-    template_name = 'user-management/password-reset-complete.html'
 
 
 def flush_cache(request, secret_key):
