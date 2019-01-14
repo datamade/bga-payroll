@@ -11,7 +11,7 @@ from django.views.generic.list import ListView
 from django.views.generic import FormView
 from postgres_stats.aggregates import Percentile
 from django.contrib.auth.views import LoginView, PasswordResetView, \
-    PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+    PasswordResetDoneView, PasswordResetConfirmView
 from django.contrib.auth import login as auth_login
 from django.conf import settings
 from django.urls import reverse_lazy
