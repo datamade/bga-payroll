@@ -8,7 +8,7 @@ from bga_database.base_models import SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
 
 
-class UserZipcode(models.Model):
+class UserZipCode(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     zipcode = models.CharField(max_length=5)
 

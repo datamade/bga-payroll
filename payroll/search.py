@@ -101,7 +101,6 @@ class PayrollSearchMixin(object):
     ]
 
     def search(self, params, *args):
-        self.facets = {}
 
         required_params = {
             'name',

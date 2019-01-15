@@ -551,13 +551,13 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
         params = {k: v for k, v in self.request.GET.items() if k != 'page'}
 
-        print(self.request.session.get('search_count'))
-
         if self.request.session.get('search_count'):
             self.request.session['search_count'] += 1
 
         else:
             self.request.session['search_count'] = 1
+
+        self.facets = {}
 
         if self.request.user.is_authenticated or self.request.session['search_count'] <= settings.SEARCH_LIMIT:
             try:

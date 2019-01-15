@@ -49,3 +49,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'testing@example.com'
 EMAIL_HOST_PASSWORD = 'secret password'
 DEFAULT_FROM_EMAIL = 'Example <example@example.com>'
+
+# Salsa mailing list settings. The particulars of these settings are provided
+# by BGA.
+SALSA_PAYLOAD = '{}'
+SALSA_URL = 'https://example.salsalabs.org'
