@@ -1,5 +1,3 @@
-import json
-
 import requests
 
 from sentry_sdk import capture_message, configure_scope
