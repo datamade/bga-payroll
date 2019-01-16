@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 
 from bga_database.chart_settings import BAR_DEFAULT
