@@ -17,7 +17,8 @@ class ChartHelperMixin(object):
         bin_size = 10000
         bin_num = 20
         bin_edges = np.array([i * bin_size for i in range(bin_num + 1)], dtype='float')
-        bin_edges = np.append(bin_edges, max_value)
+        if max_value > bin_edges[-1]:
+            bin_edges = np.append(bin_edges, max_value)
 
         values, edges = np.histogram(float_data, bins=bin_edges)
 
