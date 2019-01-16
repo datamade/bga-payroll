@@ -72,6 +72,27 @@ var ChartHelper = {
                 pointPlacement: 'between',
                 pointPadding: 0,
                 groupPadding: 0
+              },
+              series: {
+                point: {
+                  events: {
+                    click: function () {
+                      var extract_number = function (edge) {
+                          // Remove non-integer characters from edge
+                          return edge.replace(/k+/g, '') * 1000
+                      }
+                      var datum = data[this.category];
+                      var upper = extract_number(datum.upper_edge);
+                      var lower = extract_number(datum.lower_edge);
+
+                      var search_url = '/search/?salary_above=' + lower;
+                      if ( !isNaN(upper) ) {
+                          search_url = search_url + '&salary_below=' + upper;
+                      }
+                      window.location = search_url;
+                    }
+                  }
+                }
               }
             },
             xAxis: {
