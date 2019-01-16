@@ -29,15 +29,18 @@ var ChartHelper = {
             var edges = data[this.value];
 
             if (this.value === data.length) {
-              edges = data[this.value - 1];
-              return '$' + edges.upper_edge;
-            }
-
-            // Occurs when Highcharts wants to add an extra label
-            try {
-              return '$' + edges.lower_edge;
-            } catch (err) {
-              return '';
+                // Don't show the last label
+                return null;
+            } else if (this.value === data.length - 1) {
+                // Add a plus to the last visible label
+                return '$' + edges.lower_edge + '+';
+            } else {
+                try {
+                    return '$' + edges.lower_edge;
+                } catch (err) {
+                    // Occurs when Highcharts wants to add an extra label
+                    return '';
+                }
             }
         };
 
@@ -77,7 +80,6 @@ var ChartHelper = {
                     formatter: axis_format,
                 },
                 tickInterval: 0,
-                endOnTick: true,
                 title: {
                     text: 'Salary range',
                 },

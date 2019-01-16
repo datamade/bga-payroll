@@ -12,17 +12,12 @@ class ChartHelperMixin(object):
 
     def bin_salary_data(self, data):
         float_data = np.asarray(data, dtype='float')
-
-        # Size of the bins
-        multiplier = 25000
-
-        # This is to make the appropriate number of bins
         max_value = np.amax(float_data)
-        bin_num = math.ceil(max_value / multiplier)  # rounding up to capture max value
-        bin_edges = np.array([], dtype='float')
 
-        for i in range(bin_num + 1):  # adding 1 to get appropriate number of bins
-            bin_edges = np.append(bin_edges, i * multiplier)
+        bin_size = 10000
+        bin_num = 20
+        bin_edges = np.array([i * bin_size for i in range(bin_num + 1)], dtype='float')
+        bin_edges = np.append(bin_edges, max_value)
 
         values, edges = np.histogram(float_data, bins=bin_edges)
 
