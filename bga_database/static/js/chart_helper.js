@@ -26,14 +26,31 @@ var ChartHelper = {
         };
 
         var axis_format = function() {
-            var edges = data[this.value];
+            var penultimate_bin = this.value === data.length - 1;
+            var last_bin = this.value === data.length;
 
-            if (this.value === data.length) {
-                // Don't show the last label
-                return null;
-            } else if (this.value === data.length - 1) {
-                // Add a plus to the last visible label
-                return '$' + edges.lower_edge + '+';
+            var edges;
+
+            if ( last_bin ) {
+                edges = data[this.value - 1];
+            } else {
+                edges = data[this.value];
+            }
+
+            var composite_last_bin = edges.upper_edge !== '200k';
+
+            if ( last_bin ) {
+                if ( composite_last_bin ) {
+                    return null;
+                } else {
+                    return '$' + edges.upper_edge;
+                }
+            } else if ( penultimate_bin ) {
+                if ( composite_last_bin ) {
+                    return '$' + edges.lower_edge + '+';
+                } else {
+                    return '$' + edges.lower_edge;
+                }
             } else {
                 try {
                     return '$' + edges.lower_edge;
@@ -43,6 +60,16 @@ var ChartHelper = {
                 }
             }
         };
+
+        // Hide the last tick, if the chart includes a column for 200k+, i.e.,
+        // the last tick is not "200k"
+        var end_on_tick;
+
+        if ( data[data.length - 1].upper_edge !== '200k' ) {
+            end_on_tick = false;
+        } else {
+            end_on_tick = true;
+        }
 
         var element = entity_type + '-distribution-chart';
 
@@ -80,6 +107,7 @@ var ChartHelper = {
                     formatter: axis_format,
                 },
                 tickInterval: 0,
+                endOnTick: end_on_tick,
                 title: {
                     text: 'Salary range',
                 },
