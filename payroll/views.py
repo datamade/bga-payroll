@@ -570,7 +570,6 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
         else:
             self.allowed = False
             results = []
-            self.facets = {}
 
         return results
 
