@@ -68,5 +68,6 @@ class SignupForm(forms.Form):
                     'id': user.id,
                     'email': user.email
                 }
-                scope.set_extra(signup.json())
+                for key, value in signup.json().items():
+                    scope.set_extra(key, value)
                 capture_message('Salsa returned an error while capturing email "{}"'.format(user.email))
