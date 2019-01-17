@@ -468,10 +468,10 @@ class PersonView(DetailView, ChartHelperMixin):
     template_name = 'person.html'
 
     def _get_bar_color(self, lower, upper):
-        if lower < self.salary_amount < upper:
+        if lower < int(self.salary_amount) <= upper:
             return BAR_HIGHLIGHT
         else:
-            return BAR_DEFAULT
+            return super()._get_bar_color(lower, upper)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
