@@ -155,7 +155,10 @@ class PayrollSearchMixin(object):
         results = self.searcher.search(query_string, **search_kwargs)
 
         if results:
-            self.facets.update({entity_type: results.facets})
+            try:
+                self.facets.update({entity_type: results.facets})
+            except AttributeError:
+                self.facets = {entity_type: result.facets}
 
         # Retain ordering from Solr results when filtering the model objects.
         sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
