@@ -15,6 +15,8 @@ from django.contrib.auth.views import LoginView, PasswordResetView, \
 from django.contrib.auth import login as auth_login
 from django.conf import settings
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.vary import vary_on_cookie
 
 from bga_database.chart_settings import BAR_DEFAULT, BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
@@ -541,6 +543,7 @@ class PersonView(DetailView, ChartHelperMixin):
         return context
 
 
+@method_decorator(vary_on_cookie, name='dispatch')
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
     queryset = []
     template_name = 'search_results.html'
@@ -587,6 +590,9 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
 class EntityLookup(ListView, PayrollSearchMixin):
     def get_queryset(self, *args, **kwargs):
+
+        self.facets = {}
+
         params = {
             'entity_type': 'unit,person',
             'name': self.request.GET['term'],
