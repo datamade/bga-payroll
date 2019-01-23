@@ -141,5 +141,5 @@ CACHEOPS_REDIS = {
 }
 
 CACHEOPS = {
-    'payroll.*': {'ops': {'fetch', 'get'}, 'timeout': 8*60*60},
+    'payroll.*': {'ops': {'fetch', 'get'}, 'timeout': 8*60*60}, # noqa
 }
