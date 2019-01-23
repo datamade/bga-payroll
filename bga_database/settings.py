@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'postgres_stats',
     'debug_toolbar',
+    'cacheops',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +55,17 @@ ROOT_URLCONF = 'bga_database.urls'
 
 TEMPLATES = [
     {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': ['templates/'],
+        'APP_DIRS': False,
+        'OPTIONS': {
+            'environment': 'bga_database.jinja2.environment',
+            'context_processors': [
+                'payroll.context_processors.inspiration_slugs',
+            ],
+        },
+    },
+    {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
         'APP_DIRS': True,
@@ -63,17 +75,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-    {
-        'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': ['templates/'],
-        'APP_DIRS': False,
-        'OPTIONS': {
-            'environment': 'bga_database.jinja2.environment',
-            'context_processors': [
-                'payroll.context_processors.inspiration_slugs',
             ],
         },
     },
@@ -132,3 +133,13 @@ SEARCH_LIMIT = 5
 # Remote storage options
 if not DEBUG:  # noqa
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+
+CACHEOPS_REDIS = {
+    'host': 'localhost',
+    'port': 6379,
+    'db': 1,
+}
+
+CACHEOPS = {
+    'payroll.*': {'ops': {'fetch', 'get'}, 'timeout': 8*60*60},
+}

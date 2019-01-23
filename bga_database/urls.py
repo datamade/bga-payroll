@@ -33,7 +33,7 @@ urlpatterns = [
     path('department/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.DepartmentView.as_view()), name='department'),
     path('person/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.PersonView.as_view()), name='person'),
     path('entity-lookup/', payroll_views.EntityLookup.as_view(), name='entity-lookup'),
-    path('search/', cache_page(EIGHT_HOURS)(payroll_views.SearchView.as_view()), name='search'),
+    path('search/', payroll_views.SearchView.as_view(), name='search'),
     path('<int:error_code>', payroll_views.error, name='error'),
     path('login/', payroll_views.UserLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
