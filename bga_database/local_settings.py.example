@@ -30,6 +30,11 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+CACHEOPS_REDIS = REDIS_URL
+CACHEOPS = {
+    'payroll.*': {'ops': {'fetch', 'get'}, 'timeout': 8*60*60}, # noqa
+}
+
 CENSUS_API_KEY = '<A KEY>'
 
 SOLR_URL = 'http://127.0.0.1:8983/solr/bga'

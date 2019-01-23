@@ -133,13 +133,3 @@ SEARCH_LIMIT = 5
 # Remote storage options
 if not DEBUG:  # noqa
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-
-CACHEOPS_REDIS = {
-    'host': 'localhost',
-    'port': 6379,
-    'db': 1,
-}
-
-CACHEOPS = {
-    'payroll.*': {'ops': {'fetch', 'get'}, 'timeout': 8*60*60}, # noqa
-}
