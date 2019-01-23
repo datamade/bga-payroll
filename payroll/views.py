@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 
 from django.core.cache import cache
 from django.db import connection
@@ -628,37 +627,11 @@ class EntityLookup(ListView, PayrollSearchMixin):
         return JsonResponse(results, safe=False)
 
 
-class AvoidCacheMixin(object):
-
-    def add_timestamp(self, next_url):
-        if '?' in next_url:
-            next_url = '{}&_={}'.format(next_url,
-                                        int(datetime.now().timestamp()))
-        else:
-            next_url = '{}?_={}'.format(next_url,
-                                        int(datetime.now().timestamp()))
-
-        return next_url
-
-    def avoid_cache(self, form):
-        context = self.get_context_data(form=form)
-
-        # Make sure that we are not loading the cached version of the
-        # someone was just on after they login on sign up.
-        if context.get('next'):
-            context['next'] = self.add_timestamp(context['next'])
-
-        elif self.request.POST.get('next'):
-            context['next'] = self.add_timestamp(self.request.POST['next'])
-
-        return context
-
-
-class UserLoginView(LoginView, AvoidCacheMixin):
+class UserLoginView(LoginView):
     def form_valid(self, form):
         auth_login(self.request, form.get_user())
 
-        context = self.avoid_cache(form)
+        context = self.get_context_data(form=form)
 
         return self.render_to_response(context)
 
@@ -676,7 +649,7 @@ class UserLoginView(LoginView, AvoidCacheMixin):
         return JsonResponse(response)
 
 
-class UserSignupView(FormView, AvoidCacheMixin):
+class UserSignupView(FormView):
 
     form_class = SignupForm
 
@@ -685,7 +658,7 @@ class UserSignupView(FormView, AvoidCacheMixin):
 
         auth_login(self.request, user)
 
-        context = self.avoid_cache(form)
+        context = self.get_context_data(form=form)
 
         return self.render_to_response(context)
 
@@ -698,7 +671,7 @@ class UserSignupView(FormView, AvoidCacheMixin):
             response['redirect_url'] = None
             response['errors'] = errors
         else:
-            response['redirect_url'] = context['next']
+            response['redirect_url'] = self.request.POST['next']
 
         return JsonResponse(response)
 
