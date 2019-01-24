@@ -648,13 +648,13 @@ class UserLoginView(LoginView):
             response['redirect_url'] = context['next']
             user = context['form'].get_user()
             messages.add_message(self.request,
-                                messages.INFO,
-                                'Welcome back {}!'.format(user.first_name),
-                                extra_tags='font-weight-bold')
+                                 messages.INFO,
+                                 'Welcome back {}!'.format(user.first_name),
+                                 extra_tags='font-weight-bold')
 
             messages.add_message(self.request,
-                                messages.INFO,
-                                "We've logged you in so you can continue using the database.")
+                                 messages.INFO,
+                                 "We've logged you in so you can continue using the database.")
 
         return JsonResponse(response)
 
