@@ -548,8 +548,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
     paginate_by = 25
 
     def get_queryset(self, **kwargs):
-
-        params = {k: v for k, v in self.request.GET.items() if k != 'page'}
+        params = self.request.GET.dict()
 
         if self.request.session.get('search_count'):
             self.request.session['search_count'] += 1
@@ -562,7 +561,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
         if self.request.user.is_authenticated or self.request.session['search_count'] <= settings.SEARCH_LIMIT:
             try:
                 self.allowed = True
-                results = list(self.search(params))
+                results = self.search(params, pagesize=self.paginate_by)
 
             except DisallowedSearchException:
                 self.allowed = False
@@ -587,7 +586,6 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
 class EntityLookup(ListView, PayrollSearchMixin):
     def get_queryset(self, *args, **kwargs):
-
         self.facets = {}
 
         params = {
@@ -598,12 +596,11 @@ class EntityLookup(ListView, PayrollSearchMixin):
         extra_search_kwargs = {
             'expenditure_d': '[1000000 TO *]',
             'salary_d': '[100000 TO *]',
-            'rows': '10',
         }
 
         entities = []
 
-        for result in self.search(params, extra_search_kwargs):
+        for result in self.search(params, pagesize=10, **extra_search_kwargs):
             data = {
                 'label': str(result),
                 'value': str(result),

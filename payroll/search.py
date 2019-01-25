@@ -18,7 +18,6 @@ class DisallowedSearchException(Exception):
 class EmployerSearch(object):
     search_kwargs = {
         'q.op': 'AND',
-        'rows': '99999999',
         'facet': 'true',
         'facet.mincount': '3',
         'facet.interval': ['expenditure_d', 'headcount_i'],
@@ -46,7 +45,6 @@ class PersonSearch(object):
     model = Person
     search_kwargs = {
         'q.op': 'AND',
-        'rows': '99999999',
         'facet': 'true',
         'facet.mincount': '3',
         'facet.field': 'employer_ss_fct',
@@ -75,6 +73,33 @@ class PersonSearch(object):
         return results
 
 
+class LazyPaginatedResults(list):
+    def __init__(self, *args):
+        results, hits = args
+
+        super().__init__(results)
+
+        self.results = results
+        self._hits = hits
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            # Because we're only returning pagesize results at a time, always
+            # return the slice from the start of the results.
+            # TO-DO: Be smarter about this. Slicing should be allowed within
+            # pagesize.
+            slice_len = key.stop - key.start
+            return [self.results[i] for i in range(0, slice_len, key.step or 1)]
+
+        return super().__getitem__(self, *args)
+
+    def __len__(self):
+        return self._hits
+
+    def count(self):
+        return self._hits
+
+
 class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
 
@@ -100,25 +125,7 @@ class PayrollSearchMixin(object):
         'headcount'
     ]
 
-    def search(self, params, *args):
-
-        required_params = {
-            'name',
-            'employer',
-            'parent',
-            'taxonomy',
-            'universe',
-        }
-
-        if not set(params) & required_params:
-            # we want to allow a search for top paid employees
-            salary_above = params.get('salary_above')
-            if not salary_above or int(salary_above) < 150000:
-                raise DisallowedSearchException
-
-        if params.get('name') and len(params['name']) < 3:
-            raise DisallowedSearchException
-
+    def search(self, params, pagesize, **extra_kwargs):
         if params.get('entity_type'):
             entity_types = params.pop('entity_type').split(',')
         else:
@@ -126,24 +133,22 @@ class PayrollSearchMixin(object):
 
         query_string = self._make_querystring(params)
 
-        if query_string:
-            for entity_type in entity_types:
-                yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+        if params.get('page'):
+            offset = (int(params['page']) - 1) * pagesize
+            extra_kwargs.update({'start': offset})
 
-        else:
-            return None
+        for entity_type in entity_types:
+            return getattr(self, '_search_{}'.format(entity_type))(query_string, pagesize, **extra_kwargs)
 
-    def _search(self, entity_type, *args):
+    def _search(self, entity_type, *args, **extra_kwargs):
+        query_string, pagesize = args
+
         search_class = self._search_class(entity_type)
 
         # Don't edit the actual static attribute
         search_kwargs = search_class.search_kwargs.copy()
-
-        try:
-            query_string, = args
-        except ValueError:
-            query_string, extra_search_kwargs = args
-            search_kwargs.update(extra_search_kwargs)
+        search_kwargs['rows'] = pagesize
+        search_kwargs.update(extra_kwargs)
 
         entity_filter = 'id:{}*'.format(entity_type)
 
@@ -179,7 +184,7 @@ class PayrollSearchMixin(object):
             o.search_meta = sorted_results[o.id]
             objects.append(o)
 
-        return objects
+        return LazyPaginatedResults(objects, results.hits)
 
     _search_unit = partialmethod(_search, 'unit')
     _search_department = partialmethod(_search, 'department')
@@ -208,7 +213,7 @@ class PayrollSearchMixin(object):
 
         query_parts = chain(self._value_q(value_params), self._range_q(range_params))
 
-        return ' AND '.join(query_parts)
+        return ' AND '.join(query_parts) or ''
 
     def _value_q(self, params):
         query_parts = []
