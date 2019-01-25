@@ -57,7 +57,6 @@
             </div>
         </div>
 
-        {% if request.GET.keys() and request.GET.keys()|list != ['entity_type'] %}
         <div class="row">
             {% if results %}
             <div class="col-md-4">
@@ -93,7 +92,6 @@
             {% include 'partials/pagination.html' %}
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
