@@ -686,13 +686,13 @@ class UserSignupView(FormView):
             response['redirect_url'] = self.request.POST['next']
 
             messages.add_message(self.request,
-                                messages.INFO,
-                                'Thanks for signing up!',
-                                extra_tags='font-weight-bold')
+                                 messages.INFO,
+                                 'Thanks for signing up!',
+                                 extra_tags='font-weight-bold')
 
             messages.add_message(self.request,
-                                messages.INFO,
-                                'Use the your email address and the password you just created to login next time you visit.')
+                                 messages.INFO,
+                                 'Use the your email address and the password you just created to login next time you visit.')
 
         return JsonResponse(response)
 
