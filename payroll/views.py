@@ -646,7 +646,9 @@ class UserLoginView(LoginView):
             response['errors'] = errors['__all__']
         else:
             response['redirect_url'] = context['next']
+
             user = context['form'].get_user()
+
             messages.add_message(self.request,
                                  messages.INFO,
                                  'Welcome back {}!'.format(user.first_name),
@@ -683,14 +685,14 @@ class UserSignupView(FormView):
         else:
             response['redirect_url'] = self.request.POST['next']
 
-        messages.add_message(self.request,
-                             messages.INFO,
-                             'Thanks for signing up!',
-                             extra_tags='font-weight-bold')
+            messages.add_message(self.request,
+                                 messages.INFO,
+                                 'Thanks for signing up!',
+                                 extra_tags='font-weight-bold')
 
-        messages.add_message(self.request,
-                             messages.INFO,
-                             'Use the your email address and the password you just created to login next time you visit.')
+            messages.add_message(self.request,
+                                 messages.INFO,
+                                 'Use the your email address and the password you just created to login next time you visit.')
 
         return JsonResponse(response)
 
