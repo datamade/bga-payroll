@@ -131,3 +131,4 @@ data/raw/amendments-*
 .sass-cache/
 201*/
 /configs/sentry.ini
+/configs/redis.conf
