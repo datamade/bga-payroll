@@ -7,3 +7,4 @@ configs/redis.conf
 configs/sentry.ini
 scripts/after_install.sh
 scripts/app_start.sh
+scripts/locustfile.py
