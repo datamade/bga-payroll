@@ -15,7 +15,6 @@ from django.contrib.auth.views import LoginView, PasswordResetView, \
 from django.contrib.auth import login as auth_login
 from django.conf import settings
 from django.urls import reverse_lazy
-from django.contrib import messages
 
 from bga_database.chart_settings import BAR_DEFAULT, BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
@@ -647,17 +646,6 @@ class UserLoginView(LoginView):
         else:
             response['redirect_url'] = context['next']
 
-            user = context['form'].get_user()
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 'Welcome back {}!'.format(user.first_name),
-                                 extra_tags='font-weight-bold')
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 "We've logged you in so you can continue using the database.")
-
         return JsonResponse(response)
 
 
@@ -684,15 +672,6 @@ class UserSignupView(FormView):
             response['errors'] = errors
         else:
             response['redirect_url'] = self.request.POST['next']
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 'Thanks for signing up!',
-                                 extra_tags='font-weight-bold')
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 'Use the your email address and the password you just created to login next time you visit.')
 
         return JsonResponse(response)
 
