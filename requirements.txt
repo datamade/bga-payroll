@@ -23,4 +23,3 @@ pytest-mock==1.7.1
 django-postgres-stats==1.0.0
 https://github.com/datamade/pytest-flake8/zipball/master
 sentry-sdk==0.5.1
-django-cacheops==4.1

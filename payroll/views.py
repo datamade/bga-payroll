@@ -587,9 +587,6 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
 class EntityLookup(ListView, PayrollSearchMixin):
     def get_queryset(self, *args, **kwargs):
-
-        self.facets = {}
-
         params = {
             'entity_type': 'unit,person',
             'name': self.request.GET['term'],
