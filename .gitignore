@@ -132,3 +132,4 @@ data/raw/amendments-*
 201*/
 /configs/sentry.ini
 /configs/redis.conf
+/scripts/locustfile.py
