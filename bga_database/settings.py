@@ -127,8 +127,7 @@ MEDIA_URL = '/media/'
 
 LOGIN_URL = '/admin/login/'
 
-SEARCH_LIMIT = 5
-
 # Remote storage options
+
 if not DEBUG:  # noqa
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'

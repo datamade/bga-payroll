@@ -99,145 +99,23 @@
 {% endblock %}
 
 {% block modals %}
-<div class="modal" tabindex="-1" role="dialog" id="signupModal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-                <h3>If you'd like to keep using this free resource, please sign-up with your email address.</h3>
-                <p>We'll send you our latest investigations every week.</p>
-                <form class="form" id="signup-form">
-                    <input type="hidden" value="{{ csrf_token }}" name="csrfmiddlewaretoken" />
-                    <input type="hidden" value="{{ request.get_full_path() }}" name="next" />
-                    <div class="form-group">
-                        <label for="id_email">Email*</label>
-                        <input type="text" class="form-control" id="id_email" name="email" placeholder="Email" />
-                        <div class="invalid-feedback" id="email-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_password">Password*</label>
-                        <input type="password" class="form-control" id="id_password" name="password" placeholder="Password" />
-                        <div class="invalid-feedback" id="password-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_first_name">First name*</label>
-                        <input type="text" class="form-control" id="id_first_name" name="first_name" placeholder="First name" />
-                        <div class="invalid-feedback" id="first_name-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_last_name">Last name*</label>
-                        <input type="text" class="form-control" id="id_last_name" name="last_name" placeholder="Last name" />
-                        <div class="invalid-feedback" id="last_name-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_zipcode">Zip code*</label>
-                        <input type="text" class="form-control" id="id_zipcode" name="zipcode" placeholder="Zip Code" />
-                        <div class="invalid-feedback" id="zipcode-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <button id="submit-signup" class="btn btn-primary">Subscribe</button>
-                    </div>
-                </form>
-                <p>
-                    <a href="javascript://" class="toggle-login-signup" data-parent_modal="signupModal">
-                        Already have an account?
-                    </a>
-                </p>
-            </div>
-        </div>
+<div class="modal" tabindex="-1" role="dialog" id="emailModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div id="fbf1d375-61ec-433d-943f-8d4e6e3ae35a"><script type="text/javascript" src="https://default.salsalabs.org/api/widget/template/82a20ce0-6591-4a90-a77d-d73599ec9b43/?tId=fbf1d375-61ec-433d-943f-8d4e6e3ae35a" ></script></div>
+      </div>
     </div>
-</div>
-<div class="modal" tabindex="-1" role="dialog" id="loginModal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-                <h3>To keep using this free resource, please log in.</h3>
-                <form class="form" id="login-form">
-                    <input type="hidden" value="{{ csrf_token }}" name="csrfmiddlewaretoken" />
-                    <input type="hidden" value="{{ request.get_full_path() }}" name="next" />
-                    <div class="form-group">
-                        <label for="id_username">Email</label>
-                        <input type="text" class="form-control" id="id_username" name="username" placeholder="Email" />
-                    </div>
-                    <div class="form-group">
-                        <label for="id_password">Password</label>
-                        <input type="password" class="form-control" id="id_password" name="password" placeholder="Password" />
-                        <div class="invalid-feedback" id="login-form-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <button id="submit-login" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-                <p>
-                    <a href="javascript://" class="toggle-login-signup" data-parent_modal="loginModal">
-                        Need to create an account?
-                    </a>
-                </p>
-                <p>
-                    <a href="{{ url('reset') }}">
-                        Forgot your password?
-                    </a>
-                </p>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ static('js/search.js') }}"></script>
+<script src="{{ static('js/email_collection.js') }}"></script>
 
 <script type="text/javascript">
-    {% if not request.user.is_authenticated and request.session.search_count > search_limit %}
-        $('#signupModal').modal();
-        $('.toggle-login-signup').on('click', function(e){
-            var parent_modal = $(e.target).data('parent_modal');
-
-            if (parent_modal == 'loginModal'){
-                $('#loginModal').modal('hide');
-                $('#signupModal').modal();
-            } else {
-                $('#signupModal').modal('hide');
-                $('#loginModal').modal();
-            }
-        });
-        function getFormData(form){
-            var form_array = form.serializeArray();
-            var form_obj = {};
-
-            $.map(form_array, function(n, i){
-                form_obj[n['name']] = n['value'];
-            });
-
-            return form_obj;
-        }
-        $('#submit-login').on('click', function(e){
-            e.preventDefault();
-            var form_data = getFormData($('#login-form'));
-            $.post("{{ url('login') }}", form_data, function(resp){
-                if (resp['redirect_url']){
-                    window.location = resp['redirect_url'];
-                }
-                $('#login-form-errors').html(resp['errors']);
-            });
-        });
-        $('#submit-signup').on('click', function(e){
-            e.preventDefault();
-            var form_data = getFormData($('#signup-form'));
-            $.post('{{ url('signup') }}', form_data, function(resp){
-                if (resp['redirect_url']){
-                    window.location = resp['redirect_url'];
-                }
-
-                $.each(resp.errors, function(field, value){
-                    var selector = '#' + field + '-errors';
-                    $(selector).html(value[0]);
-                })
-            });
-        });
-
-    {% else %}
-        initSearch({{ request.GET.dict()|safe }});
-    {% endif %}
+    initSearch({{ request.GET.dict()|safe }});
 
     $('[id*="facet-toggle"]').click(function toggleClick(e) {
         // On click, content has not yet been expanded, i.e., if aria-expanded
