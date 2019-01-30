@@ -17,7 +17,10 @@ services:
     container_name: bga-payroll-redis
     ports:
       - '127.0.0.1:6380:6379'
+    volumes:
+      - ./configs/redis.conf:/redis.conf
     restart: on-failure
+    command: redis-server /redis.conf
   postgres:
     image: postgres:10
     container_name: bga-payroll-postgres
@@ -32,6 +35,6 @@ services:
     volumes:
       - ./configs:/configs
       - /var/log/nginx:/var/log/nginx
-      
+
 volumes:
   data:
