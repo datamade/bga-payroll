@@ -92,7 +92,8 @@ class LazyPaginatedResults(collections.abc.Sequence):
             slice_len = key.stop - key.start
             return [self.results[i] for i in range(0, slice_len, key.step or 1)]
 
-        return super().__getitem__(key)
+        else:
+            return self.results[key]
 
     def __iter__(self):
         yield from self.results
@@ -137,21 +138,20 @@ class PayrollSearchMixin(object):
 
         query_string = self._make_querystring(params)
 
+        extra_kwargs['rows'] = pagesize
+
         if params.get('page'):
             offset = (int(params['page']) - 1) * pagesize
-            extra_kwargs.update({'start': offset})
+            extra_kwargs['start'] = offset
 
         for entity_type in entity_types:
-            return getattr(self, '_search_{}'.format(entity_type))(query_string, pagesize, **extra_kwargs)
+            return getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
 
-    def _search(self, entity_type, *args, **extra_kwargs):
-        query_string, pagesize = args
-
+    def _search(self, entity_type, query_string, **extra_kwargs):
         search_class = self._search_class(entity_type)
 
         # Don't edit the actual static attribute
         search_kwargs = search_class.search_kwargs.copy()
-        search_kwargs['rows'] = pagesize
         search_kwargs.update(extra_kwargs)
 
         entity_filter = 'id:{}*'.format(entity_type)
