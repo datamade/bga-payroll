@@ -1,5 +1,4 @@
-from collections import OrderedDict
-from collections.abc import Sequence
+import collections
 from functools import partialmethod
 from itertools import chain
 import re
@@ -74,7 +73,7 @@ class PersonSearch(object):
         return results
 
 
-class LazyPaginatedResults(Sequence):
+class LazyPaginatedResults(collections.abc.Sequence):
     def __init__(self, results, hits):
         self.results = results
         self._hits = hits
@@ -94,6 +93,9 @@ class LazyPaginatedResults(Sequence):
             return [self.results[i] for i in range(0, slice_len, key.step or 1)]
 
         return super().__getitem__(key)
+
+    def __iter__(self):
+        yield from self.results
 
     def __len__(self):
         return self._hits
@@ -168,7 +170,7 @@ class PayrollSearchMixin(object):
                 self.facets = {entity_type: results.facets}
 
         # Retain ordering from Solr results when filtering the model objects.
-        sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
+        sorted_results = collections.OrderedDict([(self._id_from_result(r), r) for r in results])
         sort_order = list(sorted_results.keys())
 
         # If results contain Employer slugs, replace them with the appropriate
