@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from collections.abc import Sequence
 from functools import partialmethod
 from itertools import chain
 import re
@@ -73,25 +74,27 @@ class PersonSearch(object):
         return results
 
 
-class LazyPaginatedResults(list):
+class LazyPaginatedResults(Sequence):
     def __init__(self, *args):
         results, hits = args
-
-        super().__init__(results)
-
         self.results = results
         self._hits = hits
 
     def __getitem__(self, key):
+        '''
+        Django pagination accesses results via slice. For instance, if you have
+        pages of 25 items, it loads `slice(0, 25, None)` for the first page,
+        `slice(25, 50, None)` for the second page, and so on.
+
+        Because we only return `pagesize` results, we need to override slice
+        functionality such that slices always begin from the beginning of the
+        list. (The offset has already occurred when querying Solr.)
+        '''
         if isinstance(key, slice):
-            # Because we're only returning pagesize results at a time, always
-            # return the slice from the start of the results.
-            # TO-DO: Be smarter about this. Slicing should be allowed within
-            # pagesize.
             slice_len = key.stop - key.start
             return [self.results[i] for i in range(0, slice_len, key.step or 1)]
 
-        return super().__getitem__(self, *args)
+        return super().__getitem__(key)
 
     def __len__(self):
         return self._hits
