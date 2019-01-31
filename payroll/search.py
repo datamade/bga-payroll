@@ -75,8 +75,7 @@ class PersonSearch(object):
 
 
 class LazyPaginatedResults(Sequence):
-    def __init__(self, *args):
-        results, hits = args
+    def __init__(self, results, hits):
         self.results = results
         self._hits = hits
 
