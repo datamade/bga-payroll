@@ -85,15 +85,17 @@ class LazyPaginatedResults(collections.abc.Sequence):
         `slice(25, 50, None)` for the second page, and so on.
 
         Because we only return `pagesize` results, we need to override slice
-        functionality such that slices always begin from the beginning of the
-        list. (The offset has already occurred when querying Solr.)
+        functionality such that slices begin from the start of the list if
+        their start is larger than the number of available items, i.e., they
+        are issued from Django.
         '''
         if isinstance(key, slice):
-            slice_len = key.stop - key.start
-            return [self.results[i] for i in range(0, slice_len, key.step or 1)]
+            if key.start or 0 > len(self.results):
+                return self.results[0:key.stop:key.step]
+            else:
+                return self.results[key.start:key.stop:key.step]
 
-        else:
-            return self.results[key]
+        return self.results[key]
 
     def __iter__(self):
         yield from self.results
