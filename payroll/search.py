@@ -161,17 +161,23 @@ class PayrollSearchMixin(object):
         extra_kwargs['rows'] = 0
 
         for entity_type in entity_types:
-            hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+            _, hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
             results.append((entity_type, hits))
 
-        total_hits = sum(r._hits for _, r in results)
+        total_hits = sum(hits for _, hits in results)
 
         extra_kwargs['rows'] = pagesize
 
         if params.get('page'):
-            page = int(params.get('page'))
+            try:
+                page = int(params['page'])
+            except ValueError:
+                raise DisallowedSearchException
 
-            assert type(page) == int and page > 0
+            try:
+                assert page > 0
+            except AssertionError:
+                raise DisallowedSearchException
 
             offset = (page - 1) * pagesize
         else:
@@ -180,19 +186,33 @@ class PayrollSearchMixin(object):
         local_hits = 0
         prior_hits = 0
 
-        for entity_type, hits in results:
-            local_hits += hits._hits
+        for idx, result in enumerate(results):
+            entity_type, hits = result
+
+            local_hits += hits
 
             if local_hits >= offset:
                 local_offset = offset - prior_hits
                 extra_kwargs['start'] = local_offset
+                local_results, _ = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
 
-                hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
-                hits._hits = total_hits
+                if len(local_results) < pagesize:
+                    n_needed = pagesize - len(local_results)
 
-                return hits
+                    try:
+                        next_entity_type, _ = results[idx + 1]
+                    except IndexError:  # Last entity type, i.e., last page
+                        pass
+                    else:
+                        extra_kwargs['start'] = 0
+                        extra_kwargs['rows'] = n_needed
+                        former_results, _ = getattr(self, '_search_{}'.format(next_entity_type))(query_string, **extra_kwargs)
 
-            prior_hits += hits._hits
+                        local_results = local_results + former_results
+
+                return LazyPaginatedResults(local_results, total_hits)
+
+            prior_hits += hits
 
     def _search(self, entity_type, query_string, **extra_kwargs):
         search_class = self._search_class(entity_type)
@@ -235,7 +255,7 @@ class PayrollSearchMixin(object):
             o.search_meta = sorted_results[o.id]
             objects.append(o)
 
-        return LazyPaginatedResults(objects, results.hits)
+        return objects, results.hits
 
     _search_unit = partialmethod(_search, 'unit')
     _search_department = partialmethod(_search, 'department')
