@@ -1,3 +1,4 @@
+from itertools import chain
 import json
 
 from django.core.cache import cache
@@ -602,19 +603,28 @@ class EntityLookup(ListView, PayrollSearchMixin):
     def get_queryset(self, *args, **kwargs):
         self.facets = {}
 
-        params = {
-            'entity_type': 'unit,person',
-            'name': self.request.GET['term'],
-        }
+        base_params = {'name': self.request.GET['term']}
 
         extra_search_kwargs = {
             'expenditure_d': '[1000000 TO *]',
             'salary_d': '[100000 TO *]',
         }
 
+        units = self.search(
+            dict(base_params, **{'entity_type': 'unit'}),
+            pagesize=5,
+            **extra_search_kwargs
+        )
+
+        people = self.search(
+            dict(base_params, **{'entity_type': 'person'}),
+            pagesize=5,
+            **extra_search_kwargs
+        )
+
         entities = []
 
-        for result in self.search(params, pagesize=10, **extra_search_kwargs):
+        for result in chain(units, people):
             data = {
                 'label': str(result),
                 'value': str(result),
