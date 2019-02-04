@@ -1,4 +1,4 @@
-from collections import OrderedDict
+import collections
 from functools import partialmethod
 from itertools import chain
 import re
@@ -18,7 +18,6 @@ class DisallowedSearchException(Exception):
 class EmployerSearch(object):
     search_kwargs = {
         'q.op': 'AND',
-        'rows': '99999999',
         'facet': 'true',
         'facet.mincount': '3',
         'facet.interval': ['expenditure_d', 'headcount_i'],
@@ -46,7 +45,6 @@ class PersonSearch(object):
     model = Person
     search_kwargs = {
         'q.op': 'AND',
-        'rows': '99999999',
         'facet': 'true',
         'facet.mincount': '3',
         'facet.field': 'employer_ss_fct',
@@ -75,6 +73,56 @@ class PersonSearch(object):
         return results
 
 
+class LazyPaginatedResults(collections.abc.Sequence):
+    def __init__(self, results, hits):
+        '''
+        :results - a list of search results, `pagesize` in length
+        :hits - an int representing the total number of results
+        '''
+        self.results = results
+        self._hits = hits
+
+    def __getitem__(self, key):
+        '''
+        Django pagination accesses results via slice. For instance, if you have
+        pages of 25 items, it loads `slice(0, 25, None)` for the first page,
+        `slice(25, 50, None)` for the second page, and so on.
+
+        Because there are only `pagesize` results, we need to mock the slice
+        interface for compatibility with Django pagination. Return all results
+        if a slice is requested.
+
+        If you require sub-slices, cast LazyPaginatedResults to a list first.
+        For example:
+
+            lpr = LazyPaginatedResults(['some', 'result', 'array'], 10)
+            slice = lpr[:2]  # ['some', 'result', 'array']
+            subslice = list(lpr)[:2]  # ['some', 'result']
+        '''
+        if isinstance(key, slice):
+            # Defensively check that Django functionality is what we expect,
+            # i.e., each slice equals the number of results.
+            #
+            # N.b., if the last page returns fewer than `pagesize` results,
+            # the slice will reflect that. For example, if the last page
+            # contains only eight results, Django will request
+            # slice(n, n + 8), instead of slice(n, n + pagesize), such
+            # that this assertion holds.
+            assert (key.stop - key.start) == len(self.results)
+            return self.results
+
+        raise NotImplementedError
+
+    def __iter__(self):
+        yield from self.results
+
+    def __len__(self):
+        return self._hits
+
+    def count(self):
+        return self._hits
+
+
 class PayrollSearchMixin(object):
     searcher = pysolr.Solr(settings.SOLR_URL)
 
@@ -100,25 +148,7 @@ class PayrollSearchMixin(object):
         'headcount'
     ]
 
-    def search(self, params, *args):
-
-        required_params = {
-            'name',
-            'employer',
-            'parent',
-            'taxonomy',
-            'universe',
-        }
-
-        if not set(params) & required_params:
-            # we want to allow a search for top paid employees
-            salary_above = params.get('salary_above')
-            if not salary_above or int(salary_above) < 150000:
-                raise DisallowedSearchException
-
-        if params.get('name') and len(params['name']) < 3:
-            raise DisallowedSearchException
-
+    def search(self, params, pagesize, **extra_kwargs):
         if params.get('entity_type'):
             entity_types = params.pop('entity_type').split(',')
         else:
@@ -126,24 +156,21 @@ class PayrollSearchMixin(object):
 
         query_string = self._make_querystring(params)
 
-        if query_string:
-            for entity_type in entity_types:
-                yield from getattr(self, '_search_{}'.format(entity_type))(query_string, *args)
+        extra_kwargs['rows'] = pagesize
 
-        else:
-            return None
+        if params.get('page'):
+            offset = (int(params['page']) - 1) * pagesize
+            extra_kwargs['start'] = offset
 
-    def _search(self, entity_type, *args):
+        for entity_type in entity_types:
+            return getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+
+    def _search(self, entity_type, query_string, **extra_kwargs):
         search_class = self._search_class(entity_type)
 
         # Don't edit the actual static attribute
         search_kwargs = search_class.search_kwargs.copy()
-
-        try:
-            query_string, = args
-        except ValueError:
-            query_string, extra_search_kwargs = args
-            search_kwargs.update(extra_search_kwargs)
+        search_kwargs.update(extra_kwargs)
 
         entity_filter = 'id:{}*'.format(entity_type)
 
@@ -161,7 +188,7 @@ class PayrollSearchMixin(object):
                 self.facets = {entity_type: results.facets}
 
         # Retain ordering from Solr results when filtering the model objects.
-        sorted_results = OrderedDict([(self._id_from_result(r), r) for r in results])
+        sorted_results = collections.OrderedDict([(self._id_from_result(r), r) for r in results])
         sort_order = list(sorted_results.keys())
 
         # If results contain Employer slugs, replace them with the appropriate
@@ -179,7 +206,7 @@ class PayrollSearchMixin(object):
             o.search_meta = sorted_results[o.id]
             objects.append(o)
 
-        return objects
+        return LazyPaginatedResults(objects, results.hits)
 
     _search_unit = partialmethod(_search, 'unit')
     _search_department = partialmethod(_search, 'department')
@@ -208,7 +235,7 @@ class PayrollSearchMixin(object):
 
         query_parts = chain(self._value_q(value_params), self._range_q(range_params))
 
-        return ' AND '.join(query_parts)
+        return ' AND '.join(query_parts) or ''
 
     def _value_q(self, params):
         query_parts = []
