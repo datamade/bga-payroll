@@ -75,6 +75,10 @@ class PersonSearch(object):
 
 class LazyPaginatedResults(collections.abc.Sequence):
     def __init__(self, results, hits):
+        '''
+        :results - a list of search results, `pagesize` in length
+        :hits - an int representing the total number of results
+        '''
         self.results = results
         self._hits = hits
 
@@ -84,16 +88,19 @@ class LazyPaginatedResults(collections.abc.Sequence):
         pages of 25 items, it loads `slice(0, 25, None)` for the first page,
         `slice(25, 50, None)` for the second page, and so on.
 
-        Because we only return `pagesize` results, we need to override slice
-        functionality such that slices begin from the start of the list if
-        their start is larger than the number of available items, i.e., they
-        are issued from Django.
+        Because there are only `pagesize` results, we need to mock the slice
+        interface for compatibility with Django pagination. Return all results
+        if a slice is requested.
+
+        If you require sub-slices, cast LazyPaginatedResults to a list first.
+        For example:
+
+            lpr = LazyPaginatedResults(['some', 'result', 'array'], 10)
+            slice = lpr[:2]  # ['some', 'result', 'array']
+            subslice = list(lpr)[:2]  # ['some', 'result']
         '''
         if isinstance(key, slice):
-            if key.start or 0 > len(self.results):
-                return self.results[0:key.stop:key.step]
-            else:
-                return self.results[key.start:key.stop:key.step]
+            return self.results
 
         return self.results[key]
 
