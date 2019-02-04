@@ -156,14 +156,43 @@ class PayrollSearchMixin(object):
 
         query_string = self._make_querystring(params)
 
+        results = []
+
+        extra_kwargs['rows'] = 0
+
+        for entity_type in entity_types:
+            hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+            results.append((entity_type, hits))
+
+        total_hits = sum(r._hits for _, r in results)
+
         extra_kwargs['rows'] = pagesize
 
         if params.get('page'):
-            offset = (int(params['page']) - 1) * pagesize
-            extra_kwargs['start'] = offset
+            page = int(params.get('page'))
 
-        for entity_type in entity_types:
-            return getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+            assert type(page) == int and page > 0
+
+            offset = (page - 1) * pagesize
+        else:
+            offset = 0
+
+        local_hits = 0
+        prior_hits = 0
+
+        for entity_type, hits in results:
+            local_hits += hits._hits
+
+            if local_hits >= offset:
+                local_offset = offset - prior_hits
+                extra_kwargs['start'] = local_offset
+
+                hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+                hits._hits = total_hits
+
+                return hits
+
+            prior_hits += hits._hits
 
     def _search(self, entity_type, query_string, **extra_kwargs):
         search_class = self._search_class(entity_type)
