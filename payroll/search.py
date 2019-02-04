@@ -100,9 +100,18 @@ class LazyPaginatedResults(collections.abc.Sequence):
             subslice = list(lpr)[:2]  # ['some', 'result']
         '''
         if isinstance(key, slice):
+            # Defensively check that Django functionality is what we expect,
+            # i.e., each slice equals the number of results.
+            #
+            # N.b., if the last page returns fewer than `pagesize` results,
+            # the slice will reflect that. For example, if the last page
+            # contains only eight results, Django will request
+            # slice(n, n + 8), instead of slice(n, n + pagesize), such
+            # that this assertion holds.
+            assert (key.stop - key.start) == len(self.results)
             return self.results
 
-        return self.results[key]
+        raise NotImplementedError
 
     def __iter__(self):
         yield from self.results
