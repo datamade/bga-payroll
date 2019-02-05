@@ -154,20 +154,6 @@ class PayrollSearchMixin(object):
         else:
             entity_types = ['unit', 'department', 'person']
 
-        query_string = self._make_querystring(params)
-
-        results = []
-
-        extra_kwargs['rows'] = 0
-
-        for entity_type in entity_types:
-            _, hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
-            results.append((entity_type, hits))
-
-        total_hits = sum(hits for _, hits in results)
-
-        extra_kwargs['rows'] = pagesize
-
         if params.get('page'):
             try:
                 page = int(params['page'])
@@ -183,38 +169,92 @@ class PayrollSearchMixin(object):
         else:
             offset = 0
 
-        local_hits = 0
-        prior_hits = 0
+        query_string = self._make_querystring(params)
 
-        for idx, result in enumerate(results):
-            entity_type, hits = result
+        extra_kwargs['rows'] = 0
 
-            local_hits += hits
+        # Determine the number of hits per entity type, for use in returning
+        # results across entity types.
+        entity_edges = []
 
-            if local_hits >= offset:
-                local_offset = offset - prior_hits
-                extra_kwargs['start'] = local_offset
-                local_results, _ = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+        for entity_type in entity_types:
+            _, hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+            entity_edges.append((entity_type, hits))
 
-                if len(local_results) < pagesize:
-                    n_needed = pagesize - len(local_results)
+        total_hits = sum(hits for _, hits in entity_edges)
 
-                    try:
-                        next_entity_type, _ = results[idx + 1]
-                    except IndexError:  # Last entity type, i.e., last page
-                        pass
-                    else:
-                        extra_kwargs['start'] = 0
-                        extra_kwargs['rows'] = n_needed
-                        former_results, _ = getattr(self, '_search_{}'.format(next_entity_type))(query_string, **extra_kwargs)
+        search_results = self._composite_search(entity_edges,
+                                                pagesize,
+                                                offset,
+                                                query_string,
+                                                **extra_kwargs)
 
-                        local_results = local_results + former_results
+        return LazyPaginatedResults(search_results, total_hits)
 
-                return LazyPaginatedResults(local_results, total_hits)
+    def _composite_search(self,
+                          entity_edges,
+                          pagesize,
+                          offset,
+                          query_string,
+                          **extra_kwargs):
+        '''
+        :entity_edges - list of tuples, containing entity type and number of
+            hits for the given search term
+        :pagesize - number of search results to return
+        :offset - (current page - 1) * offset, i.e., the starting index of the
+            current page of results
+        :query_string - Solr query string
 
-            prior_hits += hits
+        Given the number of hits per entity type, generate on object containing
+        `pagesize` search results. This object contains multiple types of
+        entity when the number of hits for a given entity type is not divisible
+        by `pagesize`, i.e., the last page of its results contains fewer than
+        `pagesize` items.
+
+        For example, if there are three unit results and 10 department results,
+        and the requested page size is five, this method would return a list of
+        three units and two departments, for a total of five results.
+        '''
+        upper_bound = 0
+        lower_bound = 0
+
+        search_results = []
+        entity_type_idx = 0
+
+        while len(search_results) < pagesize:
+            try:
+                entity_type, entity_hits = entity_edges[entity_type_idx]
+            except IndexError:  # No more entity types, i.e., last page
+                break
+
+            upper_bound += entity_hits
+
+            if upper_bound >= offset:
+                if len(search_results) == 0:
+                    extra_kwargs['start'] = offset - lower_bound
+                else:
+                    # There were fewer than `pagesize` results in the previous
+                    # entity type, i.e., start from the beginning of the current
+                    # entity type
+                    extra_kwargs['start'] = 0
+
+                extra_kwargs['rows'] = pagesize - len(search_results)
+
+                entity_results, _ = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+                search_results.extend(entity_results)
+
+            lower_bound += entity_hits
+            entity_type_idx += 1
+
+        return search_results
 
     def _search(self, entity_type, query_string, **extra_kwargs):
+        '''
+        Query one type of entity. Entities must be queried separately, because
+        they each have entity-specific fields in the index, and filtering on
+        those specific fields will only return results of the given entity
+        type.
+        '''
         search_class = self._search_class(entity_type)
 
         # Don't edit the actual static attribute
