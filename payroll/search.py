@@ -154,18 +154,107 @@ class PayrollSearchMixin(object):
         else:
             entity_types = ['unit', 'department', 'person']
 
+        if params.get('page'):
+            try:
+                page = int(params['page'])
+            except ValueError:
+                raise DisallowedSearchException
+
+            try:
+                assert page > 0
+            except AssertionError:
+                raise DisallowedSearchException
+
+            offset = (page - 1) * pagesize
+        else:
+            offset = 0
+
         query_string = self._make_querystring(params)
 
-        extra_kwargs['rows'] = pagesize
+        extra_kwargs['rows'] = 0
 
-        if params.get('page'):
-            offset = (int(params['page']) - 1) * pagesize
-            extra_kwargs['start'] = offset
+        # Determine the number of hits per entity type, for use in returning
+        # results across entity types.
+        entity_edges = []
 
         for entity_type in entity_types:
-            return getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+            _, hits = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+            entity_edges.append((entity_type, hits))
+
+        total_hits = sum(hits for _, hits in entity_edges)
+
+        search_results = self._composite_search(entity_edges,
+                                                pagesize,
+                                                offset,
+                                                query_string,
+                                                **extra_kwargs)
+
+        return LazyPaginatedResults(search_results, total_hits)
+
+    def _composite_search(self,
+                          entity_edges,
+                          pagesize,
+                          offset,
+                          query_string,
+                          **extra_kwargs):
+        '''
+        :entity_edges - list of tuples, containing entity type and number of
+            hits for the given search term
+        :pagesize - number of search results to return
+        :offset - (current page - 1) * offset, i.e., the starting index of the
+            current page of results
+        :query_string - Solr query string
+
+        Given the number of hits per entity type, generate on object containing
+        `pagesize` search results. This object contains multiple types of
+        entity when the number of hits for a given entity type is not divisible
+        by `pagesize`, i.e., the last page of its results contains fewer than
+        `pagesize` items.
+
+        For example, if there are three unit results and 10 department results,
+        and the requested page size is five, this method would return a list of
+        three units and two departments, for a total of five results.
+        '''
+        upper_bound = 0
+        lower_bound = 0
+
+        search_results = []
+        entity_type_idx = 0
+
+        while len(search_results) < pagesize:
+            try:
+                entity_type, entity_hits = entity_edges[entity_type_idx]
+            except IndexError:  # No more entity types, i.e., last page
+                break
+
+            upper_bound += entity_hits
+
+            if upper_bound >= offset:
+                if len(search_results) == 0:
+                    extra_kwargs['start'] = offset - lower_bound
+                else:
+                    # There were fewer than `pagesize` results in the previous
+                    # entity type, i.e., start from the beginning of the current
+                    # entity type
+                    extra_kwargs['start'] = 0
+
+                extra_kwargs['rows'] = pagesize - len(search_results)
+
+                entity_results, _ = getattr(self, '_search_{}'.format(entity_type))(query_string, **extra_kwargs)
+                search_results.extend(entity_results)
+
+            lower_bound += entity_hits
+            entity_type_idx += 1
+
+        return search_results
 
     def _search(self, entity_type, query_string, **extra_kwargs):
+        '''
+        Query one type of entity. Entities must be queried separately, because
+        they each have entity-specific fields in the index, and filtering on
+        those specific fields will only return results of the given entity
+        type.
+        '''
         search_class = self._search_class(entity_type)
 
         # Don't edit the actual static attribute
@@ -206,7 +295,7 @@ class PayrollSearchMixin(object):
             o.search_meta = sorted_results[o.id]
             objects.append(o)
 
-        return LazyPaginatedResults(objects, results.hits)
+        return objects, results.hits
 
     _search_unit = partialmethod(_search, 'unit')
     _search_department = partialmethod(_search, 'department')
