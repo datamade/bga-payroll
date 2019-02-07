@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'postgres_stats',
     'debug_toolbar',
-    'cacheops',
 ]
 
 MIDDLEWARE = [
