@@ -75,14 +75,6 @@
           <li class="nav-item">
             <a class="nav-link" href="/user-guide/"><i class="fas fa-question fa-fw"></i> User Guide</a>
           </li>
-          {% if request.user.is_authenticated %}
-          <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" id="user-dropdown" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user fa-fw"></i> Welcome back {{ request.user.first_name }}!</a>
-              <div class="dropdown-menu" aria-labelledby="user-dropdown">
-                <a class="dropdown-item" href="/logout/">Logout</a>
-              </div>
-          </li>
-          {% endif %}
         </ul>
       </div>
     </nav>
