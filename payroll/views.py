@@ -18,7 +18,7 @@ from django.conf import settings
 from django.urls import reverse_lazy
 from django.contrib import messages
 
-from bga_database.chart_settings import BAR_DEFAULT, BAR_HIGHLIGHT
+from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.forms import SignupForm
@@ -477,10 +477,10 @@ class PersonView(DetailView, ChartHelperMixin):
     template_name = 'person.html'
 
     def _get_bar_color(self, lower, upper):
-        if lower < self.salary_amount < upper:
+        if lower < int(self.salary_amount) <= upper:
             return BAR_HIGHLIGHT
         else:
-            return BAR_DEFAULT
+            return super()._get_bar_color(lower, upper)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
