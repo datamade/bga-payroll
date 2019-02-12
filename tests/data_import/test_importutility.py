@@ -47,8 +47,13 @@ def test_import_utility_init(raw_table_setup,
         assert raw_count == generated_count
 
         validate_taxonomy = '''
-            SELECT taxonomy_id FROM payroll_employer
-            WHERE parent_id IS NULL
+            SELECT taxonomy_id
+            FROM payroll_employer AS unit
+            JOIN payroll_unitrespondingagency AS ura
+            ON unit.id = ura.unit_id
+            JOIN data_import_respondingagency AS ra
+            ON ura.responding_agency_id = ra.id
+            WHERE ra.name != 'ISBE'
         '''
 
         cursor.execute(validate_taxonomy)

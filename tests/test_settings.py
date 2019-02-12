@@ -41,7 +41,8 @@ DATABASES = {
     }
 }
 
-REDIS_URL = 'redis://localhost:6739/0'
+REDIS_PORT = 6380
+REDIS_URL = 'redis://localhost:{}/0'.format(REDIS_PORT)
 
 TEMPLATES = [
     {

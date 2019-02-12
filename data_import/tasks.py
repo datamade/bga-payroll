@@ -222,9 +222,9 @@ def insert_salary(self, *, s_file_id):
     return 'Inserted salaries'
 
 
-@shared_task(bind=True, base=DataImportTask)
+@shared_task(bind=True)
 def build_solr_index(self):
     io_out = StringIO()
-    call_command('build_solr_index', '--recreate', stdout=io_out)
+    call_command('build_solr_index', '--recreate', chunksize=25, stdout=io_out)
 
     return io_out.getvalue()
