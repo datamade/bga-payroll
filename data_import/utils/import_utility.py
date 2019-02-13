@@ -191,8 +191,54 @@ class ImportUtility(TableNamesMixin):
               AND payroll_employer.taxonomy_id IS NULL
         '''
 
+        update_school_districts = '''
+            UPDATE payroll_employer
+            SET taxonomy_id = (
+              SELECT id FROM payroll_employertaxonomy
+              WHERE entity_type ilike 'school district'
+              AND chicago = FALSE
+            )
+            /* ISBE reports school district salaries. The state
+            reports ISBE salaries. Record keeping is fun! */
+            FROM (
+              SELECT
+                unit.id AS unit_id
+              FROM payroll_employer AS unit
+              JOIN payroll_unitrespondingagency AS ura
+              ON unit.id = ura.unit_id
+              JOIN data_import_respondingagency AS ra
+              ON ura.responding_agency_id = ra.id
+              WHERE ra.name ilike 'isbe'
+            ) AS isbe_reported
+            WHERE payroll_employer.id = isbe_reported.unit_id
+              AND payroll_employer.taxonomy_id IS NULL
+        '''
+
+        update_higher_ed = '''
+            UPDATE payroll_employer
+            SET taxonomy_id = (
+              SELECT id FROM payroll_employertaxonomy
+              WHERE entity_type ilike 'higher education'
+              AND chicago = FALSE
+            )
+            FROM (
+              SELECT
+                unit.id AS unit_id
+              FROM payroll_employer AS unit
+              JOIN payroll_unitrespondingagency AS ura
+              ON unit.id = ura.unit_id
+              JOIN data_import_respondingagency AS ra
+              ON ura.responding_agency_id = ra.id
+              WHERE ra.name ilike 'ibhe'
+            ) AS ibhe_reported
+            WHERE payroll_employer.id = ibhe_reported.unit_id
+              AND payroll_employer.taxonomy_id IS NULL
+        '''
+
         with connection.cursor() as cursor:
             cursor.execute(update_non_school_districts)
+            cursor.execute(update_school_districts)
+            cursor.execute(update_higher_ed)
 
     def _insert_parent_employer_population(self):
         '''
