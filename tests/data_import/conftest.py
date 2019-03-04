@@ -105,6 +105,7 @@ def queue_teardown(request):
     @request.addfinalizer
     def flush_queue():
         from redis import Redis
+        from tests.test_settings import REDIS_PORT
 
-        r = Redis()
+        r = Redis(port=REDIS_PORT)
         r.flushdb()
