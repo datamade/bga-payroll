@@ -23,6 +23,6 @@ VPATH=data
 	# Add required data year field.
 	perl -pe 's/$$/,2017/' $< > $@
 
-2017-pt-%-with-agencies.csv : raw/2017-payroll-actual-pt-%.csv output/foia-source-lookup.csv
+2017-pt-%-with-agencies.csv : raw/2017-payroll-actual-pt-%.csv raw/foia-source-lookup.csv
 	# Join standard data with agency lookup.
 	csvjoin -c id,ID -e IBM852 $^ > $@

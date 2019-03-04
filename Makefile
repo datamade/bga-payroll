@@ -10,4 +10,4 @@ $(PG_DB) :
 	createdb -U postgres $@
 
 include data/multi_agency_files.mk data/amended_files.mk data/legacy_data.mk \
-	data/extracts.mk data/foia_source.mk
+	data/extracts.mk

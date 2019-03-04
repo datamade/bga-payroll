@@ -28,7 +28,7 @@ VPATH=data
 	perl -pe 's/$$/,2017/' $< > $@
 
 .SECONDEXPANSION :
-%-amendment-with-agencies.csv : $$(wildcard data/raw/$$*-amendment.csv $$*.csv) output/foia-source-lookup.csv
+%-amendment-with-agencies.csv : $$(wildcard data/raw/$$*-amendment.csv $$*.csv) raw/foia-source-lookup.csv
 	# Join standard data with agency lookup.
 	csvjoin -c id,ID -e IBM852 $^ > $@
 
