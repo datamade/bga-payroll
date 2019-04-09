@@ -346,7 +346,10 @@ class EmployerUniverse(models.Model):
 class Person(SluggedModel, VintagedModel, SourceFileMixin):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
-    noindex = models.BooleanField(default=False)
+    noindex = models.BooleanField(
+        default=False,
+        help_text='Check this box to prevent third-party search engines from capturing this person'
+    )
 
     def __str__(self):
         name = '{0} {1}'.format(self.first_name, self.last_name)\

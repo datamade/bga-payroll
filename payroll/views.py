@@ -537,7 +537,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'like_employer_percentile': like_employer_percentile,
             'fellow_job_holders': fellow_job_holders,
             'source_link': source_link,
-            'noindex': self.salary_amount < 30000,
+            'noindex': self.salary_amount < 30000 or self.object.noindex,
         })
 
         return context
