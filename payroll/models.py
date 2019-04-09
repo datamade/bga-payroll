@@ -351,6 +351,9 @@ class Person(SluggedModel, VintagedModel, SourceFileMixin):
         help_text='Check this box to prevent third-party search engines from capturing this person'
     )
 
+    class Meta:
+        verbose_name_plural = 'People'
+
     def __str__(self):
         name = '{0} {1}'.format(self.first_name, self.last_name)\
                         .lstrip('-')
