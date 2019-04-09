@@ -1,10 +1,10 @@
 import pickle
 
+from django.conf import settings
 from django.db import connection
 
 from saferedisqueue import SafeRedisQueue
 
-from bga_database.settings import REDIS_URL
 from data_import.utils.table_names import TableNamesMixin
 
 
@@ -12,7 +12,7 @@ class ReviewQueue(TableNamesMixin):
     def __init__(self, s_file_id):
         super().__init__(s_file_id)
 
-        self.__q = SafeRedisQueue(url=REDIS_URL,
+        self.__q = SafeRedisQueue(url=settings.REDIS_URL,
                                   name=self.q_name_fmt.format(s_file_id),
                                   autoclean_interval=150,
                                   serializer=pickle)
