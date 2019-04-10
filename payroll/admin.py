@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.core.management import call_command
 
-from payroll.models import Employer, EmployerUniverse, EmployerTaxonomy
+from payroll.models import Employer, EmployerUniverse, EmployerTaxonomy, \
+    Person
 
 
 class AdminEmployer(admin.ModelAdmin):
@@ -44,6 +45,17 @@ class LogEntryAdmin(admin.ModelAdmin):
         return actions
 
 
+class PersonAdmin(admin.ModelAdmin):
+    search_fields = ('first_name', 'last_name')
+    list_display = ('most_recent_job',)
+    readonly_fields = ('first_name', 'last_name', 'most_recent_job', 'slug',)
+    exclude = ('vintage',)
+
+    def most_recent_job(self, obj):
+        return obj.most_recent_job
+
+
+admin.site.register(Person, PersonAdmin)
 admin.site.register(Employer, AdminEmployer)
 admin.site.register(EmployerUniverse, AdminEmployerUniverse)
 admin.site.register(EmployerTaxonomy, AdminEmployerTaxonomy)

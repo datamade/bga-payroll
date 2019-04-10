@@ -127,9 +127,13 @@ data/output/*
 /configs/bga-payroll.conf.staging.nginx
 /configs/local_settings.production.py
 data/raw/amendments-*
+data/corrections.mk
 
 .sass-cache/
 201*/
 /configs/sentry.ini
 /configs/redis.conf
 /scripts/locustfile.py
+
+keyrings/live/.gpg-v21-migrated
+static/

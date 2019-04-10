@@ -484,12 +484,13 @@ class ImportUtility(TableNamesMixin):
 
     def insert_person(self):
         insert = '''
-            INSERT INTO payroll_person (id, first_name, last_name, vintage_id)
+            INSERT INTO payroll_person (id, first_name, last_name, vintage_id, noindex)
               SELECT
                 person_id,
                 first_name,
                 last_name,
-                {vintage}
+                {vintage},
+                FALSE
               FROM {raw_person}
         '''.format(vintage=self.vintage,
                    raw_person=self.raw_person_table)

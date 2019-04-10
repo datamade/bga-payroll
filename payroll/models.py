@@ -1,4 +1,3 @@
-from django.contrib.postgres.search import SearchVectorField
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import gettext_lazy as _
@@ -347,7 +346,13 @@ class EmployerUniverse(models.Model):
 class Person(SluggedModel, VintagedModel, SourceFileMixin):
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
-    search_vector = SearchVectorField(max_length=255, null=True)
+    noindex = models.BooleanField(
+        default=False,
+        help_text='Check this box to prevent third-party search engines from capturing this person'
+    )
+
+    class Meta:
+        verbose_name_plural = 'People'
 
     def __str__(self):
         name = '{0} {1}'.format(self.first_name, self.last_name)\
