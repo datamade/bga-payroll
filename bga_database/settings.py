@@ -51,7 +51,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'payroll.auth0backend.Auth0',
+    'django.contrib.auth.backends.ModelBackend'
+]
+
 ROOT_URLCONF = 'bga_database.urls'
+
+LOGIN_URL = '/login/auth0/'
+LOGIN_REDIRECT_URL = '/'
 
 TEMPLATES = [
     {
@@ -75,9 +83,11 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
-    },
+    }
 ]
 
 WSGI_APPLICATION = 'bga_database.wsgi.application'
