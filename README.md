@@ -7,6 +7,7 @@ How much do your public officials make?
 - Python 3.x
 - Postgres >= 9
 - GNU Make
+- Solr 7.x
 
 ## Running the app locally
 
@@ -39,7 +40,7 @@ Perform the following steps from your terminal.
     make database
     python manage.py migrate
     ```
-6. Run the app. In three seperate terminal windows:
+6. Run the app. In four seperate terminal windows:
 
     ```bash
     redis-server
@@ -47,6 +48,10 @@ Perform the following steps from your terminal.
 
     ```bash
     celery --app=bga_database.celery:app worker --loglevel=DEBUG
+    ```
+    
+    ```bash
+    solr start && solr create -c bga -d ./solr_configs
     ```
 
     ```bash
