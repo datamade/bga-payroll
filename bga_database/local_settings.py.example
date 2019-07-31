@@ -54,3 +54,17 @@ DEFAULT_FROM_EMAIL = 'Example <example@example.com>'
 # by BGA.
 SALSA_PAYLOAD = '{}'
 SALSA_URL = 'https://example.salsalabs.org'
+
+# Auth0 settings.
+# https://auth0.com/docs/quickstart/webapp/django/01-login#django-settings
+SOCIAL_AUTH_TRAILING_SLASH = True  # Expect trailing slash in URLs
+SOCIAL_AUTH_AUTH0_DOMAIN = 'your-domain'
+SOCIAL_AUTH_AUTH0_KEY = 'your-key'
+SOCIAL_AUTH_AUTH0_SECRET = 'your-secret'
+
+SOCIAL_AUTH_AUTH0_SCOPE = [
+    'openid',
+    'profile'
+]
+
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True

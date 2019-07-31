@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'storages',
+    'social_django',
     'payroll',
     'data_import',
     'django.contrib.postgres',
