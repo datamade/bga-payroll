@@ -103,38 +103,11 @@
             <div class="modal-body">
                 <h3>If you'd like to keep using this free resource, please create an account.</h3>
                 <p>We'll send you our latest investigations every week.</p>
-                <form class="form" id="signup-form">
-                    <input type="hidden" value="{{ csrf_token }}" name="csrfmiddlewaretoken" />
-                    <input type="hidden" value="{{ request.get_full_path() }}" name="next" />
-                    <div class="form-group">
-                        <label for="id_email">Email*</label>
-                        <input type="text" class="form-control" id="id_email" name="email" placeholder="Email" />
-                        <div class="invalid-feedback" id="email-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_password">Password*</label>
-                        <input type="password" class="form-control" id="id_password" name="password" placeholder="Password" />
-                        <div class="invalid-feedback" id="password-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_first_name">First name*</label>
-                        <input type="text" class="form-control" id="id_first_name" name="first_name" placeholder="First name" />
-                        <div class="invalid-feedback" id="first_name-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_last_name">Last name*</label>
-                        <input type="text" class="form-control" id="id_last_name" name="last_name" placeholder="Last name" />
-                        <div class="invalid-feedback" id="last_name-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_zipcode">Zip code*</label>
-                        <input type="text" class="form-control" id="id_zipcode" name="zipcode" placeholder="Zip Code" />
-                        <div class="invalid-feedback" id="zipcode-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <button id="submit-signup" class="btn btn-primary">Subscribe</button>
-                    </div>
-                </form>
+                <p>
+                    <a class="btn btn-primary btn-lg btn-login btn-block" href="{{ url('social:begin', args=('auth0',)) }}">
+                        Create account
+                    </a>
+                </p>
                 <p>
                     <a href="javascript://" class="toggle-login-signup" data-parent_modal="signupModal">
                         Already have an account?
@@ -149,30 +122,14 @@
         <div class="modal-content">
             <div class="modal-body">
                 <h3>To keep using this free resource, please log in.</h3>
-                <form class="form" id="login-form">
-                    <input type="hidden" value="{{ csrf_token }}" name="csrfmiddlewaretoken" />
-                    <input type="hidden" value="{{ request.get_full_path() }}" name="next" />
-                    <div class="form-group">
-                        <label for="id_username">Email</label>
-                        <input type="text" class="form-control" id="id_username" name="username" placeholder="Email" />
-                    </div>
-                    <div class="form-group">
-                        <label for="id_password">Password</label>
-                        <input type="password" class="form-control" id="id_password" name="password" placeholder="Password" />
-                        <div class="invalid-feedback" id="login-form-errors"></div>
-                    </div>
-                    <div class="form-group">
-                        <button id="submit-login" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
                 <p>
-                    <a href="javascript://" class="toggle-login-signup" data-parent_modal="loginModal">
-                        Need to create an account?
+                    <a class="btn btn-primary btn-lg btn-login btn-block" href="{{ url('social:begin', args=('auth0',)) }}">
+                        Log in
                     </a>
                 </p>
                 <p>
-                    <a href="{{ url('reset') }}">
-                        Forgot your password?
+                    <a href="javascript://" class="toggle-login-signup" data-parent_modal="loginModal">
+                        Need to create an account?
                     </a>
                 </p>
             </div>

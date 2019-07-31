@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
-from django.urls import path
+from django.urls import include, path
 from django.views.decorators.cache import cache_page
 
 from data_import import views as import_views
@@ -43,6 +43,8 @@ urlpatterns = [
     path('reset/', payroll_views.UserPasswordResetView.as_view(), name='reset'),
     path('reset/<str:uidb64>/<str:token>/', payroll_views.UserPasswordResetConfirmView.as_view(), name='confirm'),
     path('done/', payroll_views.UserPasswordResetDoneView.as_view(), name='done'),
+    path('', include('django.contrib.auth.urls')),
+    path('', include('social_django.urls')),
 
     # admin
     path('admin/', admin.site.urls),

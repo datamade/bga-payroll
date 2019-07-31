@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from urllib import request
 from jose import jwt
 from social_core.backends.auth0 import Auth0OAuth2
