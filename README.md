@@ -110,16 +110,15 @@ Perform the following steps from your terminal.
     ```
 6. Run the app. In separate terminal windows:
     ```bash
-    # if your postgres server isn't running yet
-    docker-compose up postgres
-    ```
-
-    ```bash
-    docker-compose up redis
-    ```
+    # Launch services listed in docker-compose.yml
+    #
+    # To launch just one:
+    #   docker-compose up <service-name>
+    #
+    # To exclude one from launching:
+    #   docker-compose up --scale <service-name>=0
     
-    ```bash
-    docker-compose up solr
+    docker-compose up
     ```
 
     ```bash
@@ -128,12 +127,6 @@ Perform the following steps from your terminal.
     
     ```bash
     python manage.py runserver
-    ```
-    
-    Alternatively, you can launch Postgres, Solr, and Redis with one command:
-    
-    ```bash
-    docker-compose up --scale nginxlog=0
     ```
         
 7. In the project directory, make a test data file.
