@@ -2,6 +2,9 @@
 
 How much do your public officials make?
 
+- [Running the app locally](#running-the-app-locally)
+- [Running the app with Docker Compose](#running-the-app-with-docker-compose)
+
 
 ## Running the app locally
 
