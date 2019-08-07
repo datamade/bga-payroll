@@ -100,7 +100,7 @@ Perform the following steps from your terminal.
     ```bash
     pip install -r requirements.txt
     ```
-4. Copy the local settings file. Note that you may need to update `DATABASES`, `REDIS_PORT` and `SOLR_URL` in your own copy of `local_settings.py` to reflect your local setup.
+4. Copy the local settings file. Note that you may need to update `DATABASES`, `REDIS_PORT` and `SOLR_URL` in your own copy of `local_settings.py` to reflect the host port each service is mapped to in `docker-compose.yml`.
 
     ```bash
     cp bga_database/local_settings.py.example bga_database/local_settings.py
