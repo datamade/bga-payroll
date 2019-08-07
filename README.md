@@ -113,15 +113,11 @@ Perform the following steps from your terminal.
     ```
 6. Run the app. In separate terminal windows:
     ```bash
-    # Launch services listed in docker-compose.yml
-    #
-    # To launch just one:
-    #   docker-compose up <service-name>
-    #
-    # To exclude one from launching:
-    #   docker-compose up --scale <service-name>=0
-    
+    # Launch all services listed in docker-compose.yml
     docker-compose up
+    
+    # Or launch one or more specific services
+    docker-compose up <service-name> [<service-name> <service-name> ...]
     ```
 
     ```bash
