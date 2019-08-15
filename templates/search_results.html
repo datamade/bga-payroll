@@ -104,7 +104,7 @@
                 <h3>If you'd like to keep using this free resource, please create an account.</h3>
                 <p>We'll send you our latest investigations every week.</p>
                 <p>
-                    <a class="btn btn-primary btn-lg btn-login btn-block" href="{{ url('social:begin', args=('auth0',)) }}">
+                    <a class="btn btn-primary btn-lg btn-login btn-block" href="{{ url('social:begin', args=('auth0',)) }}?mode=signUp">
                         Create account
                     </a>
                 </p>
@@ -123,7 +123,7 @@
             <div class="modal-body">
                 <h3>To keep using this free resource, please log in.</h3>
                 <p>
-                    <a class="btn btn-primary btn-lg btn-login btn-block" href="{{ url('social:begin', args=('auth0',)) }}">
+                    <a class="btn btn-primary btn-lg btn-login btn-block" href="{{ url('social:begin', args=('auth0',)) }}?mode=login">
                         Log in
                     </a>
                 </p>

@@ -8,6 +8,11 @@ from social_core.exceptions import AuthFailed
 class Auth0(Auth0OAuth2):
     """Auth0 OAuth authentication backend"""
     name = 'auth0'
+
+    def auth_params(self, *args, **kwargs):
+        params = super().auth_params(*args, **kwargs)
+        params['mode'] = self.strategy.session_get('mode')
+        return params
     
     def auth_complete(self, *args, **kwargs):
         try:
