@@ -10,20 +10,13 @@ from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.views.generic import FormView
 from postgres_stats.aggregates import Percentile
-from django.contrib.auth.views import LoginView, PasswordResetView, \
-    PasswordResetDoneView, PasswordResetConfirmView
-from django.contrib.auth import login as auth_login
 from django.conf import settings
-from django.urls import reverse_lazy
-from django.contrib import messages
 from django.contrib.auth import logout as log_out
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
-from payroll.forms import SignupForm
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 

@@ -1,5 +1,4 @@
 from django.shortcuts import redirect
-from urllib import request
 from jose import jwt
 from social_core.backends.auth0 import Auth0OAuth2
 from social_core.exceptions import AuthFailed
@@ -13,7 +12,7 @@ class Auth0(Auth0OAuth2):
         params = super().auth_params(*args, **kwargs)
         params['mode'] = self.strategy.session_get('mode')
         return params
-    
+
     def auth_complete(self, *args, **kwargs):
         try:
             self.process_error(self.data)
@@ -30,10 +29,10 @@ class Auth0(Auth0OAuth2):
         issuer = self.api_path()
         audience = self.setting('KEY')  # CLIENT_ID
         payload = jwt.decode(id_token,
-                              jwks,
-                              algorithms=['RS256'],
-                              audience=audience,
-                              issuer=issuer)
+                             jwks,
+                             algorithms=['RS256'],
+                             audience=audience,
+                             issuer=issuer)
 
         return {'username': payload['nickname'],
                 'email': payload['name'],
