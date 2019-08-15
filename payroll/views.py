@@ -1,10 +1,11 @@
 from itertools import chain
 import json
+from urllib.parse import urlencode
 
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q, FloatField, Prefetch
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
@@ -17,6 +18,7 @@ from django.contrib.auth import login as auth_login
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.contrib.auth import logout as log_out
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
@@ -649,39 +651,6 @@ class EntityLookup(ListView, PayrollSearchMixin):
         return JsonResponse(results, safe=False)
 
 
-class UserLoginView(LoginView):
-    def form_valid(self, form):
-        auth_login(self.request, form.get_user())
-
-        context = self.get_context_data(form=form)
-
-        return self.render_to_response(context)
-
-    def render_to_response(self, context, **kwargs):
-        response = {}
-
-        errors = context['form'].errors
-
-        if errors:
-            response['redirect_url'] = None
-            response['errors'] = errors['__all__']
-        else:
-            response['redirect_url'] = context['next']
-
-            user = context['form'].get_user()
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 'Welcome back {}!'.format(user.first_name),
-                                 extra_tags='font-weight-bold')
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 "We've logged you in so you can continue using the database.")
-
-        return JsonResponse(response)
-
-
 class UserSignupView(FormView):
 
     form_class = SignupForm
@@ -741,6 +710,13 @@ class UserPasswordResetConfirmView(PasswordResetConfirmView):
 
 class UserPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'user-management/password-reset-done.html'
+
+def logout(request):
+    log_out(request)
+    return_to = urlencode({'returnTo': request.build_absolute_uri('/')})
+    logout_url = 'https://%s/v2/logout?client_id=%s&%s' % \
+                 (settings.SOCIAL_AUTH_AUTH0_DOMAIN, settings.SOCIAL_AUTH_AUTH0_KEY, return_to)
+    return HttpResponseRedirect(logout_url)
 
 
 def flush_cache(request, secret_key):

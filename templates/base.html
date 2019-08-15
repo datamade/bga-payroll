@@ -83,7 +83,7 @@
           </li>
           {% else %}
           <li class="nav-item">
-            <a class="nav-link" href="{{ url('logout') }}?next={{ request.path | urlencode }}">Log out</a>
+            <a class="nav-link" href="{{ url('logout') }}">Log out</a>
           </li>
           {% endif %}
         </ul>
