@@ -651,66 +651,6 @@ class EntityLookup(ListView, PayrollSearchMixin):
         return JsonResponse(results, safe=False)
 
 
-class UserSignupView(FormView):
-
-    form_class = SignupForm
-
-    def form_valid(self, form):
-        user = form.make_user()
-
-        auth_login(self.request, user)
-
-        context = self.get_context_data(form=form)
-
-        return self.render_to_response(context)
-
-    def render_to_response(self, context, **kwargs):
-        response = {}
-
-        errors = context['form'].errors
-
-        if errors:
-            response['redirect_url'] = None
-            response['errors'] = errors
-        else:
-            response['redirect_url'] = self.request.POST['next']
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 'Thanks for signing up!',
-                                 extra_tags='font-weight-bold')
-
-            messages.add_message(self.request,
-                                 messages.INFO,
-                                 'Use the your email address and the password you just created to login next time you visit.')
-
-        return JsonResponse(response)
-
-
-class UserPasswordResetView(PasswordResetView):
-    template_name = 'user-management/password-reset.html'
-    email_template_name = 'user-management/password-reset-email.txt'
-    subject_template_name = 'user-management/password-reset-email-subject.txt'
-    html_email_template_name = 'user-management/password-reset-email.html'
-    success_url = reverse_lazy('done')
-
-
-class UserPasswordResetConfirmView(PasswordResetConfirmView):
-    template_name = 'user-management/password-reset-confirm.html'
-    success_url = reverse_lazy('complete')
-    post_reset_login = True
-    success_url = reverse_lazy('home')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user'] = self.user
-
-        return context
-
-
-class UserPasswordResetDoneView(PasswordResetDoneView):
-    template_name = 'user-management/password-reset-done.html'
-
 def logout(request):
     log_out(request)
     return_to = urlencode({'returnTo': request.build_absolute_uri('/')})

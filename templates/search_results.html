@@ -174,41 +174,6 @@
                 $('#loginModal').modal();
             }
         });
-        function getFormData(form){
-            var form_array = form.serializeArray();
-            var form_obj = {};
-
-            $.map(form_array, function(n, i){
-                form_obj[n['name']] = n['value'];
-            });
-
-            return form_obj;
-        }
-        $('#submit-login').on('click', function(e){
-            e.preventDefault();
-            var form_data = getFormData($('#login-form'));
-            $.post("{{ url('login') }}", form_data, function(resp){
-                if (resp['redirect_url']){
-                    window.location = resp['redirect_url'];
-                }
-                $('#login-form-errors').html(resp['errors']);
-            });
-        });
-        $('#submit-signup').on('click', function(e){
-            e.preventDefault();
-            var form_data = getFormData($('#signup-form'));
-            $.post('{{ url('signup') }}', form_data, function(resp){
-                if (resp['redirect_url']){
-                    window.location = resp['redirect_url'];
-                }
-
-                $.each(resp.errors, function(field, value){
-                    var selector = '#' + field + '-errors';
-                    $(selector).html(value[0]);
-                })
-            });
-        });
-
     {% else %}
         initSearch({{ request.GET.dict()|safe }});
     {% endif %}

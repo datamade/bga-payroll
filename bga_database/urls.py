@@ -38,10 +38,6 @@ urlpatterns = [
 
     # user auth
     path('logout/', payroll_views.logout, name='logout'),
-    path('signup/', payroll_views.UserSignupView.as_view(), name='signup'),
-    path('reset/', payroll_views.UserPasswordResetView.as_view(), name='reset'),
-    path('reset/<str:uidb64>/<str:token>/', payroll_views.UserPasswordResetConfirmView.as_view(), name='confirm'),
-    path('done/', payroll_views.UserPasswordResetDoneView.as_view(), name='done'),
     path('', include('django.contrib.auth.urls')),
     path('', include('social_django.urls')),
 
