@@ -112,7 +112,7 @@ class EmployerView(DetailView, ChartHelperMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        employee_salaries = self.object.employee_salaries
+        employee_salaries = self.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
         source_file = self.object.source_file(2017)
@@ -124,7 +124,7 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         context.update({
             'jobs': Job.of_employer(self.object.id, n=5),
-            'median_salary': self.median_entity_salary(),
+            'median_salary': self.median_entity_salary,
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
             'salary_percentile': self.salary_percentile(),
@@ -136,12 +136,47 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         return context
 
-    def median_entity_salary(self):
+    def get_median_entity_salary(self):
         q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
 
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
         return results['median']
+
+    @property
+    def _cache(self):
+        cached_keys = [
+          'employee_salaries',
+          'median_entity_salary',
+        ]
+
+        if not hasattr(self, '_kache'):
+            self._kache = cache.get_many(cached_keys)
+
+        return self._kache
+
+    @property
+    def employee_salaries(self):
+        data = self._cache.get('employee_salaries', [])
+
+        if not data:
+            data = self.object.employee_salaries
+            
+            cache.set('employee_salaries', data, CACHE_TIMEOUT)
+
+        return data
+
+    @property
+    def median_entity_salary(self):
+        data = self._cache.get('median_entity_salary', None)
+
+        if not data:
+            data = self.get_median_entity_salary()
+            
+            cache.set('median_entity_salary', data, CACHE_TIMEOUT)
+
+        return data
+
 
 
 class UnitView(EmployerView):
@@ -397,7 +432,8 @@ class UnitView(EmployerView):
         ]
 
         if not hasattr(self, '_kache'):
-            self._kache = cache.get_many(cached_keys)
+            self._kache = super()._cache
+            self._kache.update(cache.get_many(cached_keys))
 
         return self._kache
 
@@ -420,8 +456,8 @@ class DepartmentView(EmployerView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        department_expenditure = sum(self.object.employee_salaries)
-        parent_expediture = sum(self.object.parent.employee_salaries)
+        department_expenditure = self.department_expenditure
+        parent_expediture = self.parent_expenditure
         percentage = department_expenditure / parent_expediture
 
         context.update({
@@ -430,7 +466,7 @@ class DepartmentView(EmployerView):
 
         return context
 
-    def expenditure_percentile(self):
+    def get_expenditure_percentile(self):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
@@ -478,7 +514,7 @@ class DepartmentView(EmployerView):
 
         return result[0] * 100
 
-    def salary_percentile(self):
+    def get_salary_percentile(self):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
@@ -524,6 +560,63 @@ class DepartmentView(EmployerView):
             result = cursor.fetchone()
 
         return result[0] * 100
+
+    @property
+    def _cache(self):
+        cached_keys = [
+          'expenditure_percentile',
+          'salary_percentile',
+          'parent_expenditure',
+          'department_expenditure'
+        ]
+
+        if not hasattr(self, '_kache'):
+            self._kache = super()._cache
+            self._kache.update(cache.get_many(cached_keys))
+
+        return self._kache
+
+    def expenditure_percentile(self):
+        data = self._cache.get('expenditure_percentile', None)
+
+        if not data:
+            data = self.get_expenditure_percentile()
+
+            cache.set('expenditure_percentile', data, CACHE_TIMEOUT)
+        
+        return data
+
+    def salary_percentile(self):
+        data = self._cache.get('salary_percentile', None)
+
+        if not data:
+            data = self.get_salary_percentile()
+            
+            cache.set('salary_percentile', data, CACHE_TIMEOUT)
+
+        return data
+
+    @property
+    def department_expenditure(self):
+        data = self._cache.get('department_expenditure', None)
+
+        if not data:
+            data = sum(self.object.employee_salaries)
+
+            cache.set('department_expenditure', data, CACHE_TIMEOUT)
+
+        return data
+
+    @property
+    def parent_expenditure(self):
+        data = self._cache.get('parent_expenditure', None)
+
+        if not data:
+            data = sum(self.object.parent.employee_salaries)
+
+            cache.set('parent_expenditure', data, CACHE_TIMEOUT)
+
+        return data
 
 
 class PersonView(DetailView, ChartHelperMixin):
