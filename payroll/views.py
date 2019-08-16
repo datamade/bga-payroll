@@ -155,7 +155,7 @@ class UnitView(EmployerView):
         context.update({
             'department_salaries': department_statistics[:5],
             'population_percentile': self.population_percentile(),
-            'highest_spending_department': self.highest_spending_department(),
+            'highest_spending_department': self.highest_spending_department,
             'composition_json': self.composition_data(),
             'size_class': self.object.size_class,
         })
@@ -339,7 +339,7 @@ class UnitView(EmployerView):
 
         return result[0] * 100
 
-    def highest_spending_department(self):
+    def get_highest_spending_department(self):
         query = '''
           WITH all_department_expenditures AS (
             SELECT
@@ -389,6 +389,28 @@ class UnitView(EmployerView):
             'slug': slug,
         }
         return highest_spending_department
+
+    @property
+    def _cache(self):
+        cached_keys = [
+          'highest_spending_department',
+        ]
+
+        if not hasattr(self, '_kache'):
+            self._kache = cache.get_many(cached_keys)
+
+        return self._kache
+
+    @property
+    def highest_spending_department(self):
+        data = self._cache.get('highest_spending_department', None)
+
+        if not data:
+            data = self.get_highest_spending_department()
+            
+            cache.set('highest_spending_department', data, CACHE_TIMEOUT)
+
+        return data
 
 
 class DepartmentView(EmployerView):
