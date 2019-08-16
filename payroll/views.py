@@ -1,3 +1,4 @@
+import functools
 from itertools import chain
 import json
 
@@ -28,6 +29,25 @@ from payroll.search import PayrollSearchMixin, FacetingMixin, \
 from bga_database.local_settings import CACHE_SECRET_KEY
 
 CACHE_TIMEOUT = 86400 # 60 * 60 * 24
+
+
+def check_cache(func):
+    '''
+    Function decorator to first try getting data from self._cache
+    before executing.
+    '''
+    def _check_cache(self, *args, **kwargs):
+        key = func.__name__
+        data = self._cache.get(key, None)
+        cache_timeout = CACHE_TIMEOUT
+
+        if not data:
+            data = func(*args, **kwargs)
+            cache.set(key, data, cache_timeout)
+
+        return data
+    return _check_cache
+        
 
 class IndexView(TemplateView, ChartHelperMixin):
     template_name = 'index.html'
@@ -61,30 +81,18 @@ class IndexView(TemplateView, ChartHelperMixin):
         return self._kache
 
     @property
+    @check_cache
     def salary_count(self):
-        data = self._cache.get('salary_count', None)
-
-        if not data:
-            data = Salary.objects.all().count()
-            
-            cache.set('salary_count', data, CACHE_TIMEOUT)
-
-        return data
+        return Salary.objects.all().count()
 
     @property
+    @check_cache
     def binned_salaries(self):
-        data = self._cache.get('binned_salaries', [])
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT amount FROM payroll_salary')
+            all_salaries = [x[0] for x in cursor] 
 
-        if not data:
-            with connection.cursor() as cursor:
-                cursor.execute('SELECT amount FROM payroll_salary')
-                all_salaries = [x[0] for x in cursor] 
-
-            data = self.bin_salary_data(all_salaries)
-
-            cache.set('binned_salaries', data, CACHE_TIMEOUT)
-
-        return data
+        return self.bin_salary_data(all_salaries)
 
 
 class UserGuideView(TemplateView):
@@ -156,26 +164,14 @@ class EmployerView(DetailView, ChartHelperMixin):
         return self._kache
 
     @property
+    @check_cache
     def employee_salaries(self):
-        data = self._cache.get('employee_salaries', [])
-
-        if not data:
-            data = self.object.employee_salaries
-            
-            cache.set('employee_salaries', data, CACHE_TIMEOUT)
-
-        return data
+        return self.object.employee_salaries
 
     @property
+    @check_cache
     def median_entity_salary(self):
-        data = self._cache.get('median_entity_salary', None)
-
-        if not data:
-            data = self.get_median_entity_salary()
-            
-            cache.set('median_entity_salary', data, CACHE_TIMEOUT)
-
-        return data
+        return self.get_median_entity_salary()
 
 
 
@@ -438,15 +434,9 @@ class UnitView(EmployerView):
         return self._kache
 
     @property
+    @check_cache
     def highest_spending_department(self):
-        data = self._cache.get('highest_spending_department', None)
-
-        if not data:
-            data = self.get_highest_spending_department()
-            
-            cache.set('highest_spending_department', data, CACHE_TIMEOUT)
-
-        return data
+        return self.get_highest_spending_department()
 
 
 class DepartmentView(EmployerView):
@@ -576,47 +566,23 @@ class DepartmentView(EmployerView):
 
         return self._kache
 
+    @check_cache
     def expenditure_percentile(self):
-        data = self._cache.get('expenditure_percentile', None)
+        return self.get_expenditure_percentile()
 
-        if not data:
-            data = self.get_expenditure_percentile()
-
-            cache.set('expenditure_percentile', data, CACHE_TIMEOUT)
-        
-        return data
-
+    @check_cache
     def salary_percentile(self):
-        data = self._cache.get('salary_percentile', None)
-
-        if not data:
-            data = self.get_salary_percentile()
-            
-            cache.set('salary_percentile', data, CACHE_TIMEOUT)
-
-        return data
+        return self.get_salary_percentile()
 
     @property
+    @check_cache
     def department_expenditure(self):
-        data = self._cache.get('department_expenditure', None)
-
-        if not data:
-            data = sum(self.object.employee_salaries)
-
-            cache.set('department_expenditure', data, CACHE_TIMEOUT)
-
-        return data
+        return sum(self.object.employee_salaries)
 
     @property
+    @check_cache
     def parent_expenditure(self):
-        data = self._cache.get('parent_expenditure', None)
-
-        if not data:
-            data = sum(self.object.parent.employee_salaries)
-
-            cache.set('parent_expenditure', data, CACHE_TIMEOUT)
-
-        return data
+        return sum(self.object.parent.employee_salaries)
 
 
 class PersonView(DetailView, ChartHelperMixin):
@@ -712,37 +678,19 @@ class PersonView(DetailView, ChartHelperMixin):
         return self.current_job.salaries.get()
 
     @property
+    @check_cache
     def employer_percentile(self):
-        data = self._cache.get('employer_percentile')
-
-        if not data:
-            data = self.current_salary.employer_percentile
-
-            cache.set('employer_percentile', data, CACHE_TIMEOUT)
-
-        return data
+        return self.current_salary.employer_percentile
 
     @property
+    @check_cache
     def like_employer_percentile(self):
-        data = self._cache.get('like_employer_percentile')
-
-        if not data:
-            data = self.current_salary.like_employer_percentile
-
-            cache.set('like_employer_percentile', data, CACHE_TIMEOUT)
-
-        return data
+        return self.current_salary.like_employer_percentile
 
     @property
+    @check_cache
     def salary_data(self):
-        data = self._cache.get('salary_data')
-
-        if not data:
-            data = self.current_job.position.employer.employee_salaries
-
-            cache.set('salary_data', data, CACHE_TIMEOUT)
-
-        return data
+        return self.current_job.position.employer.employee_salaries
 
 
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
