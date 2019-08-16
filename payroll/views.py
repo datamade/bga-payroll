@@ -27,6 +27,7 @@ from payroll.search import PayrollSearchMixin, FacetingMixin, \
 
 from bga_database.local_settings import CACHE_SECRET_KEY
 
+CACHE_TIMEOUT = 86400 # 60 * 60 * 24
 
 class IndexView(TemplateView, ChartHelperMixin):
     template_name = 'index.html'
@@ -34,15 +35,11 @@ class IndexView(TemplateView, ChartHelperMixin):
     def get_context_data(self):
         context = super().get_context_data()
 
-        salary_count = Salary.objects.all().count()
+        salary_count = self.salary_count
         unit_count = Unit.objects.all().count()
         department_count = Department.objects.all().count()
 
-        with connection.cursor() as cursor:
-            cursor.execute('SELECT amount FROM payroll_salary')
-            all_salaries = [x[0] for x in cursor]
-
-        binned_salaries = self.bin_salary_data(all_salaries)
+        binned_salaries = self.binned_salaries
 
         context.update({
             'salary_count': salary_count,
@@ -52,6 +49,42 @@ class IndexView(TemplateView, ChartHelperMixin):
         })
 
         return context
+
+    @property
+    def _cache(self):
+        if not hasattr(self, '_kache'):
+            self._kache = cache.get_many([
+                'salary_count',
+                'binned_salaries'
+            ])
+
+        return self._kache
+
+    @property
+    def salary_count(self):
+        data = self._cache.get('salary_count', None)
+
+        if not data:
+            data = Salary.objects.all().count()
+            
+            cache.set('salary_count', data, CACHE_TIMEOUT)
+
+        return data
+
+    @property
+    def binned_salaries(self):
+        data = self._cache.get('binned_salaries', [])
+
+        if not data:
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT amount FROM payroll_salary')
+                all_salaries = [x[0] for x in cursor] 
+
+            data = self.bin_salary_data(all_salaries)
+
+            cache.set('binned_salaries', data, CACHE_TIMEOUT)
+
+        return data
 
 
 class UserGuideView(TemplateView):
