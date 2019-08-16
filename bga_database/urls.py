@@ -17,7 +17,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
-from django.views.decorators.cache import cache_page
 
 from data_import import views as import_views
 from payroll import views as payroll_views

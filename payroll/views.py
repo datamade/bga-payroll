@@ -1,4 +1,3 @@
-import functools
 from itertools import chain
 import json
 
@@ -28,7 +27,7 @@ from payroll.search import PayrollSearchMixin, FacetingMixin, \
 
 from bga_database.local_settings import CACHE_SECRET_KEY
 
-CACHE_TIMEOUT = 86400 # 60 * 60 * 24
+CACHE_TIMEOUT = 86400  # 60 * 60 * 24
 
 
 def check_cache(func):
@@ -42,12 +41,12 @@ def check_cache(func):
         cache_timeout = CACHE_TIMEOUT
 
         if not data:
-            data = func(*args, **kwargs)
+            data = func(self, *args, **kwargs)
             cache.set(key, data, cache_timeout)
 
         return data
     return _check_cache
-        
+
 
 class IndexView(TemplateView, ChartHelperMixin):
     template_name = 'index.html'
@@ -90,7 +89,7 @@ class IndexView(TemplateView, ChartHelperMixin):
     def binned_salaries(self):
         with connection.cursor() as cursor:
             cursor.execute('SELECT amount FROM payroll_salary')
-            all_salaries = [x[0] for x in cursor] 
+            all_salaries = [x[0] for x in cursor]
 
         return self.bin_salary_data(all_salaries)
 
@@ -154,8 +153,8 @@ class EmployerView(DetailView, ChartHelperMixin):
     @property
     def _cache(self):
         cached_keys = [
-          'employee_salaries',
-          'median_entity_salary',
+            'employee_salaries',
+            'median_entity_salary',
         ]
 
         if not hasattr(self, '_kache'):
@@ -172,7 +171,6 @@ class EmployerView(DetailView, ChartHelperMixin):
     @check_cache
     def median_entity_salary(self):
         return self.get_median_entity_salary()
-
 
 
 class UnitView(EmployerView):
@@ -424,7 +422,7 @@ class UnitView(EmployerView):
     @property
     def _cache(self):
         cached_keys = [
-          'highest_spending_department',
+            'highest_spending_department',
         ]
 
         if not hasattr(self, '_kache'):
@@ -554,10 +552,10 @@ class DepartmentView(EmployerView):
     @property
     def _cache(self):
         cached_keys = [
-          'expenditure_percentile',
-          'salary_percentile',
-          'parent_expenditure',
-          'department_expenditure'
+            'expenditure_percentile',
+            'salary_percentile',
+            'parent_expenditure',
+            'department_expenditure'
         ]
 
         if not hasattr(self, '_kache'):
@@ -659,9 +657,9 @@ class PersonView(DetailView, ChartHelperMixin):
     @property
     def _cache(self):
         cached_keys = [
-          'employer_percentile',
-          'like_employer_percentile',
-          'salary_data'
+            'employer_percentile',
+            'like_employer_percentile',
+            'salary_data'
         ]
 
         if not hasattr(self, '_kache'):
