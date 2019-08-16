@@ -634,8 +634,8 @@ class PersonView(DetailView, ChartHelperMixin):
         context = super().get_context_data(**kwargs)
 
         all_jobs = self.object.jobs.all()
-        current_job = self.object.most_recent_job
-        current_salary = current_job.salaries.get()
+        current_job = self.current_job
+        current_salary = self.current_salary
 
         salary_prefetch = Prefetch('salaries', to_attr='salary')
 
@@ -645,8 +645,8 @@ class PersonView(DetailView, ChartHelperMixin):
                                         .prefetch_related(salary_prefetch)\
                                         .order_by('-salaries__amount')
 
-        employer_percentile = current_salary.employer_percentile
-        like_employer_percentile = current_salary.like_employer_percentile
+        employer_percentile = self.employer_percentile
+        like_employer_percentile = self.like_employer_percentile
 
         current_employer = current_job.position.employer
 
@@ -663,7 +663,7 @@ class PersonView(DetailView, ChartHelperMixin):
         # Must be set for salary binning to work
         self.salary_amount = current_salary.amount
 
-        salary_data = current_job.position.employer.employee_salaries
+        salary_data = self.salary_data
         binned_salary_data = self.bin_salary_data(salary_data)
 
         source_file = self.object.source_file(2017)
@@ -689,6 +689,60 @@ class PersonView(DetailView, ChartHelperMixin):
         })
 
         return context
+
+    @property
+    def _cache(self):
+        cached_keys = [
+          'employer_percentile',
+          'like_employer_percentile',
+          'salary_data'
+        ]
+
+        if not hasattr(self, '_kache'):
+            self._kache = cache.get_many(cached_keys)
+
+        return self._kache
+
+    @property
+    def current_job(self):
+        return self.object.most_recent_job
+
+    @property
+    def current_salary(self):
+        return self.current_job.salaries.get()
+
+    @property
+    def employer_percentile(self):
+        data = self._cache.get('employer_percentile')
+
+        if not data:
+            data = self.current_salary.employer_percentile
+
+            cache.set('employer_percentile', data, CACHE_TIMEOUT)
+
+        return data
+
+    @property
+    def like_employer_percentile(self):
+        data = self._cache.get('like_employer_percentile')
+
+        if not data:
+            data = self.current_salary.like_employer_percentile
+
+            cache.set('like_employer_percentile', data, CACHE_TIMEOUT)
+
+        return data
+
+    @property
+    def salary_data(self):
+        data = self._cache.get('salary_data')
+
+        if not data:
+            data = self.current_job.position.employer.employee_salaries
+
+            cache.set('salary_data', data, CACHE_TIMEOUT)
+
+        return data
 
 
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
