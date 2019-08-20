@@ -20,7 +20,7 @@ from django.contrib import messages
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
-from payroll.decorators import check_cache
+from payroll.decorators import check_cache, check_detail_cache
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.forms import SignupForm
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
@@ -153,27 +153,27 @@ class EmployerView(DetailView, ChartHelperMixin):
         return self._kache
 
     @property
-    @check_cache
+    @check_detail_cache
     def employee_salaries(self):
         return self.object.employee_salaries
 
     @property
-    @check_cache
+    @check_detail_cache
     def expenditure_percentile(self):
         return self.get_expenditure_percentile()
 
     @property
-    @check_cache
+    @check_detail_cache
     def jobs(self):
         return Job.of_employer(self.object.id, n=5)
 
     @property
-    @check_cache
+    @check_detail_cache
     def median_entity_salary(self):
         return self.get_median_entity_salary()
 
     @property
-    @check_cache
+    @check_detail_cache
     def salary_percentile(self):
         return self.get_salary_percentile()
 
@@ -440,12 +440,12 @@ class UnitView(EmployerView):
         return self._kache
 
     @property
-    @check_cache
+    @check_detail_cache
     def aggregate_department_statistics(self):
         return self.get_aggregate_department_statistics()
 
     @property
-    @check_cache
+    @check_detail_cache
     def highest_spending_department(self):
         return self.get_highest_spending_department()
 
@@ -580,22 +580,22 @@ class DepartmentView(EmployerView):
         return self._kache
 
     @property
-    @check_cache
+    @check_detail_cache
     def department_expenditure(self):
         return sum(self.object.employee_salaries)
 
     @property
-    @check_cache
+    @check_detail_cache
     def expenditure_percentile(self):
         return self.get_expenditure_percentile()
 
     @property
-    @check_cache
+    @check_detail_cache
     def parent_expenditure(self):
         return sum(self.object.parent.employee_salaries)
 
     @property
-    @check_cache
+    @check_detail_cache
     def salary_percentile(self):
         return self.get_salary_percentile()
 
@@ -695,17 +695,17 @@ class PersonView(DetailView, ChartHelperMixin):
         return self.current_job.salaries.get()
 
     @property
-    @check_cache
+    @check_detail_cache
     def employer_percentile(self):
         return self.current_salary.employer_percentile
 
     @property
-    @check_cache
+    @check_detail_cache
     def like_employer_percentile(self):
         return self.current_salary.like_employer_percentile
 
     @property
-    @check_cache
+    @check_detail_cache
     def salary_data(self):
         return self.current_job.position.employer.employee_salaries
 
