@@ -53,8 +53,8 @@ class IndexView(TemplateView, ChartHelperMixin):
     @property
     def _cache(self):
         cached_keys = [
-            'salary_count',
             'binned_salaries',
+            'salary_count',
         ]
         cache_prefix = 'index'
         keys = [cache_prefix + '_' + k for k in cached_keys]
@@ -66,17 +66,17 @@ class IndexView(TemplateView, ChartHelperMixin):
 
     @property
     @check_cache(cache_prefix='index')
-    def salary_count(self):
-        return Salary.objects.all().count()
-
-    @property
-    @check_cache(cache_prefix='index')
     def binned_salaries(self):
         with connection.cursor() as cursor:
             cursor.execute('SELECT amount FROM payroll_salary')
             all_salaries = [x[0] for x in cursor]
 
         return self.bin_salary_data(all_salaries)
+
+    @property
+    @check_cache(cache_prefix='index')
+    def salary_count(self):
+        return Salary.objects.all().count()
 
 
 class UserGuideView(TemplateView):
@@ -139,10 +139,10 @@ class EmployerView(DetailView, ChartHelperMixin):
     def _cache(self):
         cached_keys = [
             'employee_salaries',
-            'median_entity_salary',
-            'jobs',
-            'salary_percentile',
             'expenditure_percentile',
+            'jobs',
+            'median_entity_salary',
+            'salary_percentile',
         ]
         cache_prefix = str(self.object.id)
         keys = [cache_prefix + '_' + k for k in cached_keys]
@@ -159,8 +159,8 @@ class EmployerView(DetailView, ChartHelperMixin):
 
     @property
     @check_cache
-    def median_entity_salary(self):
-        return self.get_median_entity_salary()
+    def expenditure_percentile(self):
+        return self.get_expenditure_percentile()
 
     @property
     @check_cache
@@ -169,13 +169,13 @@ class EmployerView(DetailView, ChartHelperMixin):
 
     @property
     @check_cache
-    def salary_percentile(self):
-        return self.get_salary_percentile()
+    def median_entity_salary(self):
+        return self.get_median_entity_salary()
 
     @property
     @check_cache
-    def expenditure_percentile(self):
-        return self.get_expenditure_percentile()
+    def salary_percentile(self):
+        return self.get_salary_percentile()
 
 
 class UnitView(EmployerView):
@@ -427,8 +427,8 @@ class UnitView(EmployerView):
     @property
     def _cache(self):
         cached_keys = [
-            'highest_spending_department',
             'aggregate_department_statistics',
+            'highest_spending_department',
         ]
         cache_prefix = str(self.object.id)
         keys = [cache_prefix + '_' + k for k in cached_keys]
@@ -441,13 +441,13 @@ class UnitView(EmployerView):
 
     @property
     @check_cache
-    def highest_spending_department(self):
-        return self.get_highest_spending_department()
+    def aggregate_department_statistics(self):
+        return self.get_aggregate_department_statistics()
 
     @property
     @check_cache
-    def aggregate_department_statistics(self):
-        return self.get_aggregate_department_statistics()
+    def highest_spending_department(self):
+        return self.get_highest_spending_department()
 
 
 class DepartmentView(EmployerView):
@@ -565,10 +565,10 @@ class DepartmentView(EmployerView):
     @property
     def _cache(self):
         cached_keys = [
-            'salary_percentile',
+            'department_expenditure',
             'expenditure_percentile',
             'parent_expenditure',
-            'department_expenditure'
+            'salary_percentile',
         ]
         cache_prefix = str(self.object.id)
         keys = [cache_prefix + '_' + k for k in cached_keys]
@@ -581,8 +581,8 @@ class DepartmentView(EmployerView):
 
     @property
     @check_cache
-    def salary_percentile(self):
-        return self.get_salary_percentile()
+    def department_expenditure(self):
+        return sum(self.object.employee_salaries)
 
     @property
     @check_cache
@@ -591,13 +591,13 @@ class DepartmentView(EmployerView):
 
     @property
     @check_cache
-    def department_expenditure(self):
-        return sum(self.object.employee_salaries)
+    def parent_expenditure(self):
+        return sum(self.object.parent.employee_salaries)
 
     @property
     @check_cache
-    def parent_expenditure(self):
-        return sum(self.object.parent.employee_salaries)
+    def salary_percentile(self):
+        return self.get_salary_percentile()
 
 
 class PersonView(DetailView, ChartHelperMixin):
@@ -676,7 +676,7 @@ class PersonView(DetailView, ChartHelperMixin):
         cached_keys = [
             'employer_percentile',
             'like_employer_percentile',
-            'salary_data'
+            'salary_data',
         ]
         cache_prefix = str(self.object.id)
         keys = [cache_prefix + '_' + k for k in cached_keys]
