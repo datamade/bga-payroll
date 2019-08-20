@@ -19,8 +19,8 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
-from payroll.charts import ChartHelperMixin
-from payroll.decorators import check_cache, check_detail_cache
+from payroll.decorators import check_cache
+from payroll.mixins import CacheMixin, ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.forms import SignupForm
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
@@ -29,8 +29,15 @@ from payroll.search import PayrollSearchMixin, FacetingMixin, \
 from bga_database.local_settings import CACHE_SECRET_KEY
 
 
-class IndexView(TemplateView, ChartHelperMixin):
+class IndexView(TemplateView, ChartHelperMixin, CacheMixin):
     template_name = 'index.html'
+
+    # CacheMixin attributes
+    cache_keys = [
+        'binned_salaries',
+        'salary_count',
+    ]
+    cache_prefix = 'index'
 
     def get_context_data(self):
         context = super().get_context_data()
@@ -51,21 +58,7 @@ class IndexView(TemplateView, ChartHelperMixin):
         return context
 
     @property
-    def _cache(self):
-        cached_keys = [
-            'binned_salaries',
-            'salary_count',
-        ]
-        cache_prefix = 'index'
-        keys = [cache_prefix + '_' + k for k in cached_keys]
-
-        if not hasattr(self, '_kache'):
-            self._kache = cache.get_many(keys)
-
-        return self._kache
-
-    @property
-    @check_cache(cache_prefix='index')
+    @check_cache
     def binned_salaries(self):
         with connection.cursor() as cursor:
             cursor.execute('SELECT amount FROM payroll_salary')
@@ -74,7 +67,7 @@ class IndexView(TemplateView, ChartHelperMixin):
         return self.bin_salary_data(all_salaries)
 
     @property
-    @check_cache(cache_prefix='index')
+    @check_cache
     def salary_count(self):
         return Salary.objects.all().count()
 
@@ -87,8 +80,17 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-class EmployerView(DetailView, ChartHelperMixin):
+class EmployerView(DetailView, ChartHelperMixin, CacheMixin):
     context_object_name = 'entity'
+
+    # CacheMixin attribute
+    cache_keys = [
+        'employee_salaries',
+        'expenditure_percentile',
+        'jobs',
+        'median_entity_salary',
+        'salary_percentile',
+    ]
 
     # from_clause connects salaries and employers through a series of joins.
     from_clause = '''
@@ -135,45 +137,33 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         return results['median']
 
+    # CacheMixin attribute
     @property
-    def _cache(self):
-        cached_keys = [
-            'employee_salaries',
-            'expenditure_percentile',
-            'jobs',
-            'median_entity_salary',
-            'salary_percentile',
-        ]
-        cache_prefix = str(self.object.id)
-        keys = [cache_prefix + '_' + k for k in cached_keys]
-
-        if not hasattr(self, '_kache'):
-            self._kache = cache.get_many(keys)
-
-        return self._kache
+    def cache_prefix(self):
+        return str(self.object.id)
 
     @property
-    @check_detail_cache
+    @check_cache
     def employee_salaries(self):
         return self.object.employee_salaries
 
     @property
-    @check_detail_cache
+    @check_cache
     def expenditure_percentile(self):
         return self.get_expenditure_percentile()
 
     @property
-    @check_detail_cache
+    @check_cache
     def jobs(self):
         return Job.of_employer(self.object.id, n=5)
 
     @property
-    @check_detail_cache
+    @check_cache
     def median_entity_salary(self):
         return self.get_median_entity_salary()
 
     @property
-    @check_detail_cache
+    @check_cache
     def salary_percentile(self):
         return self.get_salary_percentile()
 
@@ -181,6 +171,14 @@ class EmployerView(DetailView, ChartHelperMixin):
 class UnitView(EmployerView):
     model = Unit
     template_name = 'unit.html'
+
+    def __init__(self):
+        super(EmployerView, self).__init__()
+        self.cache_keys += [
+            'aggregate_department_statistics',
+            'highest_spending_department',
+        ]
+        self.cache_keys = list(set(self.cache_keys))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -425,27 +423,12 @@ class UnitView(EmployerView):
         return highest_spending_department
 
     @property
-    def _cache(self):
-        cached_keys = [
-            'aggregate_department_statistics',
-            'highest_spending_department',
-        ]
-        cache_prefix = str(self.object.id)
-        keys = [cache_prefix + '_' + k for k in cached_keys]
-
-        if not hasattr(self, '_kache'):
-            self._kache = super()._cache
-            self._kache.update(cache.get_many(keys))
-
-        return self._kache
-
-    @property
-    @check_detail_cache
+    @check_cache
     def aggregate_department_statistics(self):
         return self.get_aggregate_department_statistics()
 
     @property
-    @check_detail_cache
+    @check_cache
     def highest_spending_department(self):
         return self.get_highest_spending_department()
 
@@ -453,6 +436,16 @@ class UnitView(EmployerView):
 class DepartmentView(EmployerView):
     model = Department
     template_name = 'department.html'
+
+    def __init__(self):
+        super(EmployerView, self).__init__()
+        self.cache_keys += [
+            'department_expenditure',
+            'expenditure_percentile',
+            'parent_expenditure',
+            'salary_percentile',
+        ]
+        self.cache_keys = list(set(self.cache_keys))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -563,47 +556,41 @@ class DepartmentView(EmployerView):
         return result[0] * 100
 
     @property
-    def _cache(self):
-        cached_keys = [
-            'department_expenditure',
-            'expenditure_percentile',
-            'parent_expenditure',
-            'salary_percentile',
-        ]
-        cache_prefix = str(self.object.id)
-        keys = [cache_prefix + '_' + k for k in cached_keys]
-
-        if not hasattr(self, '_kache'):
-            self._kache = super()._cache
-            self._kache.update(cache.get_many(keys))
-
-        return self._kache
-
-    @property
-    @check_detail_cache
+    @check_cache
     def department_expenditure(self):
         return sum(self.object.employee_salaries)
 
     @property
-    @check_detail_cache
+    @check_cache
     def expenditure_percentile(self):
         return self.get_expenditure_percentile()
 
     @property
-    @check_detail_cache
+    @check_cache
     def parent_expenditure(self):
         return sum(self.object.parent.employee_salaries)
 
     @property
-    @check_detail_cache
+    @check_cache
     def salary_percentile(self):
         return self.get_salary_percentile()
 
 
-class PersonView(DetailView, ChartHelperMixin):
+class PersonView(DetailView, ChartHelperMixin, CacheMixin):
     model = Person
     context_object_name = 'entity'
     template_name = 'person.html'
+
+    # CacheMixin attributes
+    cache_keys = [
+        'employer_percentile',
+        'like_employer_percentile',
+        'salary_data',
+    ]
+
+    @property
+    def cache_prefix(self):
+        return str(self.object.id)
 
     def _get_bar_color(self, lower, upper):
         if lower < int(self.salary_amount) <= upper:
@@ -672,21 +659,6 @@ class PersonView(DetailView, ChartHelperMixin):
         return context
 
     @property
-    def _cache(self):
-        cached_keys = [
-            'employer_percentile',
-            'like_employer_percentile',
-            'salary_data',
-        ]
-        cache_prefix = str(self.object.id)
-        keys = [cache_prefix + '_' + k for k in cached_keys]
-
-        if not hasattr(self, '_kache'):
-            self._kache = cache.get_many(keys)
-
-        return self._kache
-
-    @property
     def current_job(self):
         return self.object.most_recent_job
 
@@ -695,17 +667,17 @@ class PersonView(DetailView, ChartHelperMixin):
         return self.current_job.salaries.get()
 
     @property
-    @check_detail_cache
+    @check_cache
     def employer_percentile(self):
         return self.current_salary.employer_percentile
 
     @property
-    @check_detail_cache
+    @check_cache
     def like_employer_percentile(self):
         return self.current_salary.like_employer_percentile
 
     @property
-    @check_detail_cache
+    @check_cache
     def salary_data(self):
         return self.current_job.position.employer.employee_salaries
 

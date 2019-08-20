@@ -1,8 +1,40 @@
 import numpy as np
 
+from django.core.cache import cache
+
 from bga_database.chart_settings import BAR_DEFAULT, DISTRIBUTION_MAX, \
     DISTRIBUTION_BIN_NUM
 from payroll.utils import format_ballpark_number
+
+
+class CacheMixin(object):
+    """
+    Integrate a low-level cache to work with payroll.decorators.check_cache.
+
+    Required attributes:
+
+        cache_keys:
+            The keys you're caching. Should be accessed via a class method of
+            the same name.
+
+    Optional attributes:
+
+        cache_prefix:
+            Prefix the cache key with a prefix unique to the view.
+
+    """
+
+    @property
+    def _cache(self):
+        if not hasattr(self, '_kache'):
+            if hasattr(self, 'cache_prefix'):
+                keys = [self.cache_prefix + '_' + k for k in self.cache_keys]
+            else:
+                keys = self.cache_keys
+
+            self._kache = cache.get_many(keys)
+
+        return self._kache
 
 
 class ChartHelperMixin(object):

@@ -25,14 +25,15 @@ def check_cache(func=None, *, cache_object=_get_cache_object, cache_prefix=None,
     @wraps(func)
     def _check_cache(self, *args, **kwargs):
         # set key
-        if callable(cache_prefix):
-            key = cache_prefix(self) + '_' + func.__name__
-        elif cache_prefix:
+        if cache_prefix:
             key = cache_prefix + '_' + func.__name__
+        elif getattr(self, 'cache_prefix'):
+            # get cache_prefix from CacheMixin attribute
+            key = getattr(self, 'cache_prefix') + '_' + func.__name__
         else:
             key = func.__name__
 
-        # set cache_object
+        # set _cache
         if callable(cache_object):
             _cache = cache_object(self)
         elif cache_object:
@@ -46,14 +47,3 @@ def check_cache(func=None, *, cache_object=_get_cache_object, cache_prefix=None,
 
         return data
     return _check_cache
-
-
-def _get_view_id_str(view):
-    return str(view.object.id)
-
-
-def check_detail_cache(func=None, *, cache_object=_get_cache_object, cache_prefix=_get_view_id_str, cache_timeout=CACHE_TIMEOUT):
-    '''
-    Call check_cache, setting cache_prefix to a default value of get_view_id_str.
-    '''
-    return check_cache(func, cache_object=cache_object, cache_prefix=cache_prefix, cache_timeout=cache_timeout)
