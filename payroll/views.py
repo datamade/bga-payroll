@@ -52,21 +52,25 @@ class IndexView(TemplateView, ChartHelperMixin):
 
     @property
     def _cache(self):
+        cached_keys = [
+            'salary_count',
+            'binned_salaries',
+        ]
+        cache_prefix = 'index'
+        keys = [cache_prefix + '_' + k for k in cached_keys]
+
         if not hasattr(self, '_kache'):
-            self._kache = cache.get_many([
-                'salary_count',
-                'binned_salaries'
-            ])
+            self._kache = cache.get_many(keys)
 
         return self._kache
 
     @property
-    @check_cache
+    @check_cache(cache_prefix='index')
     def salary_count(self):
         return Salary.objects.all().count()
 
     @property
-    @check_cache
+    @check_cache(cache_prefix='index')
     def binned_salaries(self):
         with connection.cursor() as cursor:
             cursor.execute('SELECT amount FROM payroll_salary')
@@ -140,9 +144,11 @@ class EmployerView(DetailView, ChartHelperMixin):
             'salary_percentile',
             'expenditure_percentile',
         ]
+        cache_prefix = str(self.object.id)
+        keys = [cache_prefix + '_' + k for k in cached_keys]
 
         if not hasattr(self, '_kache'):
-            self._kache = cache.get_many(cached_keys)
+            self._kache = cache.get_many(keys)
 
         return self._kache
 
@@ -424,10 +430,12 @@ class UnitView(EmployerView):
             'highest_spending_department',
             'aggregate_department_statistics',
         ]
+        cache_prefix = str(self.object.id)
+        keys = [cache_prefix + '_' + k for k in cached_keys]
 
         if not hasattr(self, '_kache'):
             self._kache = super()._cache
-            self._kache.update(cache.get_many(cached_keys))
+            self._kache.update(cache.get_many(keys))
 
         return self._kache
 
@@ -562,10 +570,12 @@ class DepartmentView(EmployerView):
             'parent_expenditure',
             'department_expenditure'
         ]
+        cache_prefix = str(self.object.id)
+        keys = [cache_prefix + '_' + k for k in cached_keys]
 
         if not hasattr(self, '_kache'):
             self._kache = super()._cache
-            self._kache.update(cache.get_many(cached_keys))
+            self._kache.update(cache.get_many(keys))
 
         return self._kache
 
@@ -668,9 +678,11 @@ class PersonView(DetailView, ChartHelperMixin):
             'like_employer_percentile',
             'salary_data'
         ]
+        cache_prefix = str(self.object.id)
+        keys = [cache_prefix + '_' + k for k in cached_keys]
 
         if not hasattr(self, '_kache'):
-            self._kache = cache.get_many(cached_keys)
+            self._kache = cache.get_many(keys)
 
         return self._kache
 
