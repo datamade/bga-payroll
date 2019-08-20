@@ -111,12 +111,12 @@ class EmployerView(DetailView, ChartHelperMixin):
             source_link = None
 
         context.update({
-            'jobs': Job.of_employer(self.object.id, n=5),
+            'jobs': self.jobs,
             'median_salary': self.median_entity_salary,
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
-            'salary_percentile': self.salary_percentile(),
-            'expenditure_percentile': self.expenditure_percentile(),
+            'salary_percentile': self.salary_percentile,
+            'expenditure_percentile': self.expenditure_percentile,
             'employee_salary_json': json.dumps(binned_employee_salaries),
             'data_year': 2017,
             'source_link': source_link,
@@ -136,6 +136,9 @@ class EmployerView(DetailView, ChartHelperMixin):
         cached_keys = [
             'employee_salaries',
             'median_entity_salary',
+            'jobs',
+            'salary_percentile',
+            'expenditure_percentile',
         ]
 
         if not hasattr(self, '_kache'):
@@ -153,6 +156,21 @@ class EmployerView(DetailView, ChartHelperMixin):
     def median_entity_salary(self):
         return self.get_median_entity_salary()
 
+    @property
+    @check_cache
+    def jobs(self):
+        return Job.of_employer(self.object.id, n=5)
+
+    @property
+    @check_cache
+    def salary_percentile(self):
+        return self.get_salary_percentile()
+
+    @property
+    @check_cache
+    def expenditure_percentile(self):
+        return self.get_expenditure_percentile()
+
 
 class UnitView(EmployerView):
     model = Unit
@@ -160,7 +178,7 @@ class UnitView(EmployerView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        department_statistics = self.aggregate_department_statistics()
+        department_statistics = self.aggregate_department_statistics
 
         context.update({
             'department_salaries': department_statistics[:5],
@@ -172,7 +190,7 @@ class UnitView(EmployerView):
 
         return context
 
-    def aggregate_department_statistics(self):
+    def get_aggregate_department_statistics(self):
         query = '''
             SELECT
               employer.name,
@@ -209,7 +227,7 @@ class UnitView(EmployerView):
         '''
         Returns the data required to make the composition chart of top spending departments
         '''
-        all_departments = self.aggregate_department_statistics()
+        all_departments = self.aggregate_department_statistics
         top_departments = all_departments[:5]
 
         composition_json = []
@@ -258,7 +276,7 @@ class UnitView(EmployerView):
 
         return result[0] * 100
 
-    def expenditure_percentile(self):
+    def get_expenditure_percentile(self):
         if self.object.is_unclassified:
             return 'N/A'
 
@@ -304,7 +322,7 @@ class UnitView(EmployerView):
 
         return result[0] * 100
 
-    def salary_percentile(self):
+    def get_salary_percentile(self):
         if self.object.is_unclassified:
             return 'N/A'
 
@@ -404,6 +422,7 @@ class UnitView(EmployerView):
     def _cache(self):
         cached_keys = [
             'highest_spending_department',
+            'aggregate_department_statistics',
         ]
 
         if not hasattr(self, '_kache'):
@@ -416,6 +435,11 @@ class UnitView(EmployerView):
     @check_cache
     def highest_spending_department(self):
         return self.get_highest_spending_department()
+
+    @property
+    @check_cache
+    def aggregate_department_statistics(self):
+        return self.get_aggregate_department_statistics()
 
 
 class DepartmentView(EmployerView):
@@ -533,8 +557,8 @@ class DepartmentView(EmployerView):
     @property
     def _cache(self):
         cached_keys = [
-            'expenditure_percentile',
             'salary_percentile',
+            'expenditure_percentile',
             'parent_expenditure',
             'department_expenditure'
         ]
@@ -545,13 +569,15 @@ class DepartmentView(EmployerView):
 
         return self._kache
 
-    @check_cache
-    def expenditure_percentile(self):
-        return self.get_expenditure_percentile()
-
+    @property
     @check_cache
     def salary_percentile(self):
         return self.get_salary_percentile()
+
+    @property
+    @check_cache
+    def expenditure_percentile(self):
+        return self.get_expenditure_percentile()
 
     @property
     @check_cache
