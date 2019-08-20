@@ -20,32 +20,13 @@ from django.contrib import messages
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
+from payroll.decorators import check_cache
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.forms import SignupForm
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
 from bga_database.local_settings import CACHE_SECRET_KEY
-
-CACHE_TIMEOUT = 86400  # 60 * 60 * 24
-
-
-def check_cache(func):
-    '''
-    Function decorator to first try getting data from self._cache
-    before executing.
-    '''
-    def _check_cache(self, *args, **kwargs):
-        key = func.__name__
-        data = self._cache.get(key, None)
-        cache_timeout = CACHE_TIMEOUT
-
-        if not data:
-            data = func(self, *args, **kwargs)
-            cache.set(key, data, cache_timeout)
-
-        return data
-    return _check_cache
 
 
 class IndexView(TemplateView, ChartHelperMixin):
