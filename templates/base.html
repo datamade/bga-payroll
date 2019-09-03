@@ -76,16 +76,7 @@
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/user-guide/"><i class="fas fa-question fa-fw"></i> User Guide</a>
-          </li> 
-          {% if not request.user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url('social:begin', args=('auth0',)) }}?mode=login">Log in</a>
           </li>
-          {% else %}
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url('logout') }}">Log out</a>
-          </li>
-          {% endif %}
         </ul>
       </div>
     </nav>
