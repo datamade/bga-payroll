@@ -19,7 +19,8 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
-from payroll.charts import ChartHelperMixin
+from payroll.decorators import check_cache
+from payroll.mixins import CacheMixin, ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.forms import SignupForm
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
@@ -28,21 +29,24 @@ from payroll.search import PayrollSearchMixin, FacetingMixin, \
 from bga_database.local_settings import CACHE_SECRET_KEY
 
 
-class IndexView(TemplateView, ChartHelperMixin):
+class IndexView(TemplateView, ChartHelperMixin, CacheMixin):
     template_name = 'index.html'
+
+    # CacheMixin attributes
+    cache_keys = [
+        'binned_salaries',
+        'salary_count',
+    ]
+    cache_prefix = 'index'
 
     def get_context_data(self):
         context = super().get_context_data()
 
-        salary_count = Salary.objects.all().count()
+        salary_count = self.salary_count
         unit_count = Unit.objects.all().count()
         department_count = Department.objects.all().count()
 
-        with connection.cursor() as cursor:
-            cursor.execute('SELECT amount FROM payroll_salary')
-            all_salaries = [x[0] for x in cursor]
-
-        binned_salaries = self.bin_salary_data(all_salaries)
+        binned_salaries = self.binned_salaries
 
         context.update({
             'salary_count': salary_count,
@@ -53,6 +57,20 @@ class IndexView(TemplateView, ChartHelperMixin):
 
         return context
 
+    @property
+    @check_cache
+    def binned_salaries(self):
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT amount FROM payroll_salary')
+            all_salaries = [x[0] for x in cursor]
+
+        return self.bin_salary_data(all_salaries)
+
+    @property
+    @check_cache
+    def salary_count(self):
+        return Salary.objects.all().count()
+
 
 class UserGuideView(TemplateView):
     template_name = 'user_guide.html'
@@ -62,8 +80,17 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-class EmployerView(DetailView, ChartHelperMixin):
+class EmployerView(DetailView, ChartHelperMixin, CacheMixin):
     context_object_name = 'entity'
+
+    # CacheMixin attribute
+    cache_keys = [
+        'employee_salaries',
+        'expenditure_percentile',
+        'jobs',
+        'median_entity_salary',
+        'salary_percentile',
+    ]
 
     # from_clause connects salaries and employers through a series of joins.
     from_clause = '''
@@ -79,7 +106,7 @@ class EmployerView(DetailView, ChartHelperMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        employee_salaries = self.object.employee_salaries
+        employee_salaries = self.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
         source_file = self.object.source_file(2017)
@@ -90,12 +117,12 @@ class EmployerView(DetailView, ChartHelperMixin):
             source_link = None
 
         context.update({
-            'jobs': Job.of_employer(self.object.id, n=5),
-            'median_salary': self.median_entity_salary(),
+            'jobs': self.jobs,
+            'median_salary': self.median_entity_salary,
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
-            'salary_percentile': self.salary_percentile(),
-            'expenditure_percentile': self.expenditure_percentile(),
+            'salary_percentile': self.salary_percentile,
+            'expenditure_percentile': self.expenditure_percentile,
             'employee_salary_json': json.dumps(binned_employee_salaries),
             'data_year': 2017,
             'source_link': source_link,
@@ -103,33 +130,71 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         return context
 
-    def median_entity_salary(self):
+    def get_median_entity_salary(self):
         q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
 
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
         return results['median']
 
+    # CacheMixin attribute
+    @property
+    def cache_prefix(self):
+        return str(self.object.id)
+
+    @property
+    @check_cache
+    def employee_salaries(self):
+        return self.object.employee_salaries
+
+    @property
+    @check_cache
+    def expenditure_percentile(self):
+        return self.get_expenditure_percentile()
+
+    @property
+    @check_cache
+    def jobs(self):
+        return Job.of_employer(self.object.id, n=5)
+
+    @property
+    @check_cache
+    def median_entity_salary(self):
+        return self.get_median_entity_salary()
+
+    @property
+    @check_cache
+    def salary_percentile(self):
+        return self.get_salary_percentile()
+
 
 class UnitView(EmployerView):
     model = Unit
     template_name = 'unit.html'
 
+    def __init__(self):
+        super(EmployerView, self).__init__()
+        self.cache_keys += [
+            'aggregate_department_statistics',
+            'highest_spending_department',
+        ]
+        self.cache_keys = list(set(self.cache_keys))
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        department_statistics = self.aggregate_department_statistics()
+        department_statistics = self.aggregate_department_statistics
 
         context.update({
             'department_salaries': department_statistics[:5],
             'population_percentile': self.population_percentile(),
-            'highest_spending_department': self.highest_spending_department(),
+            'highest_spending_department': self.highest_spending_department,
             'composition_json': self.composition_data(),
             'size_class': self.object.size_class,
         })
 
         return context
 
-    def aggregate_department_statistics(self):
+    def get_aggregate_department_statistics(self):
         query = '''
             SELECT
               employer.name,
@@ -166,7 +231,7 @@ class UnitView(EmployerView):
         '''
         Returns the data required to make the composition chart of top spending departments
         '''
-        all_departments = self.aggregate_department_statistics()
+        all_departments = self.aggregate_department_statistics
         top_departments = all_departments[:5]
 
         composition_json = []
@@ -215,7 +280,7 @@ class UnitView(EmployerView):
 
         return result[0] * 100
 
-    def expenditure_percentile(self):
+    def get_expenditure_percentile(self):
         if self.object.is_unclassified:
             return 'N/A'
 
@@ -261,7 +326,7 @@ class UnitView(EmployerView):
 
         return result[0] * 100
 
-    def salary_percentile(self):
+    def get_salary_percentile(self):
         if self.object.is_unclassified:
             return 'N/A'
 
@@ -306,7 +371,7 @@ class UnitView(EmployerView):
 
         return result[0] * 100
 
-    def highest_spending_department(self):
+    def get_highest_spending_department(self):
         query = '''
           WITH all_department_expenditures AS (
             SELECT
@@ -357,16 +422,36 @@ class UnitView(EmployerView):
         }
         return highest_spending_department
 
+    @property
+    @check_cache
+    def aggregate_department_statistics(self):
+        return self.get_aggregate_department_statistics()
+
+    @property
+    @check_cache
+    def highest_spending_department(self):
+        return self.get_highest_spending_department()
+
 
 class DepartmentView(EmployerView):
     model = Department
     template_name = 'department.html'
 
+    def __init__(self):
+        super(EmployerView, self).__init__()
+        self.cache_keys += [
+            'department_expenditure',
+            'expenditure_percentile',
+            'parent_expenditure',
+            'salary_percentile',
+        ]
+        self.cache_keys = list(set(self.cache_keys))
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        department_expenditure = sum(self.object.employee_salaries)
-        parent_expediture = sum(self.object.parent.employee_salaries)
+        department_expenditure = self.department_expenditure
+        parent_expediture = self.parent_expenditure
         percentage = department_expenditure / parent_expediture
 
         context.update({
@@ -375,7 +460,7 @@ class DepartmentView(EmployerView):
 
         return context
 
-    def expenditure_percentile(self):
+    def get_expenditure_percentile(self):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
@@ -423,7 +508,7 @@ class DepartmentView(EmployerView):
 
         return result[0] * 100
 
-    def salary_percentile(self):
+    def get_salary_percentile(self):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
@@ -470,11 +555,42 @@ class DepartmentView(EmployerView):
 
         return result[0] * 100
 
+    @property
+    @check_cache
+    def department_expenditure(self):
+        return sum(self.object.employee_salaries)
 
-class PersonView(DetailView, ChartHelperMixin):
+    @property
+    @check_cache
+    def expenditure_percentile(self):
+        return self.get_expenditure_percentile()
+
+    @property
+    @check_cache
+    def parent_expenditure(self):
+        return sum(self.object.parent.employee_salaries)
+
+    @property
+    @check_cache
+    def salary_percentile(self):
+        return self.get_salary_percentile()
+
+
+class PersonView(DetailView, ChartHelperMixin, CacheMixin):
     model = Person
     context_object_name = 'entity'
     template_name = 'person.html'
+
+    # CacheMixin attributes
+    cache_keys = [
+        'employer_percentile',
+        'like_employer_percentile',
+        'salary_data',
+    ]
+
+    @property
+    def cache_prefix(self):
+        return str(self.object.id)
 
     def _get_bar_color(self, lower, upper):
         if lower < int(self.salary_amount) <= upper:
@@ -486,8 +602,8 @@ class PersonView(DetailView, ChartHelperMixin):
         context = super().get_context_data(**kwargs)
 
         all_jobs = self.object.jobs.all()
-        current_job = self.object.most_recent_job
-        current_salary = current_job.salaries.get()
+        current_job = self.current_job
+        current_salary = self.current_salary
 
         salary_prefetch = Prefetch('salaries', to_attr='salary')
 
@@ -497,8 +613,8 @@ class PersonView(DetailView, ChartHelperMixin):
                                         .prefetch_related(salary_prefetch)\
                                         .order_by('-salaries__amount')
 
-        employer_percentile = current_salary.employer_percentile
-        like_employer_percentile = current_salary.like_employer_percentile
+        employer_percentile = self.employer_percentile
+        like_employer_percentile = self.like_employer_percentile
 
         current_employer = current_job.position.employer
 
@@ -515,7 +631,7 @@ class PersonView(DetailView, ChartHelperMixin):
         # Must be set for salary binning to work
         self.salary_amount = current_salary.amount
 
-        salary_data = current_job.position.employer.employee_salaries
+        salary_data = self.salary_data
         binned_salary_data = self.bin_salary_data(salary_data)
 
         source_file = self.object.source_file(2017)
@@ -541,6 +657,29 @@ class PersonView(DetailView, ChartHelperMixin):
         })
 
         return context
+
+    @property
+    def current_job(self):
+        return self.object.most_recent_job
+
+    @property
+    def current_salary(self):
+        return self.current_job.salaries.get()
+
+    @property
+    @check_cache
+    def employer_percentile(self):
+        return self.current_salary.employer_percentile
+
+    @property
+    @check_cache
+    def like_employer_percentile(self):
+        return self.current_salary.like_employer_percentile
+
+    @property
+    @check_cache
+    def salary_data(self):
+        return self.current_job.position.employer.employee_salaries
 
 
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):

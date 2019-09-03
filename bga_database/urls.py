@@ -17,7 +17,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
-from django.views.decorators.cache import cache_page
 
 from data_import import views as import_views
 from payroll import views as payroll_views
@@ -27,11 +26,11 @@ EIGHT_HOURS = 60 * 60 * 8
 
 urlpatterns = [
     # client
-    path('', cache_page(EIGHT_HOURS)(payroll_views.IndexView.as_view()), name='home'),
-    path('user-guide/', cache_page(EIGHT_HOURS)(payroll_views.UserGuideView.as_view()), name='user_guide'),
-    path('unit/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.UnitView.as_view()), name='unit'),
-    path('department/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.DepartmentView.as_view()), name='department'),
-    path('person/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.PersonView.as_view()), name='person'),
+    path('', payroll_views.IndexView.as_view(), name='home'),
+    path('user-guide/', payroll_views.UserGuideView.as_view(), name='user_guide'),
+    path('unit/<str:slug>/', payroll_views.UnitView.as_view(), name='unit'),
+    path('department/<str:slug>/', payroll_views.DepartmentView.as_view(), name='department'),
+    path('person/<str:slug>/', payroll_views.PersonView.as_view(), name='person'),
     path('entity-lookup/', payroll_views.EntityLookup.as_view(), name='entity-lookup'),
     path('search/', payroll_views.SearchView.as_view(), name='search'),
     path('<int:error_code>', payroll_views.error, name='error'),
