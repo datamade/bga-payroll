@@ -9,9 +9,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'bga_payroll',
-        'USER': '',
+        'USER': 'postgres',
         'PASSWORD': '',
-        'HOST': 'localhost',
+        'HOST': 'postgres',
         'PORT': '5432',
     }
 }
@@ -22,7 +22,7 @@ AWS_SECRET_ACCESS_KEY = '<secret>'
 
 REDIS_PORT = 6379
 REDIS_DB = 0
-REDIS_FMT = 'redis://localhost:{port}/{db}'
+REDIS_FMT = 'redis://redis:{port}/{db}'
 REDIS_URL = REDIS_FMT.format(port=REDIS_PORT, db=REDIS_DB)
 
 CELERY_BROKER_URL = REDIS_URL
@@ -32,7 +32,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 CENSUS_API_KEY = '<A KEY>'
 
-SOLR_URL = 'http://127.0.0.1:8983/solr/bga'
+SOLR_URL = 'http://solr:8983/solr/bga'
 
 CACHES = {
     'default': {
@@ -48,9 +48,13 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'testing@example.com'
 EMAIL_HOST_PASSWORD = 'secret password'
-DEFAULT_FROM_EMAIL = 'Example <example@example.com>'
 
-# Salsa mailing list settings. The particulars of these settings are provided
-# by BGA.
-SALSA_PAYLOAD = '{}'
-SALSA_URL = 'https://example.salsalabs.org'
+# Configure salsa_auth
+SALSA_AUTH_API_KEY = ''  # https://help.salsalabs.com/hc/en-us/articles/224470007-Getting-Started#acquiring-a-token
+
+# Name and domain for cookie set for authorized users
+SALSA_AUTH_COOKIE_NAME = ''  # e.g., salsa-auth
+SALSA_AUTH_COOKIE_DOMAIN = ''  # e.g., datamade.us
+
+# Location to which user will be redirected on authorization
+SALSA_AUTH_REDIRECT_LOCATION = '/'

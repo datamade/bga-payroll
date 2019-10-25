@@ -2,18 +2,11 @@
 
 How much do your public officials make?
 
-- [Running the app locally](#running-the-app-locally)
-- [Running the app with Docker Compose](#running-the-app-with-docker-compose)
-
-
 ## Running the app locally
 
 ### Requirements
 
-- Python 3.x
-- Postgres >= 9
-- GNU Make
-- Solr 7.x
+- 🐳 [Docker](https://hub.docker.com/search/?type=edition&offering=community)
 
 ### Getting started
 
@@ -25,112 +18,24 @@ Perform the following steps from your terminal.
     git clone https://github.com/datamade/bga-payroll.git
     cd bga-payroll
     ```
-2. Create a virtual environment. (We recommend using [`virtualenvwrapper`](http://virtualenvwrapper.readthedocs.org/en/latest/install.html) for working in a virtualized development environment.)
+2. Build and run the applicaton.
 
     ```bash
-    mkvirtualenv bga
+    docker-compose up -d --build
     ```
-3. Install the requirements.
+
+    Once the command exits, you can visit the app in your browser at
+    http://localhost:8000.
+
+    To view logs for `app`, `worker`, or any of the other services defined in
+    `docker-compose.yml`, run `docker-compose logs -f <SERVICE_NAME>`, e.g.,
+    `docker-compose logs -f app`.
+
+3. The application will work without data, but if you're like to add some,
+first make a formatted data file.
 
     ```bash
-    pip install -r requirements.txt
-    ```
-4. Copy the local settings file. Note that you may need to update `DATABASES` in your own copy of `local_settings.py` to reflect your local Postgres setup.
-
-    ```bash
-    cp bga_database/local_settings.py.example bga_database/local_settings.py
-    ```
-5. Create the database and run the migrations.
-
-    ```bash
-    make database
-    python manage.py migrate
-    ```
-6. Run the app. In separate terminal windows:
-
-    ```bash
-    redis-server
+    docker-compose exec app make 2016-formatted.csv
     ```
 
-    ```bash
-    celery --app=bga_database.celery:app worker --loglevel=DEBUG
-    ```
-    
-    ```bash
-    solr start && solr create -c bga -d ./solr_configs
-    ```
-
-    ```bash
-    python manage.py runserver
-    ```
-        
-7. In the project directory, make a test data file.
-    ```bash
-    make 2016-formatted.csv
-    ```
-
-8. Go to `http://localhost:8000/data-import/` and follow the steps to upload the CSV you just made. Don't forget to put in the data year. It will take a bit to complete each step, you can refresh the page to see if it's ready to move on to the next section. You can also keep track of progress in your Celery terminal.
-
-
-## Running the app with Docker Compose
-
-### Requirements
-
-- Python 3.x
-- Docker Compose
-- GNU Make
-
-### Getting started
-
-Perform the following steps from your terminal.
-
-1. Clone this repository and `cd` into your local copy.
-
-    ```bash
-    git clone https://github.com/datamade/bga-payroll.git
-    cd bga-payroll
-    ```
-2. Create a virtual environment. (We recommend using [`virtualenvwrapper`](http://virtualenvwrapper.readthedocs.org/en/latest/install.html) for working in a virtualized development environment.)
-
-    ```bash
-    mkvirtualenv bga
-    ```
-3. Install the requirements.
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-4. Copy the local settings file. Note that you may need to update `DATABASES`, `REDIS_PORT` and `SOLR_URL` in your own copy of `local_settings.py` to reflect the host port each service is mapped to in `docker-compose.yml`.
-
-    ```bash
-    cp bga_database/local_settings.py.example bga_database/local_settings.py
-    ```
-5. Launch Postgres, create the database and run the migrations.
-
-    ```bash
-    docker-compose up postgres
-    python manage.py migrate
-    ```
-6. Run the app. In separate terminal windows:
-    ```bash
-    # Launch all services listed in docker-compose.yml
-    docker-compose up
-    
-    # Or launch one or more specific services
-    docker-compose up <service-name> [<service-name> <service-name> ...]
-    ```
-
-    ```bash
-    celery --app=bga_database.celery:app worker --loglevel=DEBUG
-    ```
-    
-    ```bash
-    python manage.py runserver
-    ```
-        
-7. In the project directory, make a test data file.
-    ```bash
-    make 2016-formatted.csv
-    ```
-
-8. Go to `http://localhost:8000/data-import/` and follow the steps to upload the CSV you just made. Don't forget to put in the data year. It will take a bit to complete each step, you can refresh the page to see if it's ready to move on to the next section. You can also keep track of progress in your Celery terminal.
+    Next, go to `http://localhost:8000/data-import/` and follow the steps to upload the CSV you just made. Don't forget to put in the data year. It will take a bit to complete each step. You can refresh the page to see if it's ready to move on to the next section. You can also keep track of progress in your worker terminal by running `docker-compose logs -f app worker`.
