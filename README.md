@@ -38,4 +38,4 @@ first make a formatted data file.
     docker-compose exec app make 2016-formatted.csv
     ```
 
-    Next, go to `http://localhost:8000/data-import/` and follow the steps to upload the CSV you just made. Don't forget to put in the data year. It will take a bit to complete each step. You can refresh the page to see if it's ready to move on to the next section. You can also keep track of progress in your worker terminal by running `docker-compose logs -f app worker`.
+    Next, go to http://localhost:8000/data-import/ and follow the steps to upload the CSV you just made. Don't forget to put in the data year. It will take a bit to complete each step. You can refresh the page to see if it's ready to move on to the next section. You can also keep track of progress in your worker terminal by running `docker-compose logs -f app worker`.

@@ -21,7 +21,6 @@ services:
       # Mount the development directory as a volume into the container, so
       # Docker automatically recognizes your changes.
       - .:/app
-      - ${PWD}/bga_database/local_settings.py.example:/app/bga_database/local_settings.py
     command: python manage.py runserver 0.0.0.0:8000
 
   worker:
