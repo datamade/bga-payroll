@@ -1178,14 +1178,6 @@ span.field-label + * > :first-child > :first-child {
   color: #333333;
 }
 
-.messages--error-color,
-.messages--error,
-.messages.error,
-.error {
-  background-color: #fff0f0;
-  color: #c00;
-}
-
 .messages--warning,
 .messages.warning {
   border-color: #fd0;

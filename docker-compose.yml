@@ -1,17 +1,94 @@
-version: '3.3'
+version: '2.4'
+
 services:
+  app:
+    image: bga-payroll
+    container_name: bga-payroll
+    restart: always
+    build: .
+    # Allow container to be attached to, e.g., to access the pdb shell
+    stdin_open: true
+    tty: true
+    ports:
+      # Map ports on your computer to ports on your container. This allows you,
+      # e.g., to visit your containerized application in a browser on your
+      # computer.
+      - 8000:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      # Mount the development directory as a volume into the container, so
+      # Docker automatically recognizes your changes.
+      - .:/app
+    command: python manage.py runserver 0.0.0.0:8000
+
+  worker:
+    container_name: bga-payroll-worker
+    image: bga-payroll:latest
+    depends_on:
+      # Declaring this dependency ensures that your application image is built
+      # before migrations are run, and that your application and migrations can
+      # be run from the same image, rather than creating purpose-specific
+      # copies.
+      - app
+    volumes:
+      # These should generally be the same as your application volumes.
+      - .:/app
+      - ${PWD}/bga_database/local_settings.py.example:/app/bga_database/local_settings.py
+    command: celery --app=bga_database.celery:app worker --loglevel=DEBUG
+
+  migration:
+    container_name: bga-payroll-migration
+    image: bga-payroll:latest
+    depends_on:
+      # Declaring this dependency ensures that your application image is built
+      # before migrations are run, and that your application and migrations can
+      # be run from the same image, rather than creating purpose-specific
+      # copies.
+      - app
+    volumes:
+      # These should generally be the same as your application volumes.
+      - .:/app
+      - ${PWD}/bga_database/local_settings.py.example:/app/bga_database/local_settings.py
+    command: python manage.py migrate
+
+  postgres:
+    container_name: bga-payroll-postgres
+    image: postgres:10
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      # The default Postgres image exposes a number of environmental variables
+      # that allow you to configure the container's behavior, without writing
+      # any additional code. Specify the name of your database, and any other
+      # variables, here. https://hub.docker.com/_/postgres/#environment-variables
+      - POSTGRES_DB=bga_payroll
+    volumes:
+      # By default, Postgres instantiates an anonymous volume. Use a named
+      # one, so your data persists beyond the life of the container. See this
+      # post for a discussion of the pitfalls of Postgres and anonymous
+      # volumes: https://linuxhint.com/run_postgresql_docker_compose/
+      - bga-payroll-db-data:/var/lib/postgresql/data
+    ports:
+      - 32001:5432
+
   solr:
     image: solr:7.1
     container_name: bga-payroll-solr
     volumes:
       - ./solr_configs:/bga-payroll_configs
-      - data:/opt/solr/server/solr/mycores
+      - bga-payroll-solr-data:/opt/solr/server/solr/mycores
     command: sh -c 'solr-create -c bga -d /bga-payroll_configs'
     ports:
       - '127.0.0.1:8986:8983'
     environment:
       SOLR_LOG_LEVEL: ERROR
     restart: on-failure
+
   redis:
     image: redis
     container_name: bga-payroll-redis
@@ -21,20 +98,7 @@ services:
       - ./configs/redis.conf:/redis.conf
     restart: on-failure
     command: redis-server /redis.conf
-  postgres:
-    image: postgres:10
-    container_name: bga-payroll-postgres
-    environment:
-      POSTGRES_DB: bga_payroll
-    ports:
-      - '127.0.0.1:5433:5432'
-    restart: on-failure
-  nginxlog:
-    build: https://github.com/datamade/sentrylogs.git
-    command: sentrylogs --sentryconfig /configs/sentry.ini --nginxerrorpath /var/log/nginx/bga-payroll-error.log
-    volumes:
-      - ./configs:/configs
-      - /var/log/nginx:/var/log/nginx
 
 volumes:
-  data:
+  bga-payroll-db-data:
+  bga-payroll-solr-data:

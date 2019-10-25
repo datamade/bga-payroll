@@ -1,19 +1,9 @@
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import User
 
 from bga_database.base_models import SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
-
-
-class UserZipCode(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    zipcode = models.CharField(max_length=5)
-
-    def __str__(self):
-        return '{} {}'.format(self.user.first_name,
-                              self.user.last_name)
 
 
 class VintagedModel(models.Model):

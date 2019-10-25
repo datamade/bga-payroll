@@ -24,7 +24,7 @@ addons:
   postgresql: '9.6'
 
 before_script:
-- cp bga_database/local_settings.py.example bga_database/local_settings.py
+- cp configs/local_settings.py.travis bga_database/local_settings.py
 
 script:
 - pytest --reuse-db
