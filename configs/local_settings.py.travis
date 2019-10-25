@@ -1,0 +1,60 @@
+# This should be False in production!
+DEBUG = True
+
+SECRET_KEY = 'a very secret string'
+
+INTERNAL_IPS = ['127.0.0.1']
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'bga_payroll',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+AWS_STORAGE_BUCKET_NAME = '<bucket_name>'
+AWS_ACCESS_KEY_ID = '<key>'
+AWS_SECRET_ACCESS_KEY = '<secret>'
+
+REDIS_PORT = 6379
+REDIS_DB = 0
+REDIS_FMT = 'redis://localhost:{port}/{db}'
+REDIS_URL = REDIS_FMT.format(port=REDIS_PORT, db=REDIS_DB)
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+CENSUS_API_KEY = '<A KEY>'
+
+SOLR_URL = 'http://127.0.0.1:8983/solr/bga'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+
+CACHE_SECRET_KEY = 'a key'
+
+# Email configuration for password reset loop
+EMAIL_HOST = 'smtp.example.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'testing@example.com'
+EMAIL_HOST_PASSWORD = 'secret password'
+
+# Configure salsa_auth
+SALSA_AUTH_API_KEY = ''  # https://help.salsalabs.com/hc/en-us/articles/224470007-Getting-Started#acquiring-a-token  # noqa
+
+# Name and domain for cookie set for authorized users
+SALSA_AUTH_COOKIE_NAME = ''  # e.g., salsa-auth
+SALSA_AUTH_COOKIE_DOMAIN = ''  # e.g., datamade.us
+
+# Location to which user will be redirected on authorization
+SALSA_AUTH_REDIRECT_LOCATION = '/'
