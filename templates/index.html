@@ -134,22 +134,11 @@
 </div>
 {% endblock %}
 
-{% block modals %}
-{% include 'auth_modals.html' %}
-{% endblock %}
-
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
 <script src="{{ static('js/search.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script src="{{ static('js/chart_helper.js') }}"></script>
-<script src="{{ static('js/render_salsa_auth.js') }}"></script>
-
-{% if get_messages(request) %}
-<script type="text/javascript">
-  $('#messageModal').modal();
-</script>
-{% endif %}
 
 <script type="text/javascript">
   // Style the charts a little differently on the homepage.
