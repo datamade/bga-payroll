@@ -50,7 +50,7 @@ EMAIL_HOST_USER = 'testing@example.com'
 EMAIL_HOST_PASSWORD = 'secret password'
 
 # Configure salsa_auth
-SALSA_AUTH_API_KEY = ''  # https://help.salsalabs.com/hc/en-us/articles/224470007-Getting-Started#acquiring-a-token
+SALSA_AUTH_API_KEY = ''  # https://help.salsalabs.com/hc/en-us/articles/224470007-Getting-Started#acquiring-a-token  # noqa
 
 # Name and domain for cookie set for authorized users
 SALSA_AUTH_COOKIE_NAME = ''  # e.g., salsa-auth

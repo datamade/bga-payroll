@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import User
 
 from bga_database.base_models import SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
