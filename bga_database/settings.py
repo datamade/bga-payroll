@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'postgres_stats',
     'debug_toolbar',
+    'salsa_auth',
 ]
 
 MIDDLEWARE = [
@@ -55,8 +56,8 @@ ROOT_URLCONF = 'bga_database.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': ['templates/'],
-        'APP_DIRS': False,
+        'DIRS': ['templates/', 'jinja2/'],
+        'APP_DIRS': True,
         'OPTIONS': {
             'environment': 'bga_database.jinja2.environment',
             'context_processors': [
