@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Search results
+Search results
+{% endblock %}
+
+{% block extra_css %}
+<link href="{{ static('css/bootstrap-fs-modal.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
