@@ -86,3 +86,13 @@ uploading source files via the Django admin interface.
 Standardized files and source files are tied together by (1) RespondingAgency
 and (2) data year. The core `payroll` models all have a `source_file` method
 that leverage this relationship to retrieve the source file for a given year.
+
+## Tests
+
+Both the `payroll` and `data_import` applications have tests. These can be found
+in [the `tests/` directory]
+(https://github.com/datamade/bga-payroll/tree/master/tests/) at the root of the
+project. In general, these tests follow the guidance set out in [the DataMade
+testing guidelines](https://github.com/datamade/testing-guidelines).
+`data_import/test_tasks.py`, in particular, organizes
+tests into `TestX` classes to minimize redundant code.
