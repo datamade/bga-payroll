@@ -58,5 +58,5 @@ first make a formatted data file.
     It will take a bit to complete each step of the data import. You can refresh the page to see if it's ready to move on to the next section. (The status will have changed.) You can also keep track of progress in your worker terminal by running:
 
     ```bash
-    docker-compose logs -f app worker
+    docker-compose logs -f worker
     ```
