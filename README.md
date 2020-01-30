@@ -42,7 +42,7 @@ first make a formatted data file.
     terminal, run:
 
     ```bash
-    docker-compose exec head 2017-actual-pt-1.csv | csvlook --no-inference | less
+    docker-compose exec app head 2017-actual-pt-1.csv | csvlook --no-inference | less
     ```
 
     Type `-S` then hit Enter or Return to trim long lines, then use the arrow keys to scroll up, down, left, or right.
