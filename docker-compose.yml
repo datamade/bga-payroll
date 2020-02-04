@@ -17,6 +17,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       # Mount the development directory as a volume into the container, so
       # Docker automatically recognizes your changes.
