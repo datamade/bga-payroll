@@ -1,4 +1,4 @@
-Django==2.2
+Django==2.2.9
 psycopg2-binary==2.7.4
 numpy==1.14.1
 csvkit==1.0.3
@@ -6,7 +6,7 @@ cchardet==2.1.1
 census==0.8.7
 us==1.0.0
 inflect==1.0.1
-jinja2==2.10
+jinja2==2.10.1
 lxml==4.2.1
 django-debug-toolbar==1.9.1
 django-storages==1.6.5
