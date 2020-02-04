@@ -1,3 +1,6 @@
+import os
+
+
 # This should be False in production!
 DEBUG = True
 
@@ -20,10 +23,11 @@ AWS_STORAGE_BUCKET_NAME = '<bucket_name>'
 AWS_ACCESS_KEY_ID = '<key>'
 AWS_SECRET_ACCESS_KEY = '<secret>'
 
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
 REDIS_PORT = 6379
 REDIS_DB = 0
-REDIS_FMT = 'redis://redis:{port}/{db}'
-REDIS_URL = REDIS_FMT.format(port=REDIS_PORT, db=REDIS_DB)
+REDIS_FMT = 'redis://{host}:{port}/{db}'
+REDIS_URL = REDIS_FMT.format(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 CELERY_BROKER_URL = REDIS_URL
 CELERY_ACCEPT_CONTENT = ['json']

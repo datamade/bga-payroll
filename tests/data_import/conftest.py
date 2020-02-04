@@ -105,7 +105,7 @@ def queue_teardown(request):
     @request.addfinalizer
     def flush_queue():
         from redis import Redis
-        from bga_database.settings import REDIS_PORT
+        from django.conf import settings
 
-        r = Redis(port=REDIS_PORT)
-        r.flushdb()
+        queue = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+        queue.flushdb()
