@@ -449,7 +449,7 @@ class Salary(VintagedModel):
     class Meta:
         constraints = [
             CheckConstraint(
-                check=(~Q(amount=0) & Q(amount__isnull=False)) | (~Q(extra_pay=0) & Q(extra_pay__isnull=False)),
+                check=Q(amount__isnull=False) | Q(extra_pay__isnull=False),
                 name='total_pay_not_null'
             )
         ]
