@@ -81,36 +81,4 @@ def salary(standardized_file, job):
 
             return Salary.objects.create(**data)
 
-        def build_null(self, **kwargs):
-            s_file = standardized_file.build()
-
-            data = {
-                'job': job.build(),
-                'vintage': s_file.upload
-            }
-
-            return Salary.objects.create(**data)
-
-        def build_null_amount_zero_extra_pay(self, **kwargs):
-            s_file = standardized_file.build()
-
-            data = {
-                'extra_pay': '0',
-                'job': job.build(),
-                'vintage': s_file.upload
-            }
-
-            return Salary.objects.create(**data)
-
-        def build_null_extra_pay_zero_amount(self, **kwargs):
-            s_file = standardized_file.build()
-
-            data = {
-                'amount': '0',
-                'job': job.build(),
-                'vintage': s_file.upload
-            }
-
-            return Salary.objects.create(**data)
-
     return SalaryFactory()
