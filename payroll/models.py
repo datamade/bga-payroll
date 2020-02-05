@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models, connection
+from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 
 from bga_database.base_models import SluggedModel
@@ -442,7 +443,16 @@ class Salary(VintagedModel):
     job = models.ForeignKey('Job',
                             related_name='salaries',
                             on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    extra_pay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    class Meta:
+        constraints = [
+            CheckConstraint(
+                check=(~Q(amount=0) & Q(amount__isnull=False)) | (~Q(extra_pay=0) & Q(extra_pay__isnull=False)),
+                name='total_pay_not_null'
+            )
+        ]
 
     def __str__(self):
         return '{0} {1}'.format(self.amount, self.job)
