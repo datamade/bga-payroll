@@ -72,6 +72,7 @@ def salary(standardized_file, job):
 
             data = {
                 'amount': '25000',
+                'extra_pay': '2500',
                 'job': job.build(),
                 'vintage': s_file.upload,
             }
