@@ -1,7 +1,16 @@
 PG_DB=bga_payroll
 
 
-.PHONY : database
+.PHONY : all clean database
+
+all : 2017 2018
+
+2017 : $(patsubst %, payroll-actual-2017-pt-%.csv, 1 2 3)
+
+2018 : payroll-actual-2018-pt-1.csv
+
+clean :
+	rm *.csv
 
 database : $(PG_DB)
 
