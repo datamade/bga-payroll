@@ -22,6 +22,13 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='salary',
-            constraint=models.CheckConstraint(check=models.Q(('amount__isnull', False), ('extra_pay__isnull', False), _connector='OR'), name='total_pay_not_null'),
+            constraint=models.CheckConstraint(
+                check=models.Q(
+                    ('amount__isnull', False),
+                    ('extra_pay__isnull', False),
+                    _connector='OR'
+                ),
+                name='total_pay_not_null'
+            ),
         ),
     ]
