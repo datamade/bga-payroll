@@ -85,7 +85,8 @@ def copy_to_database(self, *, s_file_id):
         first_name VARCHAR,
         title VARCHAR,
         department VARCHAR,
-        salary VARCHAR,
+        base_salary VARCHAR,
+        extra_pay VARCHAR,
         date_started VARCHAR,
         data_year INT
     '''

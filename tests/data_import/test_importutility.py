@@ -138,7 +138,8 @@ def test_import_utility_init(raw_table_setup,
                 END AS title,
                 per.first_name,
                 per.last_name,
-                sal.amount AS salary,
+                sal.amount AS amount,
+                sal.extra_pay AS extra_pay,
                 job.start_date AS date_started
               FROM payroll_person AS per
               JOIN payroll_job AS job
@@ -158,7 +159,8 @@ def test_import_utility_init(raw_table_setup,
                 title,
                 first_name,
                 last_name,
-                salary::NUMERIC,
+                base_salary::NUMERIC,
+                extra_pay::NUMERIC,
                 NULLIF(date_started, '')::DATE AS date_started
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
@@ -169,7 +171,8 @@ def test_import_utility_init(raw_table_setup,
                 title,
                 first_name,
                 last_name,
-                salary::NUMERIC,
+                base_salary::NUMERIC,
+                extra_pay::NUMERIC,
                 NULLIF(date_started, '')::DATE AS date_started
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
