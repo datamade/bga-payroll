@@ -1,5 +1,5 @@
+SHELL := bash
 PG_DB=bga_payroll
-
 
 .PHONY : all clean database
 
