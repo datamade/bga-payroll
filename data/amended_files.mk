@@ -10,14 +10,10 @@ VPATH=data
 	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,responding_agency,data_year,salary; \
 	tail -n +2 $<) > $@
 
-%-amendment-no-salary-omitted.csv : %-amendment-salary-summed.csv
+%-amendment-no-salary-omitted.csv : %-amendment-with-valid-start-dates.csv
 	# Remove records where no salary was reported.
-	csvgrep -c total_pay -r '^$$' -i $< > $@;
-	echo "Removed $$(csvgrep -c total_pay -r '^$$' $< | wc -l | xargs) records without salary"
-
-%-amendment-salary-summed.csv : %-amendment-with-valid-start-dates.csv
-	# Sum base pay and extra salary.
-	cat $< | python data/processors/sum_salary.py > $@
+	csvgrep -c base_salary,extra_pay -r '^$$' -i $< > $@;
+	echo "Removed $$(csvgrep -c base_salary,extra_pay -r '^$$' $< | wc -l | xargs) records without salary"
 
 %-amendment-with-valid-start-dates.csv : %-amendment-with-data-year.csv
 	# Remove invalid dates.
@@ -25,7 +21,7 @@ VPATH=data
 
 %-amendment-with-data-year.csv : %-amendment-with-agencies.csv
 	# Add required data year field.
-	perl -pe 's/$$/,2017/' $< > $@
+	perl -pe "s/$$/,$$(cut -d '-' -f 1 <<< $*)/" $< > $@
 
 .SECONDEXPANSION :
 %-amendment-with-agencies.csv : $$(wildcard data/raw/$$*-amendment.csv $$*.csv) raw/foia-source-lookup.csv

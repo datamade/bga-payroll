@@ -128,6 +128,7 @@ data/output/*
 /configs/local_settings.production.py
 data/raw/amendments-*
 data/corrections.mk
+/*.csv
 
 .sass-cache/
 201*/

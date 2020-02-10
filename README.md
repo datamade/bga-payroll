@@ -35,17 +35,10 @@ Perform the following steps from your terminal.
 first make a formatted data file.
 
     ```bash
-    docker-compose exec app make 2017-actual-pt-1.csv
+    docker-compose exec app make payroll-actual-2017-pt-1.csv
     ```
 
-    This will process `data/raw/2017-payroll-actual-pt-1.csv` into a file called `2017-actual-pt-1.csv`. To preview the processed data in your
-    terminal, run:
-
-    ```bash
-    docker-compose exec app head 2017-actual-pt-1.csv | csvlook --no-inference | less
-    ```
-
-    Type `-S` then hit Enter or Return to trim long lines, then use the arrow keys to scroll up, down, left, or right.
+    This will process `data/raw/payroll-actual-2017-pt-1.csv` into a file called `payroll-actual-2017-pt-1.csv`.
 
 4. Next, create a superuser, so you can log into the data import interface.
 
