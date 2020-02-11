@@ -3,7 +3,8 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Prefetch
+from django.db.models import Q, FloatField, Prefetch, Window, F
+from django.db.models.functions import PercentRank
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -14,7 +15,7 @@ from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
-from payroll.models import Job, Person, Salary, Unit, Department
+from payroll.models import Job, Person, Salary, Unit, Department, Employer
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
@@ -218,47 +219,17 @@ class UnitView(EmployerView):
         if self.object.is_unclassified:
             return 'N/A'
 
-        query = '''
-            WITH employer_parent_lookup AS (
-              SELECT
-                id,
-                COALESCE(parent_id, id) AS parent_id
-              FROM payroll_employer
-            ),
-            expenditure_by_unit AS (
-              SELECT
-                SUM(salary.amount) AS total_budget,
-                lookup.parent_id AS unit_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN employer_parent_lookup AS lookup
-              ON position.employer_id = lookup.id
-              JOIN payroll_employer AS employer
-              ON lookup.parent_id = employer.id
-              WHERE employer.taxonomy_id = {taxonomy}
-              GROUP BY lookup.parent_id
-            ),
-            exp_percentiles AS (
-              SELECT
-                percent_rank() OVER (ORDER BY total_budget ASC) AS percentile,
-                unit_id
-              FROM expenditure_by_unit
+        qs = Employer.objects.with_expenditure().annotate(
+            salary_percentile=Window(
+                expression=PercentRank(),
+                partition_by=[F('taxonomy')],
+                order_by=F('total_expenditure').asc()
             )
-            SELECT
-              percentile
-            FROM exp_percentiles
-            WHERE unit_id = {id}
-        '''.format(taxonomy=self.object.taxonomy.id,
-                   id=self.object.id)
+        )
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
+        e = Employer.objects.get_raw(qs.query, self.object.id)
 
-        return result[0] * 100
+        return e.salary_percentile * 100
 
     def salary_percentile(self):
         if self.object.is_unclassified:

@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models, connection
-from django.db.models import Q, CheckConstraint
+from django.db.models import Q, CheckConstraint, Sum
+from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
 
 from bga_database.base_models import SluggedModel
@@ -38,7 +39,34 @@ class SourceFileMixin(object):
         return source_file
 
 
+class EmployerManager(models.Manager):
+    def get_raw(self, subquery, obj_id):
+        '''
+        Get a particular Employer object from any subquery. This is useful when
+        you want raw values back from Postgres, e.g., PERCENT_RANK with full
+        precision. Django rounds these values when annotating a queryset.
+        '''
+        raw_query = "SELECT * FROM ({subquery}) as x WHERE id = {id}".format(
+            subquery=subquery,
+            id=obj_id
+        )
+        return self.raw(raw_query)[0]
+
+    def with_expenditure(self):
+        '''
+        In Postgres, NULL plus any value will return NULL. So, use COALESCE to
+        handle instances where either a unit or department do not have salaries.
+        https://www.postgresql.org/docs/10/functions-conditional.html#FUNCTIONS-COALESCE-NVL-IFNULL
+        '''
+        return self.get_queryset().annotate(
+            total_expenditure=Coalesce(Sum('positions__jobs__salaries__amount'), 0) +
+                              Coalesce(Sum('departments__positions__jobs__salaries__amount'), 0),
+        )
+
+
 class Employer(SluggedModel, VintagedModel):
+    objects = EmployerManager()
+
     name = models.CharField(max_length=255)
     parent = models.ForeignKey('self',
                                null=True,
