@@ -1,8 +1,10 @@
 from django.core.exceptions import ValidationError
 from django.db import models, connection
-from django.db.models import Q, CheckConstraint, Sum
+from django.db.models import Q, CheckConstraint, Sum, OuterRef, Subquery, F
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
+
+from postgres_stats.aggregates import Percentile
 
 from bga_database.base_models import SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
@@ -40,14 +42,16 @@ class SourceFileMixin(object):
 
 
 class EmployerManager(models.Manager):
-    def get_raw(self, subquery, obj_id):
+    def get_raw(self, subquery, obj_id, id_column='id'):
         '''
         Get a particular Employer object from any subquery. This is useful when
         you want raw values back from Postgres, e.g., PERCENT_RANK with full
         precision. Django rounds these values when annotating a queryset.
         '''
-        raw_query = "SELECT * FROM ({subquery}) as x WHERE id = {id}".format(
+        print(subquery)
+        raw_query = "SELECT * FROM ({subquery}) as x WHERE {id_column} = {id}".format(
             subquery=subquery,
+            id_column=id_column,
             id=obj_id
         )
         return self.raw(raw_query)[0]
@@ -61,6 +65,23 @@ class EmployerManager(models.Manager):
         return self.get_queryset().annotate(
             total_expenditure=Coalesce(Sum('positions__jobs__salaries__amount'), 0) +
                               Coalesce(Sum('departments__positions__jobs__salaries__amount'), 0),
+        )
+
+    def with_median_salary(self):
+        '''
+        See https://docs.djangoproject.com/en/2.2/ref/models/expressions/#using-aggregates-within-a-subquery-expression
+        '''
+        salaries = Salary.objects.annotate(employer_id=self.employer_salary_lookup)\
+                                 .filter(employer_id=OuterRef('pk'))\
+                                 .values('employer_id')
+
+        median_salaries = salaries.annotate(
+            median=Percentile('amount', 0.5, output_field=models.FloatField())
+        ).values('median')
+
+        return self.get_queryset().annotate(
+            employer_id=F('id'),
+            median_salary=Subquery(median_salaries)
         )
 
 
@@ -214,7 +235,9 @@ class Employer(SluggedModel, VintagedModel):
         return employee_salaries
 
 
-class UnitManager(models.Manager):
+class UnitManager(EmployerManager):
+    employer_salary_lookup = Coalesce('job__position__employer__parent', 'job__position__employer')
+
     def get_queryset(self):
         return super().get_queryset().filter(parent_id__isnull=True)
 
@@ -244,7 +267,9 @@ class Unit(Employer, SourceFileMixin):
             return False
 
 
-class DepartmentManager(models.Manager):
+class DepartmentManager(EmployerManager):
+    employer_salary_lookup = F('job__position__employer')
+
     def get_queryset(self):
         # Always select the related parent, so additional queries are not
         # needed for displaying the name.
