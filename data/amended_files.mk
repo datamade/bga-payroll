@@ -7,7 +7,7 @@ VPATH=data
 
 %-amendment.csv : %-amendment-no-salary-omitted.csv
 	# Rename fields.
-	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,responding_agency,data_year,salary; \
+	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,responding_agency,data_year; \
 	tail -n +2 $<) > $@
 
 %-amendment-no-salary-omitted.csv : %-amendment-with-valid-start-dates.csv

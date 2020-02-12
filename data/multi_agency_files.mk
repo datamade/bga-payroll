@@ -7,7 +7,7 @@ VPATH=data
 
 payroll-actual-%.csv : %-no-salary-omitted.csv
 	# Rename fields.
-	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,_,responding_agency,data_year,salary; \
+	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,_,responding_agency,data_year; \
 	tail -n +2 $<) > $@
 
 %-no-salary-omitted.csv : %-with-valid-start-dates.csv
