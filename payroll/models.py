@@ -67,20 +67,29 @@ class EmployerManager(models.Manager):
                               Coalesce(Sum('departments__positions__jobs__salaries__amount'), 0),
         )
 
-    def with_median_salary(self):
+    def with_median_salary(self, extra_q=None):
         '''
         See https://docs.djangoproject.com/en/2.2/ref/models/expressions/#using-aggregates-within-a-subquery-expression
         '''
-        salaries = Salary.objects.annotate(employer_id=self.employer_salary_lookup)\
-                                 .filter(employer_id=OuterRef('pk'))\
-                                 .values('employer_id')
+        if extra_q:
+            salary_filter = Q(job__position__employer__employer_id=OuterRef('pk')) & (extra_q)
+        else:
+            salary_filter = Q(job__position__employer__employer_id=OuterRef('pk'))
+
+        salaries = Salary.objects.filter(salary_filter)\
+                                 .values('job__position__employer__employer_id', 'job__position__employer__parent_id')
 
         median_salaries = salaries.annotate(
             median=Percentile('amount', 0.5, output_field=models.FloatField())
         ).values('median')
 
+        print(self.get_queryset().annotate(
+            uid=F('id'),
+            median_salary=Subquery(median_salaries)
+        ).count())
+
         return self.get_queryset().annotate(
-            employer_id=F('id'),
+            uid=F('id'),
             median_salary=Subquery(median_salaries)
         )
 
@@ -103,6 +112,7 @@ class Employer(SluggedModel, VintagedModel):
                                  blank=True,
                                  on_delete=models.SET_NULL,
                                  related_name='employers')
+    employer_id = models.IntegerField(null=False)
 
     def __str__(self):
         name = self.name
@@ -236,8 +246,6 @@ class Employer(SluggedModel, VintagedModel):
 
 
 class UnitManager(EmployerManager):
-    employer_salary_lookup = Coalesce('job__position__employer__parent', 'job__position__employer')
-
     def get_queryset(self):
         return super().get_queryset().filter(parent_id__isnull=True)
 
@@ -268,8 +276,6 @@ class Unit(Employer, SourceFileMixin):
 
 
 class DepartmentManager(EmployerManager):
-    employer_salary_lookup = F('job__position__employer')
-
     def get_queryset(self):
         # Always select the related parent, so additional queries are not
         # needed for displaying the name.

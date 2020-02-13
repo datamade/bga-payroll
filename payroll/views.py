@@ -117,11 +117,13 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         qs = self.model.objects.with_median_salary()
 
-        e = Employer.objects.get_raw(qs.query, self.object.id, 'employer_id')
+        e = self.model.objects.get_raw(qs.query, self.object.id, 'uid')
+
+        print(e.median_salary)
 
         # print(results['median'], e.median_salary)
 
-        return e.median_salary
+        return e.median_salary or 0
 
 
 class UnitView(EmployerView):
@@ -248,12 +250,15 @@ class UnitView(EmployerView):
         if self.object.is_unclassified:
             return 'N/A'
 
-        qs = self.model.objects.with_median_salary()\
+        in_taxonomy = (
+          Q(job__position__employer__taxonomy=self.object.taxonomy) | Q(job__position__employer__parent__taxonomy=self.object.taxonomy)
+        )
+
+        qs = self.model.objects.with_median_salary(in_taxonomy)\
                                .filter(taxonomy=self.object.taxonomy)\
                                .annotate(salary_percentile=Window(
-                                        expression=PercentRank(),
-                                        partition_by=[F('taxonomy')],
-                                        order_by=F('median_salary').asc()
+                                         expression=PercentRank(),
+                                         order_by=F('median_salary').asc()
                                     )
                                )
 
