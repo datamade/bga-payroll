@@ -22,7 +22,8 @@ class CsvMeta(object):
         'first_name',
         'title',
         'department',
-        'salary',
+        'base_salary',
+        'extra_pay',
         'date_started',
         'data_year',
     ]

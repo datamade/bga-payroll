@@ -100,7 +100,8 @@ class ImportUtility(TableNamesMixin):
                 first_name,
                 last_name,
                 date_started,
-                salary
+                base_salary,
+                extra_pay
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
               UNION ALL
@@ -113,7 +114,8 @@ class ImportUtility(TableNamesMixin):
                 first_name,
                 last_name,
                 date_started,
-                salary
+                base_salary,
+                extra_pay
               FROM {raw_payroll}
               WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             )
@@ -565,10 +567,11 @@ class ImportUtility(TableNamesMixin):
 
     def insert_salary(self):
         insert = '''
-            INSERT INTO payroll_salary (job_id, amount, vintage_id)
+            INSERT INTO payroll_salary (job_id, amount, extra_pay, vintage_id)
               SELECT
                 raw_job.job_id,
-                REGEXP_REPLACE(salary, '[^0-9.]', '', 'g')::NUMERIC,
+                REGEXP_REPLACE(base_salary, '[^0-9.]', '', 'g')::NUMERIC,
+                REGEXP_REPLACE(extra_pay, '[^0-9.]', '', 'g')::NUMERIC,
                 {vintage}
               FROM {intermediate_payroll}
               JOIN {raw_job} AS raw_job
