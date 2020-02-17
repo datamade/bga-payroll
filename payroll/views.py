@@ -32,7 +32,7 @@ class IndexView(TemplateView, ChartHelperMixin):
         department_count = Department.objects.all().count()
 
         with connection.cursor() as cursor:
-            cursor.execute('SELECT amount FROM payroll_salary WHERE amount IS NOT NULL')
+            cursor.execute('SELECT amount FROM payroll_salary')
             all_salaries = [x[0] for x in cursor]
 
         try:
@@ -81,12 +81,7 @@ class EmployerView(DetailView, ChartHelperMixin):
         employee_salaries = self.object.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
-        '''
-        TODO: Set year based on user input during data alignment chunk of work.
-        '''
-        most_recent_year = self.object.responding_agencies.order_by('-reporting_year').first().reporting_year
-
-        source_file = self.object.source_file(most_recent_year)
+        source_file = self.object.source_file(2017)
 
         if source_file:
             source_link = source_file.url
@@ -101,7 +96,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             'salary_percentile': self.salary_percentile(),
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
-            'data_year': most_recent_year,
+            'data_year': 2017,
             'source_link': source_link,
         })
 
@@ -522,17 +517,12 @@ class PersonView(DetailView, ChartHelperMixin):
         salary_data = current_job.position.employer.employee_salaries
         binned_salary_data = self.bin_salary_data(salary_data)
 
-        '''
-        TODO: Set year/retrieve source file based on user input during data alignment chunk of work.
-        '''
-#        source_file = self.object.source_file(2017)
-#
-#        if source_file:
-#            source_link = source_file.url
-#        else:
-#            source_link = None
+        source_file = self.object.source_file(2017)
 
-        source_link = None
+        if source_file:
+            source_link = source_file.url
+        else:
+            source_link = None
 
         context.update({
             'data_year': 2017,

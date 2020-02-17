@@ -12,10 +12,8 @@ class ChartHelperMixin(object):
         return BAR_DEFAULT
 
     def bin_salary_data(self, data):
-        float_data = np.asarray([d for d in data if d], dtype='float')
+        float_data = np.asarray(data, dtype='float')
         max_value = np.amax(float_data)
-
-        print(max_value)
 
         bin_size = DISTRIBUTION_MAX / DISTRIBUTION_BIN_NUM
 
