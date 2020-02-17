@@ -42,7 +42,10 @@ class SourceFileMixin(object):
 
 
 class EmployerManager(models.Manager):
-    def get_raw(self, subquery, obj_id, id_column='id'):
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).annotate(uid=F('id'))
+
+    def get_raw(self, subquery, obj_id, id_column='uid'):
         '''
         Get a particular Employer object from any subquery. This is useful when
         you want raw values back from Postgres, e.g., PERCENT_RANK with full
@@ -67,29 +70,18 @@ class EmployerManager(models.Manager):
                               Coalesce(Sum('departments__positions__jobs__salaries__amount'), 0),
         )
 
-    def with_median_salary(self, extra_q=None):
+    def with_median_salary(self):
         '''
         See https://docs.djangoproject.com/en/2.2/ref/models/expressions/#using-aggregates-within-a-subquery-expression
         '''
-        if extra_q:
-            salary_filter = Q(job__position__employer__employer_id=OuterRef('pk')) & (extra_q)
-        else:
-            salary_filter = Q(job__position__employer__employer_id=OuterRef('pk'))
-
-        salaries = Salary.objects.filter(salary_filter)\
-                                 .values('job__position__employer__employer_id', 'job__position__employer__parent_id')
+        salaries = Salary.objects.filter(**{self.EMPLOYER_IDENTIFIER: OuterRef('pk')})\
+                                 .values(self.EMPLOYER_IDENTIFIER)
 
         median_salaries = salaries.annotate(
             median=Percentile('amount', 0.5, output_field=models.FloatField())
         ).values('median')
 
-        print(self.get_queryset().annotate(
-            uid=F('id'),
-            median_salary=Subquery(median_salaries)
-        ).count())
-
         return self.get_queryset().annotate(
-            uid=F('id'),
             median_salary=Subquery(median_salaries)
         )
 
@@ -246,6 +238,8 @@ class Employer(SluggedModel, VintagedModel):
 
 
 class UnitManager(EmployerManager):
+    EMPLOYER_IDENTIFIER = 'job__position__employer__employer_id'
+
     def get_queryset(self):
         return super().get_queryset().filter(parent_id__isnull=True)
 
@@ -276,6 +270,8 @@ class Unit(Employer, SourceFileMixin):
 
 
 class DepartmentManager(EmployerManager):
+    EMPLOYER_IDENTIFIER = 'job__position__employer__id'
+
     def get_queryset(self):
         # Always select the related parent, so additional queries are not
         # needed for displaying the name.

@@ -104,26 +104,11 @@ class EmployerView(DetailView, ChartHelperMixin):
         return context
 
     def median_entity_salary(self):
-#        q = Salary.objects.filter(
-#          Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object)
-#        )
-#
-#        results = q.aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
-
-#        if not self.object.parent:
-#            model = Unit
-#        else:
-#            model = Department
-
         qs = self.model.objects.with_median_salary()
 
-        e = self.model.objects.get_raw(qs.query, self.object.id, 'uid')
+        e = self.model.objects.get_raw(qs.query, self.object.id)
 
-        print(e.median_salary)
-
-        # print(results['median'], e.median_salary)
-
-        return e.median_salary or 0
+        return e.median_salary
 
 
 class UnitView(EmployerView):
@@ -234,7 +219,9 @@ class UnitView(EmployerView):
         if self.object.is_unclassified:
             return 'N/A'
 
-        qs = self.model.objects.with_expenditure().annotate(
+        in_taxonomy = Q(taxonomy=self.object.taxonomy)
+
+        qs = self.model.objects.with_expenditure().filter(in_taxonomy).annotate(
             expenditure_percentile=Window(
                 expression=PercentRank(),
                 partition_by=[F('taxonomy')],
@@ -250,11 +237,7 @@ class UnitView(EmployerView):
         if self.object.is_unclassified:
             return 'N/A'
 
-        in_taxonomy = (
-          Q(job__position__employer__taxonomy=self.object.taxonomy) | Q(job__position__employer__parent__taxonomy=self.object.taxonomy)
-        )
-
-        qs = self.model.objects.with_median_salary(in_taxonomy)\
+        qs = self.model.objects.with_median_salary()\
                                .filter(taxonomy=self.object.taxonomy)\
                                .annotate(salary_percentile=Window(
                                          expression=PercentRank(),
@@ -264,50 +247,7 @@ class UnitView(EmployerView):
 
         e = self.model.objects.get_raw(qs.query, self.object.id)
 
-        print(e.salary_percentile * 100)
-
-        query = '''
-            WITH employer_parent_lookup AS (
-              SELECT
-                id,
-                COALESCE(parent_id, id) AS parent_id
-              FROM payroll_employer
-            ),
-            median_salaries_by_unit AS (
-              SELECT
-                percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
-                lookup.parent_id AS unit_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN employer_parent_lookup AS lookup
-              ON position.employer_id = lookup.id
-              JOIN payroll_employer AS employer
-              ON lookup.parent_id = employer.id
-              WHERE employer.taxonomy_id = {taxonomy}
-              GROUP BY lookup.parent_id
-            ),
-            salary_percentiles AS (
-              SELECT
-                percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
-                unit_id
-              FROM median_salaries_by_unit
-            )
-            SELECT percentile
-            FROM salary_percentiles
-            WHERE unit_id = {id}
-            '''.format(taxonomy=self.object.taxonomy.id,
-                       id=self.object.id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-        print(result[0] * 100)
-
-        return result[0] * 100
+        return e.salary_percentile * 100
 
     def highest_spending_department(self):
         query = '''
@@ -382,96 +322,37 @@ class DepartmentView(EmployerView):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
-        query = '''
-            WITH taxonomy_members AS (
-              SELECT
-                department.id,
-                department.universe_id
-              FROM payroll_employer AS unit
-              JOIN payroll_employer AS department
-              ON unit.id = department.parent_id
-              WHERE unit.taxonomy_id = {taxonomy}
-            ),
-            expenditure_by_department AS (
-              SELECT
-                SUM(salary.amount) AS total_budget,
-                department.id AS department_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN taxonomy_members AS department
-              ON position.employer_id = department.id
-              WHERE department.universe_id = {universe}
-              GROUP BY department.id
-            ),
-            exp_percentiles AS (
-              SELECT
-                percent_rank() OVER (ORDER BY total_budget ASC) AS percentile,
-                department_id
-              FROM expenditure_by_department
-            )
-            SELECT
-              percentile
-            FROM exp_percentiles
-            WHERE department_id = {id}
-        '''.format(taxonomy=self.object.parent.taxonomy.id,
-                   universe=self.object.universe.id,
-                   id=self.object.id)
+        in_universe = Q(parent__taxonomy=self.object.parent.taxonomy) & Q(universe=self.object.universe)
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
+        qs = self.model.objects.with_expenditure()\
+                               .filter(in_universe)\
+                               .annotate(expenditure_percentile=Window(
+                                         expression=PercentRank(),
+                                         order_by=F('total_expenditure').asc()
+                                    )
+                               )
 
-        return result[0] * 100
+        e = self.model.objects.get_raw(qs.query, self.object.id)
+
+        return e.expenditure_percentile * 100
 
     def salary_percentile(self):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
-        query = '''
-            WITH taxonomy_members AS (
-              SELECT
-                department.id,
-                department.universe_id
-              FROM payroll_employer AS unit
-              JOIN payroll_employer AS department
-              ON unit.id = department.parent_id
-              WHERE unit.taxonomy_id = {taxonomy}
-            ),
-            median_salaries_by_department AS (
-              SELECT
-                percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
-                department.id AS department_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN taxonomy_members AS department
-              ON position.employer_id = department.id
-              WHERE department.universe_id = {universe}
-              GROUP BY department.id
-            ),
-            salary_percentiles AS (
-              SELECT
-                percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
-                department_id
-              FROM median_salaries_by_department
-            )
-            SELECT percentile
-            FROM salary_percentiles
-            WHERE department_id = {id}
-            '''.format(taxonomy=self.object.parent.taxonomy.id,
-                       universe=self.object.universe.id,
-                       id=self.object.id)
+        in_universe = Q(parent__taxonomy=self.object.parent.taxonomy) & Q(universe=self.object.universe)
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
+        qs = self.model.objects.with_median_salary()\
+                               .filter(in_universe)\
+                               .annotate(salary_percentile=Window(
+                                         expression=PercentRank(),
+                                         order_by=F('median_salary').asc()
+                                    )
+                               )
 
-        return result[0] * 100
+        e = self.model.objects.get_raw(qs.query, self.object.id)
+
+        return e.salary_percentile * 100
 
 
 class PersonView(DetailView, ChartHelperMixin):
