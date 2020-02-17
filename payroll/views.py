@@ -225,7 +225,6 @@ class UnitView(EmployerView):
         ).annotate(
             expenditure_percentile=Window(
                 expression=PercentRank(),
-                partition_by=[F('taxonomy')],
                 order_by=F('total_expenditure').asc()
             )
         )
