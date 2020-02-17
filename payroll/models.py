@@ -65,10 +65,10 @@ class EmployerManager(models.Manager):
         handle instances where either a unit or department do not have salaries.
         https://www.postgresql.org/docs/10/functions-conditional.html#FUNCTIONS-COALESCE-NVL-IFNULL
         '''
-        return self.get_queryset().annotate(
-            total_expenditure=Coalesce(Sum('positions__jobs__salaries__amount'), 0) +
-                              Coalesce(Sum('departments__positions__jobs__salaries__amount'), 0),
-        )
+        base_pay = Coalesce(Sum('positions__jobs__salaries__amount'), 0)
+        extra_pay = Coalesce(Sum('departments__positions__jobs__salaries__amount'), 0)
+
+        return self.get_queryset().annotate(total_expenditure=base_pay + extra_pay)
 
     def with_median_salary(self):
         '''

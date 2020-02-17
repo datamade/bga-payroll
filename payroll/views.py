@@ -3,19 +3,18 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Prefetch, Window, F
+from django.db.models import Q, Prefetch, Window, F
 from django.db.models.functions import PercentRank
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from postgres_stats.aggregates import Percentile
 from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
-from payroll.models import Job, Person, Salary, Unit, Department, Employer
+from payroll.models import Job, Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
@@ -221,7 +220,9 @@ class UnitView(EmployerView):
 
         in_taxonomy = Q(taxonomy=self.object.taxonomy)
 
-        qs = self.model.objects.with_expenditure().filter(in_taxonomy).annotate(
+        qs = self.model.objects.with_expenditure().filter(
+            in_taxonomy
+        ).annotate(
             expenditure_percentile=Window(
                 expression=PercentRank(),
                 partition_by=[F('taxonomy')],
@@ -237,13 +238,14 @@ class UnitView(EmployerView):
         if self.object.is_unclassified:
             return 'N/A'
 
-        qs = self.model.objects.with_median_salary()\
-                               .filter(taxonomy=self.object.taxonomy)\
-                               .annotate(salary_percentile=Window(
-                                         expression=PercentRank(),
-                                         order_by=F('median_salary').asc()
-                                    )
-                               )
+        qs = self.model.objects.with_median_salary().filter(
+            taxonomy=self.object.taxonomy
+        ).annotate(
+            salary_percentile=Window(
+                expression=PercentRank(),
+                order_by=F('median_salary').asc()
+            )
+        )
 
         e = self.model.objects.get_raw(qs.query, self.object.id)
 
@@ -324,13 +326,14 @@ class DepartmentView(EmployerView):
 
         in_universe = Q(parent__taxonomy=self.object.parent.taxonomy) & Q(universe=self.object.universe)
 
-        qs = self.model.objects.with_expenditure()\
-                               .filter(in_universe)\
-                               .annotate(expenditure_percentile=Window(
-                                         expression=PercentRank(),
-                                         order_by=F('total_expenditure').asc()
-                                    )
-                               )
+        qs = self.model.objects.with_expenditure().filter(
+            in_universe
+        ).annotate(
+            expenditure_percentile=Window(
+                expression=PercentRank(),
+                order_by=F('total_expenditure').asc()
+            )
+        )
 
         e = self.model.objects.get_raw(qs.query, self.object.id)
 
@@ -342,13 +345,14 @@ class DepartmentView(EmployerView):
 
         in_universe = Q(parent__taxonomy=self.object.parent.taxonomy) & Q(universe=self.object.universe)
 
-        qs = self.model.objects.with_median_salary()\
-                               .filter(in_universe)\
-                               .annotate(salary_percentile=Window(
-                                         expression=PercentRank(),
-                                         order_by=F('median_salary').asc()
-                                    )
-                               )
+        qs = self.model.objects.with_median_salary().filter(
+            in_universe
+        ).annotate(
+            salary_percentile=Window(
+                expression=PercentRank(),
+                order_by=F('median_salary').asc()
+            )
+        )
 
         e = self.model.objects.get_raw(qs.query, self.object.id)
 
