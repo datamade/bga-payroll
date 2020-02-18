@@ -109,6 +109,24 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         return results['median']
 
+    def _make_pie_chart(self, container):
+        return {
+            'container': container,
+            'total_pay': 4,
+            'series_data': {
+                'Name': 'Data',
+                'data': [{
+                    'name': 'Base Pay',
+                    'y': 3,
+                    'label': 'base_pay',
+                }, {
+                    'name': 'Extra Pay',
+                    'y': 1,
+                    'label': 'extra_pay',
+                }],
+            },
+        }
+
 
 class UnitView(EmployerView):
     model = Unit
@@ -117,6 +135,7 @@ class UnitView(EmployerView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
+
 
         context.update({
             'department_salaries': department_statistics[:5],
@@ -360,9 +379,11 @@ class UnitView(EmployerView):
 class DepartmentView(EmployerView):
     model = Department
     template_name = 'department.html'
+        
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
 
         department_expenditure = sum(self.object.employee_salaries)
         parent_expediture = sum(self.object.parent.employee_salaries)
@@ -370,6 +391,7 @@ class DepartmentView(EmployerView):
 
         context.update({
             'percent_of_total_expenditure': percentage * 100,
+            'payroll_expenditure': payroll_chart_data,
         })
 
         return context
