@@ -136,6 +136,7 @@ class UnitView(EmployerView):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
 
+        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
 
         context.update({
             'department_salaries': department_statistics[:5],
@@ -143,6 +144,7 @@ class UnitView(EmployerView):
             'highest_spending_department': self.highest_spending_department(),
             'composition_json': self.composition_data(),
             'size_class': self.object.size_class,
+            'payroll_expenditure': payroll_chart_data,
         })
 
         return context
