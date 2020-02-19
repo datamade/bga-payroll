@@ -135,7 +135,7 @@ var ChartHelper = {
     });
   },
   make_composition_chart: function(data) {
-    const element = 'department-composition-chart';
+    var element = 'department-composition-chart';
 
     Highcharts.chart(element, {
       title: '',
@@ -157,7 +157,7 @@ var ChartHelper = {
     });
   },
   make_payroll_expenditure_chart: function(data) {
-    const element = 'payroll-expenditure-chart'
+    var element = 'payroll-expenditure-chart'
 
     print(data.series_data)
     // Create the chart
