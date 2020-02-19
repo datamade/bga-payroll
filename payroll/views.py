@@ -4,6 +4,7 @@ import json
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q, FloatField, Prefetch, Sum
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -103,27 +104,22 @@ class EmployerView(DetailView, ChartHelperMixin):
         return context
 
     def median_entity_salary(self):
-        q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
+        q = Salary.objects.filter(\
+          Q(job__position__employer__parent=self.object) | \
+          Q(job__position__employer=self.object))
 
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
         return results['median']
 
     def _make_pie_chart(self, container, entity_type, entity):
-        grand_total_base_pay = Salary.objects.filter(\
-          Q(amount__isnull=False))
-        grand_total_extra_pay = Salary.objects.filter(\
-          Q(extra_pay__isnull=False))
+        employer_payroll = entity_type.objects.filter(Q(id=entity.id)).aggregate(\
+          extra_pay=Sum(Coalesce("departments__positions__jobs__salaries__extra_pay",0))+\
+          Sum(Coalesce("positions__jobs__salaries__extra_pay",0)),\
+          base_pay=Sum(Coalesce("positions__jobs__salaries__amount",0)))
 
-        entity_base_pay = entity_type.objects.prefetch_related(\
-          Prefetch("salaries", queryset=grand_total_base_pay)).aggregate(\
-          Sum("positions__jobs__salaries__amount"))
-        entity_extra_pay = entity_type.objects.prefetch_related(\
-          Prefetch("extra_pay", queryset=grand_total_extra_pay)).aggregate(\
-          Sum("positions__jobs__salaries__extra_pay"))
-
-        base_pay = float(entity_base_pay['positions__jobs__salaries__amount__sum'])
-        extra_pay = float(entity_extra_pay['positions__jobs__salaries__extra_pay__sum'])
+        base_pay = float(employer_payroll['base_pay'])
+        extra_pay = float(employer_payroll['extra_pay'])
 
         return {
             'container': container,
