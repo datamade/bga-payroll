@@ -15,7 +15,6 @@ from django.conf import settings
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
-from django.db.models.functions import Coalesce
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
@@ -111,15 +110,20 @@ class EmployerView(DetailView, ChartHelperMixin):
         return results['median']
 
     def _make_pie_chart(self, container, entity_type, entity):
-        total_base_pay = Salary.objects.filter(\
-          Q(amount__isnull=False)).aggregate(Sum("amount"))
-        total_extra_pay = Salary.objects.filter(\
-          Q(extra_pay__isnull=False)).aggregate(Sum("extra_pay"))
-        
-        # import pdb
-        # pdb.set_trace()
-        base_pay = float(total_base_pay['amount__sum'])
-        extra_pay = float(total_extra_pay['extra_pay__sum'])
+        grand_total_base_pay = Salary.objects.filter(\
+          Q(amount__isnull=False))
+        grand_total_extra_pay = Salary.objects.filter(\
+          Q(extra_pay__isnull=False))
+
+        entity_base_pay = entity_type.objects.prefetch_related(\
+          Prefetch("salaries", queryset=grand_total_base_pay)).aggregate(\
+          Sum("positions__jobs__salaries__amount"))
+        entity_extra_pay = entity_type.objects.prefetch_related(\
+          Prefetch("extra_pay", queryset=grand_total_extra_pay)).aggregate(\
+          Sum("positions__jobs__salaries__extra_pay"))
+
+        base_pay = float(entity_base_pay['positions__jobs__salaries__amount__sum'])
+        extra_pay = float(entity_extra_pay['positions__jobs__salaries__extra_pay__sum'])
 
         return {
             'container': container,
