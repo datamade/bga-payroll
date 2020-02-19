@@ -166,7 +166,7 @@ var ChartHelper = {
         type: 'pie'
       },
       title: {
-        text: 'Test'
+        text: ''
       },
       plotOptions: {
         series: {
