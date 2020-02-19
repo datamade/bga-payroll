@@ -175,6 +175,6 @@ var ChartHelper = {
         }
       },
       series: [data.series_data]
-    })
-  };
+    });
+  }
 };
