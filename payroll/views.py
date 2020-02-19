@@ -104,19 +104,19 @@ class EmployerView(DetailView, ChartHelperMixin):
         return context
 
     def median_entity_salary(self):
-        q = Salary.objects.filter(\
-          Q(job__position__employer__parent=self.object) | \
-          Q(job__position__employer=self.object))
+        q = Salary.objects.filter(
+            Q(job__position__employer__parent=self.object) |
+            Q(job__position__employer=self.object))
 
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
         return results['median']
 
     def _make_pie_chart(self, container, entity_type, entity):
-        employer_payroll = entity_type.objects.filter(Q(id=entity.id)).aggregate(\
-          extra_pay=Sum(Coalesce("departments__positions__jobs__salaries__extra_pay",0))+\
-          Sum(Coalesce("positions__jobs__salaries__extra_pay",0)),\
-          base_pay=Sum(Coalesce("positions__jobs__salaries__amount",0)))
+        employer_payroll = entity_type.objects.filter(Q(id=entity.id)).aggregate(
+            extra_pay=Sum(Coalesce("departments__positions__jobs__salaries__extra_pay", 0)) +
+            Sum(Coalesce("positions__jobs__salaries__extra_pay", 0)),
+            base_pay=Sum(Coalesce("positions__jobs__salaries__amount", 0)))
 
         base_pay = float(employer_payroll['base_pay'])
         extra_pay = float(employer_payroll['extra_pay'])
@@ -392,7 +392,6 @@ class UnitView(EmployerView):
 class DepartmentView(EmployerView):
     model = Department
     template_name = 'department.html'
-        
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
