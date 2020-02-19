@@ -136,7 +136,6 @@ var ChartHelper = {
   },
   make_composition_chart: function(data) {
     const element = 'department-composition-chart';
-    console.log(data)
 
     Highcharts.chart(element, {
       title: '',
@@ -159,9 +158,8 @@ var ChartHelper = {
   },
   make_payroll_expenditure_chart: function(data) {
     const element = 'payroll-expenditure-chart'
-    console.log(data.series_data)
 
-    data.series_data.data.colorByPoint = true
+    print(data.series_data)
     // Create the chart
     Highcharts.chart(element, {
       chart: {

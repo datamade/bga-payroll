@@ -3,7 +3,7 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Prefetch
+from django.db.models import Q, FloatField, Prefetch, Sum
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -15,6 +15,7 @@ from django.conf import settings
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
 from payroll.models import Job, Person, Salary, Unit, Department
+from django.db.models.functions import Coalesce
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
@@ -109,19 +110,29 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         return results['median']
 
-    def _make_pie_chart(self, container):
+    def _make_pie_chart(self, container, entity_type, entity):
+        total_base_pay = Salary.objects.filter(\
+          Q(amount__isnull=False)).aggregate(Sum("amount"))
+        total_extra_pay = Salary.objects.filter(\
+          Q(extra_pay__isnull=False)).aggregate(Sum("extra_pay"))
+        
+        # import pdb
+        # pdb.set_trace()
+        base_pay = float(total_base_pay['amount__sum'])
+        extra_pay = float(total_extra_pay['extra_pay__sum'])
+
         return {
             'container': container,
-            'total_pay': 4,
+            'total_pay': base_pay + extra_pay,
             'series_data': {
                 'Name': 'Data',
                 'data': [{
                     'name': 'Base Pay',
-                    'y': 3,
+                    'y': base_pay,
                     'label': 'base_pay',
                 }, {
                     'name': 'Extra Pay',
-                    'y': 1,
+                    'y': extra_pay,
                     'label': 'extra_pay',
                 }],
             },
@@ -136,7 +147,7 @@ class UnitView(EmployerView):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
 
-        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
+        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart", self.model, self.object)
 
         context.update({
             'department_salaries': department_statistics[:5],
@@ -385,7 +396,7 @@ class DepartmentView(EmployerView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
+        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart", self.model, self.object)
 
         department_expenditure = sum(self.object.employee_salaries)
         parent_expediture = sum(self.object.parent.employee_salaries)
