@@ -157,9 +157,8 @@ var ChartHelper = {
     });
   },
   make_payroll_expenditure_chart: function(data) {
-    var element = 'payroll-expenditure-chart'
+    var element = 'payroll-expenditure-chart';
 
-    print(data.series_data)
     // Create the chart
     Highcharts.chart(element, {
       chart: {
@@ -177,5 +176,5 @@ var ChartHelper = {
       },
       series: [data.series_data]
     })
-  }
+  };
 };
