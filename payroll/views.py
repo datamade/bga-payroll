@@ -15,7 +15,7 @@ from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
-from payroll.models import Job, Person, Salary, Unit, Department
+from payroll.models import Job, Person, Salary, Unit, Department, Employer
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
@@ -76,6 +76,19 @@ class EmployerView(DetailView, ChartHelperMixin):
         ON position.employer_id = employer.id
     '''
 
+    def get_entity_payroll(self):
+        entity_qs = Employer.objects.filter(Q(id=self.object.id) | Q(parent_id=self.object.id))
+
+        entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))
+        entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))
+
+        employer_payroll = entity_qs.aggregate(base_pay=entity_base_pay, extra_pay=entity_extra_pay)
+        
+        base_pay = float(employer_payroll['base_pay'])
+        extra_pay = float(employer_payroll['extra_pay'])
+
+        return base_pay, extra_pay
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -83,6 +96,8 @@ class EmployerView(DetailView, ChartHelperMixin):
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
         source_file = self.object.source_file(2017)
+
+        base_pay, extra_pay = self.get_entity_payroll()
 
         if source_file:
             source_link = source_file.url
@@ -93,7 +108,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             'jobs': Job.of_employer(self.object.id, n=5),
             'median_salary': self.median_entity_salary(),
             'headcount': len(employee_salaries),
-            'total_expenditure': sum(employee_salaries),
+            'total_expenditure': base_pay + extra_pay,
             'salary_percentile': self.salary_percentile(),
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
@@ -113,24 +128,8 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         return results['median']
 
-    def _make_pie_chart(self, container, entity_type, entity):
-        # ***
-        # entity_type => self.model
-        # entity => self.object
-        # change in dept and unit views
-        entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))\
-            + Sum(Coalesce("departments__positions__jobs__salaries__amount", 0))
-
-        entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))\
-            + Sum(Coalesce("departments__positions__jobs__salaries__extra_pay", 0))
-
-        employer_payroll = entity_type.objects.filter(id=entity.id)\
-            .annotate(base_pay=entity_base_pay, extra_pay=entity_extra_pay)
-        
-        base_pay = float(employer_payroll['base_pay'])
-        extra_pay = float(employer_payroll['extra_pay'])
-        # **
-
+    def _make_pie_chart(self, container):
+        base_pay, extra_pay = self.get_entity_payroll()
         return {
             'container': container,
             'total_pay': base_pay + extra_pay,
@@ -157,7 +156,7 @@ class UnitView(EmployerView):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
 
-        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart", self.model, self.object)
+        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
 
         context.update({
             'department_salaries': department_statistics[:5],
@@ -405,7 +404,7 @@ class DepartmentView(EmployerView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart", self.model, self.object)
+        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
 
         department_expenditure = sum(self.object.employee_salaries)
         parent_expediture = sum(self.object.parent.employee_salaries)
