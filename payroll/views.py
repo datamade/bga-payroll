@@ -76,6 +76,24 @@ class EmployerView(DetailView, ChartHelperMixin):
         ON position.employer_id = employer.id
     '''
 
+    def _make_pie_chart(self, container, base_pay, extra_pay):
+        return {
+            'container': container,
+            'total_pay': base_pay + extra_pay,
+            'series_data': {
+                'Name': 'Data',
+                'data': [{
+                    'name': 'Base Pay',
+                    'y': base_pay,
+                    'label': 'base_pay',
+                }, {
+                    'name': 'Extra Pay',
+                    'y': extra_pay,
+                    'label': 'extra_pay',
+                }],
+            },
+        }
+
     def get_entity_payroll(self):
         entity_qs = Employer.objects.filter(Q(id=self.object.id) | Q(parent_id=self.object.id))
 
@@ -98,6 +116,9 @@ class EmployerView(DetailView, ChartHelperMixin):
         source_file = self.object.source_file(2017)
 
         base_pay, extra_pay = self.get_entity_payroll()
+        payroll_chart_data = self._make_pie_chart(
+            "payroll-expenditure-chart", base_pay, extra_pay
+        )
 
         if source_file:
             source_link = source_file.url
@@ -114,6 +135,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             'employee_salary_json': json.dumps(binned_employee_salaries),
             'data_year': 2017,
             'source_link': source_link,
+            'payroll_expenditure': payroll_chart_data,
         })
 
         return context
@@ -128,25 +150,6 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         return results['median']
 
-    def _make_pie_chart(self, container):
-        base_pay, extra_pay = self.get_entity_payroll()
-        return {
-            'container': container,
-            'total_pay': base_pay + extra_pay,
-            'series_data': {
-                'Name': 'Data',
-                'data': [{
-                    'name': 'Base Pay',
-                    'y': base_pay,
-                    'label': 'base_pay',
-                }, {
-                    'name': 'Extra Pay',
-                    'y': extra_pay,
-                    'label': 'extra_pay',
-                }],
-            },
-        }
-
 
 class UnitView(EmployerView):
     model = Unit
@@ -156,15 +159,12 @@ class UnitView(EmployerView):
         context = super().get_context_data(**kwargs)
         department_statistics = self.aggregate_department_statistics()
 
-        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
-
         context.update({
             'department_salaries': department_statistics[:5],
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
             'composition_json': self.composition_data(),
-            'size_class': self.object.size_class,
-            'payroll_expenditure': payroll_chart_data,
+            'size_class': self.object.size_class
         })
 
         return context
@@ -404,7 +404,6 @@ class DepartmentView(EmployerView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        payroll_chart_data = super()._make_pie_chart("payroll-expenditure-chart")
 
         department_expenditure = sum(self.object.employee_salaries)
         parent_expediture = sum(self.object.parent.employee_salaries)
@@ -412,7 +411,6 @@ class DepartmentView(EmployerView):
 
         context.update({
             'percent_of_total_expenditure': percentage * 100,
-            'payroll_expenditure': payroll_chart_data,
         })
 
         return context
