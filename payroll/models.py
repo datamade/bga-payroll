@@ -44,11 +44,13 @@ class EmployerManager(models.Manager):
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs)
 
-    def get_raw(self, subquery, obj_id, id_column='uid'):
+    def get_raw(self, subquery, obj_id, id_column='id'):
         '''
-        Get a particular Employer object from any subquery. This is useful when
-        you want raw values back from Postgres, e.g., PERCENT_RANK with full
-        precision. Django rounds these values when annotating a queryset.
+        Convenience wrapper around Manager.raw() that returns an Employer
+        instance with raw values from any subquery. Helpful because Django
+        rounds certain values when annotating or aggregating a queryset, e.g.,
+        the output from the PERCENT_RANK() function. This method allows us to
+        access those values with full precision.
         '''
         print(subquery)
         raw_query = "SELECT * FROM ({subquery}) as x WHERE {id_column} = {id}".format(
