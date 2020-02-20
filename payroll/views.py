@@ -3,7 +3,8 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Prefetch
+from django.db.models import Q, FloatField, Prefetch, Window, F
+from django.db.models.functions import PercentRank
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -264,6 +265,19 @@ class UnitView(EmployerView):
         if self.object.is_unclassified:
             return 'N/A'
 
+        in_taxonomy = Q(taxonomy__id=self.object.taxonomy.id)
+
+        qs = self.model.objects.with_median_salary(extra_q=in_taxonomy).annotate(
+            salary_percentile=Window(
+                expression=PercentRank(),
+                order_by=F('median_salary').asc()
+            )
+        ).values('id', 'salary_percentile')
+
+        e = self.model.objects.get_raw(qs.query, self.object.id, 'id')
+
+        new_value = e.salary_percentile * 100
+
         query = '''
             WITH employer_parent_lookup AS (
               SELECT
@@ -303,7 +317,11 @@ class UnitView(EmployerView):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0] * 100
+        old_value = result[0] * 100
+
+        assert new_value == old_value
+
+        return new_value
 
     def highest_spending_department(self):
         query = '''
@@ -426,6 +444,20 @@ class DepartmentView(EmployerView):
         if self.object.is_unclassified or self.object.parent.is_unclassified:
             return 'N/A'
 
+        in_taxonomy = Q(parent__taxonomy__id=self.object.parent.taxonomy.id)
+        in_universe = Q(universe__id=self.object.universe.id)
+
+        qs = self.model.objects.with_median_salary(extra_q=in_taxonomy & in_universe).annotate(
+            salary_percentile=Window(
+                expression=PercentRank(),
+                order_by=F('median_salary').asc()
+            )
+        ).values('id', 'salary_percentile')
+
+        e = self.model.objects.get_raw(qs.query, self.object.id, 'id')
+
+        new_value = e.salary_percentile * 100
+
         query = '''
             WITH taxonomy_members AS (
               SELECT
@@ -467,7 +499,11 @@ class DepartmentView(EmployerView):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0] * 100
+        old_value = result[0] * 100
+
+        assert new_value == old_value
+
+        return new_value
 
 
 class PersonView(DetailView, ChartHelperMixin):
