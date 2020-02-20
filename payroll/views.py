@@ -2,6 +2,7 @@ from itertools import chain
 import json
 
 from django.core.cache import cache
+from django.conf import settings
 from django.db import connection
 from django.db.models import Q, FloatField, Prefetch, Window, F
 from django.db.models.functions import PercentRank
@@ -11,7 +12,6 @@ from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from postgres_stats.aggregates import Percentile
-from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
@@ -104,11 +104,19 @@ class EmployerView(DetailView, ChartHelperMixin):
         return context
 
     def median_entity_salary(self):
-        q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
+        e = self.model.objects.with_median_salary()\
+                              .filter(id=self.object.id)\
+                              .get()
 
-        results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
+        median = e.median_salary
 
-        return results['median']
+        if settings.DEBUG:
+            q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
+            results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
+
+            assert median == results['median']
+
+        return median
 
 
 class UnitView(EmployerView):
@@ -267,59 +275,63 @@ class UnitView(EmployerView):
 
         in_taxonomy = Q(taxonomy__id=self.object.taxonomy.id)
 
-        qs = self.model.objects.with_median_salary(extra_q=in_taxonomy).annotate(
-            salary_percentile=Window(
-                expression=PercentRank(),
-                order_by=F('median_salary').asc()
-            )
-        ).values('id', 'salary_percentile')
+        salary_percentile = Window(
+          expression=PercentRank(),
+          order_by=F('median_salary').asc()
+        )
+
+        qs = self.model.objects.with_median_salary()\
+                               .filter(in_taxonomy)\
+                               .annotate(salary_percentile=salary_percentile)\
+                               .values('id', 'salary_percentile')
 
         e = self.model.objects.get_raw(qs.query, self.object.id, 'id')
 
         new_value = e.salary_percentile * 100
 
-        query = '''
-            WITH employer_parent_lookup AS (
-              SELECT
-                id,
-                COALESCE(parent_id, id) AS parent_id
-              FROM payroll_employer
-            ),
-            median_salaries_by_unit AS (
-              SELECT
-                percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
-                lookup.parent_id AS unit_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN employer_parent_lookup AS lookup
-              ON position.employer_id = lookup.id
-              JOIN payroll_employer AS employer
-              ON lookup.parent_id = employer.id
-              WHERE employer.taxonomy_id = {taxonomy}
-              GROUP BY lookup.parent_id
-            ),
-            salary_percentiles AS (
-              SELECT
-                percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
-                unit_id
-              FROM median_salaries_by_unit
-            )
-            SELECT percentile
-            FROM salary_percentiles
-            WHERE unit_id = {id}
-            '''.format(taxonomy=self.object.taxonomy.id,
-                       id=self.object.id)
+        if settings.DEBUG:
+            query = '''
+                WITH employer_parent_lookup AS (
+                  SELECT
+                    id,
+                    COALESCE(parent_id, id) AS parent_id
+                  FROM payroll_employer
+                ),
+                median_salaries_by_unit AS (
+                  SELECT
+                    percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
+                    lookup.parent_id AS unit_id
+                  FROM payroll_salary AS salary
+                  JOIN payroll_job AS job
+                  ON salary.job_id = job.id
+                  JOIN payroll_position AS position
+                  ON job.position_id = position.id
+                  JOIN employer_parent_lookup AS lookup
+                  ON position.employer_id = lookup.id
+                  JOIN payroll_employer AS employer
+                  ON lookup.parent_id = employer.id
+                  WHERE employer.taxonomy_id = {taxonomy}
+                  GROUP BY lookup.parent_id
+                ),
+                salary_percentiles AS (
+                  SELECT
+                    percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
+                    unit_id
+                  FROM median_salaries_by_unit
+                )
+                SELECT percentile
+                FROM salary_percentiles
+                WHERE unit_id = {id}
+                '''.format(taxonomy=self.object.taxonomy.id,
+                           id=self.object.id)
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                result = cursor.fetchone()
 
-        old_value = result[0] * 100
+            old_value = result[0] * 100
 
-        assert new_value == old_value
+            assert new_value == old_value
 
         return new_value
 
@@ -447,61 +459,65 @@ class DepartmentView(EmployerView):
         in_taxonomy = Q(parent__taxonomy__id=self.object.parent.taxonomy.id)
         in_universe = Q(universe__id=self.object.universe.id)
 
-        qs = self.model.objects.with_median_salary(extra_q=in_taxonomy & in_universe).annotate(
-            salary_percentile=Window(
-                expression=PercentRank(),
-                order_by=F('median_salary').asc()
-            )
-        ).values('id', 'salary_percentile')
+        salary_percentile = Window(
+            expression=PercentRank(),
+            order_by=F('median_salary').asc()
+        )
+
+        qs = self.model.objects.with_median_salary()\
+                               .filter(in_taxonomy & in_universe)\
+                               .annotate(salary_percentile=salary_percentile)\
+                               .values('id', 'salary_percentile')
 
         e = self.model.objects.get_raw(qs.query, self.object.id, 'id')
 
         new_value = e.salary_percentile * 100
 
-        query = '''
-            WITH taxonomy_members AS (
-              SELECT
-                department.id,
-                department.universe_id
-              FROM payroll_employer AS unit
-              JOIN payroll_employer AS department
-              ON unit.id = department.parent_id
-              WHERE unit.taxonomy_id = {taxonomy}
-            ),
-            median_salaries_by_department AS (
-              SELECT
-                percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
-                department.id AS department_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN taxonomy_members AS department
-              ON position.employer_id = department.id
-              WHERE department.universe_id = {universe}
-              GROUP BY department.id
-            ),
-            salary_percentiles AS (
-              SELECT
-                percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
-                department_id
-              FROM median_salaries_by_department
-            )
-            SELECT percentile
-            FROM salary_percentiles
-            WHERE department_id = {id}
-            '''.format(taxonomy=self.object.parent.taxonomy.id,
-                       universe=self.object.universe.id,
-                       id=self.object.id)
+        if settings.DEBUG:
+            query = '''
+                WITH taxonomy_members AS (
+                  SELECT
+                    department.id,
+                    department.universe_id
+                  FROM payroll_employer AS unit
+                  JOIN payroll_employer AS department
+                  ON unit.id = department.parent_id
+                  WHERE unit.taxonomy_id = {taxonomy}
+                ),
+                median_salaries_by_department AS (
+                  SELECT
+                    percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
+                    department.id AS department_id
+                  FROM payroll_salary AS salary
+                  JOIN payroll_job AS job
+                  ON salary.job_id = job.id
+                  JOIN payroll_position AS position
+                  ON job.position_id = position.id
+                  JOIN taxonomy_members AS department
+                  ON position.employer_id = department.id
+                  WHERE department.universe_id = {universe}
+                  GROUP BY department.id
+                ),
+                salary_percentiles AS (
+                  SELECT
+                    percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
+                    department_id
+                  FROM median_salaries_by_department
+                )
+                SELECT percentile
+                FROM salary_percentiles
+                WHERE department_id = {id}
+                '''.format(taxonomy=self.object.parent.taxonomy.id,
+                           universe=self.object.universe.id,
+                           id=self.object.id)
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                result = cursor.fetchone()
 
-        old_value = result[0] * 100
+            old_value = result[0] * 100
 
-        assert new_value == old_value
+            assert new_value == old_value
 
         return new_value
 

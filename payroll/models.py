@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models, connection
-from django.db.models import Q, CheckConstraint, OuterRef, Subquery, F
+from django.db.models import Q, CheckConstraint, OuterRef, Subquery, F, ExpressionWrapper
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext_lazy as _
 from postgres_stats.aggregates import Percentile
@@ -41,8 +41,6 @@ class SourceFileMixin(object):
 
 
 class EmployerManager(models.Manager):
-    def get_queryset(self, *args, **kwargs):
-        return super().get_queryset(*args, **kwargs)
 
     def get_raw(self, subquery, obj_id, id_column='id'):
         '''
@@ -60,20 +58,22 @@ class EmployerManager(models.Manager):
         )
         return self.raw(raw_query)[0]
 
-    def with_median_salary(self, extra_q=None):
+    def with_median_salary(self):
         '''
         See https://docs.djangoproject.com/en/2.2/ref/models/expressions/#using-aggregates-within-a-subquery-expression
         '''
         salaries = Salary.objects.annotate(employer_id=self.employer_salary_lookup)\
-                                 .filter(employer_id=OuterRef('pk'))\
+                                 .filter(employer_id=OuterRef('pk'), amount__isnull=False)\
                                  .values('employer_id')
 
         median_salaries = salaries.annotate(
             median=Percentile('amount', 0.5, output_field=models.FloatField())
         ).values('median')
 
-        return self.get_queryset().filter(extra_q).annotate(
-            median_salary=Subquery(median_salaries)
+        return super().get_queryset().annotate(
+            median_salary=ExpressionWrapper(
+                Subquery(median_salaries), output_field=models.FloatField()
+            )
         )
 
 
