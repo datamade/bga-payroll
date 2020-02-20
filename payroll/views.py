@@ -89,14 +89,20 @@ class EmployerView(DetailView, ChartHelperMixin):
         else:
             source_link = None
 
+        top_salaries = Job.of_employer(self.object.id, n=5)
+        median_salary = self.median_entity_salary()
+        salary_percentile = self.salary_percentile()
+        expenditure_percentile = self.expenditure_percentile()
+        salary_json = json.dumps(binned_employee_salaries)
+
         context.update({
-            'jobs': Job.of_employer(self.object.id, n=5),
-            'median_salary': self.median_entity_salary(),
+            'jobs': top_salaries,
+            'median_salary': median_salary,
             'headcount': len(employee_salaries),
             'total_expenditure': sum(employee_salaries),
-            'salary_percentile': self.salary_percentile(),
-            'expenditure_percentile': self.expenditure_percentile(),
-            'employee_salary_json': json.dumps(binned_employee_salaries),
+            'salary_percentile': salary_percentile,
+            'expenditure_percentile': expenditure_percentile,
+            'employee_salary_json': salary_json,
             'data_year': 2017,
             'source_link': source_link,
         })
