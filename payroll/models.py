@@ -62,7 +62,7 @@ class EmployerManager(models.Manager):
         '''
         See https://docs.djangoproject.com/en/2.2/ref/models/expressions/#using-aggregates-within-a-subquery-expression
         '''
-        salaries = Salary.objects.annotate(employer_id=self.employer_salary_lookup)\
+        salaries = Salary.objects.annotate(employer_id=self.employer_id_lookup)\
                                  .filter(employer_id=OuterRef('pk'), amount__isnull=False)\
                                  .values('employer_id')
 
@@ -228,7 +228,7 @@ class Employer(SluggedModel, VintagedModel):
 
 
 class UnitManager(EmployerManager):
-    employer_salary_lookup = Coalesce('job__position__employer__parent', 'job__position__employer')
+    employer_id_lookup = Coalesce('job__position__employer__parent', 'job__position__employer')
 
     def get_queryset(self):
         return super().get_queryset().filter(parent_id__isnull=True)
@@ -260,7 +260,7 @@ class Unit(Employer, SourceFileMixin):
 
 
 class DepartmentManager(EmployerManager):
-    employer_salary_lookup = F('job__position__employer')
+    employer_id_lookup = F('job__position__employer')
 
     def get_queryset(self):
         # Always select the related parent, so additional queries are not
