@@ -114,6 +114,10 @@ class EmployerView(DetailView, ChartHelperMixin):
         return results['median']
 
     def _make_pie_chart(self, container, entity_type, entity):
+        # ***
+        # entity_type => self.model
+        # entity => self.object
+        # change in dept and unit views
         entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))\
             + Sum(Coalesce("departments__positions__jobs__salaries__amount", 0))
 
@@ -121,10 +125,11 @@ class EmployerView(DetailView, ChartHelperMixin):
             + Sum(Coalesce("departments__positions__jobs__salaries__extra_pay", 0))
 
         employer_payroll = entity_type.objects.filter(id=entity.id)\
-            .aggregate(base_pay=entity_base_pay, extra_pay=entity_extra_pay)
-
+            .annotate(base_pay=entity_base_pay, extra_pay=entity_extra_pay)
+        
         base_pay = float(employer_payroll['base_pay'])
         extra_pay = float(employer_payroll['extra_pay'])
+        # **
 
         return {
             'container': container,
