@@ -3,7 +3,8 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Prefetch
+from django.db.models import Q, FloatField, Prefetch, Sum
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -14,7 +15,7 @@ from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
-from payroll.models import Job, Person, Salary, Unit, Department
+from payroll.models import Job, Person, Salary, Unit, Department, Employer
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
@@ -75,6 +76,37 @@ class EmployerView(DetailView, ChartHelperMixin):
         ON position.employer_id = employer.id
     '''
 
+    def _make_pie_chart(self, container, base_pay, extra_pay):
+        return {
+            'container': container,
+            'total_pay': base_pay + extra_pay,
+            'series_data': {
+                'Name': 'Data',
+                'data': [{
+                    'name': 'Base Pay',
+                    'y': base_pay,
+                    'label': 'base_pay',
+                }, {
+                    'name': 'Extra Pay',
+                    'y': extra_pay,
+                    'label': 'extra_pay',
+                }],
+            },
+        }
+
+    def get_entity_payroll(self):
+        entity_qs = Employer.objects.filter(Q(id=self.object.id) | Q(parent_id=self.object.id))
+
+        entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))
+        entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))
+
+        employer_payroll = entity_qs.aggregate(base_pay=entity_base_pay, extra_pay=entity_extra_pay)
+
+        base_pay = float(employer_payroll['base_pay'])
+        extra_pay = float(employer_payroll['extra_pay'])
+
+        return base_pay, extra_pay
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -82,6 +114,11 @@ class EmployerView(DetailView, ChartHelperMixin):
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
         source_file = self.object.source_file(2017)
+
+        base_pay, extra_pay = self.get_entity_payroll()
+        payroll_chart_data = self._make_pie_chart(
+            "payroll-expenditure-chart", base_pay, extra_pay
+        )
 
         if source_file:
             source_link = source_file.url
@@ -92,18 +129,22 @@ class EmployerView(DetailView, ChartHelperMixin):
             'jobs': Job.of_employer(self.object.id, n=5),
             'median_salary': self.median_entity_salary(),
             'headcount': len(employee_salaries),
-            'total_expenditure': sum(employee_salaries),
+            'total_expenditure': base_pay + extra_pay,
             'salary_percentile': self.salary_percentile(),
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
             'data_year': 2017,
             'source_link': source_link,
+            'payroll_expenditure': payroll_chart_data,
         })
 
         return context
 
     def median_entity_salary(self):
-        q = Salary.objects.filter(Q(job__position__employer__parent=self.object) | Q(job__position__employer=self.object))
+        q = Salary.objects.filter(
+            Q(job__position__employer__parent=self.object) |
+            Q(job__position__employer=self.object)
+        )
 
         results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
 
@@ -123,7 +164,7 @@ class UnitView(EmployerView):
             'population_percentile': self.population_percentile(),
             'highest_spending_department': self.highest_spending_department(),
             'composition_json': self.composition_data(),
-            'size_class': self.object.size_class,
+            'size_class': self.object.size_class
         })
 
         return context

@@ -110,5 +110,6 @@
 <script type="text/javascript">
   ChartHelper.make_salary_chart({{ employee_salary_json|safe }}, 'employee');
   ChartHelper.make_composition_chart({{ composition_json|safe }});
+  ChartHelper.make_payroll_expenditure_chart({{ payroll_expenditure|safe }});
 </script>
 {% endblock %}
