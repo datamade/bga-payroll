@@ -83,7 +83,7 @@ class EmployerView(DetailView, ChartHelperMixin):
         entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))
 
         employer_payroll = entity_qs.aggregate(base_pay=entity_base_pay, extra_pay=entity_extra_pay)
-        
+
         base_pay = float(employer_payroll['base_pay'])
         extra_pay = float(employer_payroll['extra_pay'])
 
