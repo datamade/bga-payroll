@@ -5,15 +5,15 @@
     <div class="col-lg-6">
       <div class="text-center d-flex flex-column justify-content-around h-100">
         <div>
-          <h4>$$$$$</h4>
-          <small class="text-muted">Median Total Pay</small></br>
+          <h4>{{ median_tp|format_salary }}</h4>
+          <small class="text-muted">Median Total Salary</small></br>
         </div>
         <div>
-          <h4>$$$</h4>
+          <h4>{{ median_bp|format_salary }}</h4>
           <small class="text-muted">Median Base Salary</small></br>
         </div>
         <div>
-          <h4>$</h4>
+          <h4>{{ median_ep|format_salary }}</h4>
           <small class="text-muted">Median Extra Pay</small></br>
         </div>
       </div>

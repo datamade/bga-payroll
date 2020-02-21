@@ -95,7 +95,9 @@ class EmployerView(DetailView, ChartHelperMixin):
         }
 
     def get_entity_payroll(self):
-        entity_qs = Employer.objects.filter(Q(id=self.object.id) | Q(parent_id=self.object.id))
+        entity_qs = Employer.objects.filter(
+            Q(id=self.object.id) | Q(parent_id=self.object.id)
+        )
 
         entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))
         entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))
@@ -120,6 +122,8 @@ class EmployerView(DetailView, ChartHelperMixin):
             "payroll-expenditure-chart", base_pay, extra_pay
         )
 
+        median_bp, median_ep, median_tp = self.median_entity_salary()
+
         if source_file:
             source_link = source_file.url
         else:
@@ -127,7 +131,9 @@ class EmployerView(DetailView, ChartHelperMixin):
 
         context.update({
             'jobs': Job.of_employer(self.object.id, n=5),
-            'median_salary': self.median_entity_salary(),
+            'median_tp': median_tp,
+            'median_bp': median_bp,
+            'median_ep': median_ep,
             'headcount': len(employee_salaries),
             'total_expenditure': base_pay + extra_pay,
             'salary_percentile': self.salary_percentile(),
@@ -141,14 +147,34 @@ class EmployerView(DetailView, ChartHelperMixin):
         return context
 
     def median_entity_salary(self):
-        q = Salary.objects.filter(
-            Q(job__position__employer__parent=self.object) |
-            Q(job__position__employer=self.object)
+        entity_qs = Employer.objects.filter(
+            Q(id=self.object.id) | Q(parent_id=self.object.id)
         )
 
-        results = q.all().aggregate(median=Percentile('amount', 0.5, output_field=FloatField()))
+        median_base_pay = Percentile(
+            "positions__jobs__salaries__amount", 0.5, output_field=FloatField()
+        )
+        median_extra_pay = Percentile(
+            "positions__jobs__salaries__extra_pay", 0.5, output_field=FloatField()
+        )
+        median_total_pay = Percentile(
+            (
+                Coalesce("positions__jobs__salaries__amount", 0) + 
+                Coalesce("positions__jobs__salaries__extra_pay", 0)
+            ), 0.5, output_field=FloatField()
+        )
 
-        return results['median']
+        results = entity_qs.all().aggregate(
+            median_base_pay=median_base_pay, 
+            median_extra_pay=median_extra_pay,
+            median_total_pay=median_total_pay
+        )
+
+        bp = results['median_base_pay']
+        ep = results['median_extra_pay']
+        tp = results['median_total_pay']
+
+        return bp, ep, tp
 
 
 class UnitView(EmployerView):
