@@ -4,7 +4,7 @@ import json
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q, FloatField, Prefetch, Sum
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, NullIf
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
