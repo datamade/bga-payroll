@@ -126,7 +126,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             source_link = None
 
         context.update({
-            'jobs': Job.of_employer(self.object.id, n=5),
+            'salaries': Salary.of_employer(self.object.id, n=5),
             'median_salary': self.median_entity_salary(),
             'headcount': len(employee_salaries),
             'total_expenditure': base_pay + extra_pay,
