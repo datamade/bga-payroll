@@ -159,8 +159,10 @@ class EmployerView(DetailView, ChartHelperMixin):
         )
         median_total_pay = Percentile(
             (
-                NullIf(Coalesce("positions__jobs__salaries__amount", 0), 0) +
-                NullIf(Coalesce("positions__jobs__salaries__extra_pay", 0), 0)
+                NullIf(
+                    Coalesce("positions__jobs__salaries__amount", 0) +
+                    Coalesce("positions__jobs__salaries__extra_pay", 0), 
+                0)
             ), 0.5, output_field=FloatField()
         )
 
