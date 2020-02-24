@@ -578,13 +578,12 @@ class Salary(VintagedModel):
         ep = Coalesce("extra_pay", 0)
 
         salaries = cls.objects.filter(criterion)\
-                        .annotate(total_pay=bp + ep)\
-                        .order_by('-total_pay')\
-                        .select_related(
-                            'job__person', 
-                            'job__position', 
-                            'job__position__employer', 
-                            'job__position__employer__parent'
-                        )[:n]
+            .annotate(total_pay=bp + ep)\
+            .order_by('-total_pay')\
+            .select_related(
+                'job__person',
+                'job__position',
+                'job__position__employer',
+                'job__position__employer__parent')[:n]
 
         return salaries
