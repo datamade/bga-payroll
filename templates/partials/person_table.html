@@ -7,7 +7,8 @@
       {% if not entity.is_department and department_salaries %}
       <th scope="col">Department</th>
       {% endif %}
-      <th scope="col" class="text-right">Salary</th>
+      <th scope="col" class="text-right">Base Salary</th>
+      <th scope="col" class="text-right">Extra Pay</th>
       {% if show_start_date %}
       <th scope="col" class="text-right">Start Date</th>
       {% endif %}
@@ -39,6 +40,9 @@
             <i class="fas invisible"></i>
           {% endif %}
         {% endif %}
+      </td>
+      <td class="text-right">
+        {{ job.salaries.first().extra_pay|format_salary }}
       </td>
       {% if show_start_date %}
       <td class="text-right">
