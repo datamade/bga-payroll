@@ -3,7 +3,7 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Prefetch, Sum
+from django.db.models import Q, FloatField, Sum
 from django.db.models.functions import Coalesce, NullIf
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -15,7 +15,7 @@ from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
-from payroll.models import Job, Person, Salary, Unit, Department, Employer
+from payroll.models import Person, Salary, Unit, Department, Employer
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
@@ -130,7 +130,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             source_link = None
 
         context.update({
-            'jobs': Job.of_employer(self.object.id, n=5),
+            'salaries': Salary.of_employer(self.object.id, n=5),
             'median_tp': median_tp,
             'median_bp': median_bp,
             'median_ep': median_ep,
@@ -557,13 +557,14 @@ class PersonView(DetailView, ChartHelperMixin):
         current_job = self.object.most_recent_job
         current_salary = current_job.salaries.get()
 
-        salary_prefetch = Prefetch('salaries', to_attr='salary')
+        bp = Coalesce("amount", 0)
+        ep = Coalesce("extra_pay", 0)
 
-        fellow_job_holders = Job.objects.filter(position=current_job.position)\
-                                        .exclude(person=self.object)\
-                                        .select_related('person', 'position')\
-                                        .prefetch_related(salary_prefetch)\
-                                        .order_by('-salaries__amount')
+        fellow_job_holders = Salary.objects.exclude(job__person=self.object)\
+                                           .select_related('job__person', 'job__position')\
+                                           .filter(job__position=self.object.most_recent_job.position)\
+                                           .annotate(total_pay=bp + ep)\
+                                           .order_by('-total_pay')
 
         employer_percentile = current_salary.employer_percentile
         like_employer_percentile = current_salary.like_employer_percentile
@@ -603,7 +604,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'employer_salary_json': json.dumps(binned_salary_data),
             'employer_percentile': employer_percentile,
             'like_employer_percentile': like_employer_percentile,
-            'fellow_job_holders': fellow_job_holders,
+            'salaries': fellow_job_holders,
             'source_link': source_link,
             'noindex': self.salary_amount < 30000 or self.object.noindex,
         })

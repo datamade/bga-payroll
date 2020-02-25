@@ -7,32 +7,31 @@
       {% if not entity.is_department and department_salaries %}
       <th scope="col">Department</th>
       {% endif %}
-      <th scope="col" class="text-right">Salary</th>
+      <th scope="col" class="text-right">Base Salary</th>
+      <th scope="col" class="text-right">Extra Pay</th>
       {% if show_start_date %}
       <th scope="col" class="text-right">Start Date</th>
       {% endif %}
     </tr>
   </thead>
   <tbody>
-  {% for job in jobs %}
+  {% for salary in salaries %}
     <tr>
-      <td><a href="{{ url('person', kwargs={'slug': job.person.slug}) }}">{{ job.person }}</a></td>
-      <td>{{ job.position.title }}</td>
+      <td><a href="{{ url('person', kwargs={'slug': salary.job.person.slug}) }}">{{ salary.job.person }}</a></td>
+      <td>{{ salary.job.position.title }}</td>
       {% if not entity.is_department and department_salaries %}
-      <td><a href="{{ url('department', kwargs={'slug': job.position.employer.slug}) }}">{{ job.position.employer }}</a></td>
-      {% endif %}
-      {% if job.salary %}
-        {# Use the prefetched salary. #}
-        {% set salary_at_hand = job.salary[0].amount %}
-      {% else %}
-        {% set salary_at_hand = job.salaries.get().amount %}
+      <td><a href="{{ url('department', kwargs={'slug': salary.job.position.employer.slug}) }}">{{ salary.job.position.employer }}</a></td>
       {% endif %}
       <td class="text-right">
-        {{ salary_at_hand|format_salary }}
+        {% if salary.amount %}
+          {{ salary.amount|format_salary }}
+        {% else %}
+          Not available
+        {% endif %}
         {% if current_salary %}
-          {% if current_salary < salary_at_hand %}
+          {% if current_salary < salary.amount %}
             <span class="text-success"><i class="fas fa-arrow-up"></i></span>
-          {% elif current_salary > salary_at_hand %}
+          {% elif current_salary > salary.amount %}
             <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
           {% else %}
             <!-- Empty placeholder for equal salaries -->
@@ -40,10 +39,17 @@
           {% endif %}
         {% endif %}
       </td>
+      <td class="text-right">
+        {% if salary.extra_pay %}
+          {{ salary.extra_pay|format_salary }}
+        {% else %}
+          Not available
+        {% endif %}
+      </td>
       {% if show_start_date %}
       <td class="text-right">
-        {% if job.start_date %}
-          {{ job.start_date.strftime('%m-%d-%Y') }}
+        {% if salary.job.start_date %}
+          {{ salary.job.start_date.strftime('%m-%d-%Y') }}
         {% else %}
           N/A
         {% endif %}
