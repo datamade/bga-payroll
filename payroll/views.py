@@ -125,8 +125,14 @@ class EmployerView(DetailView, ChartHelperMixin):
         else:
             source_link = None
 
+        # import pdb
+        # pdb.set_trace()
+
         context.update({
             'salaries': Salary.of_employer(self.object.id, n=5),
+            'median_tp': median_tp,
+            'median_bp': median_bp,
+            'median_ep': median_ep,
             'median_salary': self.median_entity_salary(),
             'headcount': len(employee_salaries),
             'total_expenditure': base_pay + extra_pay,
