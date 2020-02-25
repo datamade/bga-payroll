@@ -26,7 +26,7 @@
         {% if salary.amount %}
           {{ salary.amount|format_salary }}
         {% else %}
-          $0
+          Not available
         {% endif %}
         {% if current_salary %}
           {% if current_salary < salary.amount %}
@@ -43,7 +43,7 @@
         {% if salary.extra_pay %}
           {{ salary.extra_pay|format_salary }}
         {% else %}
-          $0
+          Not available
         {% endif %}
       </td>
       {% if show_start_date %}
