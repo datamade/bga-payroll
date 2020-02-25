@@ -553,6 +553,10 @@ class PersonView(DetailView, ChartHelperMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # import pdb
+        # pdb.set_trace()
+        salaries = Salary.objects.filter(job__position=self.object.most_recent_job.position)
+
         all_jobs = self.object.jobs.all()
         current_job = self.object.most_recent_job
         current_salary = current_job.salaries.get()
@@ -603,7 +607,7 @@ class PersonView(DetailView, ChartHelperMixin):
             'employer_salary_json': json.dumps(binned_salary_data),
             'employer_percentile': employer_percentile,
             'like_employer_percentile': like_employer_percentile,
-            'fellow_job_holders': fellow_job_holders,
+            'fellow_job_holders': salaries,
             'source_link': source_link,
             'noindex': self.salary_amount < 30000 or self.object.noindex,
         })
