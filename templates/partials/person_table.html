@@ -22,14 +22,14 @@
       {% if not entity.is_department and department_salaries %}
       <td><a href="{{ url('department', kwargs={'slug': salary.job.position.employer.slug}) }}">{{ salary.job.position.employer }}</a></td>
       {% endif %}
-      {% if salary.job.salary %}
+      {% if salary.amount %}
         {# Use the prefetched salary. #}
-        {% set salary_at_hand = salary.job.salary[0].amount %}
+        {% set salary_at_hand = salary.amount %}
       {% else %}
         {% set salary_at_hand = salary.job.salaries.get().amount %}
       {% endif %}
       <td class="text-right">
-        {{ salary_at_hand|format_salary }}
+        ${{ salary_at_hand }}
         {% if current_salary %}
           {% if current_salary < salary_at_hand %}
             <span class="text-success"><i class="fas fa-arrow-up"></i></span>
@@ -42,7 +42,7 @@
         {% endif %}
       </td>
       <td class="text-right">
-        {{ salary.job.salaries.first().extra_pay|format_salary }}
+        ${{ salary.extra_pay }}
       </td>
       {% if show_start_date %}
       <td class="text-right">
