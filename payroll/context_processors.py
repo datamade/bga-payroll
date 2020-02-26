@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from payroll.models import Unit
 
 
@@ -7,4 +9,7 @@ def inspiration_slugs(request):
     except:
         chicago_slug = None
 
-    return {'chicago_slug': chicago_slug}
+    return {
+        'data_year': settings.DATA_YEAR,
+        'chicago_slug': chicago_slug,
+    }
