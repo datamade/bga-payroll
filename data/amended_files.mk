@@ -1,9 +1,9 @@
 VPATH=data
 
 
-#.INTERMEDIATE : %-amendment-with-data-year.csv \
-#	%-amendment-with-valid-start-dates.csv %-amendment-salary-summed.csv \
-#	%-amendment-no-salary-omitted.csv group-%.csv
+.INTERMEDIATE : %-amendment-with-data-year.csv \
+	%-amendment-with-valid-start-dates.csv %-amendment-salary-summed.csv \
+	%-amendment-no-salary-omitted.csv group-%.csv
 
 %-amendment.csv : %-amendment-no-salary-omitted.csv
 	# Rename fields.
