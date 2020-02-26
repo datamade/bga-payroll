@@ -137,6 +137,6 @@ if not DEBUG:  # noqa
 
 # Stopgap to render most recent data year until multi-year support is added
 try:
-    assert DATA_YEAR
+    assert DATA_YEAR  # noqa
 except NameError:
     DATA_YEAR = 2017
