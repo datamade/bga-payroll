@@ -198,8 +198,6 @@ class UnitView(EmployerView):
         return context
 
     def aggregate_department_statistics(self):
-        entity_qs = Employer.objects.filter(Q(parent_id=self.object.id))
-
         entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))
         entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))
         median_total_pay = Percentile(
@@ -212,13 +210,13 @@ class UnitView(EmployerView):
         )
 
         department_salaries = Employer.objects.filter(parent_id=self.object.id)\
-        .values("name", "slug")\
-        .annotate(headcount=Count("positions__jobs__salaries"), 
-                  median_tp=median_total_pay, 
-                  entity_bp=entity_base_pay, 
-                  entity_ep=entity_extra_pay, 
-                  total_expenditure=entity_base_pay + entity_extra_pay)\
-        .order_by("-total_expenditure")[::1]
+                                              .values("name", "slug")\
+                                              .annotate(headcount=Count("positions__jobs__salaries"),
+                                                        median_tp=median_total_pay,
+                                                        entity_bp=entity_base_pay,
+                                                        entity_ep=entity_extra_pay,
+                                                        total_expenditure=entity_base_pay + entity_extra_pay)\
+                                              .order_by("-total_expenditure")[::1]
 
         return department_salaries
 
