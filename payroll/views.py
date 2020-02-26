@@ -3,7 +3,7 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Sum
+from django.db.models import Q, FloatField, Sum, Count
 from django.db.models.functions import Coalesce, NullIf
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -198,35 +198,27 @@ class UnitView(EmployerView):
         return context
 
     def aggregate_department_statistics(self):
-        query = '''
-            SELECT
-              employer.name,
-              AVG(salary.amount) AS average,
-              SUM(salary.amount) AS budget,
-              COUNT(*) AS headcount,
-              employer.slug AS slug
-            {from_clause}
-            WHERE employer.parent_id = {id}
-            GROUP BY employer.id, employer.name
-            ORDER BY SUM(salary.amount) DESC
-        '''.format(from_clause=self.from_clause,
-                   id=self.object.id)
+        entity_qs = Employer.objects.filter(Q(parent_id=self.object.id))
 
-        total_expenditure = sum(self.object.employee_salaries)
+        entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))
+        entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))
+        median_total_pay = Percentile(
+            (
+                NullIf(
+                    Coalesce("positions__jobs__salaries__amount", 0) +
+                    Coalesce("positions__jobs__salaries__extra_pay", 0), 0
+                )
+            ), 0.5, output_field=FloatField()
+        )
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-
-            department_salaries = []
-            for department, average, budget, headcount, slug in cursor:
-                department_salaries.append({
-                    'department': department,
-                    'amount': average,
-                    'total_budget': budget,
-                    'headcount': headcount,
-                    'slug': slug,
-                    'percentage': (float(budget / total_expenditure) * 100)  # Percentage of total expenditure
-                })
+        department_salaries = Employer.objects.filter(parent_id=self.object.id)\
+        .values("name", "slug")\
+        .annotate(headcount=Count("positions__jobs__salaries"), 
+                  median_tp=median_total_pay, 
+                  entity_bp=entity_base_pay, 
+                  entity_ep=entity_extra_pay, 
+                  total_expenditure=entity_base_pay + entity_extra_pay)\
+        .order_by("-total_expenditure")[::1]
 
         return department_salaries
 
@@ -240,9 +232,14 @@ class UnitView(EmployerView):
         composition_json = []
         percentage_tracker = 0
 
+        unit_base_pay, unit_extra_pay = super().get_entity_payroll()
+        budget = unit_base_pay + unit_extra_pay
+        for dept in top_departments:
+            dept['percentage'] = (float(dept['total_expenditure']) / budget) * 100
+
         for i, value in enumerate(top_departments):
             composition_json.append({
-                'name': value['department'],
+                'name': value['name'],
                 'data': [value['percentage']],
                 'index': i
             })
