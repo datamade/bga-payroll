@@ -208,15 +208,16 @@ class UnitView(EmployerView):
                 )
             ), 0.5, output_field=FloatField()
         )
+        headcount = Count("positions__jobs__salaries")
 
         department_salaries = Employer.objects.filter(parent_id=self.object.id)\
                                               .values("name", "slug")\
-                                              .annotate(headcount=Count("positions__jobs__salaries"),
+                                              .annotate(headcount=headcount,
                                                         median_tp=median_total_pay,
                                                         entity_bp=entity_base_pay,
                                                         entity_ep=entity_extra_pay,
                                                         total_expenditure=entity_base_pay + entity_extra_pay)\
-                                              .order_by("-total_expenditure")[::1]
+                                              .order_by("-total_expenditure")
 
         return department_salaries
 
@@ -230,12 +231,11 @@ class UnitView(EmployerView):
         composition_json = []
         percentage_tracker = 0
 
-        unit_base_pay, unit_extra_pay = super().get_entity_payroll()
+        unit_base_pay, unit_extra_pay = self.get_entity_payroll()
         budget = unit_base_pay + unit_extra_pay
-        for dept in top_departments:
-            dept['percentage'] = (float(dept['total_expenditure']) / budget) * 100
 
         for i, value in enumerate(top_departments):
+            value['percentage'] = (float(value['total_expenditure']) / budget) * 100
             composition_json.append({
                 'name': value['name'],
                 'data': [value['percentage']],
