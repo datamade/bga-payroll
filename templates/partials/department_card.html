@@ -10,7 +10,7 @@
     <table class="table table-striped">
       <thead class="bg-dark text-light">
         <tr class="row">
-          <th scope="col" class="col text-right">Department</th>
+          <th scope="col" class="col">Department</th>
           <th scope="col" class="col text-right">Number of employees</th>
           <th scope="col" class="col text-right">Median total pay</th>
           <th scope="col" class="col text-right">Total base pay</th>
@@ -21,7 +21,7 @@
       <tbody>
       {% for department in department_salaries %}
         <tr class="row">
-          <td class="col text-right"><a href="{{ url('department', kwargs={'slug': department.slug}) }}">{{ department.name }}</a></td>
+          <td class="col"><a href="{{ url('department', kwargs={'slug': department.slug}) }}">{{ department.name }}</a></td>
           <td class="col text-right">{{ department.headcount|format_exact_number }}</td>
           <td class="col text-right">{{ department.median_tp|format_salary }}</td>
           <td class="col text-right">${{ department.entity_bp|format_ballpark_number }}</td>
