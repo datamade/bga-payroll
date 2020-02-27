@@ -5,10 +5,13 @@ VPATH=data
 	%-with-valid-start-dates.csv %-salary-summed.csv \
 	%-no-salary-omitted.csv %-amendment-with-agencies.csv
 
-payroll-actual-%.csv : %-no-salary-omitted.csv
+payroll-actual-%.csv : %-leading-whitespace-trimmed.csv
 	# Rename fields.
 	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,_,responding_agency,data_year; \
 	tail -n +2 $<) > $@
+
+%-leading-whitespace-trimmed.csv : %-no-salary-omitted.csv
+	perl -pe 's/^\s+//' $< > $@
 
 %-no-salary-omitted.csv : %-with-valid-start-dates.csv
 	# Remove records where no salary was reported.

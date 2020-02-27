@@ -62,3 +62,6 @@ SALSA_AUTH_COOKIE_DOMAIN = ''  # e.g., datamade.us
 
 # Location to which user will be redirected on authorization
 SALSA_AUTH_REDIRECT_LOCATION = '/'
+
+# Stopgap to render most recent data year until multi-year support is added
+DATA_YEAR = 2018

@@ -33,7 +33,7 @@ class IndexView(TemplateView, ChartHelperMixin):
         department_count = Department.objects.all().count()
 
         with connection.cursor() as cursor:
-            cursor.execute('SELECT amount FROM payroll_salary')
+            cursor.execute('SELECT amount FROM payroll_salary WHERE amount IS NOT NULL')
             all_salaries = [x[0] for x in cursor]
 
         try:
@@ -115,7 +115,7 @@ class EmployerView(DetailView, ChartHelperMixin):
         employee_salaries = self.object.employee_salaries
         binned_employee_salaries = self.bin_salary_data(employee_salaries)
 
-        source_file = self.object.source_file(2017)
+        source_file = self.object.source_file(settings.DATA_YEAR)
 
         base_pay, extra_pay = self.get_entity_payroll()
         payroll_chart_data = self._make_pie_chart(
@@ -139,7 +139,7 @@ class EmployerView(DetailView, ChartHelperMixin):
             'salary_percentile': self.salary_percentile(),
             'expenditure_percentile': self.expenditure_percentile(),
             'employee_salary_json': json.dumps(binned_employee_salaries),
-            'data_year': 2017,
+            'data_year': settings.DATA_YEAR,
             'source_link': source_link,
             'payroll_expenditure': payroll_chart_data,
         })
@@ -587,7 +587,7 @@ class PersonView(DetailView, ChartHelperMixin):
         salary_data = current_job.position.employer.employee_salaries
         binned_salary_data = self.bin_salary_data(salary_data)
 
-        source_file = self.object.source_file(2017)
+        source_file = self.object.source_file(settings.DATA_YEAR)
 
         if source_file:
             source_link = source_file.url
@@ -595,7 +595,7 @@ class PersonView(DetailView, ChartHelperMixin):
             source_link = None
 
         context.update({
-            'data_year': 2017,
+            'data_year': settings.DATA_YEAR,
             'current_job': current_job,
             'all_jobs': all_jobs,
             'current_salary': self.salary_amount,
