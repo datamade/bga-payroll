@@ -521,41 +521,44 @@ class Salary(VintagedModel):
         return result[0] * 100
 
     def _like_department_percentile(self, employer):
-        query = '''
-            WITH taxonomy_members AS (
-              SELECT
-                department.id,
-                department.universe_id
-              FROM payroll_employer AS unit
-              JOIN payroll_employer AS department
-              ON unit.id = department.parent_id
-              WHERE unit.taxonomy_id = {taxonomy}
-            ),
-            salary_percentiles AS (
-              SELECT
-                percent_rank() OVER (ORDER BY amount ASC) AS percentile,
-                job.person_id
-              FROM payroll_job AS job
-              JOIN payroll_salary AS salary
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN taxonomy_members AS department
-              ON position.employer_id = department.id
-              WHERE department.universe_id = {universe}
-            )
-            SELECT percentile
-            FROM salary_percentiles
-            WHERE person_id = {id}
-        '''.format(taxonomy=employer.parent.taxonomy.id,
-                   universe=employer.universe.id,
-                   id=self.job.person.id)
+        if employer.parent.is_unclassified:
+            return None
+        else:
+            query = '''
+                WITH taxonomy_members AS (
+                  SELECT
+                    department.id,
+                    department.universe_id
+                  FROM payroll_employer AS unit
+                  JOIN payroll_employer AS department
+                  ON unit.id = department.parent_id
+                  WHERE unit.taxonomy_id = {taxonomy}
+                ),
+                salary_percentiles AS (
+                  SELECT
+                    percent_rank() OVER (ORDER BY amount ASC) AS percentile,
+                    job.person_id
+                  FROM payroll_job AS job
+                  JOIN payroll_salary AS salary
+                  ON salary.job_id = job.id
+                  JOIN payroll_position AS position
+                  ON job.position_id = position.id
+                  JOIN taxonomy_members AS department
+                  ON position.employer_id = department.id
+                  WHERE department.universe_id = {universe}
+                )
+                SELECT percentile
+                FROM salary_percentiles
+                WHERE person_id = {id}
+            '''.format(taxonomy=employer.parent.taxonomy.id,
+                       universe=employer.universe.id,
+                       id=self.job.person.id)
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                result = cursor.fetchone()
 
-        return result[0] * 100
+            return result[0] * 100
 
     @classmethod
     def of_employer(cls, employer_id, n=None):
