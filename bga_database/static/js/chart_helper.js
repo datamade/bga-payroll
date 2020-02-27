@@ -143,6 +143,9 @@ var ChartHelper = {
         type: 'bar'
       },
       colors: ['#004c76', '#c84747', '#fd0', '#67488b', '#1a9b5b', '#343a40'],
+      yAxis: {
+        reversedStacks: false
+      },
       plotOptions: {
         series: {
           stacking: 'percent',
