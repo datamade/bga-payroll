@@ -235,13 +235,13 @@ class UnitView(EmployerView):
         budget = unit_base_pay + unit_extra_pay
 
         for i, value in enumerate(top_departments):
-            value['percentage'] = (float(value['total_expenditure']) / budget) * 100
+            proportion = (float(value['total_expenditure']) / budget) * 100
             composition_json.append({
                 'name': value['name'],
-                'data': [value['percentage']],
+                'data': [proportion],
                 'index': i
             })
-            percentage_tracker += value['percentage']
+            percentage_tracker += proportion
 
         composition_json.append({
             'name': 'All else',
