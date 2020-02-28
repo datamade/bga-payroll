@@ -33,7 +33,7 @@ class IndexView(TemplateView, ChartHelperMixin):
         department_count = Department.objects.all().count()
 
         with connection.cursor() as cursor:
-            cursor.execute('SELECT amount FROM payroll_salary WHERE amount IS NOT NULL')
+            cursor.execute('SELECT COALESCE(amount, 0) + COALESCE(extra_pay, 0) FROM payroll_salary')
             all_salaries = [x[0] for x in cursor]
 
         try:
@@ -291,7 +291,7 @@ class UnitView(EmployerView):
             ),
             expenditure_by_unit AS (
               SELECT
-                SUM(salary.amount) AS total_budget,
+                SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS total_budget,
                 lookup.parent_id AS unit_id
               FROM payroll_salary AS salary
               JOIN payroll_job AS job
@@ -337,7 +337,9 @@ class UnitView(EmployerView):
             ),
             median_salaries_by_unit AS (
               SELECT
-                percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
+                percentile_cont(0.5) WITHIN GROUP (
+                  ORDER BY COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0) ASC
+                ) AS median_salary,
                 lookup.parent_id AS unit_id
               FROM payroll_salary AS salary
               JOIN payroll_job AS job
@@ -373,7 +375,7 @@ class UnitView(EmployerView):
         query = '''
           WITH all_department_expenditures AS (
             SELECT
-              SUM(salary.amount) AS dept_budget,
+              SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS dept_budget,
               employer.id as dept_id
             FROM payroll_salary AS salary
             JOIN payroll_job AS job
@@ -454,7 +456,7 @@ class DepartmentView(EmployerView):
             ),
             expenditure_by_department AS (
               SELECT
-                SUM(salary.amount) AS total_budget,
+                SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS total_budget,
                 department.id AS department_id
               FROM payroll_salary AS salary
               JOIN payroll_job AS job
@@ -502,7 +504,9 @@ class DepartmentView(EmployerView):
             ),
             median_salaries_by_department AS (
               SELECT
-                percentile_cont(0.5) WITHIN GROUP (ORDER BY salary.amount ASC) AS median_salary,
+                percentile_cont(0.5) WITHIN GROUP (
+                  ORDER BY COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0) ASC
+                ) AS median_salary,
                 department.id AS department_id
               FROM payroll_salary AS salary
               JOIN payroll_job AS job
