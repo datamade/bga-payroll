@@ -142,7 +142,12 @@ var ChartHelper = {
       chart: {
         type: 'bar'
       },
-      colors: ['#004c76', '#c84747', '#fd0', '#67488b', '#1a9b5b', '#343a40'],
+      colors: ['#387fc6', '#578ecd', '#8baddc', '#a5bde3', '#d2ddf1', '#e8eef8'],
+      xAxis: {
+        labels: {
+          enabled: false
+        }
+      },
       yAxis: {
         reversedStacks: false
       },
@@ -167,6 +172,7 @@ var ChartHelper = {
       chart: {
         type: 'pie'
       },
+      colors: ['#387fc6', '#739dd6'],
       title: {
         text: ''
       },
