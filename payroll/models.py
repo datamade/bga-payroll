@@ -167,7 +167,7 @@ class Employer(SluggedModel, VintagedModel):
     def employee_salaries(self):
         query = '''
             SELECT
-              salary.amount
+              COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0) AS amount
             FROM payroll_job AS job
             JOIN payroll_salary AS salary
             ON salary.job_id = job.id
@@ -449,7 +449,9 @@ class Salary(VintagedModel):
         query = '''
             WITH salary_percentiles AS (
               SELECT
-                percent_rank() OVER (ORDER BY amount ASC) AS percentile,
+                percent_rank() OVER (
+                  ORDER BY COALESCE(amount, 0) + COALESCE(extra_pay, 0) ASC
+                ) AS percentile,
                 job.person_id
               FROM payroll_job AS job
               JOIN payroll_salary AS salary
@@ -495,7 +497,9 @@ class Salary(VintagedModel):
               FROM payroll_employer
             ), salary_percentiles AS (
               SELECT
-                percent_rank() OVER (ORDER BY amount ASC) AS percentile,
+                percent_rank() OVER (
+                  ORDER BY COALESCE(amount, 0) + COALESCE(extra_pay, 0) ASC
+                ) AS percentile,
                 job.person_id
               FROM payroll_job AS job
               JOIN payroll_salary AS salary
@@ -523,6 +527,7 @@ class Salary(VintagedModel):
     def _like_department_percentile(self, employer):
         if employer.parent.is_unclassified:
             return None
+
         else:
             query = '''
                 WITH taxonomy_members AS (
@@ -536,7 +541,9 @@ class Salary(VintagedModel):
                 ),
                 salary_percentiles AS (
                   SELECT
-                    percent_rank() OVER (ORDER BY amount ASC) AS percentile,
+                    percent_rank() OVER (
+                      ORDER BY COALESCE(amount, 0) + COALESCE(extra_pay, 0) ASC
+                    ) AS percentile,
                     job.person_id
                   FROM payroll_job AS job
                   JOIN payroll_salary AS salary
