@@ -142,7 +142,7 @@ var ChartHelper = {
       chart: {
         type: 'bar'
       },
-      colors: ['#387fc6', '#578ecd', '#8baddc', '#a5bde3', '#d2ddf1', '#e8eef8'],
+      colors: ['#0B2F42', '#004C76', '#245D8C', '#538BC2', '#82BEED', '#758892'],
       xAxis: {
         labels: {
           enabled: false
@@ -172,7 +172,7 @@ var ChartHelper = {
       chart: {
         type: 'pie'
       },
-      colors: ['#387fc6', '#739dd6'],
+      colors: ['#004C76', '#538BC2'],
       title: {
         text: ''
       },
