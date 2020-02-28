@@ -142,9 +142,27 @@ var ChartHelper = {
       chart: {
         type: 'bar'
       },
-      colors: ['#004c76', '#c84747', '#fd0', '#67488b', '#1a9b5b', '#343a40'],
+      tooltip: {
+        formatter: function() {
+          return this.series.name;
+        }
+      },
+      legend: {
+        floating: true,
+        verticalAlign: 'top',
+        y: 30
+      },
+      colors: ['#0B2F42', '#023f62', '#245D8C', '#538BC2', '#82BEED', '#758892'],
+      xAxis: {
+        labels: {
+          enabled: false
+        }
+      },
       yAxis: {
-        reversedStacks: false
+        reversedStacks: false,
+        title: {
+          text: 'Percent of total unit payroll expenditure'
+        }
       },
       plotOptions: {
         series: {
@@ -167,8 +185,14 @@ var ChartHelper = {
       chart: {
         type: 'pie'
       },
+      colors: ['#004C76', '#538BC2'],
       title: {
         text: ''
+      },
+      tooltip: {
+        formatter: function() {
+          return this.key + ": $" +  this.y.toLocaleString();
+        }
       },
       plotOptions: {
         series: {
