@@ -143,8 +143,8 @@ var ChartHelper = {
         type: 'bar'
       },
       tooltip: {
-        formatter() {
-          return `${this.series.name}`
+        formatter: function() {
+          return this.series.name;
         }
       },
       legend: {
@@ -187,8 +187,8 @@ var ChartHelper = {
         text: ''
       },
       tooltip: {
-        formatter() {
-          return `${this.key}: $${this.y}`
+        formatter: function() {
+          return this.key + ": $" +  this.y;
         }
       },
       plotOptions: {
