@@ -152,14 +152,17 @@ var ChartHelper = {
         verticalAlign: 'top',
         y: 30
       },
-      colors: ['#0B2F42', '#004C76', '#245D8C', '#538BC2', '#82BEED', '#758892'],
+      colors: ['#0B2F42', '#023f62', '#245D8C', '#538BC2', '#82BEED', '#758892'],
       xAxis: {
         labels: {
           enabled: false
         }
       },
       yAxis: {
-        reversedStacks: false
+        reversedStacks: false,
+        title: {
+          text: 'Percent of total unit payroll expenditure'
+        }
       },
       plotOptions: {
         series: {
@@ -188,7 +191,7 @@ var ChartHelper = {
       },
       tooltip: {
         formatter: function() {
-          return this.key + ": $" +  this.y;
+          return this.key + ": $" +  this.y.toLocaleString();
         }
       },
       plotOptions: {
