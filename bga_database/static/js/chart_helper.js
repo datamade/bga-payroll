@@ -142,6 +142,16 @@ var ChartHelper = {
       chart: {
         type: 'bar'
       },
+      tooltip: {
+        formatter() {
+          return `${this.series.name}`
+        }
+      },
+      legend: {
+        floating: true,
+        verticalAlign: 'top',
+        y: 30
+      },
       colors: ['#0B2F42', '#004C76', '#245D8C', '#538BC2', '#82BEED', '#758892'],
       xAxis: {
         labels: {
@@ -175,6 +185,11 @@ var ChartHelper = {
       colors: ['#004C76', '#538BC2'],
       title: {
         text: ''
+      },
+      tooltip: {
+        formatter() {
+          return `${this.key}: $${this.y}`
+        }
       },
       plotOptions: {
         series: {
