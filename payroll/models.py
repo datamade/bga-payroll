@@ -1,10 +1,10 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.db import models, connection
 from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 from django.db.models.functions import Coalesce
 
-from bga_database.base_models import SluggedModel
+from bga_database.base_models import AliasModel, SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
 
 
@@ -185,6 +185,28 @@ class Employer(SluggedModel, VintagedModel):
             employee_salaries = [row[0] for row in cursor]
 
         return employee_salaries
+
+
+class EmployerAlias(AliasModel):
+    employer = models.ForeignKey(
+        'Employer',
+        related_name='population',
+        on_delete=models.CASCADE
+    )
+
+    def clean(self):
+        super().clean()
+        try:
+            if self.is_department:
+                type(self).objects.get(
+                    Q(name=self.name) & Q(parent_id=self.object.id)
+                )
+            else:
+                type(self).objects.get(
+                    Q(name=self.name) & Q(parent_id__isnull=True)
+                )
+        except MultipleObjectsReturned:
+            raise ValidationError(_('{} name must be unique.'.format(self)))
 
 
 class UnitManager(models.Manager):

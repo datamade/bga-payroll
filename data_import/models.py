@@ -2,10 +2,11 @@ from os.path import basename
 
 from celery import chain
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.db import connection, models
 from django_fsm import FSMField, transition
 
-from bga_database.base_models import SluggedModel
+from bga_database.base_models import AliasModel, SluggedModel
 from data_import import tasks
 
 
@@ -39,6 +40,21 @@ class RespondingAgency(SluggedModel):
 
     def __str__(self):
         return self.name
+
+
+class RespondingAgencyAlias(AliasModel):
+    responding_agency = models.ForeignKey(
+        'RespondingAgency',
+        related_name='source_files',
+        on_delete=models.CASCADE
+    )
+
+    def clean(self):
+        super().clean()
+        try:
+            type(self).objects.get(name=self.name)
+        except MultipleObjectsReturned:
+            raise ValidationError('{} name must be unique.'.format(self))
 
 
 def source_file_upload_name(instance, filename):
