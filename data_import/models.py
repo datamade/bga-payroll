@@ -43,9 +43,10 @@ class RespondingAgency(SluggedModel):
 
 
 class RespondingAgencyAlias(AliasModel):
+    entity_type = 'responding_agency'
     responding_agency = models.ForeignKey(
         'RespondingAgency',
-        related_name='source_files',
+        related_name='aliases',
         on_delete=models.CASCADE
     )
 
