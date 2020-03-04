@@ -188,9 +188,10 @@ class Employer(SluggedModel, VintagedModel):
 
 
 class EmployerAlias(AliasModel):
+    entity_type = 'employer'
     employer = models.ForeignKey(
         'Employer',
-        related_name='population',
+        related_name='aliases',
         on_delete=models.CASCADE
     )
 
