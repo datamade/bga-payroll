@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
                 ('preferred', models.BooleanField(default=False)),
-                ('responding_agency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='aliases', to='data_import.RespondingAgency')),
+                ('responding_agency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='aliases', to='data_import.RespondingAgency')),  # noqa
             ],
             options={
                 'abstract': False,
