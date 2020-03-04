@@ -17,9 +17,11 @@ class AliasModel(models.Model):
         abstract = True
 
     def clean(self):
+        entity = getattr(self, self.entity_type)
+        setattr(self, "entity", entity)
         try:
             preferred_aliases = type(self).objects.filter(
-                Q(preferred=True) & Q(employer_id=self.employer.id)
+                Q(preferred=True) & Q(entity_id=entity.id)
             )
         except len(preferred_aliases) == 0:
             self.preferred = True
