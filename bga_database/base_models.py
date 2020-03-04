@@ -19,15 +19,14 @@ class AliasModel(models.Model):
     def clean(self):
         entity = getattr(self, self.entity_type)
         setattr(self, "entity", entity)
-        try:
-            preferred_aliases = type(self).objects.filter(
-                Q(preferred=True) & Q(entity_id=entity.id)
-            )
-        except len(preferred_aliases) == 0:
-            self.preferred = True
-        except len(preferred_aliases) > 1:
+
+        preferred_aliases = type(self.entity).objects.filter(
+            Q(preferred=True) & Q(entity_id=entity.id)
+        )
+
+        if len(preferred_aliases) == 1:
             other_alias = preferred_aliases.filter(~Q(id=self.id)).first()
             other_alias.preferred = False
             other_alias.save()
 
-            self.preferred = True
+        self.preferred = True
