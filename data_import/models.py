@@ -52,9 +52,9 @@ class RespondingAgencyAlias(AliasModel):
 
     def clean(self):
         super().clean()
-        try:
-            type(self).objects.get(name=self.name)
-        except MultipleObjectsReturned:
+
+        duplicate_alias = type(self).objects.filter(name=self.name)
+        if len(duplicate_alias) > 1:
             raise ValidationError('{} name must be unique.'.format(self))
 
 

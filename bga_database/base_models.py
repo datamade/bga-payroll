@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import connection, models
 from django.db.models import Q
 
 
@@ -16,17 +16,18 @@ class AliasModel(models.Model):
     class Meta:
         abstract = True
 
-    def clean(self):
-        entity = getattr(self, self.entity_type)
-        setattr(self, "entity", entity)
+    def __str__(self):
+        return self.name
 
-        preferred_aliases = type(self.entity).objects.filter(
-            Q(preferred=True) & Q(entity_id=entity.id)
+    def clean(self):
+        super().clean()
+
+        entity = getattr(self, self.entity_type)
+        preferred_aliases = entity.aliases.filter(
+            Q(preferred=True) & Q(id=entity.id)
         )
 
-        if len(preferred_aliases) == 1:
-            other_alias = preferred_aliases.filter(~Q(id=self.id)).first()
+        if len(preferred_aliases) >= 1 and self.preferred == True:
+            other_alias = preferred_aliases.filter(~Q(id=self.id) & Q(preferred=True)).first()
             other_alias.preferred = False
             other_alias.save()
-
-        self.preferred = True
