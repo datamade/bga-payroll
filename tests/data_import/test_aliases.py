@@ -14,9 +14,9 @@ def test_responding_agency_preferred_alias(responding_agency):
 
     old_alias_again = RespondingAgencyAlias.objects.get(name='a_rose')
 
-    if new_alias.preferred is True:
+    if new_alias.preferred:
         pass
-    if old_alias_again.preferred is False:
+    if not old_alias_again.preferred:
         pass
 
 
@@ -27,4 +27,4 @@ def test_responding_agency_unique_alias(responding_agency):
 
         RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose')
 
-        another_ra_alias = RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose')
+        RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose')

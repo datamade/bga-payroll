@@ -2,7 +2,7 @@ from os.path import basename
 
 from celery import chain
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError, MultipleObjectsReturned
+from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django_fsm import FSMField, transition
 

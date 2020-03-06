@@ -1,4 +1,4 @@
-from django.db import connection, models
+from django.db import models
 from django.db.models import Q
 
 
@@ -27,7 +27,7 @@ class AliasModel(models.Model):
             Q(preferred=True) & Q(id=entity.id)
         )
 
-        if len(preferred_aliases) >= 1 and self.preferred == True:
+        if len(preferred_aliases) >= 1 and self.preferred:
             other_alias = preferred_aliases.filter(~Q(id=self.id) & Q(preferred=True)).first()
             other_alias.preferred = False
             other_alias.save()
