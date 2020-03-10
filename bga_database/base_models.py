@@ -28,9 +28,8 @@ class AliasModel(models.Model):
         )
 
         if len(preferred_aliases) >= 1 and self.preferred:
-            other_alias = preferred_aliases.filter(~Q(id=self.id) & Q(preferred=True)).first()
-            other_alias.preferred = False
-            other_alias.save()
+            other_alias = preferred_aliases.filter(~Q(id=self.id) & Q(preferred=True))
+            other_alias.update(preferred=False)
 
     def save(self, * args, **kwargs):
         self.full_clean()

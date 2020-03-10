@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError, MultipleObjectsReturned
+from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
