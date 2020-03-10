@@ -197,17 +197,18 @@ class EmployerAlias(AliasModel):
 
     def clean(self):
         super().clean()
-        try:
-            if self.is_department:
-                type(self).objects.get(
-                    Q(name=self.name) & Q(parent_id=self.object.id)
-                )
-            else:
-                type(self).objects.get(
-                    Q(name=self.name) & Q(parent_id__isnull=True)
-                )
-        except MultipleObjectsReturned:
-            raise ValidationError(_('{} name must be unique.'.format(self)))
+
+        if self.is_department:
+            duplicate_alias = type(self).objects.filter(
+                Q(name=self.name) & Q(parent_id=self.object.id)
+            )
+        else:
+            duplicate_alias = type(self).objects.filter(
+                Q(name=self.name) & Q(parent_id__isnull=True)
+            )
+
+        if len(duplicate_alias) >= 1:
+            raise ValidationError('{} name must be unique.'.format(self))
 
 
 class UnitManager(models.Manager):
