@@ -8,11 +8,11 @@ from data_import.models import RespondingAgencyAlias
 def test_responding_agency_preferred_alias(responding_agency):
     agency = responding_agency.build()
 
-    RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose', preferred=True)
+    old_alias = RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose', preferred=True)
 
     new_alias = RespondingAgencyAlias.objects.create(responding_agency=agency, name='by_any_other_name', preferred=True)
 
-    old_alias_again = RespondingAgencyAlias.objects.get(name='a_rose')
+    old_alias_again = RespondingAgencyAlias.objects.get(id=old_alias.id)
 
     if new_alias.preferred:
         pass

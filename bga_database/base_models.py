@@ -31,3 +31,7 @@ class AliasModel(models.Model):
             other_alias = preferred_aliases.filter(~Q(id=self.id) & Q(preferred=True)).first()
             other_alias.preferred = False
             other_alias.save()
+
+    def save(self, * args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

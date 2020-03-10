@@ -54,7 +54,7 @@ class RespondingAgencyAlias(AliasModel):
         super().clean()
 
         duplicate_alias = type(self).objects.filter(name=self.name)
-        if len(duplicate_alias) > 1:
+        if len(duplicate_alias) >= 1:
             raise ValidationError('{} name must be unique.'.format(self))
 
 
