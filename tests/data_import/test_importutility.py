@@ -1,3 +1,9 @@
+# This test must run before any tests that complete transactions
+# with the database (tests/data_import/test_ze_aliases.py) because
+# it depends on the data migration and transactional tests 
+# will tear down the necessary data after. For more about this:
+# https://github.com/pytest-dev/pytest-django/issues/595
+
 # TO-DO: Decide whether to roll this into test_tasks.
 # (Likely involves writing a task / workflow for first-time
 # slash non-validated imports.)
