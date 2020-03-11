@@ -1,6 +1,6 @@
 # This test must run before any tests that complete transactions
 # with the database (tests/data_import/test_ze_aliases.py) because
-# it depends on the data migration and transactional tests 
+# it depends on the data migration and transactional tests
 # will tear down the necessary data after. For more about this:
 # https://github.com/pytest-dev/pytest-django/issues/595
 
