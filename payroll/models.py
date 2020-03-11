@@ -198,13 +198,13 @@ class EmployerAlias(AliasModel):
     def clean(self):
         super().clean()
 
-        if self.is_department:
+        if self.employer.is_department:
             duplicate_alias = type(self).objects.filter(
-                Q(name=self.name) & Q(parent_id=self.object.id)
+                Q(name=self.name) & Q(employer__parent_id=self.employer.parent.id)
             )
         else:
             duplicate_alias = type(self).objects.filter(
-                Q(name=self.name) & Q(parent_id__isnull=True)
+                Q(name=self.name) & Q(employer__parent_id__isnull=True)
             )
 
         if len(duplicate_alias) >= 1:

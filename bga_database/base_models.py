@@ -23,13 +23,10 @@ class AliasModel(models.Model):
         super().clean()
 
         entity = getattr(self, self.entity_type)
-        preferred_aliases = entity.aliases.filter(
-            Q(preferred=True) & Q(id=entity.id)
-        )
+        preferred_alias = entity.aliases.filter(preferred=True)
 
-        if len(preferred_aliases) >= 1 and self.preferred:
-            other_alias = preferred_aliases.filter(~Q(id=self.id) & Q(preferred=True))
-            other_alias.update(preferred=False)
+        if len(preferred_alias) == 1 and self.preferred:
+            preferred_alias.update(preferred=False)
 
     def save(self, * args, **kwargs):
         self.full_clean()
