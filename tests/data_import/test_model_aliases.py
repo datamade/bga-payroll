@@ -13,10 +13,10 @@ def test_responding_agency_preferred_alias(responding_agency):
 
     new_alias = RespondingAgencyAlias.objects.create(responding_agency=agency, name='by_any_other_name', preferred=True)
 
-    old_alias_again = RespondingAgencyAlias.objects.get(id=old_alias.id)
+    old_alias.refresh_from_db()
 
     assert new_alias.preferred is True
-    assert old_alias_again.preferred is False
+    assert old_alias.preferred is False
 
 
 @pytest.mark.django_db
@@ -38,10 +38,10 @@ def test_department_preferred_alias(employer):
 
     new_alias = EmployerAlias.objects.create(employer=department, name='by_any_other_name', preferred=True)
 
-    old_alias_again = EmployerAlias.objects.get(id=old_alias.id)
+    old_alias.refresh_from_db()
 
     assert new_alias.preferred is True
-    assert old_alias_again.preferred is False
+    assert old_alias.preferred is False
 
 
 @pytest.mark.django_db
@@ -62,10 +62,10 @@ def test_unit_preferred_alias(employer):
 
     new_alias = EmployerAlias.objects.create(employer=unit, name='by_any_other_name', preferred=True)
 
-    old_alias_again = EmployerAlias.objects.get(id=old_alias.id)
+    old_alias.refresh_from_db()
 
     assert new_alias.preferred is True
-    assert old_alias_again.preferred is False
+    assert old_alias.preferred is False
 
 
 @pytest.mark.django_db
@@ -75,3 +75,27 @@ def test_unit_unique_alias(employer):
     with pytest.raises(ValidationError):
         EmployerAlias.objects.create(employer=unit, name='a_rose')
         EmployerAlias.objects.create(employer=unit, name='a_rose')
+
+
+@pytest.mark.django_db
+def test_dept_gets_unit_alias(employer):
+    unit = employer.build()
+    department = employer.build(parent=unit, name='a_dept')
+
+    unit_alias = EmployerAlias.objects.create(employer=unit, name='a_rose')
+    dept_alias = EmployerAlias.objects.create(employer=department, name='a_rose')
+
+    assert unit_alias.name == 'a_rose'
+    assert dept_alias.name == 'a_rose'
+
+
+@pytest.mark.django_db
+def test_unit_gets_dept_alias(employer):
+    unit = employer.build()
+    department = employer.build(parent=unit, name='a_dept')
+
+    dept_alias = EmployerAlias.objects.create(employer=department, name='a_rose')
+    unit_alias = EmployerAlias.objects.create(employer=unit, name='a_rose')
+
+    assert dept_alias.name == 'a_rose'
+    assert unit_alias.name == 'a_rose'

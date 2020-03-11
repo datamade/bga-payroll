@@ -207,7 +207,7 @@ class EmployerAlias(AliasModel):
                 Q(name=self.name) & Q(employer__parent_id__isnull=True)
             )
 
-        if len(duplicate_alias) >= 1:
+        if len(duplicate_alias) == 1:
             raise ValidationError('{} name must be unique.'.format(self))
 
 
