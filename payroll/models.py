@@ -4,7 +4,7 @@ from django.db.models import Q, CheckConstraint
 from django.utils.translation import gettext_lazy as _
 from django.db.models.functions import Coalesce
 
-from bga_database.base_models import SluggedModel
+from bga_database.base_models import AliasModel, SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
 
 
@@ -185,6 +185,30 @@ class Employer(SluggedModel, VintagedModel):
             employee_salaries = [row[0] for row in cursor]
 
         return employee_salaries
+
+
+class EmployerAlias(AliasModel):
+    entity_type = 'employer'
+    employer = models.ForeignKey(
+        'Employer',
+        related_name='aliases',
+        on_delete=models.CASCADE
+    )
+
+    def clean(self):
+        super().clean()
+
+        if self.employer.is_department:
+            duplicate_alias = type(self).objects.filter(
+                Q(name=self.name) & Q(employer__parent_id=self.employer.parent.id)
+            )
+        else:
+            duplicate_alias = type(self).objects.filter(
+                Q(name=self.name) & Q(employer__parent_id__isnull=True)
+            )
+
+        if len(duplicate_alias) == 1:
+            raise ValidationError('{} name must be unique.'.format(self))
 
 
 class UnitManager(models.Manager):
