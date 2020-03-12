@@ -22,10 +22,9 @@ def test_responding_agency_preferred_alias(responding_agency):
 @pytest.mark.django_db
 def test_responding_agency_unique_alias(responding_agency):
     agency = responding_agency.build()
+    RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose')
 
     with pytest.raises(ValidationError):
-
-        RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose')
         RespondingAgencyAlias.objects.create(responding_agency=agency, name='a_rose')
 
 
@@ -48,9 +47,9 @@ def test_department_preferred_alias(employer):
 def test_department_unique_alias(employer):
     unit = employer.build()
     department = employer.build(parent=unit, name='a_dept')
+    EmployerAlias.objects.create(employer=department, name='a_rose')
 
     with pytest.raises(ValidationError):
-        EmployerAlias.objects.create(employer=department, name='a_rose')
         EmployerAlias.objects.create(employer=department, name='a_rose')
 
 
@@ -71,14 +70,14 @@ def test_unit_preferred_alias(employer):
 @pytest.mark.django_db
 def test_unit_unique_alias(employer):
     unit = employer.build()
+    EmployerAlias.objects.create(employer=unit, name='a_rose')
 
     with pytest.raises(ValidationError):
-        EmployerAlias.objects.create(employer=unit, name='a_rose')
         EmployerAlias.objects.create(employer=unit, name='a_rose')
 
 
 @pytest.mark.django_db
-def test_dept_gets_unit_alias(employer):
+def test_unit_and_department_can_have_same_alias(employer):
     unit = employer.build()
     department = employer.build(parent=unit, name='a_dept')
 
@@ -90,7 +89,7 @@ def test_dept_gets_unit_alias(employer):
 
 
 @pytest.mark.django_db
-def test_unit_gets_dept_alias(employer):
+def test_department_and_unit_can_have_same_alias(employer):
     unit = employer.build()
     department = employer.build(parent=unit, name='a_dept')
 
