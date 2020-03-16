@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib import admin
 
-from data_import.models import SourceFile, Upload, RespondingAgency
+from data_import.models import SourceFile, Upload, RespondingAgency, StandardizedFile
 
 
 class AdminRespondingAgency(admin.ModelAdmin):
@@ -62,5 +62,10 @@ class AdminSourceFile(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+class AdminStandardizedFile(admin.ModelAdmin):
+    pass  
+
 admin.site.register(SourceFile, AdminSourceFile)
 admin.site.register(RespondingAgency, AdminRespondingAgency)
+admin.site.register(StandardizedFile, AdminStandardizedFile)
+
