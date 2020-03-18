@@ -14,7 +14,7 @@ from django.db import connection
 from data_import import utils
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 def test_import_utility_init(raw_table_setup,
                              mocker,
                              transactional_db):
