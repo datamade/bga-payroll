@@ -3,7 +3,8 @@ import os
 from django.core.files import File
 import pytest
 
-from data_import.models import Upload, RespondingAgency, StandardizedFile
+from data_import.models import Upload, RespondingAgency, StandardizedFile, \
+    RespondingAgencyAlias
 from payroll.models import Employer, UnitRespondingAgency, EmployerTaxonomy, \
     EmployerUniverse
 
@@ -62,7 +63,10 @@ def responding_agency(transactional_db):
             }
             data.update(kwargs)
 
-            return RespondingAgency.objects.create(**data)
+            agency = RespondingAgency.objects.create(**data)
+            alias = RespondingAgencyAlias.objects.create(name=data['name'], responding_agency=agency)
+
+            return agency
 
     return RespondingAgencyFactory()
 
