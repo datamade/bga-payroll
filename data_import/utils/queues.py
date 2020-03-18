@@ -69,7 +69,8 @@ class ReviewQueue(TableNamesMixin):
                 except:
                     # TO-DO: Handle better.
                     # It seems like the same item can be checked out 2x...
-                    pass
+                    # pass
+                    raise
 
     def match_or_create(self):
         raise NotImplementedError
