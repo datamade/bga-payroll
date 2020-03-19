@@ -106,12 +106,15 @@ class ImportUtility(TableNamesMixin):
         q = ParentEmployerQueue(self.s_file_id)
 
         select = '''
-            SELECT DISTINCT TRIM(employer)
+            SELECT
+              DISTINCT TRIM(employer)
             FROM {raw_payroll} AS raw
-            LEFT JOIN payroll_employeralias AS existing
-            ON TRIM(raw.employer) = TRIM(existing.name)
-            AND existing.parent_id IS NULL
-            WHERE existing.name IS NULL
+            LEFT JOIN payroll_employeralias AS alias
+            ON TRIM(raw.employer) = TRIM(alias.name)
+            LEFT JOIN payroll_employer AS existing
+            ON alias.employer_id = existing.id
+            WHERE existing.parent_id IS NULL
+            AND alias.name IS NULL
         '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
@@ -124,15 +127,15 @@ class ImportUtility(TableNamesMixin):
         from payroll.models import Employer, EmployerAlias
 
         select_parents = '''
-              SELECT
-                DISTINCT TRIM(employer)
-              FROM {raw_payroll} AS raw
-              LEFT JOIN payroll_employeralias AS alias
-              ON TRIM(raw.employer) = TRIM(alias.name)
-              LEFT JOIN payroll_employer AS existing
-              ON alias.employer_id = existing.id
-              WHERE existing.parent_id IS NULL
-              AND alias.name IS NULL
+            SELECT
+              DISTINCT TRIM(employer)
+            FROM {raw_payroll} AS raw
+            LEFT JOIN payroll_employeralias AS alias
+            ON TRIM(raw.employer) = TRIM(alias.name)
+            LEFT JOIN payroll_employer AS existing
+            ON alias.employer_id = existing.id
+            WHERE existing.parent_id IS NULL
+            AND alias.name IS NULL
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 

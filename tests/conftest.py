@@ -6,7 +6,7 @@ import pytest
 from data_import.models import Upload, RespondingAgency, StandardizedFile, \
     RespondingAgencyAlias
 from payroll.models import Employer, UnitRespondingAgency, EmployerTaxonomy, \
-    EmployerUniverse
+    EmployerUniverse, EmployerAlias
 
 
 @pytest.fixture
@@ -57,14 +57,21 @@ def standardized_file(mock_file, upload):
 @pytest.mark.django_db(transaction=True)
 def responding_agency(transactional_db):
     class RespondingAgencyFactory():
-        def build(self, **kwargs):
+        def build(self, allow_get=False, **kwargs):
             data = {
                 'name': 'Half Acre Beer Co',
             }
             data.update(kwargs)
 
-            agency = RespondingAgency.objects.create(**data)
-            RespondingAgencyAlias.objects.create(name=data['name'], responding_agency=agency)
+            if allow_get:
+                agency, created = RespondingAgency.objects.get_or_create(**data)
+
+                if created:
+                    RespondingAgencyAlias.objects.create(name=data['name'], responding_agency=agency)
+
+            else:
+                agency = RespondingAgency.objects.create(**data)
+                RespondingAgencyAlias.objects.create(name=data['name'], responding_agency=agency)
 
             return agency
 
@@ -130,9 +137,10 @@ def employer(standardized_file,
                 data['taxonomy'] = employer_taxonomy.build()
 
             employer = Employer.objects.create(**data)
+            EmployerAlias.objects.create(name=data['name'], employer_id=employer.id)
 
             if not employer.is_department:
-                agency = responding_agency.build()
+                agency = responding_agency.build(allow_get=True)
                 UnitRespondingAgency.objects.create(unit=employer,
                                                     responding_agency=agency,
                                                     reporting_year=2017)
