@@ -1,8 +1,6 @@
 import pickle
 
 from django.conf import settings
-from django.db import connection
-
 from saferedisqueue import SafeRedisQueue
 
 from data_import.utils.table_names import TableNamesMixin
