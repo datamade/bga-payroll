@@ -45,7 +45,6 @@ urlpatterns = [
     # data import
     path('data-import/', import_views.Uploads.as_view(), name='data-import'),
     path('data-import/upload-source-file/', import_views.SourceFileHook.as_view(), name='upload-source-file'),
-    # path('data-import/upload-standardized-file/', import_views.StandardizedDataUpload.as_view(), name='upload-standardized-file'),
     path('data-import/review/responding-agency/<int:s_file_id>', import_views.RespondingAgencyReview.as_view(), name='review-responding-agency'),
     path('data-import/review/parent-employer/<int:s_file_id>', import_views.ParentEmployerReview.as_view(), name='review-parent-employer'),
     path('data-import/review/child-employer/<int:s_file_id>', import_views.ChildEmployerReview.as_view(), name='review-child-employer'),
