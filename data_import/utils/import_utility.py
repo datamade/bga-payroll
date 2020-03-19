@@ -148,9 +148,36 @@ class ImportUtility(TableNamesMixin):
                 employer = Employer.objects.create(name=name, vintage_id=self.vintage)
                 EmployerAlias.objects.create(name=name, employer=employer)
 
+        '''
+        TODO: Use alias for all of these.
+        '''
         self._insert_unit_responding_agency()
         self._classify_parent_employers()
         self._insert_parent_employer_population()
+
+    def _insert_unit_responding_agency(self):
+        insert = '''
+            INSERT INTO payroll_unitrespondingagency (
+              unit_id,
+              responding_agency_id,
+              reporting_year
+            )
+            SELECT DISTINCT ON (emp.id, agency.id)
+              emp.id,
+              agency.id,
+              {reporting_year}
+            FROM {raw_payroll} AS raw
+            JOIN payroll_employer AS emp
+            ON TRIM(raw.employer) = TRIM(emp.name)
+            JOIN data_import_respondingagency AS agency
+            ON TRIM(raw.responding_agency) = TRIM(agency.name)
+            WHERE emp.parent_id IS NULL
+            ON CONFLICT DO NOTHING
+        '''.format(reporting_year=self.reporting_year,
+                   raw_payroll=self.raw_payroll_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
 
     def _classify_parent_employers(self):
         '''
@@ -274,30 +301,6 @@ class ImportUtility(TableNamesMixin):
         with connection.cursor() as cursor:
             cursor.execute(insert)
 
-    def _insert_unit_responding_agency(self):
-        insert = '''
-            INSERT INTO payroll_unitrespondingagency (
-              unit_id,
-              responding_agency_id,
-              reporting_year
-            )
-            SELECT DISTINCT ON (emp.id, agency.id)
-              emp.id,
-              agency.id,
-              {reporting_year}
-            FROM {raw_payroll} AS raw
-            JOIN payroll_employer AS emp
-            ON TRIM(raw.employer) = TRIM(emp.name)
-            JOIN data_import_respondingagency AS agency
-            ON TRIM(raw.responding_agency) = TRIM(agency.name)
-            WHERE emp.parent_id IS NULL
-            ON CONFLICT DO NOTHING
-        '''.format(reporting_year=self.reporting_year,
-                   raw_payroll=self.raw_payroll_table)
-
-        with connection.cursor() as cursor:
-            cursor.execute(insert)
-
     def select_unseen_child_employer(self):
         '''
         If the parent is new as of this vintage, don't force the
@@ -309,31 +312,34 @@ class ImportUtility(TableNamesMixin):
         select = '''
             WITH child_employers AS (
               SELECT
-                child.name AS employer_name,
-                parent.name AS parent_name,
-                parent.vintage_id = {vintage} AS new_parent
-              FROM payroll_employer AS parent
-              LEFT JOIN payroll_employer AS child
-              ON parent.id = child.parent_id
+                department_alias.name AS department_name,
+                unit_alias.name AS unit_name,
+                unit.vintage_id = {vintage} AS new_parent
+              FROM payroll_employer AS department
+              JOIN payroll_employer AS unit
+              ON department.parent_id = unit.id
+              JOIN payroll_employeralias AS department_alias
+              ON department.id = department_alias.employer_id
+              JOIN payroll_employeralias AS unit_alias
+              ON unit.id = unit_alias.employer_id
             )
-            SELECT DISTINCT ON (employer, department)
-              employer,
-              department
+            SELECT DISTINCT ON (TRIM(employer), TRIM(department))
+              TRIM(employer),
+              TRIM(department)
             FROM {raw_payroll} AS raw
             /* Join to filter records where new_parent is True.
             Parents will always exist, because we added them in
             the prior step. */
-            LEFT JOIN child_employers AS parent
-            ON TRIM(raw.employer) = TRIM(parent.parent_name)
-            /* Join to filter records with a corresponding child. */
-            LEFT JOIN child_employers AS child
-            ON TRIM(raw.employer) = TRIM(child.parent_name)
-            AND TRIM(raw.department) = TRIM(child.employer_name)
+            LEFT JOIN child_employers AS unit_join
+            ON TRIM(raw.employer) = unit_join.unit_name
+            /* Join to filter unseen records. */
+            LEFT JOIN child_employers AS department_join
+            ON TRIM(raw.employer) = department_join.unit_name
+              AND TRIM(raw.department) = department_join.department_name
             WHERE raw.department IS NOT NULL
-            AND parent.new_parent IS FALSE
-            AND child.employer_name IS NULL
-        '''.format(vintage=self.vintage,
-                   raw_payroll=self.raw_payroll_table)
+              AND unit_join.new_parent IS NOT TRUE
+              AND department_join.department_name IS NULL
+        '''.format(vintage=self.vintage, raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
@@ -346,26 +352,58 @@ class ImportUtility(TableNamesMixin):
                 })
 
     def insert_child_employer(self):
-        insert_children = '''
-            INSERT INTO payroll_employer (name, parent_id, vintage_id)
-              SELECT DISTINCT ON (employer, department)
-                department AS employer_name,
-                parent.id AS parent_id,
-                {vintage}
-              FROM {raw_payroll} AS raw
-              JOIN payroll_employer AS parent
-              ON TRIM(raw.employer) = TRIM(parent.name)
-              WHERE department IS NOT NULL
-            ON CONFLICT DO NOTHING
+        from payroll.models import Employer, EmployerAlias
+
+        select = '''
+            WITH child_employers AS (
+              SELECT
+                department_alias.name AS department_name,
+                unit_alias.name AS unit_name,
+                unit.vintage_id = {vintage} AS new_parent
+              FROM payroll_employer AS department
+              JOIN payroll_employer AS unit
+              ON department.parent_id = unit.id
+              JOIN payroll_employeralias AS department_alias
+              ON department.id = department_alias.employer_id
+              JOIN payroll_employeralias AS unit_alias
+              ON unit.id = unit_alias.employer_id
+            )
+            SELECT DISTINCT ON (TRIM(employer), TRIM(department))
+              TRIM(employer),
+              TRIM(department)
+            FROM {raw_payroll} AS raw
+            /* Join to filter records where new_parent is True.
+            Parents will always exist, because we added them in
+            the prior step. */
+            LEFT JOIN child_employers AS unit_join
+            ON TRIM(raw.employer) = unit_join.unit_name
+            /* Join to filter unseen records. */
+            LEFT JOIN child_employers AS department_join
+            ON TRIM(raw.employer) = department_join.unit_name
+              AND TRIM(raw.department) = department_join.department_name
+            WHERE raw.department IS NOT NULL
+              AND unit_join.new_parent IS NOT TRUE
+              AND department_join.department_name IS NULL
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
-            cursor.execute(insert_children)
+            cursor.execute(select)
+
+            for row in cursor:
+                unit_name, department_name = row
+
+                unit = Employer.objects.get(name=unit_name, parent_id__isnull=True)
+                department = Employer.objects.create(name=department_name, parent=unit, vintage_id=self.vintage)
+
+                EmployerAlias.objects.create(name=department_name, employer=department)
 
         self._add_employer_universe()
 
     def _add_employer_universe(self):
+        '''
+        TODO: Use alias.
+        '''
         update = '''
             WITH pattern_matched_employers AS (
               SELECT
@@ -403,6 +441,9 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(update)
 
     def insert_position(self):
+        '''
+        TODO: Use alias.
+        '''
         insert = '''
             INSERT INTO payroll_position (employer_id, title, vintage_id)
               WITH employer_ids AS (
@@ -477,6 +518,9 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_raw_job(self):
+        '''
+        TODO: Use alias.
+        '''
         select = '''
             WITH employer_ids AS (
               SELECT
