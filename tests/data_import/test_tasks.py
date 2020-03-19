@@ -169,10 +169,10 @@ class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer)
             SELECT COUNT(*) - 1
             FROM (
               SELECT DISTINCT ON (employer, department)
-              * FROM {intermediate_payroll}
+              * FROM {raw_payroll}
               WHERE department IS NOT NULL
             ) AS child_employers
-        '''.format(intermediate_payroll=self.s_file.raw_table_name)
+        '''.format(raw_payroll=self.s_file.raw_table_name)
 
         return select
 
@@ -186,8 +186,8 @@ class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer)
 
         with connection.cursor() as cursor:
             cursor.execute('''
-                SELECT DISTINCT employer FROM {intermediate_payroll}
-            '''.format(intermediate_payroll=self.s_file.raw_table_name))
+                SELECT DISTINCT TRIM(employer) FROM {raw_payroll}
+            '''.format(raw_payroll=self.s_file.raw_table_name))
 
             for record in cursor:
                 parent_name, = record
@@ -206,11 +206,11 @@ class TestSelectUnseenChildEmployerNewParent(TestSelectUnseenChildEmployer):
             SELECT COUNT(*)
             FROM (
               SELECT DISTINCT ON (employer, department)
-              * FROM {intermediate_payroll}
+              * FROM {raw_payroll}
               WHERE employer != '{canned_data}'
                 AND department IS NOT NULL
             ) AS child_employers
-        '''.format(intermediate_payroll=self.s_file.raw_table_name,
+        '''.format(raw_payroll=self.s_file.raw_table_name,
                    canned_data=self.existing_entity.parent.name)
 
         return select
@@ -226,8 +226,8 @@ class TestSelectUnseenChildEmployerNewParent(TestSelectUnseenChildEmployer):
 
         with connection.cursor() as cursor:
             cursor.execute('''
-                SELECT DISTINCT employer FROM {intermediate_payroll}
-            '''.format(intermediate_payroll=self.s_file.raw_table_name))
+                SELECT DISTINCT employer FROM {raw_payroll}
+            '''.format(raw_payroll=self.s_file.raw_table_name))
 
             for record in cursor:
                 parent_name, = record
