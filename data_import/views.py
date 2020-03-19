@@ -8,7 +8,6 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, ListView
-from django.views.generic.edit import FormView
 
 # from data_import.forms import UploadForm
 from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
