@@ -160,28 +160,15 @@ def test_import_utility_init(raw_table_setup,
               ON emp.parent_id = parent.id
             ), raw AS (
               SELECT
-                employer,
-                department,
-                title,
-                first_name,
-                last_name,
+                TRIM(employer),
+                TRIM(department),
+                TRIM(title),
+                TRIM(first_name),
+                TRIM(last_name),
                 base_salary::NUMERIC,
                 extra_pay::NUMERIC,
                 NULLIF(date_started, '')::DATE AS date_started
               FROM {raw_payroll}
-              WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
-              UNION ALL
-              SELECT
-                department AS employer,
-                NULL AS department,
-                title,
-                first_name,
-                last_name,
-                base_salary::NUMERIC,
-                extra_pay::NUMERIC,
-                NULLIF(date_started, '')::DATE AS date_started
-              FROM {raw_payroll}
-              WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             )
             SELECT * FROM raw
             EXCEPT
