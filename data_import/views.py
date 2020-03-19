@@ -13,8 +13,6 @@ from data_import.forms import UploadForm
 from data_import.models import StandardizedFile, RespondingAgency, Upload
 from data_import.utils import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
-from data_import.tasks import flush_responding_agency_queue, \
-    flush_parent_employer_queue, flush_child_employer_queue
 
 from payroll.models import Employer
 
@@ -70,10 +68,9 @@ class Review(LoginRequiredMixin, DetailView):
         Otherwise, show the review.
         '''
         if self.request.GET.get('flush') == 'true':
-            self.flush()
-            return redirect(reverse('data-import'))
+            self.q.flush()
 
-        elif self.q.remaining == 0:
+        if self.q.remaining == 0:
             self.finish_review_step()
             return redirect(reverse('data-import'))
 
@@ -111,17 +108,12 @@ class Review(LoginRequiredMixin, DetailView):
         else:
             return redirect('/data-import/?pending=True')
 
-    def flush(self):
-        self.flush_task.delay(s_file_id=self.kwargs['s_file_id'])
-
     def finish_review_step(self):
-        # TO-DO: Make sure this can't be triggered more than once.
         s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
         getattr(s_file, self.transition)()
 
 
 class RespondingAgencyReview(Review):
-    flush_task = flush_responding_agency_queue
     transition = 'select_unseen_parent_employer'
     entity = 'responding agency'
     entities = 'responding agencies'
@@ -132,7 +124,6 @@ class RespondingAgencyReview(Review):
 
 
 class ParentEmployerReview(Review):
-    flush_task = flush_parent_employer_queue
     transition = 'select_unseen_child_employer'
     entity = 'parent employer'
     entities = 'parent employers'
@@ -143,7 +134,6 @@ class ParentEmployerReview(Review):
 
 
 class ChildEmployerReview(Review):
-    flush_task = flush_child_employer_queue
     transition = 'select_invalid_salary'
     entity = 'child employer'
     entities = 'child employers'
