@@ -148,9 +148,6 @@ class ImportUtility(TableNamesMixin):
                 employer = Employer.objects.create(name=name, vintage_id=self.vintage)
                 EmployerAlias.objects.create(name=name, employer=employer)
 
-        '''
-        TODO: Use alias for all of these.
-        '''
         self._insert_unit_responding_agency()
         self._classify_parent_employers()
         self._insert_parent_employer_population()
@@ -167,12 +164,13 @@ class ImportUtility(TableNamesMixin):
               agency.id,
               {reporting_year}
             FROM {raw_payroll} AS raw
+            JOIN payroll_employeralias AS alias
+              ON TRIM(raw.employer) = alias.name
             JOIN payroll_employer AS emp
-            ON TRIM(raw.employer) = TRIM(emp.name)
+              ON alias.employer_id = emp.id
             JOIN data_import_respondingagency AS agency
-            ON TRIM(raw.responding_agency) = TRIM(agency.name)
+              ON TRIM(raw.responding_agency) = agency.name
             WHERE emp.parent_id IS NULL
-            ON CONFLICT DO NOTHING
         '''.format(reporting_year=self.reporting_year,
                    raw_payroll=self.raw_payroll_table)
 
@@ -180,18 +178,15 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def _classify_parent_employers(self):
-        '''
-        In the future, there will be a review step to classify employers
-        that are not in the canonical list, e.g., are not classified in this
-        step. For now, just leave them unclassified.
-        '''
         update_non_school_districts = '''
             UPDATE payroll_employer
             SET taxonomy_id = model_taxonomy.id
-            FROM raw_taxonomy
+            FROM payroll_employeralias AS alias
+            JOIN raw_taxonomy
+            ON LOWER(alias.name) = LOWER(raw_taxonomy.entity)
             JOIN payroll_employertaxonomy AS model_taxonomy
             USING (entity_type, chicago, cook_or_collar)
-            WHERE LOWER(payroll_employer.name) = LOWER(raw_taxonomy.entity)
+            WHERE alias.employer_id = payroll_employer.id
               AND payroll_employer.parent_id IS NULL
               AND payroll_employer.taxonomy_id IS NULL
         '''
@@ -280,17 +275,19 @@ class ImportUtility(TableNamesMixin):
                 pop.data_year
               FROM payroll_employer AS emp
               JOIN unmatched_gov_units AS unmatched
-              USING (id)
+                USING (id)
+              JOIN payroll_employeralias AS alias
+                ON emp.id = alias.employer_id
               JOIN raw_population AS pop
-              ON (
-                LOWER(emp.name) = LOWER(pop.name)
-                AND LOWER(unmatched.entity_type) IN ('municipal', 'county')
-                AND pop.classification != 'township'
-              ) OR (
-                LOWER(REGEXP_REPLACE(emp.name, ' township', '', 'i')) = LOWER(pop.name)
-                AND LOWER(unmatched.entity_type) = 'township'
-                AND pop.classification = 'township'
-              )
+                ON (
+                  LOWER(alias.name) = LOWER(pop.name)
+                  AND LOWER(unmatched.entity_type) IN ('municipal', 'county')
+                  AND pop.classification != 'township'
+                ) OR (
+                  LOWER(REGEXP_REPLACE(alias.name, ' township', '', 'i')) = LOWER(pop.name)
+                  AND LOWER(unmatched.entity_type) = 'township'
+                  AND pop.classification = 'township'
+                )
               /* There are a handful of instances where there are CDPs called
               the same thing as a city or village. They always have a smaller
               population. We want the city or village, so order by population
@@ -401,29 +398,27 @@ class ImportUtility(TableNamesMixin):
         self._add_employer_universe()
 
     def _add_employer_universe(self):
-        '''
-        TODO: Use alias.
-        '''
         update = '''
             WITH pattern_matched_employers AS (
               SELECT
-                id,
-                name,
+                employer.id,
+                alias.name,
                 CASE
                   WHEN
-                    (name ~* E'\\mpd'
-                    OR name ~* E'(?<!state )police'
-                    OR name ~* E'(?<!homeland )security'
-                    OR name ~* E'public safety')
-                    AND name !~* E'(board|comm(isss?ion)?(er)?s?)'
+                    (alias.name ~* E'\\mpd'
+                    OR alias.name ~* E'(?<!state )police'
+                    OR alias.name ~* E'public safety')
+                    AND alias.name !~* E'(board|comm(isss?ion)?(er)?s?)'
                   THEN 'Police Department'
-                  WHEN name ~* E'\\m(fp?d|fire)' THEN 'Fire Department'
+                  WHEN alias.name ~* E'\\m(fp?d|fire)' THEN 'Fire Department'
                 END AS match
-              FROM payroll_employer
+              FROM payroll_employer AS employer
+              JOIN payroll_employeralias AS alias
+              ON employer.id = alias.employer_id
               /* Only add departments to universes. */
-              WHERE parent_id IS NOT NULL
+              WHERE employer.parent_id IS NOT NULL
               /* Only classify unclassified departments. */
-              AND universe_id IS NULL
+              AND employer.universe_id IS NULL
             )
             UPDATE payroll_employer
             SET universe_id = xwalk.universe_id FROM (
