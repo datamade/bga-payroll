@@ -442,7 +442,7 @@ class ImportUtility(TableNamesMixin):
                 SELECT
                   child.id AS employer_id,
                   department_alias.name AS employer_name,
-                  parent.name AS parent_name
+                  unit_alias.name AS parent_name
                 FROM payroll_employer AS child
                 LEFT JOIN payroll_employer AS parent
                   ON child.parent_id = parent.id
@@ -453,7 +453,7 @@ class ImportUtility(TableNamesMixin):
               )
               SELECT
                 employer_id,
-                COALESCE(title, 'Employee'),
+                COALESCE(TRIM(raw.title), 'Employee'),
                 {vintage}
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
@@ -479,8 +479,8 @@ class ImportUtility(TableNamesMixin):
         select = '''
             SELECT
               record_id,
-              first_name,
-              last_name,
+              TRIM(first_name) AS first_name,
+              TRIM(last_name) AS last_name,
               {vintage},
               NEXTVAL('payroll_person_id_seq') AS person_id
               /* payroll_person does not have a uniquely identifying
@@ -514,18 +514,19 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_raw_job(self):
-        '''
-        TODO: Use alias.
-        '''
         select = '''
             WITH employer_ids AS (
               SELECT
                 child.id AS employer_id,
-                child.name AS employer_name,
-                parent.name AS parent_name
+                department_alias.name AS employer_name,
+                unit_alias.name AS parent_name
               FROM payroll_employer AS child
               LEFT JOIN payroll_employer AS parent
-              ON child.parent_id = parent.id
+                ON child.parent_id = parent.id
+              LEFT JOIN payroll_employeralias AS unit_alias
+                ON parent.id = unit_alias.employer_id
+              LEFT JOIN payroll_employeralias AS department_alias
+                ON child.id = department_alias.employer_id
             )
             SELECT
               record_id,
@@ -541,22 +542,22 @@ class ImportUtility(TableNamesMixin):
             INTO {raw_job}
             FROM {raw_person}
             JOIN {raw_payroll} AS raw
-            USING (record_id)
+              USING (record_id)
             JOIN employer_ids AS emp
-            ON (
-              TRIM(raw.department) = TRIM(emp.employer_name)
-              AND TRIM(raw.employer) = TRIM(emp.parent_name)
-              AND raw.department IS NOT NULL
-            ) OR (
-              TRIM(raw.employer) = TRIM(emp.employer_name)
-              AND raw.department IS NULL
-              /* Only allow for matches on top-level employers, i.e., where
-              there is no parent. */
-              AND emp.parent_name IS NULL
-            )
+              ON (
+                TRIM(raw.department) = emp.employer_name
+                AND TRIM(raw.employer) = emp.parent_name
+                AND raw.department IS NOT NULL
+              ) OR (
+                TRIM(raw.employer) = emp.employer_name
+                AND raw.department IS NULL
+                /* Only allow for matches on top-level employers, i.e., where
+                there is no parent. */
+                AND emp.parent_name IS NULL
+              )
             JOIN payroll_position AS position
-            ON position.employer_id = emp.employer_id
-            AND TRIM(position.title) = TRIM(COALESCE(raw.title, 'Employee'))
+              ON position.employer_id = emp.employer_id
+              AND position.title = COALESCE(TRIM(raw.title), 'Employee')
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
