@@ -436,19 +436,20 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(update)
 
     def insert_position(self):
-        '''
-        TODO: Use alias.
-        '''
         insert = '''
             INSERT INTO payroll_position (employer_id, title, vintage_id)
               WITH employer_ids AS (
                 SELECT
                   child.id AS employer_id,
-                  child.name AS employer_name,
+                  department_alias.name AS employer_name,
                   parent.name AS parent_name
                 FROM payroll_employer AS child
                 LEFT JOIN payroll_employer AS parent
-                ON child.parent_id = parent.id
+                  ON child.parent_id = parent.id
+                LEFT JOIN payroll_employeralias AS unit_alias
+                  ON parent.id = unit_alias.employer_id
+                LEFT JOIN payroll_employeralias AS department_alias
+                  ON child.id = department_alias.employer_id
               )
               SELECT
                 employer_id,
@@ -457,12 +458,12 @@ class ImportUtility(TableNamesMixin):
               FROM {raw_payroll} AS raw
               JOIN employer_ids AS existing
               ON (
-                TRIM(raw.department) = TRIM(existing.employer_name)
-                AND TRIM(raw.employer) = TRIM(existing.parent_name)
-                AND raw.department IS NOT NULL
+                TRIM(raw.department) = existing.employer_name
+                AND TRIM(raw.employer) = existing.parent_name
+                AND TRIM(raw.department) IS NOT NULL
               ) OR (
-                TRIM(raw.employer) = TRIM(existing.employer_name)
-                AND raw.department IS NULL
+                TRIM(raw.employer) = existing.employer_name
+                AND TRIM(raw.department) IS NULL
                 /* Only allow for matches on top-level employers, i.e., where
                 there is no parent. */
                 AND existing.parent_name IS NULL
