@@ -50,7 +50,7 @@ def test_match(mocker, admin_client):
     with pytest.raises(AssertionError):
         admin_client.post(reverse('match-entity'), data={'data': json.dumps(data)})
 
-    data['match'] = 'bar'
+    data['match'] = 1
 
     admin_client.post(reverse('match-entity'), data={'data': json.dumps(data)})
 
@@ -65,7 +65,7 @@ def test_add(mocker, admin_client):
         'entity_type': 'responding-agency',
         's_file_id': 99,
         'unseen': 'foo',
-        'match': 'bar,'
+        'match': 1,
     }
 
     with pytest.raises(AssertionError):

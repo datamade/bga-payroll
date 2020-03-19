@@ -1,66 +1,54 @@
-from django.db import connection
 import pytest
 
-from data_import.models import RespondingAgency
+from data_import.models import RespondingAgencyAlias
 from data_import.utils import RespondingAgencyQueue, ParentEmployerQueue, \
-    ChildEmployerQueue, CsvMeta
+    ChildEmployerQueue
 
-from payroll.models import Employer
+from payroll.models import EmployerAlias
 
 
-@pytest.mark.parametrize('queue,raw_field,model,model_kwargs', [
-    (RespondingAgencyQueue, 'Responding Agency', RespondingAgency, {}),
-    (ParentEmployerQueue, 'Employer', Employer, {'parent_id__isnull': True}),
-    (ChildEmployerQueue, 'Department', Employer, {'parent_id__isnull': False}),
+@pytest.mark.parametrize('queue,raw_field', [
+    (RespondingAgencyQueue, 'Responding Agency'),
+    (ParentEmployerQueue, 'Employer'),
+    (ChildEmployerQueue, 'Department'),
 ])
 @pytest.mark.django_db(transaction=True)
 def test_match_or_create_responding_agency(raw_table_setup,
                                            canned_data,
                                            employer,
                                            queue,
-                                           raw_field,
-                                           model,
-                                           model_kwargs):
+                                           raw_field):
     s_file = raw_table_setup
 
     q = queue(s_file.id)
 
-    name = canned_data[raw_field]
+    item = {
+        'id': None,
+        'name': '{} Unseen'.format(canned_data[raw_field]),
+    }
 
-    item = {'id': None, 'name': name}
+    match = employer.build(
+        name='{} Match'.format(canned_data['Employer']),
+        vintage=s_file.upload
+    )
 
-    if isinstance(q, ChildEmployerQueue):
-        parent = canned_data['Employer']
-        employer.build(name=parent, vintage=s_file.upload)
-        item['parent'] = parent
-
-    for match in (None, 'a matching agency'):
+    for match in (None, match.id):
         q.match_or_create(item.copy(), match)
 
-        with connection.cursor() as cursor:
-            select = '''
-                SELECT EXISTS(
-                  SELECT 1
-                  FROM {raw_payroll}
-                  WHERE {processed_field} = '{item}'
-                ),
-                EXISTS(
-                  SELECT 1
-                  FROM {raw_payroll}
-                  WHERE {processed_field} = '{match}'
-                )
-            '''.format(raw_payroll=s_file.raw_table_name,
-                       processed_field=CsvMeta._clean_field(raw_field),
-                       item=name,
-                       match=match)
+        if raw_field == 'Responding Agency':
+            alias_model = RespondingAgencyAlias
+            filter_kwargs = {'responding_agency_id': match}
 
-            cursor.execute(select)
+        else:
+            alias_model = EmployerAlias
+            filter_kwargs = {'employer_id': match}
 
-            item_exists, match_exists = cursor.fetchone()
+        filter_kwargs['name'] = item['name']
 
-            if match:
-                assert match_exists and not item_exists
+        alias = alias_model.objects.filter(**filter_kwargs)
 
-            else:
-                assert item_exists and not match_exists
-                assert model.objects.get(name=name, **model_kwargs)
+        if match:
+            assert alias.exists()
+
+        else:
+            assert not alias.exists()
