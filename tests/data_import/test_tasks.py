@@ -168,7 +168,7 @@ class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer)
         select = '''
             SELECT COUNT(*) - 1
             FROM (
-              SELECT DISTINCT ON (employer, department)
+              SELECT DISTINCT ON (TRIM(employer), TRIM(department))
               * FROM {raw_payroll}
               WHERE department IS NOT NULL
             ) AS child_employers
