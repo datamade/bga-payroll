@@ -201,7 +201,7 @@ def review_entity_lookup(request, entity_type):
     for e in queryset.filter(name__istartswith=q):
         data = {
             'label': str(e),
-            'value': str(e),
+            'value': e.id,
         }
         entities.append(data)
 
