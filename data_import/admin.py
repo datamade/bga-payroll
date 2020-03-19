@@ -66,11 +66,12 @@ class AdminSourceFile(admin.ModelAdmin):
 class AdminStandardizedFile(admin.ModelAdmin):
     form = UploadForm
 
-    # def save_model(request, obj, form, change):
-        # import pdb
-        # pdb.set_trace()
-        # create Upload object
-        # s_file.copy_to_database()
+    def save_model(self, request, obj, form, change):
+        upload = Upload.objects.create()
+        obj.upload = upload
+        import pdb
+        pdb.set_trace()
+        obj.copy_to_database()
 
 admin.site.register(SourceFile, AdminSourceFile)
 admin.site.register(RespondingAgency, AdminRespondingAgency)
