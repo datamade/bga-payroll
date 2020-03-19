@@ -3,16 +3,14 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import FormView
 
 from data_import.forms import UploadForm
-from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
-    Upload
+from data_import.models import StandardizedFile, RespondingAgency, Upload
 from data_import.utils import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
 from data_import.tasks import flush_responding_agency_queue, \

@@ -64,7 +64,7 @@ def responding_agency(transactional_db):
             data.update(kwargs)
 
             agency = RespondingAgency.objects.create(**data)
-            alias = RespondingAgencyAlias.objects.create(name=data['name'], responding_agency=agency)
+            RespondingAgencyAlias.objects.create(name=data['name'], responding_agency=agency)
 
             return agency
 

@@ -16,6 +16,7 @@ from payroll.models import EmployerAlias
 def test_match_or_create_responding_agency(raw_table_setup,
                                            canned_data,
                                            employer,
+                                           responding_agency,
                                            queue,
                                            raw_field):
     s_file = raw_table_setup
@@ -27,23 +28,29 @@ def test_match_or_create_responding_agency(raw_table_setup,
         'name': '{} Unseen'.format(canned_data[raw_field]),
     }
 
-    match = employer.build(
-        name='{} Match'.format(canned_data['Employer']),
-        vintage=s_file.upload
-    )
+    if raw_field == 'Responding Agency':
+        alias_model = RespondingAgencyAlias
 
-    for match in (None, match.id):
+        match_id = responding_agency.build(
+            name='{} Match'.format(canned_data[raw_field]),
+        ).id
+
+        filter_kwargs = {'responding_agency_id': match_id}
+
+    else:
+        alias_model = EmployerAlias
+
+        match_id = employer.build(
+            name='{} Match'.format(canned_data[raw_field]),
+            vintage=s_file.upload
+        ).id
+
+        filter_kwargs = {'employer_id': match_id}
+
+    filter_kwargs['name'] = item['name']
+
+    for match in (None, match_id):
         q.match_or_create(item.copy(), match)
-
-        if raw_field == 'Responding Agency':
-            alias_model = RespondingAgencyAlias
-            filter_kwargs = {'responding_agency_id': match}
-
-        else:
-            alias_model = EmployerAlias
-            filter_kwargs = {'employer_id': match}
-
-        filter_kwargs['name'] = item['name']
 
         alias = alias_model.objects.filter(**filter_kwargs)
 
