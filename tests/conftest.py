@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.core.files import File
 import pytest
 
@@ -42,7 +43,7 @@ def standardized_file(mock_file, upload):
     class StandardizedFileFactory():
         def build(self, **kwargs):
             data = {
-                'reporting_year': 2017,
+                'reporting_year': settings.DATA_YEAR,
                 'standardized_file': mock_file,
                 'upload': upload.build(),
             }
@@ -143,7 +144,7 @@ def employer(standardized_file,
                 agency = responding_agency.build(allow_get=True)
                 UnitRespondingAgency.objects.create(unit=employer,
                                                     responding_agency=agency,
-                                                    reporting_year=2017)
+                                                    reporting_year=settings.DATA_YEAR)
 
             return employer
 
