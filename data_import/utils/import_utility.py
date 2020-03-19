@@ -96,25 +96,22 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_unseen_parent_employer(self):
-        '''
-        Select all parent employers we have not yet seen, regardless
-        of whether they directly employ people (department is null) or
-        not (department is not null). Do this, in order to avoid the
-        user having to review every department of a parent employer
-        that can be matched to an existing department.
-        '''
         q = ParentEmployerQueue(self.s_file_id)
 
         select = '''
+            WITH parent_employers AS (
+              SELECT alias.*
+              FROM payroll_employeralias AS alias
+              JOIN payroll_employer AS employer
+              ON alias.employer_id = employer.id
+              WHERE employer.parent_id IS NULL
+            )
             SELECT
               DISTINCT TRIM(employer)
             FROM {raw_payroll} AS raw
-            LEFT JOIN payroll_employeralias AS alias
-            ON TRIM(raw.employer) = TRIM(alias.name)
-            LEFT JOIN payroll_employer AS existing
-            ON alias.employer_id = existing.id
-            WHERE existing.parent_id IS NULL
-            AND alias.name IS NULL
+            LEFT JOIN parent_employers AS existing
+            ON TRIM(raw.employer) = TRIM(existing.name)
+            WHERE existing.name IS NULL
         '''.format(raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
@@ -127,15 +124,19 @@ class ImportUtility(TableNamesMixin):
         from payroll.models import Employer, EmployerAlias
 
         select_parents = '''
+            WITH parent_employers AS (
+              SELECT alias.*
+              FROM payroll_employeralias AS alias
+              JOIN payroll_employer AS employer
+              ON alias.employer_id = employer.id
+              WHERE employer.parent_id IS NULL
+            )
             SELECT
               DISTINCT TRIM(employer)
             FROM {raw_payroll} AS raw
-            LEFT JOIN payroll_employeralias AS alias
-            ON TRIM(raw.employer) = TRIM(alias.name)
-            LEFT JOIN payroll_employer AS existing
-            ON alias.employer_id = existing.id
-            WHERE existing.parent_id IS NULL
-            AND alias.name IS NULL
+            LEFT JOIN parent_employers AS existing
+            ON TRIM(raw.employer) = TRIM(existing.name)
+            WHERE existing.name IS NULL
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 
