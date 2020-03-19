@@ -27,7 +27,11 @@ def test_missing_fields_raises_exception(standardized_data_upload_blob,
 
     mock_file = standardized_data_upload_blob['standardized_file']
 
-    rv = admin_client.post(reverse('upload-standardized-file'),
+    # rv = admin_client.post(reverse('upload-standardized-file'),
+    #                        data=standardized_data_upload_blob,
+    #                        files={'standardized_file': mock_file})
+
+    rv = admin_client.post('/admin/',
                            data=standardized_data_upload_blob,
                            files={'standardized_file': mock_file})
 

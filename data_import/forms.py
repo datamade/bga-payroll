@@ -20,6 +20,9 @@ class UploadForm(forms.ModelForm):
     def _validate_fields(self, incoming_fields):
         missing_fields = ', '.join(set(CsvMeta.REQUIRED_FIELDS) - set(incoming_fields))
 
+        import pdb
+        pdb.set_trace()
+
         if missing_fields:
             message = 'Standardized file missing fields: {}'.format(missing_fields)
             raise forms.ValidationError(message)

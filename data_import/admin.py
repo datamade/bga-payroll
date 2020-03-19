@@ -3,6 +3,7 @@ import datetime
 from django.contrib import admin
 
 from data_import.models import SourceFile, Upload, RespondingAgency, StandardizedFile
+from data_import.forms import UploadForm
 
 
 class AdminRespondingAgency(admin.ModelAdmin):
@@ -63,7 +64,13 @@ class AdminSourceFile(admin.ModelAdmin):
 
 
 class AdminStandardizedFile(admin.ModelAdmin):
-    pass  
+    form = UploadForm
+
+    # def save_model(request, obj, form, change):
+        # import pdb
+        # pdb.set_trace()
+        # create Upload object
+        # s_file.copy_to_database()
 
 admin.site.register(SourceFile, AdminSourceFile)
 admin.site.register(RespondingAgency, AdminRespondingAgency)
