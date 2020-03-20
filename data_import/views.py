@@ -9,7 +9,6 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, ListView
 
-# from data_import.forms import UploadForm
 from data_import.models import SourceFile, StandardizedFile, RespondingAgency, \
     Upload
 from data_import.utils import ChildEmployerQueue, ParentEmployerQueue, \

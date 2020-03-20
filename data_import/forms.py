@@ -37,6 +37,9 @@ class UploadForm(LoginRequiredMixin, forms.ModelForm):
         self._validate_filetype(meta.file_type)
         self._validate_fields(meta.field_names)
 
+        now = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+        s_file.name = '{}-{}'.format(now, s_file.name)
+
         return s_file
 
     def clean_reporting_year(self):
@@ -46,10 +49,3 @@ class UploadForm(LoginRequiredMixin, forms.ModelForm):
             raise forms.ValidationError('Reporting year cannot exceed the current year')
 
         return reporting_year
-
-    def form_valid(self, form):
-        uploaded_file = form.cleaned_data['standardized_file']
-        now = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
-        uploaded_file.name = '{}-{}'.format(now, uploaded_file.name)
-
-        return super().form_valid(form)
