@@ -68,16 +68,9 @@ class AdminStandardizedFile(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         upload = Upload.objects.create()
-        standardized_file = form.cleaned_data['standardized_file']
-        reporting_year = form.cleaned_data['reporting_year']
-
         obj.upload = upload
-        obj.standardized_file = standardized_file
-        obj.reporting_year = reporting_year
-
-        obj.copy_to_database()
-
         super().save_model(request, obj, form, change)
+        obj.copy_to_database()
 
 
 admin.site.register(SourceFile, AdminSourceFile)
