@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models, connection
-from django.db.models import Q, CheckConstraint
+from django.db.models import Q, CheckConstraint, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
 from django.db.models.functions import Coalesce
 
@@ -55,6 +55,20 @@ class Employer(SluggedModel, VintagedModel):
                                  blank=True,
                                  on_delete=models.SET_NULL,
                                  related_name='employers')
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=['name'],
+                condition=Q(parent_id__isnull=True),
+                name='unique_unit_name'
+            ),
+            UniqueConstraint(
+                fields=['name', 'parent_id'],
+                condition=Q(parent_id__isnull=False),
+                name='unique_department_name'
+            )
+        ]
 
     def __str__(self):
         name = self.name
@@ -422,6 +436,14 @@ class Job(VintagedModel):
 class Position(VintagedModel):
     employer = models.ForeignKey('Employer', on_delete=models.CASCADE, related_name='positions')
     title = models.CharField(max_length=255, null=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=['title', 'employer_id'],
+                name='unique_position'
+            )
+        ]
 
     def __str__(self):
         position = '{0} {1}'.format(self.employer, self.title)
