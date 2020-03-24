@@ -193,6 +193,8 @@ def test_import_utility_init(raw_table_setup,
     imp.insert_parent_employer()
     imp.insert_child_employer()
     imp.insert_position()
+    imp.select_raw_person()
+    imp.insert_person()
 
-    # import pdb
-    # pdb.set_trace()
+    import pdb
+    pdb.set_trace()

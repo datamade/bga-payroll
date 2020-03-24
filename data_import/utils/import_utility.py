@@ -477,71 +477,68 @@ class ImportUtility(TableNamesMixin):
 
     def select_raw_person(self):
         create_view = '''
-            CREATE MATERIALIZED VIEW {raw_person} AS
-              WITH employer_ids AS (
-                /* Create a lookup table of all employer IDs, names, and parent
-                names, if applicable. (Units do not have parents.) */
-                SELECT
-                  child.id AS employer_id,
-                  department_alias.name AS employer_name,
-                  unit_alias.name AS parent_name
-                FROM payroll_employer AS child
-                LEFT JOIN payroll_employer AS parent
-                  ON child.parent_id = parent.id
-                LEFT JOIN payroll_employeralias AS unit_alias
-                  ON parent.id = unit_alias.employer_id
-                LEFT JOIN payroll_employeralias AS department_alias
-                  ON child.id = department_alias.employer_id
-              ), existing AS (
-                /* Construct a view of existing people and their positions. */
-                SELECT
-                  emp.employer_id,
-                  emp.employer_name AS e_employer_name,
-                  emp.parent_name AS e_employer_parent,
-                  pos.id AS position_id,
-                  pos.title AS e_title,
-                  per.id AS e_person_id,
-                  per.first_name AS e_first_name,
-                  per.last_name AS e_last_name
-                FROM payroll_person AS per
-                JOIN payroll_job AS job
-                  ON job.person_id = per.id
-                JOIN payroll_salary AS sal
-                  ON sal.job_id = job.id
-                JOIN payroll_position AS pos
-                  ON pos.id = job.position_id
-                JOIN employer_ids AS emp
-                  ON pos.employer_id = emp.employer_id
-              )
-              /* Join the raw data to the existing view to create a lookup
-              of incoming records to the matching employer, person, and
-              position; or null. */
+            WITH employer_ids AS (
+              /* Create a lookup table of all employer IDs, names, and parent
+              names, if applicable. (Units do not have parents.) */
               SELECT
-                CASE
-                  WHEN e_person_id IS NULL
-                    THEN NEXTVAL('payroll_person_id_seq')
-                  ELSE e_person_id
-                END AS person_id,
-                raw.*,
-                existing.*
-              FROM {raw_payroll} AS raw
-              LEFT JOIN existing
-                ON (
-                  TRIM(raw.first_name) = existing.e_first_name
-                  AND TRIM(raw.last_name) = existing.e_last_name
-                  AND COALESCE(TRIM(raw.title), 'Employee') = existing.e_title
+                child.id AS employer_id,
+                department_alias.name AS employer_name,
+                unit_alias.name AS parent_name
+              FROM payroll_employer AS child
+              LEFT JOIN payroll_employer AS parent
+                ON child.parent_id = parent.id
+              LEFT JOIN payroll_employeralias AS unit_alias
+                ON parent.id = unit_alias.employer_id
+              LEFT JOIN payroll_employeralias AS department_alias
+                ON child.id = department_alias.employer_id
+            )
+            /* Join the raw data to the existing view to create a lookup
+            of incoming records to the matching employer, person, and
+            position; or null. */
+            SELECT
+              COALESCE(e_person_id, NEXTVAL('payroll_person_id_seq')) AS person_id,
+              raw.record_id,
+              raw.first_name,
+              raw.last_name,
+              existing.*,
+              e_person_id IS NOT NULL AS exists
+            INTO {raw_person}
+            FROM {raw_payroll} AS raw
+            LEFT JOIN (
+              /* Construct a view of existing people and their positions. */
+              SELECT
+                per.id AS e_person_id,
+                per.first_name AS e_first_name,
+                per.last_name AS e_last_name,
+                emp.employer_name AS e_employer_name,
+                emp.parent_name AS e_employer_parent,
+                pos.title AS e_title
+              FROM payroll_person AS per
+              JOIN payroll_job AS job
+                ON job.person_id = per.id
+              JOIN payroll_salary AS sal
+                ON sal.job_id = job.id
+              JOIN payroll_position AS pos
+                ON pos.id = job.position_id
+              JOIN employer_ids AS emp
+                ON pos.employer_id = emp.employer_id
+            ) AS existing
+              ON (
+                TRIM(raw.first_name) = existing.e_first_name
+                AND TRIM(raw.last_name) = existing.e_last_name
+                AND COALESCE(TRIM(raw.title), 'Employee') = existing.e_title
+              )
+              AND (
+                (
+                  TRIM(raw.department) = existing.e_employer_name
+                  AND TRIM(raw.employer) = existing.e_employer_parent
+                  AND TRIM(raw.department) IS NOT NULL
+                ) OR (
+                  TRIM(raw.employer) = existing.e_employer_name
+                  AND TRIM(raw.department) IS NULL
+                  AND existing.e_employer_parent IS NULL
                 )
-                AND (
-                  (
-                    TRIM(raw.department) = existing.e_employer_name
-                    AND TRIM(raw.employer) = existing.e_employer_parent
-                    AND TRIM(raw.department) IS NOT NULL
-                  ) OR (
-                    TRIM(raw.employer) = existing.e_employer_name
-                    AND TRIM(raw.department) IS NULL
-                    AND existing.e_employer_parent IS NULL
-                  )
-                )
+              )
         '''.format(raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
 
@@ -558,7 +555,7 @@ class ImportUtility(TableNamesMixin):
                 {vintage},
                 FALSE
               FROM {raw_person}
-              WHERE e_person_id IS NULL
+              WHERE exists = FALSE
         '''.format(vintage=self.vintage,
                    raw_person=self.raw_person_table)
 
