@@ -19,9 +19,9 @@ def test_import_utility_init(raw_table_setup,
                              mocker,
                              transactional_db):
 
-    s_file = raw_table_setup
+    s_file_2017, s_file_2018 = raw_table_setup
 
-    imp = utils.ImportUtility(s_file.id)
+    imp = utils.ImportUtility(s_file_2018.id)
     imp.populate_models_from_raw_data()
 
     with connection.cursor() as cursor:

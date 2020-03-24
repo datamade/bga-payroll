@@ -1,4 +1,5 @@
 import csv
+import os
 import shutil
 
 from django.core.files import File
@@ -9,23 +10,26 @@ from data_import.tasks import copy_to_database
 
 
 @pytest.fixture
-def real_file(request):
-    s_file = File(open('tests/data_import/fixtures/standardized_data_sample.2016.csv'))
+def real_files(request, project_directory):
+    s_file_2017 = File(open(os.path.join(project_directory, 'tests/data_import/fixtures/standardized_data_sample.2017.csv')))
+    s_file_2018 = File(open(os.path.join(project_directory, 'tests/data_import/fixtures/standardized_data_sample.2018.csv')))
 
     @request.addfinalizer
     def close():
-        s_file.close()
+        s_file_2017.close()
+        s_file_2018.close()
 
-        try:
-            # When this fixture is used to test a valid upload, the
-            # file is saved to disk at 2016/payroll/standardized/...
-            # Clean up that file tree.
-            shutil.rmtree('2016')
+        for upload_directory in ('2017', '2018'):
+            try:
+                # When this fixture is used to test a valid upload, the
+                # file is saved to disk at 2018/payroll/standardized/...
+                # Clean up that file tree.
+                shutil.rmtree(upload_directory)
 
-        except FileNotFoundError:
-            pass
+            except FileNotFoundError:
+                pass
 
-    return s_file
+    return s_file_2017, s_file_2018
 
 
 @pytest.fixture
@@ -34,7 +38,7 @@ def canned_data():
     Yield the first row of the canned data fixture, so we have access to
     values we know will match.
     '''
-    with open('tests/data_import/fixtures/standardized_data_sample.2016.csv', 'r') as data:
+    with open('tests/data_import/fixtures/standardized_data_sample.2018.csv', 'r') as data:
         reader = csv.DictReader(data)
         yield next(reader)
 
@@ -43,7 +47,7 @@ def canned_data():
 def standardized_data_upload_blob(mock_file):
     blob = {
         'standardized_file': mock_file,
-        'reporting_year': 2016,
+        'reporting_year': 2018,
     }
 
     return blob
@@ -53,17 +57,23 @@ def standardized_data_upload_blob(mock_file):
 @pytest.mark.django_db(transaction=True)
 def raw_table_setup(transactional_db,
                     standardized_file,
-                    real_file,
+                    real_files,
                     celery_worker,
                     request):
 
-    s_file = standardized_file.build(standardized_file=real_file)
+    file_2017, file_2018 = real_files
+
+    s_file_2017 = standardized_file.build(standardized_file=file_2017, reporting_year=2017)
+    s_file_2018 = standardized_file.build(standardized_file=file_2018, reporting_year=2018)
 
     # Call copy_to_database directly, rather than using the transition
     # method on the StandardizedFile object, so we can have test execution
     # wait until the delayed work is finished via work.get()
-    work = copy_to_database.delay(s_file_id=s_file.id)
-    work.get()
+    copy_2017 = copy_to_database.delay(s_file_id=s_file_2017.id)
+    copy_2017.get()
+
+    copy_2018 = copy_to_database.delay(s_file_id=s_file_2018.id)
+    copy_2018.get()
 
     @request.addfinalizer
     def raw_table_teardown():
@@ -82,7 +92,7 @@ def raw_table_setup(transactional_db,
         with connection.cursor() as cursor:
             cursor.execute(drop)
 
-    return s_file
+    return s_file_2017, s_file_2018
 
 
 @pytest.fixture
