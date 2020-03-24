@@ -476,37 +476,89 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_raw_person(self):
-        select = '''
-            SELECT
-              record_id,
-              TRIM(first_name) AS first_name,
-              TRIM(last_name) AS last_name,
-              {vintage},
-              NEXTVAL('payroll_person_id_seq') AS person_id
-              /* payroll_person does not have a uniquely identifying
-              set of fields for performing joins. Instead, create an
-              intermediate table with the unique record_id from the raw
-              data and the corresponding Person ID, selected here, for
-              use in a later join to create the Job table. */
-            INTO {raw_person}
-            FROM {raw_payroll}
-        '''.format(vintage=self.vintage,
-                   raw_person=self.raw_person_table,
+        create_view = '''
+            CREATE MATERIALIZED VIEW {raw_person} AS
+              WITH employer_ids AS (
+                /* Create a lookup table of all employer IDs, names, and parent
+                names, if applicable. (Units do not have parents.) */
+                SELECT
+                  child.id AS employer_id,
+                  department_alias.name AS employer_name,
+                  unit_alias.name AS parent_name
+                FROM payroll_employer AS child
+                LEFT JOIN payroll_employer AS parent
+                  ON child.parent_id = parent.id
+                LEFT JOIN payroll_employeralias AS unit_alias
+                  ON parent.id = unit_alias.employer_id
+                LEFT JOIN payroll_employeralias AS department_alias
+                  ON child.id = department_alias.employer_id
+              ), existing AS (
+                /* Construct a view of existing people and their positions. */
+                SELECT
+                  emp.employer_id,
+                  emp.employer_name AS e_employer_name,
+                  emp.parent_name AS e_employer_parent,
+                  pos.id AS position_id,
+                  pos.title AS e_title,
+                  per.id AS e_person_id,
+                  per.first_name AS e_first_name,
+                  per.last_name AS e_last_name
+                FROM payroll_person AS per
+                JOIN payroll_job AS job
+                  ON job.person_id = per.id
+                JOIN payroll_salary AS sal
+                  ON sal.job_id = job.id
+                JOIN payroll_position AS pos
+                  ON pos.id = job.position_id
+                JOIN employer_ids AS emp
+                  ON pos.employer_id = emp.employer_id
+              )
+              /* Join the raw data to the existing view to create a lookup
+              of incoming records to the matching employer, person, and
+              position; or null. */
+              SELECT
+                CASE
+                  WHEN e_person_id IS NULL
+                    THEN NEXTVAL('payroll_person_id_seq')
+                  ELSE e_person_id
+                END AS person_id,
+                raw.*,
+                existing.*
+              FROM {raw_payroll} AS raw
+              LEFT JOIN existing
+                ON (
+                  TRIM(raw.first_name) = existing.e_first_name
+                  AND TRIM(raw.last_name) = existing.e_last_name
+                  AND COALESCE(TRIM(raw.title), 'Employee') = existing.e_title
+                )
+                AND (
+                  (
+                    TRIM(raw.department) = existing.e_employer_name
+                    AND TRIM(raw.employer) = existing.e_employer_parent
+                    AND TRIM(raw.department) IS NOT NULL
+                  ) OR (
+                    TRIM(raw.employer) = existing.e_employer_name
+                    AND TRIM(raw.department) IS NULL
+                    AND existing.e_employer_parent IS NULL
+                  )
+                )
+        '''.format(raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
-            cursor.execute(select)
+            cursor.execute(create_view)
 
     def insert_person(self):
         insert = '''
             INSERT INTO payroll_person (id, first_name, last_name, vintage_id, noindex)
               SELECT
                 person_id,
-                first_name,
-                last_name,
+                TRIM(first_name),
+                TRIM(last_name),
                 {vintage},
                 FALSE
               FROM {raw_person}
+              WHERE e_person_id IS NULL
         '''.format(vintage=self.vintage,
                    raw_person=self.raw_person_table)
 
@@ -530,9 +582,9 @@ class ImportUtility(TableNamesMixin):
             )
             SELECT
               record_id,
-              person_id,
+              COALESCE(person_id, e_person_id) AS person_id,
               position.id AS position_id,
-              NULLIF(TRIM(date_started), '')::DATE AS start_date,
+              NULLIF(TRIM(raw.date_started), '')::DATE AS start_date,
               NEXTVAL('payroll_job_id_seq') AS job_id
               /* payroll_job does not have a uniquely identifying
               set of fields for performing joins. Instead, create an
