@@ -186,3 +186,6 @@ def test_import_utility_init(raw_table_setup,
         cursor.execute(reconstruct)
 
         assert not cursor.fetchone()
+
+    imp = utils.ImportUtility(s_file_2017.id)
+    imp.populate_models_from_raw_data()
