@@ -188,13 +188,7 @@ def test_import_utility_init(raw_table_setup,
         assert not cursor.fetchone()
 
     imp = utils.ImportUtility(s_file_2017.id)
-
-    imp.insert_responding_agency()
-    imp.insert_parent_employer()
-    imp.insert_child_employer()
-    imp.insert_position()
-    imp.select_raw_person()
-    imp.insert_person()
+    imp.populate_models_from_raw_data()
 
     import pdb
     pdb.set_trace()

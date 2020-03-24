@@ -491,21 +491,8 @@ class ImportUtility(TableNamesMixin):
                 ON parent.id = unit_alias.employer_id
               LEFT JOIN payroll_employeralias AS department_alias
                 ON child.id = department_alias.employer_id
-            )
-            /* Join the raw data to the existing view to create a lookup
-            of incoming records to the matching employer, person, and
-            position; or null. */
-            SELECT
-              COALESCE(e_person_id, NEXTVAL('payroll_person_id_seq')) AS person_id,
-              raw.record_id,
-              raw.first_name,
-              raw.last_name,
-              existing.*,
-              e_person_id IS NOT NULL AS exists
-            INTO {raw_person}
-            FROM {raw_payroll} AS raw
-            LEFT JOIN (
-              /* Construct a view of existing people and their positions. */
+            ), existing AS (
+              /* Create a view of existing people and their positions. */
               SELECT
                 per.id AS e_person_id,
                 per.first_name AS e_first_name,
@@ -522,23 +509,50 @@ class ImportUtility(TableNamesMixin):
                 ON pos.id = job.position_id
               JOIN employer_ids AS emp
                 ON pos.employer_id = emp.employer_id
-            ) AS existing
-              ON (
-                TRIM(raw.first_name) = existing.e_first_name
-                AND TRIM(raw.last_name) = existing.e_last_name
-                AND COALESCE(TRIM(raw.title), 'Employee') = existing.e_title
-              )
-              AND (
-                (
-                  TRIM(raw.department) = existing.e_employer_name
-                  AND TRIM(raw.employer) = existing.e_employer_parent
-                  AND TRIM(raw.department) IS NOT NULL
-                ) OR (
-                  TRIM(raw.employer) = existing.e_employer_name
-                  AND TRIM(raw.department) IS NULL
-                  AND existing.e_employer_parent IS NULL
+            ), unambiguous_matches AS (
+              /* If an incoming person is the only individual with their
+              name in a given unit and department, use the existing person,
+              entity, rather than creating a new one. */
+              SELECT
+                record_id,
+                ARRAY_AGG(e_person_id) AS e_person_id
+              FROM {raw_payroll} AS raw
+              LEFT JOIN existing
+                ON (
+                  TRIM(raw.first_name) = existing.e_first_name
+                  AND TRIM(raw.last_name) = existing.e_last_name
+                  AND COALESCE(TRIM(raw.title), 'Employee') = existing.e_title
                 )
-              )
+                AND (
+                  (
+                    TRIM(raw.department) = existing.e_employer_name
+                    AND TRIM(raw.employer) = existing.e_employer_parent
+                    AND TRIM(raw.department) IS NOT NULL
+                  ) OR (
+                    TRIM(raw.employer) = existing.e_employer_name
+                    AND TRIM(raw.department) IS NULL
+                    AND existing.e_employer_parent IS NULL
+                  )
+                )
+              WHERE existing.e_person_id IS NOT NULL
+              GROUP BY record_id
+              HAVING COUNT(*) = 1
+            )
+            SELECT
+              COALESCE(existing.e_person_id, NEXTVAL('payroll_person_id_seq')) AS person_id,
+              raw.record_id,
+              raw.first_name,
+              raw.last_name,
+              existing.e_person_id IS NOT NULL AS exists
+            INTO {raw_person}
+            FROM {raw_payroll} AS raw
+            LEFT JOIN (
+              SELECT
+                record_id,
+                UNNEST(e_person_id) AS e_person_id
+              FROM unambiguous_matches
+            ) AS existing
+            USING (record_id)
         '''.format(raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
 
@@ -563,6 +577,8 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_raw_job(self):
+        # TODO: Only insert jobs for existing People if they are in a new
+        # position, otherwise this will throw an integrity error.
         select = '''
             WITH employer_ids AS (
               SELECT
@@ -579,7 +595,7 @@ class ImportUtility(TableNamesMixin):
             )
             SELECT
               record_id,
-              COALESCE(person_id, e_person_id) AS person_id,
+              person_id,
               position.id AS position_id,
               NULLIF(TRIM(raw.date_started), '')::DATE AS start_date,
               NEXTVAL('payroll_job_id_seq') AS job_id
@@ -624,7 +640,6 @@ class ImportUtility(TableNamesMixin):
                 start_date,
                 {vintage}
               FROM {raw_job}
-            ON CONFLICT DO NOTHING
         '''.format(vintage=self.vintage,
                    raw_job=self.raw_job_table)
 
@@ -635,7 +650,7 @@ class ImportUtility(TableNamesMixin):
         insert = '''
             INSERT INTO payroll_salary (job_id, amount, extra_pay, vintage_id)
               SELECT
-                raw_job.job_id,
+                job_id,
                 REGEXP_REPLACE(base_salary, '[^0-9.]', '', 'g')::NUMERIC,
                 REGEXP_REPLACE(extra_pay, '[^0-9.]', '', 'g')::NUMERIC,
                 {vintage}
