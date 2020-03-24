@@ -73,18 +73,18 @@ def test_future_date_raises_exception(standardized_data_upload_blob,
 @pytest.mark.django_db
 @pytest.mark.standardized_data
 def test_valid_standardized_data_upload(standardized_data_upload_blob,
-                                        real_file,
+                                        real_files,
                                         admin_client,
                                         mocker):
 
     # Mock our delayed tasks (which we'll test over in test_tasks)
     mock_copy = mocker.patch('data_import.views.StandardizedFile.copy_to_database')
 
-    standardized_data_upload_blob['standardized_file'] = real_file
+    standardized_data_upload_blob['standardized_file'] = real_files[1]
 
     rv = admin_client.post('/admin/data_import/standardizedfile/add/',
                            data=standardized_data_upload_blob,
-                           files={'standardized_file': real_file})
+                           files={'standardized_file': real_files[1]})
 
     # Assert the page redirects, e.g., upload was successful
     assert rv.status_code == 302
