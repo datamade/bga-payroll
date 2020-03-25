@@ -9,7 +9,7 @@ from payroll.models import Employer
 @pytest.mark.celery
 @pytest.mark.django_db(transaction=True)
 def test_copy_to_database(raw_table_setup):
-    s_file = raw_table_setup
+    s_file = raw_table_setup[1]
 
     with connection.cursor() as cursor:
         cursor.execute('''
@@ -115,7 +115,7 @@ class TestSelectUnseenRespondingAgency(TestSelectUnseenBase):
                                              canned_data,
                                              raw_table_setup,
                                              queue_teardown):
-        self.s_file = raw_table_setup
+        self.s_file = raw_table_setup[1]
 
         self.existing_entity = responding_agency.build(name=canned_data['Responding Agency'])
 
@@ -146,7 +146,8 @@ class TestSelectUnseenParentEmployer(TestSelectUnseenBase):
                                            canned_data,
                                            raw_table_setup,
                                            queue_teardown):
-        self.s_file = raw_table_setup
+
+        self.s_file = raw_table_setup[1]
 
         self.existing_entity = employer.build(name=canned_data['Employer'])
 
@@ -182,7 +183,7 @@ class TestSelectUnseenChildEmployerExistingParent(TestSelectUnseenChildEmployer)
                                                                canned_data,
                                                                raw_table_setup,
                                                                queue_teardown):
-        self.s_file = raw_table_setup
+        self.s_file = raw_table_setup[1]
 
         with connection.cursor() as cursor:
             cursor.execute('''
@@ -222,7 +223,7 @@ class TestSelectUnseenChildEmployerNewParent(TestSelectUnseenChildEmployer):
                                                           canned_data,
                                                           raw_table_setup,
                                                           queue_teardown):
-        self.s_file = raw_table_setup
+        self.s_file = raw_table_setup[1]
 
         with connection.cursor() as cursor:
             cursor.execute('''

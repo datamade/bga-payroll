@@ -5,8 +5,6 @@ from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
 
 
-# TO-DO: Return select / insert counts for logging
-
 class ImportUtility(TableNamesMixin):
     def __init__(self, s_file_id):
         super().__init__(s_file_id)
@@ -28,11 +26,10 @@ class ImportUtility(TableNamesMixin):
         self.insert_position()
 
         self.select_raw_person()
-        self.insert_person()
-
         self.select_raw_job()
-        self.insert_job()
 
+        self.insert_person()
+        self.insert_job()
         self.insert_salary()
 
     def select_unseen_responding_agency(self):
@@ -464,8 +461,6 @@ class ImportUtility(TableNamesMixin):
               ) OR (
                 TRIM(raw.employer) = existing.employer_name
                 AND TRIM(raw.department) IS NULL
-                /* Only allow for matches on top-level employers, i.e., where
-                there is no parent. */
                 AND existing.parent_name IS NULL
               )
             ON CONFLICT DO NOTHING
@@ -477,41 +472,89 @@ class ImportUtility(TableNamesMixin):
 
     def select_raw_person(self):
         select = '''
+            WITH employer_ids AS (
+              /* Create a lookup table of all employer IDs, names, and parent
+              names, if applicable. (Units do not have parents.) */
+              SELECT
+                child.id AS employer_id,
+                department_alias.name AS employer_name,
+                unit_alias.name AS parent_name
+              FROM payroll_employer AS child
+              LEFT JOIN payroll_employer AS parent
+                ON child.parent_id = parent.id
+              LEFT JOIN payroll_employeralias AS unit_alias
+                ON parent.id = unit_alias.employer_id
+              LEFT JOIN payroll_employeralias AS department_alias
+                ON child.id = department_alias.employer_id
+            ), existing AS (
+              /* Create a view of existing people and their employers. */
+              SELECT
+                per.id AS e_person_id,
+                per.first_name AS e_first_name,
+                per.last_name AS e_last_name,
+                emp.employer_id AS e_employer_id,
+                emp.employer_name AS e_employer_name,
+                emp.parent_name AS e_employer_parent
+              FROM payroll_person AS per
+              JOIN payroll_job AS job
+                ON job.person_id = per.id
+              JOIN payroll_salary AS sal
+                ON sal.job_id = job.id
+              JOIN payroll_position AS pos
+                ON pos.id = job.position_id
+              JOIN employer_ids AS emp
+                ON pos.employer_id = emp.employer_id
+            ), unambiguous_matches AS (
+              /* If an incoming person is the only individual with their
+              name in a given unit and department, use the existing person,
+              entity, rather than creating a new one. */
+              SELECT
+                ARRAY_AGG(record_id) AS record_id,
+                ARRAY_AGG(e_person_id) AS e_person_id
+              FROM {raw_payroll} AS raw
+              JOIN existing
+                ON (
+                  TRIM(raw.first_name) = existing.e_first_name
+                  AND TRIM(raw.last_name) = existing.e_last_name
+                )
+                AND (
+                  (
+                    TRIM(raw.department) = existing.e_employer_name
+                    AND TRIM(raw.employer) = existing.e_employer_parent
+                    AND TRIM(raw.department) IS NOT NULL
+                  ) OR (
+                    TRIM(raw.employer) = existing.e_employer_name
+                    AND TRIM(raw.department) IS NULL
+                    AND existing.e_employer_parent IS NULL
+                  )
+                )
+              GROUP BY (
+                existing.e_employer_id,
+                TRIM(raw.first_name),
+                TRIM(raw.last_name)
+              )
+              HAVING COUNT(*) = 1
+            )
             SELECT
-              record_id,
-              TRIM(first_name) AS first_name,
-              TRIM(last_name) AS last_name,
-              {vintage},
-              NEXTVAL('payroll_person_id_seq') AS person_id
-              /* payroll_person does not have a uniquely identifying
-              set of fields for performing joins. Instead, create an
-              intermediate table with the unique record_id from the raw
-              data and the corresponding Person ID, selected here, for
-              use in a later join to create the Job table. */
+              COALESCE(existing.e_person_id, NEXTVAL('payroll_person_id_seq')) AS person_id,
+              raw.record_id,
+              raw.first_name,
+              raw.last_name,
+              existing.e_person_id IS NOT NULL AS exists
             INTO {raw_person}
-            FROM {raw_payroll}
-        '''.format(vintage=self.vintage,
-                   raw_person=self.raw_person_table,
+            FROM {raw_payroll} AS raw
+            LEFT JOIN (
+              SELECT
+                UNNEST(record_id) AS record_id,
+                UNNEST(e_person_id) AS e_person_id
+              FROM unambiguous_matches
+            ) AS existing
+            USING (record_id)
+        '''.format(raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
-
-    def insert_person(self):
-        insert = '''
-            INSERT INTO payroll_person (id, first_name, last_name, vintage_id, noindex)
-              SELECT
-                person_id,
-                first_name,
-                last_name,
-                {vintage},
-                FALSE
-              FROM {raw_person}
-        '''.format(vintage=self.vintage,
-                   raw_person=self.raw_person_table)
-
-        with connection.cursor() as cursor:
-            cursor.execute(insert)
 
     def select_raw_job(self):
         select = '''
@@ -529,41 +572,56 @@ class ImportUtility(TableNamesMixin):
                 ON child.id = department_alias.employer_id
             )
             SELECT
-              record_id,
-              person_id,
+              raw_person.record_id,
+              raw_person.person_id,
               position.id AS position_id,
-              NULLIF(TRIM(date_started), '')::DATE AS start_date,
-              NEXTVAL('payroll_job_id_seq') AS job_id
-              /* payroll_job does not have a uniquely identifying
-              set of fields for performing joins. Instead, create an
-              intermediate table with the unique record_id from the raw
-              data and the corresponding Job ID, selected here, for
-              use in a later join to create the Salary table. */
+              raw.date_started,
+              COALESCE(job.id, NEXTVAL('payroll_job_id_seq')) AS job_id,
+              job.id IS NOT NULL AS exists
             INTO {raw_job}
-            FROM {raw_person}
+            FROM {raw_person} AS raw_person
             JOIN {raw_payroll} AS raw
               USING (record_id)
             JOIN employer_ids AS emp
               ON (
                 TRIM(raw.department) = emp.employer_name
                 AND TRIM(raw.employer) = emp.parent_name
-                AND raw.department IS NOT NULL
+                AND TRIM(raw.department) IS NOT NULL
               ) OR (
                 TRIM(raw.employer) = emp.employer_name
-                AND raw.department IS NULL
-                /* Only allow for matches on top-level employers, i.e., where
-                there is no parent. */
+                AND TRIM(raw.department) IS NULL
                 AND emp.parent_name IS NULL
               )
             JOIN payroll_position AS position
               ON position.employer_id = emp.employer_id
               AND position.title = COALESCE(TRIM(raw.title), 'Employee')
+            LEFT JOIN payroll_job AS job
+              ON job.person_id = raw_person.person_id
+              AND job.position_id = position.id
+              AND job.start_date = NULLIF(TRIM(raw.date_started), '')::DATE
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
             cursor.execute(select)
+
+    def insert_person(self):
+        insert = '''
+            INSERT INTO payroll_person (id, first_name, last_name, vintage_id, noindex)
+              SELECT
+                person_id,
+                TRIM(first_name),
+                TRIM(last_name),
+                {vintage},
+                FALSE
+              FROM {raw_person}
+              WHERE exists = FALSE
+        '''.format(vintage=self.vintage,
+                   raw_person=self.raw_person_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
 
     def insert_job(self):
         insert = '''
@@ -572,10 +630,10 @@ class ImportUtility(TableNamesMixin):
                 job_id,
                 person_id,
                 position_id,
-                start_date,
+                NULLIF(TRIM(date_started), '')::DATE,
                 {vintage}
               FROM {raw_job}
-            ON CONFLICT DO NOTHING
+              WHERE exists = FALSE
         '''.format(vintage=self.vintage,
                    raw_job=self.raw_job_table)
 
@@ -586,7 +644,7 @@ class ImportUtility(TableNamesMixin):
         insert = '''
             INSERT INTO payroll_salary (job_id, amount, extra_pay, vintage_id)
               SELECT
-                raw_job.job_id,
+                job_id,
                 REGEXP_REPLACE(base_salary, '[^0-9.]', '', 'g')::NUMERIC,
                 REGEXP_REPLACE(extra_pay, '[^0-9.]', '', 'g')::NUMERIC,
                 {vintage}

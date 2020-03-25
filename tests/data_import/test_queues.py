@@ -19,7 +19,7 @@ def test_match_or_create_responding_agency(raw_table_setup,
                                            responding_agency,
                                            queue,
                                            raw_field):
-    s_file = raw_table_setup
+    s_file = raw_table_setup[0]
 
     q = queue(s_file.id)
 
