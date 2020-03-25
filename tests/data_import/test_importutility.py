@@ -139,7 +139,7 @@ def test_import_utility_init(raw_table_setup,
                   ELSE NULL
                 END AS department,
                 CASE
-                  WHEN pos.title = 'EMPLOYEE' THEN NULL
+                  WHEN pos.title = 'Employee' THEN NULL
                   ELSE pos.title
                 END AS title,
                 per.first_name,
@@ -189,6 +189,3 @@ def test_import_utility_init(raw_table_setup,
 
     imp = utils.ImportUtility(s_file_2017.id)
     imp.populate_models_from_raw_data()
-
-    import pdb
-    pdb.set_trace()
