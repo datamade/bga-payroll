@@ -471,7 +471,7 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_raw_person(self):
-        create_view = '''
+        select = '''
             WITH employer_ids AS (
               /* Create a lookup table of all employer IDs, names, and parent
               names, if applicable. (Units do not have parents.) */
@@ -554,7 +554,7 @@ class ImportUtility(TableNamesMixin):
                    raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
-            cursor.execute(create_view)
+            cursor.execute(select)
 
     def select_raw_job(self):
         select = '''
