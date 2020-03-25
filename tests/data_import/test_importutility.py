@@ -189,3 +189,75 @@ def test_import_utility_init(raw_table_setup,
 
     imp = utils.ImportUtility(s_file_2017.id)
     imp.populate_models_from_raw_data()
+
+    with connection.cursor() as cursor:
+        # Create a map of people from the second dataset to people in the first
+        # dataset. Use a left join so all people from the second dataset are
+        # represented.
+        potentially_linked_people = '''
+            WITH common_names AS (
+              SELECT
+                a.record_id AS left_record_id,
+                b.record_id AS right_record_id,
+                a.first_name,
+                a.last_name,
+                a.title AS left_title,
+                b.title AS right_title
+              FROM raw_payroll_1 AS a
+              LEFT JOIN raw_payroll_2 AS b
+              ON TRIM(a.employer) = TRIM(b.employer)
+              AND COALESCE(TRIM(a.department), 'no department') = COALESCE(TRIM(b.department), 'no department')
+              AND TRIM(a.first_name) = TRIM(b.first_name)
+              AND TRIM(a.last_name) = TRIM(b.last_name)
+            ), unambiguous_matches AS (
+              /* Determine whether the link is unambiguous, i.e., the incoming
+              person is the only person with their first and last name for the
+              given employer. */
+              SELECT
+                ARRAY_AGG(left_record_id) AS left_record_id
+              FROM common_names
+              GROUP BY right_record_id
+              HAVING count(*) = 1
+            )
+            SELECT
+              left_record_id,
+              right_record_id,
+              match.id IS NOT NULL AS linked
+            FROM common_names AS common
+            LEFT JOIN (
+              SELECT unnest(left_record_id) AS id
+              FROM unambiguous_matches
+            ) AS match
+            ON common.left_record_id = match.id
+        '''
+
+        cursor.execute(potentially_linked_people)
+
+        potential_links = [row for row in cursor]
+
+        for left_record_id, right_record_id, linked in potential_links:
+            if right_record_id:
+                # If there is a potential match, it can be ambiguous. Grab the
+                # ultimate person IDs from the raw person tables, then compare
+                # them ensure that whether or not they were linked during
+                # import matches whether or not they should have been linked,
+                # per the potentially linked people query.
+                person_ids = '''
+                    SELECT
+                      (SELECT person_id FROM raw_person_1 WHERE record_id = '{left_record_id}') AS left_person_id,
+                      (SELECT person_id FROM raw_person_2 WHERE record_id = '{right_record_id}') AS right_person_id
+                '''.format(left_record_id=left_record_id,
+                           right_record_id=right_record_id)
+
+                cursor.execute(person_ids)
+
+                result, = cursor
+                left_person_id, right_person_id = result
+
+                assert (left_person_id == right_person_id) == linked
+
+            else:
+                assert not linked
+
+    import pdb
+    pdb.set_trace()
