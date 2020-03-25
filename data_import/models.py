@@ -142,10 +142,6 @@ class StandardizedFile(models.Model):
         return 'raw_payroll_{}'.format(self.id)
 
     @property
-    def intermediate_table_name(self):
-        return 'intermediate_payroll_{}'.format(self.id)
-
-    @property
     def processing(self):
         '''
         TO-DO: Find a less expensive way to check whether an instance

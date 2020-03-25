@@ -131,11 +131,11 @@ def test_import_utility_init(raw_table_setup,
             WITH reconstructed AS (
               SELECT
                 CASE
-                  WHEN emp.parent_id IS NULL THEN emp.name
-                  ELSE parent.name
+                  WHEN emp.parent_id IS NULL THEN emp_alias.name
+                  ELSE parent_alias.name
                 END AS employer,
                 CASE
-                  WHEN emp.parent_id IS NOT NULL THEN emp.name
+                  WHEN emp.parent_id IS NOT NULL THEN emp_alias.name
                   ELSE NULL
                 END AS department,
                 CASE
@@ -149,39 +149,30 @@ def test_import_utility_init(raw_table_setup,
                 job.start_date AS date_started
               FROM payroll_person AS per
               JOIN payroll_job AS job
-              ON job.person_id = per.id
+                ON job.person_id = per.id
               JOIN payroll_salary AS sal
-              ON sal.job_id = job.id
+                ON sal.job_id = job.id
               JOIN payroll_position AS pos
-              ON pos.id = job.position_id
+                ON pos.id = job.position_id
               JOIN payroll_employer AS emp
-              ON pos.employer_id = emp.id
+                ON pos.employer_id = emp.id
               LEFT JOIN payroll_employer AS parent
-              ON emp.parent_id = parent.id
+                ON emp.parent_id = parent.id
+              LEFT JOIN payroll_employeralias AS parent_alias
+                ON parent.id = parent_alias.employer_id
+              LEFT JOIN payroll_employeralias AS emp_alias
+                ON emp.id = emp_alias.employer_id
             ), raw AS (
               SELECT
-                employer,
-                department,
-                title,
-                first_name,
-                last_name,
+                TRIM(employer),
+                TRIM(department),
+                TRIM(title),
+                TRIM(first_name),
+                TRIM(last_name),
                 base_salary::NUMERIC,
                 extra_pay::NUMERIC,
                 NULLIF(date_started, '')::DATE AS date_started
               FROM {raw_payroll}
-              WHERE TRIM(LOWER(employer)) != 'all elementary/high school employees'
-              UNION ALL
-              SELECT
-                department AS employer,
-                NULL AS department,
-                title,
-                first_name,
-                last_name,
-                base_salary::NUMERIC,
-                extra_pay::NUMERIC,
-                NULLIF(date_started, '')::DATE AS date_started
-              FROM {raw_payroll}
-              WHERE TRIM(LOWER(employer)) = 'all elementary/high school employees'
             )
             SELECT * FROM raw
             EXCEPT

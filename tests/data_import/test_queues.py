@@ -1,66 +1,61 @@
-from django.db import connection
 import pytest
 
-from data_import.models import RespondingAgency
+from data_import.models import RespondingAgencyAlias
 from data_import.utils import RespondingAgencyQueue, ParentEmployerQueue, \
-    ChildEmployerQueue, CsvMeta
+    ChildEmployerQueue
 
-from payroll.models import Employer
+from payroll.models import EmployerAlias
 
 
-@pytest.mark.parametrize('queue,raw_field,model,model_kwargs', [
-    (RespondingAgencyQueue, 'Responding Agency', RespondingAgency, {}),
-    (ParentEmployerQueue, 'Employer', Employer, {'parent_id__isnull': True}),
-    (ChildEmployerQueue, 'Department', Employer, {'parent_id__isnull': False}),
+@pytest.mark.parametrize('queue,raw_field', [
+    (RespondingAgencyQueue, 'Responding Agency'),
+    (ParentEmployerQueue, 'Employer'),
+    (ChildEmployerQueue, 'Department'),
 ])
 @pytest.mark.django_db(transaction=True)
 def test_match_or_create_responding_agency(raw_table_setup,
                                            canned_data,
                                            employer,
+                                           responding_agency,
                                            queue,
-                                           raw_field,
-                                           model,
-                                           model_kwargs):
+                                           raw_field):
     s_file = raw_table_setup
 
     q = queue(s_file.id)
 
-    name = canned_data[raw_field]
+    item = {
+        'id': None,
+        'name': '{} Unseen'.format(canned_data[raw_field]),
+    }
 
-    item = {'id': None, 'name': name}
+    if raw_field == 'Responding Agency':
+        alias_model = RespondingAgencyAlias
 
-    if isinstance(q, ChildEmployerQueue):
-        parent = canned_data['Employer']
-        employer.build(name=parent, vintage=s_file.upload)
-        item['parent'] = parent
+        match_id = responding_agency.build(
+            name='{} Match'.format(canned_data[raw_field]),
+        ).id
 
-    for match in (None, 'a matching agency'):
+        filter_kwargs = {'responding_agency_id': match_id}
+
+    else:
+        alias_model = EmployerAlias
+
+        match_id = employer.build(
+            name='{} Match'.format(canned_data[raw_field]),
+            vintage=s_file.upload
+        ).id
+
+        filter_kwargs = {'employer_id': match_id}
+
+    filter_kwargs['name'] = item['name']
+
+    for match in (None, match_id):
         q.match_or_create(item.copy(), match)
 
-        with connection.cursor() as cursor:
-            select = '''
-                SELECT EXISTS(
-                  SELECT 1
-                  FROM {raw_payroll}
-                  WHERE {processed_field} = '{item}'
-                ),
-                EXISTS(
-                  SELECT 1
-                  FROM {raw_payroll}
-                  WHERE {processed_field} = '{match}'
-                )
-            '''.format(raw_payroll=s_file.raw_table_name,
-                       processed_field=CsvMeta._clean_field(raw_field),
-                       item=name,
-                       match=match)
+        alias = alias_model.objects.filter(**filter_kwargs)
 
-            cursor.execute(select)
+        if match:
+            assert alias.exists()
 
-            item_exists, match_exists = cursor.fetchone()
-
-            if match:
-                assert match_exists and not item_exists
-
-            else:
-                assert item_exists and not match_exists
-                assert model.objects.get(name=name, **model_kwargs)
+        else:
+            assert not alias.exists()
