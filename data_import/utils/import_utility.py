@@ -464,8 +464,6 @@ class ImportUtility(TableNamesMixin):
               ) OR (
                 TRIM(raw.employer) = existing.employer_name
                 AND TRIM(raw.department) IS NULL
-                /* Only allow for matches on top-level employers, i.e., where
-                there is no parent. */
                 AND existing.parent_name IS NULL
               )
             ON CONFLICT DO NOTHING
@@ -521,7 +519,6 @@ class ImportUtility(TableNamesMixin):
                 ON (
                   TRIM(raw.first_name) = existing.e_first_name
                   AND TRIM(raw.last_name) = existing.e_last_name
-                  AND COALESCE(TRIM(raw.title), 'Employee') = existing.e_title
                 )
                 AND (
                   (
@@ -577,8 +574,6 @@ class ImportUtility(TableNamesMixin):
             cursor.execute(insert)
 
     def select_raw_job(self):
-        # TODO: Only insert jobs for existing People if they are in a new
-        # position, otherwise this will throw an integrity error.
         select = '''
             WITH employer_ids AS (
               SELECT
@@ -594,35 +589,33 @@ class ImportUtility(TableNamesMixin):
                 ON child.id = department_alias.employer_id
             )
             SELECT
-              record_id,
-              person_id,
+              raw_person.record_id,
+              raw_person.person_id,
               position.id AS position_id,
-              NULLIF(TRIM(raw.date_started), '')::DATE AS start_date,
-              NEXTVAL('payroll_job_id_seq') AS job_id
-              /* payroll_job does not have a uniquely identifying
-              set of fields for performing joins. Instead, create an
-              intermediate table with the unique record_id from the raw
-              data and the corresponding Job ID, selected here, for
-              use in a later join to create the Salary table. */
+              raw.date_started,
+              COALESCE(job.id, NEXTVAL('payroll_job_id_seq')) AS job_id,
+              job.id IS NOT NULL AS exists
             INTO {raw_job}
-            FROM {raw_person}
+            FROM {raw_person} AS raw_person
             JOIN {raw_payroll} AS raw
               USING (record_id)
             JOIN employer_ids AS emp
               ON (
                 TRIM(raw.department) = emp.employer_name
                 AND TRIM(raw.employer) = emp.parent_name
-                AND raw.department IS NOT NULL
+                AND TRIM(raw.department) IS NOT NULL
               ) OR (
                 TRIM(raw.employer) = emp.employer_name
-                AND raw.department IS NULL
-                /* Only allow for matches on top-level employers, i.e., where
-                there is no parent. */
+                AND TRIM(raw.department) IS NULL
                 AND emp.parent_name IS NULL
               )
             JOIN payroll_position AS position
               ON position.employer_id = emp.employer_id
               AND position.title = COALESCE(TRIM(raw.title), 'Employee')
+            LEFT JOIN payroll_job AS job
+              ON job.person_id = raw_person.person_id
+              AND job.position_id = position.id
+              AND job.start_date = NULLIF(TRIM(raw.date_started), '')::DATE
         '''.format(raw_job=self.raw_job_table,
                    raw_person=self.raw_person_table,
                    raw_payroll=self.raw_payroll_table)
@@ -637,9 +630,10 @@ class ImportUtility(TableNamesMixin):
                 job_id,
                 person_id,
                 position_id,
-                start_date,
+                NULLIF(TRIM(date_started), '')::DATE,
                 {vintage}
               FROM {raw_job}
+              WHERE exists = FALSE
         '''.format(vintage=self.vintage,
                    raw_job=self.raw_job_table)
 
