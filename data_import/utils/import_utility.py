@@ -5,8 +5,6 @@ from data_import.utils.queues import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
 
 
-# TO-DO: Return select / insert counts for logging
-
 class ImportUtility(TableNamesMixin):
     def __init__(self, s_file_id):
         super().__init__(s_file_id)
@@ -28,11 +26,10 @@ class ImportUtility(TableNamesMixin):
         self.insert_position()
 
         self.select_raw_person()
-        self.insert_person()
-
         self.select_raw_job()
-        self.insert_job()
 
+        self.insert_person()
+        self.insert_job()
         self.insert_salary()
 
     def select_unseen_responding_agency(self):
@@ -490,14 +487,14 @@ class ImportUtility(TableNamesMixin):
               LEFT JOIN payroll_employeralias AS department_alias
                 ON child.id = department_alias.employer_id
             ), existing AS (
-              /* Create a view of existing people and their positions. */
+              /* Create a view of existing people and their employers. */
               SELECT
                 per.id AS e_person_id,
                 per.first_name AS e_first_name,
                 per.last_name AS e_last_name,
+                emp.employer_id AS e_employer_id,
                 emp.employer_name AS e_employer_name,
-                emp.parent_name AS e_employer_parent,
-                pos.title AS e_title
+                emp.parent_name AS e_employer_parent
               FROM payroll_person AS per
               JOIN payroll_job AS job
                 ON job.person_id = per.id
@@ -512,10 +509,10 @@ class ImportUtility(TableNamesMixin):
               name in a given unit and department, use the existing person,
               entity, rather than creating a new one. */
               SELECT
-                record_id,
+                ARRAY_AGG(record_id) AS record_id,
                 ARRAY_AGG(e_person_id) AS e_person_id
               FROM {raw_payroll} AS raw
-              LEFT JOIN existing
+              JOIN existing
                 ON (
                   TRIM(raw.first_name) = existing.e_first_name
                   AND TRIM(raw.last_name) = existing.e_last_name
@@ -531,8 +528,11 @@ class ImportUtility(TableNamesMixin):
                     AND existing.e_employer_parent IS NULL
                   )
                 )
-              WHERE existing.e_person_id IS NOT NULL
-              GROUP BY record_id
+              GROUP BY (
+                existing.e_employer_id,
+                TRIM(raw.first_name),
+                TRIM(raw.last_name)
+              )
               HAVING COUNT(*) = 1
             )
             SELECT
@@ -545,7 +545,7 @@ class ImportUtility(TableNamesMixin):
             FROM {raw_payroll} AS raw
             LEFT JOIN (
               SELECT
-                record_id,
+                UNNEST(record_id) AS record_id,
                 UNNEST(e_person_id) AS e_person_id
               FROM unambiguous_matches
             ) AS existing
@@ -555,23 +555,6 @@ class ImportUtility(TableNamesMixin):
 
         with connection.cursor() as cursor:
             cursor.execute(create_view)
-
-    def insert_person(self):
-        insert = '''
-            INSERT INTO payroll_person (id, first_name, last_name, vintage_id, noindex)
-              SELECT
-                person_id,
-                TRIM(first_name),
-                TRIM(last_name),
-                {vintage},
-                FALSE
-              FROM {raw_person}
-              WHERE exists = FALSE
-        '''.format(vintage=self.vintage,
-                   raw_person=self.raw_person_table)
-
-        with connection.cursor() as cursor:
-            cursor.execute(insert)
 
     def select_raw_job(self):
         select = '''
@@ -622,6 +605,23 @@ class ImportUtility(TableNamesMixin):
 
         with connection.cursor() as cursor:
             cursor.execute(select)
+
+    def insert_person(self):
+        insert = '''
+            INSERT INTO payroll_person (id, first_name, last_name, vintage_id, noindex)
+              SELECT
+                person_id,
+                TRIM(first_name),
+                TRIM(last_name),
+                {vintage},
+                FALSE
+              FROM {raw_person}
+              WHERE exists = FALSE
+        '''.format(vintage=self.vintage,
+                   raw_person=self.raw_person_table)
+
+        with connection.cursor() as cursor:
+            cursor.execute(insert)
 
     def insert_job(self):
         insert = '''
