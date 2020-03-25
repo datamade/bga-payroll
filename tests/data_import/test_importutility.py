@@ -191,6 +191,71 @@ def test_import_utility_init(raw_table_setup,
     imp.populate_models_from_raw_data()
 
     with connection.cursor() as cursor:
+        validate_employers = '''
+            WITH all_raw AS (
+              SELECT
+                TRIM(employer) AS employer,
+                TRIM(department) AS department
+              FROM raw_payroll_1
+              UNION
+              SELECT
+                TRIM(employer) AS employer,
+                TRIM(department) AS department
+              FROM raw_payroll_2
+            ), raw_parents AS (
+              SELECT
+                DISTINCT(employer)
+              FROM all_raw
+            ), raw_children AS (
+              SELECT DISTINCT ON (employer, department)
+                *
+              FROM all_raw
+              WHERE department IS NOT NULL
+            )
+            SELECT
+              (SELECT COUNT(*) FROM raw_parents) AS raw_parent_count,
+              (SELECT COUNT(*) FROM raw_children) AS raw_child_count,
+              (SELECT COUNT(*) FROM payroll_employer WHERE parent_id IS NULL) AS generated_parent_count,
+              (SELECT COUNT(*) FROM payroll_employer WHERE parent_id IS NOT NULL) AS generated_child_count
+        '''
+
+        cursor.execute(validate_employers)
+
+        result, = cursor
+        raw_parent_count, raw_child_count, generated_parent_count, generated_child_count = result
+
+        assert raw_parent_count == generated_parent_count
+        assert raw_child_count == generated_child_count
+
+        validate_position = '''
+            WITH all_raw AS (
+              SELECT
+                TRIM(employer) AS employer,
+                TRIM(department) AS department,
+                TRIM(title) AS title
+              FROM raw_payroll_1
+              UNION
+              SELECT
+                TRIM(employer) AS employer,
+                TRIM(department) AS department,
+                TRIM(title) AS title
+              FROM raw_payroll_2
+            ), distinct_positions AS (
+              SELECT DISTINCT ON (employer, department, title) *
+              FROM all_raw
+            )
+            SELECT
+              (SELECT COUNT(*) FROM distinct_positions) AS raw_count,
+              (SELECT COUNT(*) FROM payroll_position) AS generated_count
+        '''
+
+        cursor.execute(validate_position)
+
+        result, = cursor
+        raw_count, generated_count = result
+
+        assert raw_count == generated_count
+
         # Create a map of people from the second dataset to people in the first
         # dataset. Use a left join so all people from the second dataset are
         # represented.
@@ -222,7 +287,8 @@ def test_import_utility_init(raw_table_setup,
             SELECT
               left_record_id,
               right_record_id,
-              match.id IS NOT NULL AS linked
+              match.id IS NOT NULL AS linked,
+              left_title != right_title AS new_job
             FROM common_names AS common
             LEFT JOIN (
               SELECT unnest(left_record_id) AS id
@@ -235,7 +301,10 @@ def test_import_utility_init(raw_table_setup,
 
         potential_links = [row for row in cursor]
 
-        for left_record_id, right_record_id, linked in potential_links:
+        linked_count = 0
+        new_job_count = 0
+
+        for left_record_id, right_record_id, linked, new_job in potential_links:
             if right_record_id:
                 # If there is a potential match, it can be ambiguous. Grab the
                 # ultimate person IDs from the raw person tables, then compare
@@ -256,8 +325,24 @@ def test_import_utility_init(raw_table_setup,
 
                 assert (left_person_id == right_person_id) == linked
 
+                if linked:
+                    linked_count += 1
+
+                if new_job:
+                    new_job_count += 1
+
             else:
                 assert not linked
 
-    import pdb
-    pdb.set_trace()
+        validate_job = '''
+            SELECT
+              (SELECT COUNT(*) FROM raw_payroll_1) + (SELECT COUNT(*) FROM raw_payroll_2) - {existing_jobs} AS raw_count,
+              (SELECT COUNT(*) FROM payroll_job) AS generated_count
+        '''.format(existing_jobs=str(linked_count - new_job_count))
+
+        cursor.execute(validate_job)
+
+        result, = cursor
+        raw_count, generated_count = result
+
+        assert raw_count == generated_count
