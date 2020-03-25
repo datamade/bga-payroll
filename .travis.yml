@@ -1,7 +1,6 @@
 branches:
   only:
   - master
-  - rebase/hec/import-refactor
   - "/^v0.*$/"
 
 language: python
