@@ -7,7 +7,6 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import DetailView, ListView
-from django.views.generic.edit import FormView
 
 from data_import.forms import UploadForm
 from data_import.models import StandardizedFile, RespondingAgency, Upload
@@ -15,31 +14,6 @@ from data_import.utils import ChildEmployerQueue, ParentEmployerQueue, \
     RespondingAgencyQueue
 
 from payroll.models import Employer
-
-
-class StandardizedDataUpload(LoginRequiredMixin, FormView):
-    template_name = 'data_import/upload.html'
-    form_class = UploadForm
-    success_url = '/data-import/'
-
-    def form_valid(self, form):
-        upload = Upload.objects.create()
-
-        uploaded_file = form.cleaned_data['standardized_file']
-        now = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
-        uploaded_file.name = '{}-{}'.format(now, uploaded_file.name)
-
-        s_file_meta = {
-            'standardized_file': uploaded_file,
-            'upload': upload,
-            'reporting_year': form.cleaned_data['reporting_year'],
-        }
-
-        s_file = StandardizedFile.objects.create(**s_file_meta)
-
-        s_file.copy_to_database()
-
-        return super().form_valid(form)
 
 
 class Uploads(LoginRequiredMixin, ListView):

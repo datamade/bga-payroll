@@ -1,11 +1,17 @@
 import datetime
 
 from django import forms
+from django.contrib.auth.mixins import LoginRequiredMixin
 
+from data_import.models import StandardizedFile
 from data_import.utils import CsvMeta
 
 
-class UploadForm(forms.Form):
+class UploadForm(LoginRequiredMixin, forms.ModelForm):
+    class Meta:
+        model = StandardizedFile
+        fields = []
+
     '''
     Collect standardized data.
     '''
@@ -30,6 +36,9 @@ class UploadForm(forms.Form):
 
         self._validate_filetype(meta.file_type)
         self._validate_fields(meta.field_names)
+
+        now = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+        s_file.name = '{}-{}'.format(now, s_file.name)
 
         return s_file
 

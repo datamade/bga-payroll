@@ -1,6 +1,5 @@
 import datetime
 
-from django.urls import reverse
 import pytest
 
 from data_import.utils import CsvMeta
@@ -27,7 +26,7 @@ def test_missing_fields_raises_exception(standardized_data_upload_blob,
 
     mock_file = standardized_data_upload_blob['standardized_file']
 
-    rv = admin_client.post(reverse('upload-standardized-file'),
+    rv = admin_client.post('/admin/data_import/standardizedfile/add/',
                            data=standardized_data_upload_blob,
                            files={'standardized_file': mock_file})
 
@@ -45,7 +44,7 @@ def test_non_csv_raises_exception(standardized_data_upload_blob,
 
     standardized_data_upload_blob['standardized_file'] = mock_file
 
-    rv = admin_client.post(reverse('upload-standardized-file'),
+    rv = admin_client.post('/admin/data_import/standardizedfile/add/',
                            data=standardized_data_upload_blob,
                            files={'standardized_file': mock_file})
 
@@ -63,7 +62,7 @@ def test_future_date_raises_exception(standardized_data_upload_blob,
 
     mock_file = standardized_data_upload_blob['standardized_file']
 
-    rv = admin_client.post(reverse('upload-standardized-file'),
+    rv = admin_client.post('/admin/data_import/standardizedfile/add/',
                            data=standardized_data_upload_blob,
                            files={'standardized_file': mock_file})
 
@@ -83,7 +82,7 @@ def test_valid_standardized_data_upload(standardized_data_upload_blob,
 
     standardized_data_upload_blob['standardized_file'] = real_file
 
-    rv = admin_client.post(reverse('upload-standardized-file'),
+    rv = admin_client.post('/admin/data_import/standardizedfile/add/',
                            data=standardized_data_upload_blob,
                            files={'standardized_file': real_file})
 
