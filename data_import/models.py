@@ -200,7 +200,6 @@ class StandardizedFile(models.Model):
     def select_unseen_parent_employer(self):
         work = chain(
             tasks.insert_responding_agency.si(s_file_id=self.id),
-            tasks.reshape_raw_payroll.si(s_file_id=self.id),
             tasks.select_unseen_parent_employer.si(s_file_id=self.id)
         )
 
@@ -220,11 +219,10 @@ class StandardizedFile(models.Model):
     @transition(field=status,
                 source=State.C_EMP_PENDING,
                 target=State.COMPLETE)
-    def select_invalid_salary(self):
+    def insert_salaries(self):
         work = chain(
             tasks.insert_child_employer.si(s_file_id=self.id),
-            tasks.select_invalid_salary.si(s_file_id=self.id),
-            tasks.insert_salary.si(s_file_id=self.id),
+            tasks.insert_salaries.si(s_file_id=self.id),
             tasks.build_solr_index.si()
         )
 

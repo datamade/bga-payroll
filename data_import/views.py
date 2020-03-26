@@ -106,7 +106,7 @@ class ParentEmployerReview(Review):
 
 
 class ChildEmployerReview(Review):
-    transition = 'select_invalid_salary'
+    transition = 'insert_salaries'
     entity = 'child employer'
     entities = 'child employers'
 
