@@ -34,6 +34,17 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+# See https://github.com/datamade/bga-payroll/issues/327 for a discussion of
+# these settings. Taken together, this configuration means that tasks will not
+# be acknowledged until they are complete, and tasks that are not completed
+# within five hours will be re-triggered. The longest running task, reindexing
+# the database, clocks in around 4.5 hours. If we see this triggered multiple
+# times without an accompanying error, it is taking longer than that to finish,
+# and we should increase the visibility timeout.
+
+CELERY_TASK_ACKS_LATE = True
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600*5}
+
 CENSUS_API_KEY = '<A KEY>'
 
 SOLR_URL = 'http://solr:8983/solr/bga'
