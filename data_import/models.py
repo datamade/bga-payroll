@@ -144,9 +144,28 @@ class StandardizedFile(models.Model):
     @property
     def processing(self):
         '''
-        TO-DO: Find a less expensive way to check whether an instance
-        is processing.
+        Inspect the queue for work related to the StandardizedFile
+        at hand. If there is active work, or work on the queue,
+        return True. Otherwise, return False.
         '''
+        from celery.task.control import inspect
+
+        i = inspect()
+
+        active = i.active()
+
+        for worker, tasks in active.items():
+            for task in tasks:
+                if task['kwargs'].get('s_file_id') == self.id:
+                    return True
+
+        enqueued = i.reserved()
+
+        for worker, tasks in enqueued.items():
+            for task in tasks:
+                if task['kwargs'].get('s_file_id') == self.id:
+                    return True
+
         return False
 
     @property
