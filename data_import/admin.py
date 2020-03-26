@@ -82,10 +82,16 @@ class AdminStandardizedFile(admin.ModelAdmin):
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
     def save_model(self, request, obj, form, change):
-        upload = Upload.objects.create()
-        obj.upload = upload
-        super().save_model(request, obj, form, change)
-        obj.copy_to_database()
+        if change:
+            super().save_model(request, obj, form, change)
+
+        else:
+            upload = Upload.objects.create()
+            obj.upload = upload
+
+            super().save_model(request, obj, form, change)
+
+            obj.copy_to_database()
 
 
 admin.site.register(SourceFile, AdminSourceFile)
