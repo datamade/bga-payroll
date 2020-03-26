@@ -28,6 +28,8 @@ services:
   worker:
     container_name: bga-payroll-worker
     image: bga-payroll:latest
+    stdin_open: true
+    tty: true
     depends_on:
       # Declaring this dependency ensures that your application image is built
       # before migrations are run, and that your application and migrations can
