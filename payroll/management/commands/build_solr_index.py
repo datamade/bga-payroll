@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Prefetch
 import pysolr
 
 from django.conf import settings
@@ -211,9 +211,19 @@ class Command(BaseCommand):
         name = str(person)
 
         for year in self.reporting_years:
+            filtered_salaries = Salary.objects.filter(
+                vintage__standardized_file__reporting_year=year
+            )
+
+            reporting_year_salaries = Prefetch(
+                'salaries',
+                queryset=filtered_salaries,
+                to_attr='reporting_year_salaries'
+            )
+
             try:
                 job = person.jobs.select_related('position', 'position__employer')\
-                                 .prefetch_related('salaries')\
+                                 .prefetch_related(reporting_year_salaries)\
                                  .get(vintage__standardized_file__reporting_year=year)
 
             except Job.DoesNotExist:
@@ -244,7 +254,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE(info))
 
                 job = person.jobs.select_related('position', 'position__employer')\
-                                 .prefetch_related('salaries')\
+                                 .prefetch_related(reporting_year_salaries)\
                                  .first()
 
             position = job.position
@@ -257,6 +267,15 @@ class Command(BaseCommand):
             else:
                 employer_slug = [employer.slug]
 
+            try:
+                salary, = job.reporting_year_salaries
+            except ValueError:
+                message = 'Job #{0} for Person {1} (#{2}) has more than one salary in {3}'.format(job.id,
+                                                                                                  name,
+                                                                                                  person.id,
+                                                                                                  year)
+                raise ValueError(message)
+
             document = {
                 'id': 'person.{0}.{1}'.format(person.id, year),
                 'slug': person.slug,
@@ -264,7 +283,7 @@ class Command(BaseCommand):
                 'entity_type': 'Person',
                 'year': year,
                 'title_s': job.position.title,
-                'salary_d': job.salaries.get().amount,
+                'salary_d': salary.amount,
                 'employer_ss': employer_slug,
                 'text': text,
             }
