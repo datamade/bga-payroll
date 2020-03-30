@@ -56,7 +56,7 @@ ROOT_URLCONF = 'bga_database.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates/admin/data_import'],
+        'DIRS': ['templates/admin'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -69,7 +69,7 @@ TEMPLATES = [
     },
     {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': ['templates/', 'jinja2/'],
+        'DIRS': ['templates/jinja2/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'environment': 'bga_database.jinja2.environment',
