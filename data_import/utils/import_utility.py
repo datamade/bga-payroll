@@ -168,6 +168,7 @@ class ImportUtility(TableNamesMixin):
             JOIN data_import_respondingagency AS agency
               ON TRIM(raw.responding_agency) = agency.name
             WHERE emp.parent_id IS NULL
+            ON CONFLICT DO NOTHING
         '''.format(reporting_year=self.reporting_year,
                    raw_payroll=self.raw_payroll_table)
 
@@ -387,7 +388,7 @@ class ImportUtility(TableNamesMixin):
             for row in cursor:
                 unit_name, department_name = row
 
-                unit = Employer.objects.get(name=unit_name, parent_id__isnull=True)
+                unit = Employer.objects.get(aliases__name=unit_name, parent_id__isnull=True)
                 department = Employer.objects.create(name=department_name, parent=unit, vintage_id=self.vintage)
 
                 EmployerAlias.objects.create(name=department_name, employer=department)
