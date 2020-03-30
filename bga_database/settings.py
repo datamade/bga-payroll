@@ -55,19 +55,8 @@ ROOT_URLCONF = 'bga_database.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': ['templates/', 'jinja2/'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'environment': 'bga_database.jinja2.environment',
-            'context_processors': [
-                'payroll.context_processors.inspiration_slugs',
-            ],
-        },
-    },
-    {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates/admin/data_import'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -75,6 +64,17 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': ['templates/', 'jinja2/'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'environment': 'bga_database.jinja2.environment',
+            'context_processors': [
+                'payroll.context_processors.inspiration_slugs',
             ],
         },
     },

@@ -20,9 +20,11 @@ from django.views.decorators.cache import cache_page
 
 from data_import import views as import_views
 from payroll import views as payroll_views
+from data_import.forms import UploadForm
 
 
 EIGHT_HOURS = 60 * 60 * 8
+admin.site.change_form = 'admin/data_import/standardizefile_change_form.html'
 
 urlpatterns = [
     # client
