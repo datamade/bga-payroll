@@ -20,6 +20,7 @@ from django.views.decorators.cache import cache_page
 
 from data_import import views as import_views
 from payroll import views as payroll_views
+from data_import.forms import UploadForm
 
 
 EIGHT_HOURS = 60 * 60 * 8
