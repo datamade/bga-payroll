@@ -179,9 +179,16 @@ def insert_salaries(self, *, s_file_id):
     return 'Inserted salaries'
 
 
-@shared_task(bind=True)
-def build_solr_index(self):
+@shared_task(bind=True, base=DataImportTask)
+def build_solr_index(self, *, s_file_id):
     io_out = StringIO()
-    call_command('build_solr_index', '--recreate', chunksize=25, stdout=io_out)
+
+    call_command(
+        'build_solr_index',
+        '--recreate',
+        reporting_year=self.s_file.reporting_year,
+        chunksize=25,
+        stdout=io_out
+    )
 
     return io_out.getvalue()

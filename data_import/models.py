@@ -223,7 +223,7 @@ class StandardizedFile(models.Model):
         work = chain(
             tasks.insert_child_employer.si(s_file_id=self.id),
             tasks.insert_salaries.si(s_file_id=self.id),
-            tasks.build_solr_index.si()
+            tasks.build_solr_index.si(s_file_id=self.id)
         )
 
         work.apply_async()
