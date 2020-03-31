@@ -69,7 +69,7 @@ class AdminStandardizedFile(admin.ModelAdmin):
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
-        
+
         file = self.get_object(request, object_id)
         processing = file.processing
         review_step = file.review_step
