@@ -2,7 +2,7 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
 from django.contrib import messages
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment
 
 from payroll.utils import format_ballpark_number, format_salary, \
     query_transform, format_percentile, url_from_facet, \
