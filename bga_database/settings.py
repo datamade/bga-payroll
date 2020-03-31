@@ -56,7 +56,7 @@ ROOT_URLCONF = 'bga_database.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates/admin'],
+        'DIRS': ['templates/admin/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

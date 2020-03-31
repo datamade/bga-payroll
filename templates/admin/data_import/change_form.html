@@ -6,7 +6,7 @@
 {{ media }}
 {% endblock %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}">{% endblock %}
 
 {% block coltype %}colM{% endblock %}
 
@@ -61,7 +61,12 @@
 
 {% block after_related_objects %}{% endblock %}
 
-{% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+{% block submit_buttons_bottom %}
+  {% if finished and review_step %}
+    <a href="/data-import/review/{{ review_step }}/{{ id }}">Resume import</a>
+  {% endif %}
+  {% submit_row %}
+{% endblock %}
 
 {% block admin_change_form_document_ready %}
     <script type="text/javascript"

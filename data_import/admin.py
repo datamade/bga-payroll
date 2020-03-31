@@ -65,6 +65,21 @@ class AdminSourceFile(admin.ModelAdmin):
 
 class AdminStandardizedFile(admin.ModelAdmin):
     form = UploadForm
+    change_form_template = 'data_import/change_form.html'
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        
+        file = self.get_object(request, object_id)
+        processing = file.processing
+        review_step = file.review_step
+
+        if not processing:
+            extra_context['finished'] = True
+            extra_context['review_step'] = review_step
+            extra_context['id'] = object_id
+
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
     def save_model(self, request, obj, form, change):
         upload = Upload.objects.create()
