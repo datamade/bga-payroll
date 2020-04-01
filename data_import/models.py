@@ -156,16 +156,16 @@ class StandardizedFile(models.Model):
 
         active = i.active()
 
-        for worker, tasks in active.items():
-            for task in tasks:
+        for worker, import_tasks in active.items():
+            for task in import_tasks:
                 kw_args = json.loads(task['kwargs'])
                 if kw_args.get('s_file_id') == self.id:
                     return True
 
         enqueued = i.reserved()
 
-        for worker, tasks in enqueued.items():
-            for task in tasks:
+        for worker, import_tasks in enqueued.items():
+            for task in import_tasks:
                 kw_args = json.loads(task['kwargs'])
                 if kw_args.get('s_file_id') == self.id:
                     return True
