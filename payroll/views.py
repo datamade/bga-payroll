@@ -83,11 +83,11 @@ class EmployerView(DetailView, ChartHelperMixin):
             'series_data': {
                 'Name': 'Data',
                 'data': [{
-                    'name': 'Base Pay',
+                    'name': 'Reported Base Pay',
                     'y': base_pay,
                     'label': 'base_pay',
                 }, {
-                    'name': 'Extra Pay',
+                    'name': 'Reported Extra Pay',
                     'y': extra_pay,
                     'label': 'extra_pay',
                 }],
