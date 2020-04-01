@@ -9,6 +9,8 @@ from django_fsm import FSMField, transition
 from bga_database.base_models import AliasModel, SluggedModel
 from data_import import tasks
 
+import json
+
 
 def set_deleted_user():
     return get_user_model().objects.get_or_create(username='deleted').first()
@@ -156,14 +158,16 @@ class StandardizedFile(models.Model):
 
         for worker, tasks in active.items():
             for task in tasks:
-                if task['kwargs'].get('s_file_id') == self.id:
+                kw_args = json.loads(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
                     return True
 
         enqueued = i.reserved()
 
         for worker, tasks in enqueued.items():
             for task in tasks:
-                if task['kwargs'].get('s_file_id') == self.id:
+                kw_args = json.loads(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
                     return True
 
         return False

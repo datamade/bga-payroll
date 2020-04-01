@@ -69,7 +69,7 @@ TEMPLATES = [
     },
     {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': ['templates/jinja2/'],
+        'DIRS': ['templates/jinja2/', 'jinja2/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'environment': 'bga_database.jinja2.environment',

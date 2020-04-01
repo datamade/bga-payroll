@@ -23,7 +23,6 @@ from payroll import views as payroll_views
 
 
 EIGHT_HOURS = 60 * 60 * 8
-admin.site.change_form = 'admin/data_import/standardizefile_change_form.html'
 
 urlpatterns = [
     # client
