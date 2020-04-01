@@ -139,9 +139,29 @@ class StandardizedFile(models.Model):
     )
     status = FSMField(default=State.UPLOADED)
 
+    def __str__(self):
+        return str(self.standardized_file)
+
     @property
     def raw_table_name(self):
         return 'raw_payroll_{}'.format(self.id)
+
+    def _get_task(self):
+        from celery.task.control import inspect
+
+        inspector = inspect()
+
+        for _, tasks in inspector.active().items():
+            for task in tasks:
+                kw_args = eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return task
+
+        for _, tasks in inspector.reserved().items():
+            for task in tasks:
+                kw_args = eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return task
 
     @property
     def processing(self):
@@ -150,27 +170,9 @@ class StandardizedFile(models.Model):
         at hand. If there is active work, or work on the queue,
         return True. Otherwise, return False.
         '''
-        from celery.task.control import inspect
+        task = self._get_task()
 
-        i = inspect()
-
-        active = i.active()
-
-        for worker, import_tasks in active.items():
-            for task in import_tasks:
-                kw_args = json.loads(task['kwargs'])
-                if kw_args.get('s_file_id') == self.id:
-                    return True
-
-        enqueued = i.reserved()
-
-        for worker, import_tasks in enqueued.items():
-            for task in import_tasks:
-                kw_args = json.loads(task['kwargs'])
-                if kw_args.get('s_file_id') == self.id:
-                    return True
-
-        return False
+        return (task is not None, task)
 
     @property
     def review_step(self):

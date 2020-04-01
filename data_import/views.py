@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -32,6 +33,13 @@ class Uploads(LoginRequiredMixin, ListView):
 class Review(LoginRequiredMixin, DetailView):
     template_name = 'data_import/review.html'
 
+    @property
+    def change_url(self):
+        return reverse(
+            'admin:data_import_standardizedfile_change',
+            args=(self.kwargs['s_file_id'],)
+        )
+
     def dispatch(self, request, *args, **kwargs):
         '''
         If there are no more items to review, flush the matched
@@ -44,7 +52,8 @@ class Review(LoginRequiredMixin, DetailView):
 
         if self.q.remaining == 0:
             self.finish_review_step()
-            return redirect(reverse('data-import'))
+            messages.info(self.request, 'Remaining items are being added to the database.')
+            return redirect(self.change_url)
 
         else:
             return super().dispatch(request, *args, **kwargs)
@@ -78,7 +87,8 @@ class Review(LoginRequiredMixin, DetailView):
             return super().render_to_response(context, **response_kwargs)
 
         else:
-            return redirect('/data-import/?pending=True')
+            messages.info(self.request, 'All items have been reviewed.')
+            return redirect(self.change_url)
 
     def finish_review_step(self):
         s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
