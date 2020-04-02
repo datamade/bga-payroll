@@ -72,7 +72,7 @@ class AdminStandardizedFile(admin.ModelAdmin):
         Disable editing of responding agency for existing source files.
         '''
         if obj:
-            return ['standardized_file', 'reporting_year',]
+            return ['standardized_file', 'reporting_year']
         else:
             return []
 

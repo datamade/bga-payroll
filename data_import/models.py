@@ -13,8 +13,6 @@ from django_fsm import FSMField, transition
 from bga_database.base_models import AliasModel, SluggedModel
 from data_import import tasks
 
-import json
-
 
 def set_deleted_user():
     return get_user_model().objects.get_or_create(username='deleted').first()
@@ -166,14 +164,14 @@ class StandardizedFile(models.Model):
     def get_task(self):
         inspector = inspect()
 
-        for _, tasks in inspector.active().items():
-            for task in tasks:
+        for _, task_array in inspector.active().items():
+            for task in task_array:
                 kw_args = ast.literal_eval(task['kwargs'])
                 if kw_args.get('s_file_id') == self.id:
                     return self._add_runtime(task)
 
-        for _, tasks in inspector.reserved().items():
-            for task in tasks:
+        for _, task_array in inspector.reserved().items():
+            for task in task_array:
                 kw_args = ast.literal_eval(task['kwargs'])
                 if kw_args.get('s_file_id') == self.id:
                     return self._add_runtime(task)

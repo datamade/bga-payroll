@@ -43,6 +43,10 @@ class Review(LoginRequiredMixin, DetailView):
     def dispatch(self, request, *args, **kwargs):
         if self.request.GET.get('flush') == 'true':
             self.q.flush()
+
+        # TODO: This may be redundant with render_to_response, but I'll keep it
+        # here protectively.
+        if self.q.remaining == 0:
             self.finish_review_step()
             messages.info(self.request, 'Remaining items are being added to the database.')
             return redirect(self.change_url)
