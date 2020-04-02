@@ -9,6 +9,8 @@ from django_fsm import FSMField, transition
 from bga_database.base_models import AliasModel, SluggedModel
 from data_import import tasks
 
+import ast
+
 
 def set_deleted_user():
     return get_user_model().objects.get_or_create(username='deleted').first()
@@ -144,9 +146,30 @@ class StandardizedFile(models.Model):
     @property
     def processing(self):
         '''
-        TO-DO: Find a less expensive way to check whether an instance
-        is processing.
+        Inspect the queue for work related to the StandardizedFile
+        at hand. If there is active work, or work on the queue,
+        return True. Otherwise, return False.
         '''
+        from celery.task.control import inspect
+
+        i = inspect()
+
+        active = i.active()
+
+        for worker, import_tasks in active.items():
+            for task in import_tasks:
+                kw_args = ast.literal_eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return True
+
+        enqueued = i.reserved()
+
+        for worker, import_tasks in enqueued.items():
+            for task in import_tasks:
+                kw_args = ast.literal_eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return True
+
         return False
 
     @property

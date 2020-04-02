@@ -1,0 +1,9 @@
+{% extends "admin/change_form.html" %}
+{% block submit_buttons_bottom %}
+  {% if finished and review_step %}
+    <fieldset class="module aligned" style="text-align: center">
+      <a class="button" href="/data-import/review/{{ review_step }}/{{ id }}" style="padding: 10px">Resume import</a>
+    </fieldset>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
