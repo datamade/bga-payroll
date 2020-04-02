@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Prefetch
 import pysolr
 
 from django.conf import settings
@@ -15,8 +15,6 @@ class Command(BaseCommand):
         super().__init__(*args, **kwargs)
 
         self.searcher = pysolr.Solr(settings.SOLR_URL)
-        self.reporting_years = [x.reporting_year for x
-                                in StandardizedFile.objects.distinct('reporting_year')]
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -48,6 +46,13 @@ class Command(BaseCommand):
             default=None,
             help='ID of specific Person instance to reindex'
         )
+        parser.add_argument(
+            '--reporting_year',
+            type=int,
+            dest='reporting_year',
+            default=None,
+            help='Specify a specific reporting year to index'
+        )
         '''
         TO-DO: Implement these selective index building args, for version 2.
         If we're adding units and departments, we're going to want to rebuild
@@ -55,9 +60,7 @@ class Command(BaseCommand):
         data in more than one upload, i.e., the calculated expenditure and
         headcount fields may change & need updating. Conversely, people are
         always treated as distinct within a reporting year, so we could feasibly
-        do that by upload, i.e., standardized file. Since we're only handling
-        one year of data up front, however, let's just drop and rebuild the
-        whole shebang when we import new data.
+        do that by upload, i.e., standardized file.
         '''
         parser.add_argument(
             '--s_file',
@@ -65,14 +68,14 @@ class Command(BaseCommand):
             default=None,
             help='Specify a specific standardized file to index'
         )
-        parser.add_argument(
-            '--reporting_year',
-            dest='reporting_year',
-            default=None,
-            help='Specify a specific reporting year to index'
-        )
 
     def handle(self, *args, **options):
+        if options.get('reporting_year'):
+            self.reporting_years = [options['reporting_year']]
+        else:
+            self.reporting_years = list(StandardizedFile.objects.distinct('reporting_year')
+                                                                .values_list('reporting_year', flat=True))
+
         if options['employer']:
             self.reindex_one('employer', options['employer'])
 
@@ -87,6 +90,11 @@ class Command(BaseCommand):
 
             for entity in entities:
                 getattr(self, 'index_{}'.format(entity))()
+
+    def _make_search_string(self, initial_params):
+        search_fmt = '{initial_params} AND ({year_params})'
+        year_params = ' OR '.join('year:{}'.format(year) for year in self.reporting_years)
+        return search_fmt.format(initial_params=initial_params, year_params=year_params)
 
     def _make_unit_index(self, unit):
         name = unit.name
@@ -118,8 +126,14 @@ class Command(BaseCommand):
 
     def index_units(self):
         if self.recreate:
-            self.stdout.write('Dropping units from index')
-            self.searcher.delete(q='id:unit*')
+            message = 'Dropping units from {} from index'.format(
+                ', '.join(str(year) for year in self.reporting_years)
+            )
+            self.stdout.write(message)
+
+            search_string = self._make_search_string('id:unit*')
+            self.searcher.delete(q=search_string)
+
             self.stdout.write(self.style.SUCCESS('Units dropped from index'))
 
         self.stdout.write('Indexing units')
@@ -178,8 +192,14 @@ class Command(BaseCommand):
 
     def index_departments(self):
         if self.recreate:
-            self.stdout.write('Dropping departments from index')
-            self.searcher.delete(q='id:department*')
+            message = 'Dropping departments from {} from index'.format(
+                ', '.join(str(year) for year in self.reporting_years)
+            )
+            self.stdout.write(message)
+
+            search_string = self._make_search_string('id:department*')
+            self.searcher.delete(q=search_string)
+
             self.stdout.write(self.style.SUCCESS('Departments dropped from index'))
 
         self.stdout.write('Indexing departments')
@@ -211,9 +231,19 @@ class Command(BaseCommand):
         name = str(person)
 
         for year in self.reporting_years:
+            filtered_salaries = Salary.objects.filter(
+                vintage__standardized_file__reporting_year=year
+            )
+
+            reporting_year_salaries = Prefetch(
+                'salaries',
+                queryset=filtered_salaries,
+                to_attr='reporting_year_salaries'
+            )
+
             try:
                 job = person.jobs.select_related('position', 'position__employer')\
-                                 .prefetch_related('salaries')\
+                                 .prefetch_related(reporting_year_salaries)\
                                  .get(vintage__standardized_file__reporting_year=year)
 
             except Job.DoesNotExist:
@@ -244,7 +274,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE(info))
 
                 job = person.jobs.select_related('position', 'position__employer')\
-                                 .prefetch_related('salaries')\
+                                 .prefetch_related(reporting_year_salaries)\
                                  .first()
 
             position = job.position
@@ -257,6 +287,15 @@ class Command(BaseCommand):
             else:
                 employer_slug = [employer.slug]
 
+            try:
+                salary, = job.reporting_year_salaries
+            except ValueError:
+                message = 'Job #{0} for Person {1} (#{2}) has more than one salary in {3}'.format(job.id,
+                                                                                                  name,
+                                                                                                  person.id,
+                                                                                                  year)
+                raise ValueError(message)
+
             document = {
                 'id': 'person.{0}.{1}'.format(person.id, year),
                 'slug': person.slug,
@@ -264,7 +303,7 @@ class Command(BaseCommand):
                 'entity_type': 'Person',
                 'year': year,
                 'title_s': job.position.title,
-                'salary_d': job.salaries.get().amount,
+                'salary_d': salary.amount,
                 'employer_ss': employer_slug,
                 'text': text,
             }
@@ -273,8 +312,14 @@ class Command(BaseCommand):
 
     def index_people(self):
         if self.recreate:
-            self.stdout.write('Dropping people from index')
-            self.searcher.delete(q='id:person*')
+            message = 'Dropping people from {} from index'.format(
+                ', '.join(str(year) for year in self.reporting_years)
+            )
+            self.stdout.write(message)
+
+            search_string = self._make_search_string('id:person*')
+            self.searcher.delete(q=search_string)
+
             self.stdout.write(self.style.SUCCESS('People dropped from index'))
 
         self.stdout.write('Indexing people')

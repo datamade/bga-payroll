@@ -20,21 +20,37 @@ def test_review_dispatch(mocker, admin_client, remaining, item):
     mock_q = mocker.patch.object(RespondingAgencyReview, 'q', new_callable=mocker.PropertyMock)
     mock_q.return_value = mock_queue
 
-    if not remaining:
-        mock_transition = mocker.patch.object(RespondingAgencyReview, 'finish_review_step')
+    mock_transition = mocker.patch.object(RespondingAgencyReview, 'finish_review_step')
 
-    rv = admin_client.get(reverse('review-responding-agency', kwargs={'s_file_id': 99}))
+    render_review = remaining and all(item)
+    flush_queue = remaining and not all(item)
+    nothing_to_review = not remaining
 
-    if remaining and all(item):
+    review_url = reverse('review-responding-agency', kwargs={'s_file_id': 99})
+
+    if flush_queue:
+        review_url += '?flush=true'
+
+    rv = admin_client.get(review_url)
+
+    if render_review:
         assert rv.status_code == 200
 
-    elif remaining:
-        assert rv.status_code == 302
-        assert rv.url == '/data-import/?pending=True'
-
-    else:
+    elif flush_queue:
         assert rv.status_code == 302
         assert mock_transition.call_count == 1
+        assert rv.url == reverse(
+            'admin:data_import_standardizedfile_change',
+            args=(99,)
+        )
+
+    elif nothing_to_review:
+        assert rv.status_code == 302
+        assert mock_transition.call_count == 1
+        assert rv.url == reverse(
+            'admin:data_import_standardizedfile_change',
+            args=(99,)
+        )
 
 
 def test_match(mocker, admin_client):

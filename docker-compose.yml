@@ -4,7 +4,6 @@ services:
   app:
     image: bga-payroll
     container_name: bga-payroll
-    restart: always
     build: .
     # Allow container to be attached to, e.g., to access the pdb shell
     stdin_open: true
@@ -28,6 +27,8 @@ services:
   worker:
     container_name: bga-payroll-worker
     image: bga-payroll:latest
+    stdin_open: true
+    tty: true
     depends_on:
       # Declaring this dependency ensures that your application image is built
       # before migrations are run, and that your application and migrations can
@@ -88,8 +89,7 @@ services:
     ports:
       - '127.0.0.1:8986:8983'
     environment:
-      SOLR_LOG_LEVEL: ERROR
-    restart: on-failure
+      SOLR_LOG_LEVEL: INFO
 
   redis:
     image: redis
@@ -98,7 +98,6 @@ services:
       - '127.0.0.1:6380:6379'
     volumes:
       - ./configs/redis.conf:/redis.conf
-    restart: on-failure
     command: redis-server /redis.conf
 
 volumes:

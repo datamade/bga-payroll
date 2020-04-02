@@ -1,9 +1,22 @@
 {% extends "admin/change_form.html" %}
 {% block submit_buttons_bottom %}
-  {% if finished and review_step %}
+  {% if task or review_step %}
     <fieldset class="module aligned" style="text-align: center">
-      <a class="button" href="/data-import/review/{{ review_step }}/{{ id }}" style="padding: 10px">Resume import</a>
+      {% if not task and review_step %}
+        <a class="button" href="/data-import/review/{{ review_step }}/{{ id }}" style="padding: 10px">Resume import</a>
+      {% elif task %}
+        <p>
+          <em>Upload processing. Please return to this page later.</em>
+        </p>
+        <p>
+          <strong>Task:</strong> {{ task.name }}<br />
+          <strong>Runtime:</strong> {{ task.runtime }}
+        </p>
+      {% else %}
+        <em>Upload complete!</em>
+      {% endif %}
     </fieldset>
+  {% else %}
+    {{ block.super }}
   {% endif %}
-  {{ block.super }}
 {% endblock %}

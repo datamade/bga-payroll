@@ -1,6 +1,10 @@
+import ast
+import datetime
 from os.path import basename
 
 from celery import chain
+from celery.task.control import inspect, revoke
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import connection, models
@@ -8,8 +12,6 @@ from django_fsm import FSMField, transition
 
 from bga_database.base_models import AliasModel, SluggedModel
 from data_import import tasks
-
-import ast
 
 
 def set_deleted_user():
@@ -139,49 +141,40 @@ class StandardizedFile(models.Model):
     )
     status = FSMField(default=State.UPLOADED)
 
+    def __str__(self):
+        return str(self.standardized_file)
+
     @property
     def raw_table_name(self):
         return 'raw_payroll_{}'.format(self.id)
 
     @property
-    def processing(self):
-        '''
-        Inspect the queue for work related to the StandardizedFile
-        at hand. If there is active work, or work on the queue,
-        return True. Otherwise, return False.
-        '''
-        from celery.task.control import inspect
-
-        i = inspect()
-
-        active = i.active()
-
-        for worker, import_tasks in active.items():
-            for task in import_tasks:
-                kw_args = ast.literal_eval(task['kwargs'])
-                if kw_args.get('s_file_id') == self.id:
-                    return True
-
-        enqueued = i.reserved()
-
-        for worker, import_tasks in enqueued.items():
-            for task in import_tasks:
-                kw_args = ast.literal_eval(task['kwargs'])
-                if kw_args.get('s_file_id') == self.id:
-                    return True
-
-        return False
-
-    @property
     def review_step(self):
         return '-'.join(self.status.split(' ')[:-1])
 
-    def post_delete_handler(self):
-        '''
-        Drop the associated raw table.
-        '''
-        with connection.cursor() as cursor:
-            cursor.execute('DROP TABLE IF EXISTS {}'.format(self.raw_table_name))
+    def _add_runtime(self, task):
+        start_time = datetime.datetime.fromtimestamp(task['time_start'])
+        now = datetime.datetime.utcnow()
+
+        runtime = relativedelta(now, start_time)
+        task['runtime'] = '{} hours, {} minutes'.format(runtime.hours, runtime.minutes)
+
+        return task
+
+    def get_task(self):
+        inspector = inspect()
+
+        for _, task_array in inspector.active().items():
+            for task in task_array:
+                kw_args = ast.literal_eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return self._add_runtime(task)
+
+        for _, task_array in inspector.reserved().items():
+            for task in task_array:
+                kw_args = ast.literal_eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return self._add_runtime(task)
 
     @transition(field=status,
                 source=State.UPLOADED,
@@ -200,7 +193,6 @@ class StandardizedFile(models.Model):
     def select_unseen_parent_employer(self):
         work = chain(
             tasks.insert_responding_agency.si(s_file_id=self.id),
-            tasks.reshape_raw_payroll.si(s_file_id=self.id),
             tasks.select_unseen_parent_employer.si(s_file_id=self.id)
         )
 
@@ -220,15 +212,37 @@ class StandardizedFile(models.Model):
     @transition(field=status,
                 source=State.C_EMP_PENDING,
                 target=State.COMPLETE)
-    def select_invalid_salary(self):
+    def insert_salaries(self):
         work = chain(
             tasks.insert_child_employer.si(s_file_id=self.id),
-            tasks.select_invalid_salary.si(s_file_id=self.id),
-            tasks.insert_salary.si(s_file_id=self.id),
-            tasks.build_solr_index.si()
+            tasks.insert_salaries.si(s_file_id=self.id),
+            tasks.build_solr_index.si(s_file_id=self.id)
         )
 
         work.apply_async()
+
+    def post_delete_handler(self):
+        '''
+        Remove related objects, revoke delayed work, and drop raw tables, if
+        they exist.
+        '''
+        print('Revoking work')
+        task = self.get_task()
+
+        if task:
+            revoke(task['id'], terminate=True)
+
+        print('Removing related responding agencies')
+        self.responding_agencies.clear()
+
+        print('Deleting upload')
+        self.upload.delete()
+
+        with connection.cursor() as cursor:
+            for table in ('raw_payroll_{}', 'raw_person_{}', 'raw_job_{}'):
+                table_name = table.format(self.id)
+                print('Dropping {}'.format(table_name))
+                cursor.execute('DROP TABLE IF EXISTS {}'.format(table_name))
 
 
 def post_delete_handler(sender, instance, **kwargs):
