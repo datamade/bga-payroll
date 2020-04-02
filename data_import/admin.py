@@ -1,5 +1,4 @@
 import datetime
-from dateutil.relativedelta import relativedelta
 
 from django.contrib import admin
 
@@ -77,26 +76,12 @@ class AdminStandardizedFile(admin.ModelAdmin):
         else:
             return []
 
-    def _add_runtime(self, task):
-        start_time = datetime.datetime.fromtimestamp(task['time_start'])
-        now = datetime.datetime.utcnow()
-
-        runtime = relativedelta(now, start_time)
-        task['runtime'] = '{} hours, {} minutes'.format(runtime.hours, runtime.minutes)
-
-        return task
-
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
 
         file = self.get_object(request, object_id)
 
-        processing, task = file.processing
-
-        task = self._add_runtime(task)
-
-        extra_context['finished'] = not processing
-        extra_context['task'] = task
+        extra_context['task'] = file.get_task()
         extra_context['review_step'] = file.review_step
         extra_context['id'] = object_id
 

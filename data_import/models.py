@@ -1,6 +1,10 @@
+import ast
+import datetime
 from os.path import basename
 
 from celery import chain
+from celery.task.control import inspect, revoke
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import connection, models
@@ -146,44 +150,33 @@ class StandardizedFile(models.Model):
     def raw_table_name(self):
         return 'raw_payroll_{}'.format(self.id)
 
-    def _get_task(self):
-        from celery.task.control import inspect
-
-        inspector = inspect()
-
-        for _, tasks in inspector.active().items():
-            for task in tasks:
-                kw_args = eval(task['kwargs'])
-                if kw_args.get('s_file_id') == self.id:
-                    return task
-
-        for _, tasks in inspector.reserved().items():
-            for task in tasks:
-                kw_args = eval(task['kwargs'])
-                if kw_args.get('s_file_id') == self.id:
-                    return task
-
-    @property
-    def processing(self):
-        '''
-        Inspect the queue for work related to the StandardizedFile
-        at hand. If there is active work, or work on the queue,
-        return True. Otherwise, return False.
-        '''
-        task = self._get_task()
-
-        return (task is not None, task)
-
     @property
     def review_step(self):
         return '-'.join(self.status.split(' ')[:-1])
 
-    def post_delete_handler(self):
-        '''
-        Drop the associated raw table.
-        '''
-        with connection.cursor() as cursor:
-            cursor.execute('DROP TABLE IF EXISTS {}'.format(self.raw_table_name))
+    def _add_runtime(self, task):
+        start_time = datetime.datetime.fromtimestamp(task['time_start'])
+        now = datetime.datetime.utcnow()
+
+        runtime = relativedelta(now, start_time)
+        task['runtime'] = '{} hours, {} minutes'.format(runtime.hours, runtime.minutes)
+
+        return task
+
+    def get_task(self):
+        inspector = inspect()
+
+        for _, tasks in inspector.active().items():
+            for task in tasks:
+                kw_args = ast.literal_eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return self._add_runtime(task)
+
+        for _, tasks in inspector.reserved().items():
+            for task in tasks:
+                kw_args = ast.literal_eval(task['kwargs'])
+                if kw_args.get('s_file_id') == self.id:
+                    return self._add_runtime(task)
 
     @transition(field=status,
                 source=State.UPLOADED,
@@ -229,6 +222,29 @@ class StandardizedFile(models.Model):
         )
 
         work.apply_async()
+
+    def post_delete_handler(self):
+        '''
+        Remove related objects, revoke delayed work, and drop raw tables, if
+        they exist.
+        '''
+        print('Revoking work')
+        task = self.get_task()
+
+        if task:
+            revoke(task['id'], terminate=True)
+
+        print('Removing related responding agencies')
+        self.responding_agencies.clear()
+
+        print('Deleting upload')
+        self.upload.delete()
+
+        with connection.cursor() as cursor:
+            for table in ('raw_payroll_{}', 'raw_person_{}', 'raw_job_{}'):
+                table_name = table.format(self.id)
+                print('Dropping {}'.format(table_name))
+                cursor.execute('DROP TABLE IF EXISTS {}'.format(table_name))
 
 
 def post_delete_handler(sender, instance, **kwargs):

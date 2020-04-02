@@ -36,6 +36,8 @@ class DataImportTask(Task):
         '''
         from data_import.models import StandardizedFile
 
+        print(s_file_id)
+
         self.s_file = StandardizedFile.objects.get(id=s_file_id)
         self.import_utility = ImportUtility(s_file_id)
 
@@ -75,6 +77,9 @@ def copy_to_database(self, *, s_file_id):
     handler, init_task, before the code in this task method is run,
     e.g, self.s_file and self.import_utility are available.
     '''
+    print(s_file_id)
+    print(self.s_file.id)
+
     table_name = self.s_file.raw_table_name
 
     columns = '''
