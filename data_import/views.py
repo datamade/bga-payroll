@@ -41,22 +41,26 @@ class Review(LoginRequiredMixin, DetailView):
         )
 
     def dispatch(self, request, *args, **kwargs):
-        '''
-        If there are no more items to review, flush the matched
-        data to the raw_payroll table, and redirect to the index.
-
-        Otherwise, show the review.
-        '''
         if self.request.GET.get('flush') == 'true':
             self.q.flush()
-
-        if self.q.remaining == 0:
             self.finish_review_step()
             messages.info(self.request, 'Remaining items are being added to the database.')
             return redirect(self.change_url)
 
         else:
             return super().dispatch(request, *args, **kwargs)
+
+    def render_to_response(self, context, **response_kwargs):
+        '''
+        If nothing is available for checkout, finish the review step.
+        '''
+        if context['object']:
+            return super().render_to_response(context, **response_kwargs)
+
+        else:
+            self.finish_review_step()
+            messages.info(self.request, 'All items have been reviewed.')
+            return redirect(self.change_url)
 
     def get_object(self):
         item_id, item = self.q.checkout()
@@ -76,19 +80,6 @@ class Review(LoginRequiredMixin, DetailView):
         })
 
         return context
-
-    def render_to_response(self, context, **response_kwargs):
-        '''
-        If nothing is available for checkout, redirect to main page,
-        where the user will be told there is work remaining, but none is
-        currently available.
-        '''
-        if context['object']:
-            return super().render_to_response(context, **response_kwargs)
-
-        else:
-            messages.info(self.request, 'All items have been reviewed.')
-            return redirect(self.change_url)
 
     def finish_review_step(self):
         s_file = StandardizedFile.objects.get(id=self.kwargs['s_file_id'])
