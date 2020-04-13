@@ -307,16 +307,16 @@ class ImportUtility(TableNamesMixin):
         select = '''
             WITH child_employers AS (
               SELECT
-                department_alias.name AS department_name,
-                unit_alias.name AS unit_name,
-                unit.vintage_id = {vintage} AS new_parent
-              FROM payroll_employer AS department
-              JOIN payroll_employer AS unit
-              ON department.parent_id = unit.id
-              JOIN payroll_employeralias AS department_alias
-              ON department.id = department_alias.employer_id
-              JOIN payroll_employeralias AS unit_alias
-              ON unit.id = unit_alias.employer_id
+                child_alias.name AS employer_name,
+                parent_alias.name AS parent_name,
+                parent.vintage_id = {vintage} AS new_parent
+              FROM payroll_employer AS parent
+              LEFT JOIN payroll_employer AS child
+              ON parent.id = child.parent_id
+              LEFT JOIN payroll_employeralias AS parent_alias
+              ON parent.id = parent_alias.employer_id
+              LEFT JOIN payroll_employeralias AS child_alias
+              ON child.id = child_alias.employer_id
             )
             SELECT DISTINCT ON (TRIM(employer), TRIM(department))
               TRIM(employer),
@@ -325,15 +325,15 @@ class ImportUtility(TableNamesMixin):
             /* Join to filter records where new_parent is True.
             Parents will always exist, because we added them in
             the prior step. */
-            LEFT JOIN child_employers AS unit_join
-            ON TRIM(raw.employer) = unit_join.unit_name
+            LEFT JOIN child_employers AS parent
+            ON TRIM(raw.employer) = parent.parent_name
             /* Join to filter unseen records. */
-            LEFT JOIN child_employers AS department_join
-            ON TRIM(raw.employer) = department_join.unit_name
-              AND TRIM(raw.department) = department_join.department_name
+            LEFT JOIN child_employers AS child
+            ON TRIM(raw.employer) = child.parent_name
+              AND TRIM(raw.department) = child.employer_name
             WHERE raw.department IS NOT NULL
-              AND unit_join.new_parent IS NOT TRUE
-              AND department_join.department_name IS NULL
+              AND parent.new_parent IS FALSE
+              AND child.employer_name IS NULL
         '''.format(vintage=self.vintage, raw_payroll=self.raw_payroll_table)
 
         with connection.cursor() as cursor:
@@ -352,33 +352,25 @@ class ImportUtility(TableNamesMixin):
         select = '''
             WITH child_employers AS (
               SELECT
-                department_alias.name AS department_name,
-                unit_alias.name AS unit_name,
-                unit.vintage_id = {vintage} AS new_parent
-              FROM payroll_employer AS department
-              JOIN payroll_employer AS unit
-              ON department.parent_id = unit.id
-              JOIN payroll_employeralias AS department_alias
-              ON department.id = department_alias.employer_id
-              JOIN payroll_employeralias AS unit_alias
-              ON unit.id = unit_alias.employer_id
+                child_alias.name AS employer_name,
+                parent_alias.name AS parent_name
+              FROM payroll_employer AS parent
+              LEFT JOIN payroll_employer AS child
+              ON parent.id = child.parent_id
+              LEFT JOIN payroll_employeralias AS parent_alias
+              ON parent.id = parent_alias.employer_id
+              LEFT JOIN payroll_employeralias AS child_alias
+              ON child.id = child_alias.employer_id
             )
             SELECT DISTINCT ON (TRIM(employer), TRIM(department))
               TRIM(employer),
               TRIM(department)
             FROM {raw_payroll} AS raw
-            /* Join to filter records where new_parent is True.
-            Parents will always exist, because we added them in
-            the prior step. */
-            LEFT JOIN child_employers AS unit_join
-            ON TRIM(raw.employer) = unit_join.unit_name
-            /* Join to filter unseen records. */
-            LEFT JOIN child_employers AS department_join
-            ON TRIM(raw.employer) = department_join.unit_name
-              AND TRIM(raw.department) = department_join.department_name
+            LEFT JOIN child_employers AS child
+            ON TRIM(raw.employer) = child.parent_name
+              AND TRIM(raw.department) = child.employer_name
             WHERE raw.department IS NOT NULL
-              AND unit_join.new_parent IS NOT TRUE
-              AND department_join.department_name IS NULL
+              AND child.employer_name IS NULL
         '''.format(vintage=self.vintage,
                    raw_payroll=self.raw_payroll_table)
 
