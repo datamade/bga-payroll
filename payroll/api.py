@@ -24,8 +24,7 @@ class IndexViewSet(viewsets.ViewSet):
 
 class ReadOnlyModelViewSetWithDataYear(viewsets.ReadOnlyModelViewSet):
 
-    def retreive(self, request, pk=None):
-        print('Subclass retrieve called')
+    def retrieve(self, request, slug=None):
         try:
             data_year = request.query_params['data_year']
         except KeyError:

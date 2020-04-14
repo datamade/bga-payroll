@@ -226,7 +226,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self.bin_salary_data(obj.employee_salaries)
 
     def get_source_link(self, obj):
-        return obj.source_file(2018)
+        return obj.source_file(self.context['data_year'])
 
     def get_payroll_expenditure(self, obj):
         return self._make_pie_chart('payroll-expenditure-chart',
