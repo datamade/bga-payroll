@@ -40,3 +40,21 @@ class ChartHelperMixin(object):
             })
 
         return salary_json
+
+    def _make_pie_chart(self, container, base_pay, extra_pay):
+        return {
+            'container': container,
+            'total_pay': base_pay + extra_pay,
+            'series_data': {
+                'Name': 'Data',
+                'data': [{
+                    'name': 'Reported Base Pay',
+                    'y': base_pay,
+                    'label': 'base_pay',
+                }, {
+                    'name': 'Reported Extra Pay',
+                    'y': extra_pay,
+                    'label': 'extra_pay',
+                }],
+            },
+        }

@@ -65,17 +65,6 @@ def error(request, error_code):
 class EmployerView(DetailView, ChartHelperMixin):
     context_object_name = 'entity'
 
-    # from_clause connects salaries and employers through a series of joins.
-    from_clause = '''
-        FROM payroll_job AS job
-        JOIN payroll_salary AS salary
-        ON salary.job_id = job.id
-        JOIN payroll_position AS position
-        ON job.position_id = position.id
-        JOIN payroll_employer as employer
-        ON position.employer_id = employer.id
-    '''
-
     def _make_pie_chart(self, container, base_pay, extra_pay):
         return {
             'container': container,

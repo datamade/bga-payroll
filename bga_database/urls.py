@@ -21,6 +21,14 @@ from django.views.decorators.cache import cache_page
 from data_import import views as import_views
 from payroll import views as payroll_views
 
+from rest_framework import routers
+from payroll import api as api_views
+
+
+router = routers.DefaultRouter()
+router.register(r'index', api_views.IndexViewSet, 'index')
+router.register(r'units', api_views.UnitViewSet)
+router.register(r'departments', api_views.DepartmentViewSet)
 
 EIGHT_HOURS = 60 * 60 * 8
 
@@ -52,6 +60,10 @@ urlpatterns = [
     path('data-import/add/', import_views.review, name='add-entity'),
 ]
 
+urlpatterns += [
+    path('', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+]
 
 if settings.DEBUG:
     from django.conf.urls import include, url

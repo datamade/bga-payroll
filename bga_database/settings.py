@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'postgres_stats',
     'debug_toolbar',
     'salsa_auth',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
