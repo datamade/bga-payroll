@@ -500,10 +500,25 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self.person_current_salary.like_employer_percentile
 
     def get_salaries(self, obj):
-        return Salary.objects.exclude(job__person=obj)\
-                             .select_related('job__person', 'job__position')\
-                             .filter(job__position=self.person_current_job.position)\
-                             .order_by('-total_pay')
+        data = []
+
+        for salary in Salary.objects.with_related_objects()\
+                                    .filter(job__position=self.person_current_job.position)\
+                                    .exclude(job__person=obj)\
+                                    .order_by('-total_pay'):
+
+            data.append({
+                'name': str(salary.job.person),
+                'slug': salary.job.person.slug,
+                'position': salary.job.position.title,
+                'employer': salary.job.position.employer.name,
+                'employer_slug': salary.job.position.employer.slug,
+                'amount': salary.amount,
+                'extra_pay': salary.extra_pay,
+                'start_date': salary.job.start_date,
+            })
+
+        return data
 
     def get_source_link(self, obj):
         source_file = obj.source_file(self.context['data_year'])
