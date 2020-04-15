@@ -1,5 +1,5 @@
 from django.db import connection
-from django.db.models import Q, FloatField, Sum
+from django.db.models import Q, FloatField, Sum, Count
 from django.db.models.functions import Coalesce, NullIf
 from postgres_stats.aggregates import Percentile
 from rest_framework import serializers
@@ -98,8 +98,8 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     @property
     def entity_payroll(self):
         if not hasattr(self, '_entity_payroll'):
-            entity_base_pay = Sum(Coalesce("positions__jobs__salaries__amount", 0))
-            entity_extra_pay = Sum(Coalesce("positions__jobs__salaries__extra_pay", 0))
+            entity_base_pay = Sum(Coalesce('positions__jobs__salaries__amount', 0))
+            entity_extra_pay = Sum(Coalesce('positions__jobs__salaries__extra_pay', 0))
 
             self._entity_payroll = self.employer_queryset.aggregate(
                 base_pay=entity_base_pay,
@@ -229,9 +229,22 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return obj.source_file(self.context['data_year'])
 
     def get_payroll_expenditure(self, obj):
-        return self._make_pie_chart('payroll-expenditure-chart',
-                                    self.entity_payroll['base_pay'],
-                                    self.entity_payroll['extra_pay'])
+        return {
+            'container': 'payroll-expenditure-chart',
+            'total_pay': self.entity_payroll['base_pay'] + self.entity_payroll['extra_pay'],
+            'series_data': {
+                'Name': 'Data',
+                'data': [{
+                    'name': 'Reported Base Pay',
+                    'y': self.entity_payroll['base_pay'],
+                    'label': 'base_pay',
+                }, {
+                    'name': 'Reported Extra Pay',
+                    'y': self.entity_payroll['extra_pay'],
+                    'label': 'extra_pay',
+                }],
+            },
+        }
 
 
 # /v1/units/SLUG/YEAR
@@ -246,8 +259,71 @@ class UnitSerializer(EmployerSerializer):
     highest_spending_department = serializers.SerializerMethodField()
     composition_json = serializers.SerializerMethodField()
 
+    @property
+    def department_statistics(self):
+        if not hasattr(self, '_department_statistics'):
+            entity_base_pay = Sum(Coalesce('positions__jobs__salaries__amount', 0))
+            entity_extra_pay = Sum(Coalesce('positions__jobs__salaries__extra_pay', 0))
+            median_total_pay = Percentile(
+                (
+                    NullIf(
+                        Coalesce('positions__jobs__salaries__amount', 0) +
+                        Coalesce('positions__jobs__salaries__extra_pay', 0), 0
+                    )
+                ), 0.5, output_field=FloatField()
+            )
+            headcount = Count('positions__jobs__salaries')
+
+            self._department_statistics = Employer.objects.filter(parent=self.instance)\
+                                                          .values('name', 'slug')\
+                                                          .annotate(headcount=headcount,
+                                                                    median_tp=median_total_pay,
+                                                                    entity_bp=entity_base_pay,
+                                                                    entity_ep=entity_extra_pay,
+                                                                    total_expenditure=entity_base_pay + entity_extra_pay)\
+                                                          .order_by('-total_expenditure')
+
+        return self._department_statistics
+
     def get_department_salaries(self, obj):
-        pass
+        return self.department_statistics[:5]
+
+    def get_highest_spending_department(self, obj):
+        top_department = self.department_statistics[0]
+
+        highest_spending_department = {
+            'name': top_department['name'],
+            'amount': top_department['total_expenditure'],
+            'slug': top_department['slug'],
+        }
+
+        return highest_spending_department
+
+    def get_composition_json(self, obj):
+        top_departments = self.department_statistics[:5]
+
+        composition_json = []
+        percentage_tracker = 0
+
+        budget = self.entity_payroll['base_pay'] + self.entity_payroll['extra_pay']
+
+        for i, value in enumerate(top_departments):
+            proportion = (value['total_expenditure'] / budget) * 100
+            composition_json.append({
+                'name': value['name'],
+                'data': [proportion],
+                'index': i
+            })
+            percentage_tracker += proportion
+
+        composition_json.append({
+            'name': 'All else',
+            'data': [100 - percentage_tracker],
+            'index': 5
+
+        })
+
+        return composition_json
 
     def get_population_percentile(self, obj):
         if obj.get_population() is None:
@@ -275,61 +351,6 @@ class UnitSerializer(EmployerSerializer):
 
         return result[0] * 100
 
-    def get_highest_spending_department(self, obj):
-        query = '''
-          WITH all_department_expenditures AS (
-            SELECT
-              SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS dept_budget,
-              employer.id as dept_id
-            FROM payroll_salary AS salary
-            JOIN payroll_job AS job
-            ON salary.job_id = job.id
-            JOIN payroll_position AS positions
-            ON job.position_id = positions.id
-            JOIN payroll_employer AS employer
-            ON positions.employer_id = employer.id
-            GROUP BY employer.id
-          ),
-          parent_department_expenditures AS (
-            SELECT
-              *
-            FROM all_department_expenditures as ade
-            JOIN payroll_employer AS employer
-            ON ade.dept_id = employer.id
-            WHERE employer.parent_id = {id}
-          )
-          SELECT
-            employer.name,
-            dept_budget,
-            employer.slug
-          FROM parent_department_expenditures
-          JOIN payroll_employer as employer
-          ON parent_department_expenditures.dept_id = employer.id
-          ORDER BY dept_budget DESC
-          LIMIT 1
-        '''.format(id=obj.id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-        if result is None:
-            name, amount, slug = ['N/A'] * 3
-
-        else:
-            name, amount, slug = result
-
-        highest_spending_department = {
-            'name': name,
-            'amount': amount,
-            'slug': slug,
-        }
-
-        return highest_spending_department
-
-    def get_composition_json(self, obj):
-        pass
-
 
 # /v1/departments/SLUG/YEAR
 class DepartmentSerializer(EmployerSerializer):
@@ -341,7 +362,10 @@ class DepartmentSerializer(EmployerSerializer):
     percent_of_total_expenditure = serializers.SerializerMethodField()
 
     def get_percent_of_total_expenditure(self, obj):
-        pass
+        department_expenditure = sum(self.instance.employee_salaries)
+        parent_expediture = sum(self.instance.parent.employee_salaries)
+
+        return department_expenditure / parent_expediture * 100
 
 
 # /v1/people/SLUG/YEAR
