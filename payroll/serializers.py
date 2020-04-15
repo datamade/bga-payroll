@@ -449,7 +449,10 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_all_jobs(self, obj):
         data = []
 
-        for salary in Salary.objects.filter(job__person=obj).order_by('-job__start_date'):
+        for salary in Salary.objects.with_related_objects()\
+                                    .filter(job__person=obj)\
+                                    .order_by('-vintage__standardized_file__reporting_year'):
+
             data.append({
                 'name': str(salary.job.person),
                 'slug': salary.job.person.slug,
@@ -464,7 +467,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return data
 
     def get_current_salary(self, obj):
-        return self.person_current_salary.amount
+        return self.person_current_salary.total_pay
 
     def get_current_employer(self, obj):
         return {
@@ -484,7 +487,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_employer_salary_json(self, obj):
         return self.bin_salary_data(
             list(s['total_pay'] for s in self.person_current_employer.get_salaries().values('total_pay')),
-            salary_amount=self.person_current_salary.amount
+            salary_amount=self.person_current_salary.total_pay
         )
 
     def get_employer_percentile(self, obj):
@@ -497,7 +500,6 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return Salary.objects.exclude(job__person=obj)\
                              .select_related('job__person', 'job__position')\
                              .filter(job__position=self.person_current_job.position)\
-                             .annotate(total_pay=Coalesce('amount', 0) + Coalesce('amount', 0))\
                              .order_by('-total_pay')
 
     def get_source_link(self, obj):

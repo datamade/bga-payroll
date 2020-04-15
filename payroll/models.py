@@ -188,9 +188,7 @@ class Employer(SluggedModel, VintagedModel):
         else:
             criteria = of_employer
 
-        return Salary.objects.filter(criteria).annotate(
-            total_pay=Coalesce('amount', 0) + Coalesce('extra_pay', 0)
-        ).select_related(
+        return Salary.objects.filter(criteria).select_related(
             'job__person',
             'job__position',
             'job__position__employer',
@@ -470,6 +468,23 @@ class Position(VintagedModel):
         return position
 
 
+class SalaryManager(models.Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            total_pay=Coalesce('amount', 0) + Coalesce('extra_pay', 0)
+        )
+
+    def with_related_objects(self):
+        return self.select_related(
+            'job',
+            'job__person',
+            'job__position',
+            'job__position__employer',
+            'job__position__employer__parent'
+        )
+
+
 class Salary(VintagedModel):
     '''
     The Salary object is a representation of prospective, annual salary. The
@@ -482,6 +497,8 @@ class Salary(VintagedModel):
     reported at hourly or per-appearance rates. This can be inferred, but is
     not explicitly specified in the source data.
     '''
+    objects = SalaryManager()
+
     job = models.ForeignKey('Job',
                             related_name='salaries',
                             on_delete=models.CASCADE)
