@@ -575,12 +575,12 @@ class PersonView(DetailView, ChartHelperMixin):
         salary_data = current_job.position.employer.employee_salaries
         binned_salary_data = self.bin_salary_data(salary_data)
 
-        source_file = self.object.source_file(settings.DATA_YEAR)
-
-        if source_file:
-            source_link = source_file.url
-        else:
+        try:
+            source_file = self.object.source_file(settings.DATA_YEAR)
+        except:
             source_link = None
+        else:
+            source_link = source_file.url
 
         context.update({
             'data_year': settings.DATA_YEAR,

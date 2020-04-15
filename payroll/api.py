@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 
-from payroll.models import Unit, Department
+from payroll.models import Unit, Department, Person
 from payroll import serializers
 
 
@@ -24,6 +24,8 @@ class IndexViewSet(viewsets.ViewSet):
 
 class ReadOnlyModelViewSetWithDataYear(viewsets.ReadOnlyModelViewSet):
 
+    lookup_field = 'slug'
+
     def retrieve(self, request, slug=None):
         try:
             data_year = request.query_params['data_year']
@@ -37,11 +39,13 @@ class ReadOnlyModelViewSetWithDataYear(viewsets.ReadOnlyModelViewSet):
 
 class UnitViewSet(ReadOnlyModelViewSetWithDataYear):
     serializer_class = serializers.UnitSerializer
-    lookup_field = 'slug'
     queryset = Unit.objects.all()
 
 
 class DepartmentViewSet(ReadOnlyModelViewSetWithDataYear):
     serializer_class = serializers.DepartmentSerializer
-    lookup_field = 'slug'
     queryset = Department.objects.all()
+
+class PersonViewSet(ReadOnlyModelViewSetWithDataYear):
+    serializer_class = serializers.PersonSerializer
+    queryset = Person.objects.all()

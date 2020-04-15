@@ -5,7 +5,7 @@ from django.db.models.functions import Coalesce, NullIf
 from postgres_stats.aggregates import Percentile
 from rest_framework import serializers
 
-from payroll.models import Employer, Unit, Department, Salary
+from payroll.models import Employer, Unit, Department, Salary, Person
 from payroll.charts import ChartHelperMixin
 
 
@@ -121,8 +121,10 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         for salary in self.employer_salaries[:5]:
             data.append({
                 'name': str(salary.job.person),
+                'slug': salary.job.person.slug,
                 'position': salary.job.position.title,
                 'employer': salary.job.position.employer.name,
+                'employer_slug': salary.job.position.employer.slug,
                 'amount': salary.amount,
                 'extra_pay': salary.extra_pay,
                 'start_date': salary.job.start_date,
@@ -388,7 +390,11 @@ class DepartmentSerializer(EmployerSerializer):
 
 
 # /v1/people/SLUG/YEAR
-class PersonSerializer(serializers.ModelSerializer):
+class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
+
+    class Meta:
+        model = Person
+        fields = '__all__'
 
     current_job = serializers.SerializerMethodField()
     all_jobs = serializers.SerializerMethodField()
@@ -403,70 +409,102 @@ class PersonSerializer(serializers.ModelSerializer):
     noindex = serializers.SerializerMethodField()
 
     def _get_bar_color(self, lower, upper, **kwargs):
+        '''
+        Override _get_bar_color from the ChartHelperMixin to highlight the
+        salary range to which the person belongs.
+        '''
         if lower < int(kwargs['salary_amount']) <= upper:
-            return BAR_HIGHLIGHT
+            return settings.BAR_HIGHLIGHT
         else:
             return super()._get_bar_color(lower, upper)
 
     @property
-    def current_job(self):
+    def person_current_job(self):
         if not hasattr(self, '_current_job'):
             self._current_job = self.instance.most_recent_job
         return self._current_job
 
     @property
-    def current_salary(self):
+    def person_current_salary(self):
         if not hasattr(self, '_current_salary'):
-            self._current_salary = self.current_job.salaries.get()
+            self._current_salary = self.person_current_job.salaries.get()
         return self._current_salary
 
     @property
-    def current_employer(self):
+    def person_current_employer(self):
         if not hasattr(self, '_current_employer'):
-            self._current_employer = self.current_job.employer
+            self._current_employer = self.person_current_job.position.employer
         return self._current_employer
 
     def get_current_job(self, obj):
-        return self.current_job
+        '''
+        TODO: Consider caching current_jobs with an S, then accessing the most
+        recent one here.
+        '''
+        return {
+            'title': self.person_current_job.position.title,
+            'start_date': self.person_current_job.start_date,
+        }
 
     def get_all_jobs(self, obj):
-        return obj.jobs.all()
+        data = []
+
+        for salary in Salary.objects.filter(job__person=obj).order_by('-job__start_date'):
+            data.append({
+                'name': str(salary.job.person),
+                'slug': salary.job.person.slug,
+                'position': salary.job.position.title,
+                'employer': salary.job.position.employer.name,
+                'employer_slug': salary.job.position.employer.slug,
+                'amount': salary.amount,
+                'extra_pay': salary.extra_pay,
+                'start_date': salary.job.start_date,
+            })
+
+        return data
 
     def get_current_salary(self, obj):
-        return self.current_salary
+        return self.person_current_salary.amount
 
     def get_current_employer(self, obj):
-        return self.current_employer.name
+        return {
+            'endoint': self.person_current_employer.endpoint,
+            'slug': self.person_current_employer.slug,
+            'name': self.person_current_employer.name,
+        }
 
     def get_employer_type(self, obj):
-        if self.current_employer.is_unclassified:
+        if self.person_current_employer.is_unclassified:
             return None
-        elif self.current_employer.is_department:
-            return [self.current_employer.universe, self.current_employer.parent.taxonomy]
+        elif self.person_current_employer.is_department:
+            return [str(self.person_current_employer.universe), str(self.person_current_employer.parent.taxonomy)]
         else:
-            return [self.current_employer.taxonomy]
+            return [str(self.person_current_employer.taxonomy)]
 
     def get_employer_salary_json(self, obj):
         return self.bin_salary_data(
-            list(s.total_pay for s in self.current_employer.get_salaries().values('total_pay')),
-            salary_amount=self.current_salary.amount
+            list(s['total_pay'] for s in self.person_current_employer.get_salaries().values('total_pay')),
+            salary_amount=self.person_current_salary.amount
         )
 
     def get_employer_percentile(self, obj):
-        return self.current_salary.employer_percentile
+        return self.person_current_salary.employer_percentile
 
     def get_like_employer_percentile(self, obj):
-        return self.current_salary.like_employer_percentile
+        return self.person_current_salary.like_employer_percentile
 
     def get_salaries(self, obj):
-        return Salary.objects.exclude(job__person=self.object)\
+        return Salary.objects.exclude(job__person=obj)\
                              .select_related('job__person', 'job__position')\
-                             .filter(job__position=self.current_job.position)\
+                             .filter(job__position=self.person_current_job.position)\
                              .annotate(total_pay=Coalesce('amount', 0) + Coalesce('amount', 0))\
                              .order_by('-total_pay')
 
     def get_source_link(self, obj):
-        return obj.source_file(settings.DATA_YEAR)
+        try:
+            obj.source_file(settings.DATA_YEAR)
+        except:
+            return None
 
     def get_noindex(self, obj):
-        return self.current_salary.amount < 30000 or obj.noindex
+        return self.person_current_salary.amount < 30000 or obj.noindex

@@ -29,6 +29,7 @@ router = routers.DefaultRouter()
 router.register(r'index', api_views.IndexViewSet, 'index')
 router.register(r'units', api_views.UnitViewSet)
 router.register(r'departments', api_views.DepartmentViewSet)
+router.register(r'people', api_views.PersonViewSet)
 
 EIGHT_HOURS = 60 * 60 * 8
 
