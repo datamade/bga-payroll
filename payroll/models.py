@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models, connection
 from django.db.models import Q, CheckConstraint, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
@@ -26,7 +26,10 @@ class SourceFileMixin(object):
     removed from the unit.
     '''
     def source_file(self, year):
-        responding_agency = self.responding_agency(year)
+        try:
+            responding_agency = self.responding_agency(year)
+        except ObjectDoesNotExist:
+            return None
 
         try:
             source_file = responding_agency.source_files\
@@ -34,7 +37,7 @@ class SourceFileMixin(object):
                                            .source_file
 
         except SourceFile.DoesNotExist:
-            source_file = None
+            return None
 
         return source_file
 

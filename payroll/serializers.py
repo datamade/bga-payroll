@@ -246,7 +246,10 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         )
 
     def get_source_link(self, obj):
-        return obj.source_file(self.context['data_year'])
+        source_file = obj.source_file(self.context['data_year'])
+
+        if source_file:
+            return source_file.url
 
     def get_payroll_expenditure(self, obj):
         return {
@@ -503,10 +506,10 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
                              .order_by('-total_pay')
 
     def get_source_link(self, obj):
-        try:
-            obj.source_file(settings.DATA_YEAR)
-        except:
-            return None
+        source_file = obj.source_file(self.context['data_year'])
+
+        if source_file:
+            return source_file.url
 
     def get_noindex(self, obj):
         return self.person_current_salary.amount < 30000 or obj.noindex
