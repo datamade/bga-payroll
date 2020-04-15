@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import connection
 from django.db.models import Q, FloatField, Sum, Count
 from django.db.models.functions import Coalesce, NullIf
