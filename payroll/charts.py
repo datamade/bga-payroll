@@ -6,12 +6,12 @@ from payroll.utils import format_ballpark_number
 
 
 class ChartHelperMixin(object):
-    def _get_bar_color(self, lower_edge, upper_edge):
+    def _get_bar_color(self, lower_edge, upper_edge, **kwargs):
         if lower_edge == DISTRIBUTION_MAX:
             return 'url(#highcharts-default-pattern-0)'
         return BAR_DEFAULT
 
-    def bin_salary_data(self, data):
+    def bin_salary_data(self, data, **kwargs):
         float_data = np.asarray(data, dtype='float')
         max_value = np.amax(float_data)
 
@@ -36,7 +36,7 @@ class ChartHelperMixin(object):
                 'value': int(value),  # number of salaries in given bin
                 'lower_edge': format_ballpark_number(lower),
                 'upper_edge': format_ballpark_number(upper),
-                'color': self._get_bar_color(lower, upper),
+                'color': self._get_bar_color(lower, upper, **kwargs),
             })
 
         return salary_json

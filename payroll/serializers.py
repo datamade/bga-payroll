@@ -402,35 +402,71 @@ class PersonSerializer(serializers.ModelSerializer):
     source_link = serializers.SerializerMethodField()
     noindex = serializers.SerializerMethodField()
 
+    def _get_bar_color(self, lower, upper, **kwargs):
+        if lower < int(kwargs['salary_amount']) <= upper:
+            return BAR_HIGHLIGHT
+        else:
+            return super()._get_bar_color(lower, upper)
+
+    @property
+    def current_job(self):
+        if not hasattr(self, '_current_job'):
+            self._current_job = self.instance.most_recent_job
+        return self._current_job
+
+    @property
+    def current_salary(self):
+        if not hasattr(self, '_current_salary'):
+            self._current_salary = self.current_job.salaries.get()
+        return self._current_salary
+
+    @property
+    def current_employer(self):
+        if not hasattr(self, '_current_employer'):
+            self._current_employer = self.current_job.employer
+        return self._current_employer
+
     def get_current_job(self, obj):
-        pass
+        return self.current_job
 
     def get_all_jobs(self, obj):
-        pass
+        return obj.jobs.all()
 
     def get_current_salary(self, obj):
-        pass
+        return self.current_salary
 
     def get_current_employer(self, obj):
-        pass
+        return self.current_employer.name
 
     def get_employer_type(self, obj):
-        pass
+        if self.current_employer.is_unclassified:
+            return None
+        elif self.current_employer.is_department:
+            return [self.current_employer.universe, self.current_employer.parent.taxonomy]
+        else:
+            return [self.current_employer.taxonomy]
 
     def get_employer_salary_json(self, obj):
-        pass
+        return self.bin_salary_data(
+            list(s.total_pay for s in self.current_employer.get_salaries().values('total_pay')),
+            salary_amount=self.current_salary.amount
+        )
 
     def get_employer_percentile(self, obj):
-        pass
+        return self.current_salary.employer_percentile
 
     def get_like_employer_percentile(self, obj):
-        pass
+        return self.current_salary.like_employer_percentile
 
     def get_salaries(self, obj):
-        pass
+        return Salary.objects.exclude(job__person=self.object)\
+                             .select_related('job__person', 'job__position')\
+                             .filter(job__position=self.current_job.position)\
+                             .annotate(total_pay=Coalesce('amount', 0) + Coalesce('amount', 0))\
+                             .order_by('-total_pay')
 
     def get_source_link(self, obj):
-        pass
+        return obj.source_file(settings.DATA_YEAR)
 
     def get_noindex(self, obj):
-        pass
+        return self.current_salary.amount < 30000 or obj.noindex
