@@ -70,6 +70,12 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         )
 
     @property
+    def employer_salaries(self):
+        if not hasattr(self, '_salaries'):
+            self._salaries = self.instance.get_salaries()
+        return self._salaries
+
+    @property
     def median_salaries(self):
         if not hasattr(self, '_median_salaries'):
             median_base_pay = Percentile(
@@ -109,10 +115,19 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self._entity_payroll
 
     def get_salaries(self, obj):
-        '''
-        TODO: Return attributes needed in template.
-        '''
-        return list(str(s) for s in Salary.of_employer(obj.id, n=5))
+        data = []
+
+        for salary in self.employer_salaries[:5]:
+            data.append({
+                'name': str(salary.job.person),
+                'position': salary.job.position.title,
+                'employer': salary.job.position.employer.name,
+                'amount': salary.amount,
+                'extra_pay': salary.extra_pay,
+                'start_date': salary.job.start_date,
+            })
+
+        return data
 
     def get_median_tp(self, obj):
         return self.median_salaries['median_total_pay']
@@ -124,7 +139,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self.median_salaries['median_extra_pay']
 
     def get_headcount(self, obj):
-        return len(obj.employee_salaries)
+        return self.employer_salaries.count()
 
     def get_total_expenditure(self, obj):
         return self.entity_payroll['base_pay'] + self.entity_payroll['extra_pay']
@@ -223,7 +238,9 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return result[0] * 100
 
     def get_employee_salary_json(self, obj):
-        return self.bin_salary_data(obj.employee_salaries)
+        return self.bin_salary_data(
+            list(s['total_pay'] for s in self.employer_salaries.values('total_pay'))
+        )
 
     def get_source_link(self, obj):
         return obj.source_file(self.context['data_year'])
@@ -289,15 +306,16 @@ class UnitSerializer(EmployerSerializer):
         return self.department_statistics[:5]
 
     def get_highest_spending_department(self, obj):
-        top_department = self.department_statistics[0]
-
-        highest_spending_department = {
-            'name': top_department['name'],
-            'amount': top_department['total_expenditure'],
-            'slug': top_department['slug'],
-        }
-
-        return highest_spending_department
+        try:
+            top_department = self.department_statistics[0]
+        except IndexError:
+            return None
+        else:
+            return {
+                'name': top_department['name'],
+                'amount': top_department['total_expenditure'],
+                'slug': top_department['slug'],
+            }
 
     def get_composition_json(self, obj):
         top_departments = self.department_statistics[:5]

@@ -177,6 +177,26 @@ class Employer(SluggedModel, VintagedModel):
 
             return self.population.get(data_year=closest).population
 
+    def get_salaries(self, year=None):
+        employer_and_children = Employer.objects.filter(Q(id=self.id) | Q(parent_id=self.id))
+
+        of_employer = Q(job__position__employer__in=employer_and_children)
+
+        if year:
+            in_year = Q(vintage__standardized_file__reporting_year=year)
+            criteria = of_employer & in_year
+        else:
+            criteria = of_employer
+
+        return Salary.objects.filter(criteria).annotate(
+            total_pay=Coalesce('amount', 0) + Coalesce('extra_pay', 0)
+        ).select_related(
+            'job__person',
+            'job__position',
+            'job__position__employer',
+            'job__position__employer__parent'
+        ).order_by('-total_pay')
+
     @property
     def employee_salaries(self):
         query = '''
@@ -480,15 +500,6 @@ class Salary(VintagedModel):
         return '{0} {1}'.format(self.amount, self.job)
 
     @property
-    def is_wage(self):
-        '''
-        Some salary data is hourly, or per appearance. This isn't explicit in
-        the source, but we can intuit based on the amount. Return True if the
-        salary amount is less than 1000, False otherwise.
-        '''
-        return self.amount < 1000
-
-    @property
     def employer_percentile(self):
         employer = self.job.position.employer
 
@@ -616,7 +627,7 @@ class Salary(VintagedModel):
     @classmethod
     def of_employer(cls, employer_id, n=None):
         '''
-        Return Salary objects for given employer.
+        TODO: Deprecate after API changes come in.
         '''
         employer = models.Q(job__position__employer_id=employer_id)
         parent_employer = models.Q(job__position__employer__parent_id=employer_id)
