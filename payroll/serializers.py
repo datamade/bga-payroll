@@ -76,8 +76,8 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self._salaries
 
     @property
-    def median_salaries(self):
-        if not hasattr(self, '_median_salaries'):
+    def employer_median_salaries(self):
+        if not hasattr(self, '_employer_median_salaries'):
             median_base_pay = Percentile(
                 'positions__jobs__salaries__amount', 0.5, output_field=FloatField()
             )
@@ -93,26 +93,26 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
                 ), 0.5, output_field=FloatField()
             )
 
-            self._median_salaries = self.employer_queryset.aggregate(
+            self._employer_median_salaries = self.employer_queryset.aggregate(
                 median_base_pay=median_base_pay,
                 median_extra_pay=median_extra_pay,
                 median_total_pay=median_total_pay
             )
 
-        return self._median_salaries
+        return self._employer_median_salaries
 
     @property
-    def entity_payroll(self):
-        if not hasattr(self, '_entity_payroll'):
+    def employer_payroll(self):
+        if not hasattr(self, '_employer_payroll'):
             entity_base_pay = Sum(Coalesce('positions__jobs__salaries__amount', 0))
             entity_extra_pay = Sum(Coalesce('positions__jobs__salaries__extra_pay', 0))
 
-            self._entity_payroll = self.employer_queryset.aggregate(
+            self._employer_payroll = self.employer_queryset.aggregate(
                 base_pay=entity_base_pay,
                 extra_pay=entity_extra_pay
             )
 
-        return self._entity_payroll
+        return self._employer_payroll
 
     def get_salaries(self, obj):
         data = []
@@ -130,19 +130,19 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return data
 
     def get_median_tp(self, obj):
-        return self.median_salaries['median_total_pay']
+        return self.employer_median_salaries['median_total_pay']
 
     def get_median_bp(self, obj):
-        return self.median_salaries['median_base_pay']
+        return self.employer_median_salaries['median_base_pay']
 
     def get_median_ep(self, obj):
-        return self.median_salaries['median_extra_pay']
+        return self.employer_median_salaries['median_extra_pay']
 
     def get_headcount(self, obj):
         return self.employer_salaries.count()
 
     def get_total_expenditure(self, obj):
-        return self.entity_payroll['base_pay'] + self.entity_payroll['extra_pay']
+        return self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay']
 
     def get_salary_percentile(self, obj):
         if obj.is_unclassified:
@@ -155,7 +155,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
                 COALESCE(parent_id, id) AS parent_id
               FROM payroll_employer
             ),
-            median_salaries_by_unit AS (
+            employer_median_salaries_by_unit AS (
               SELECT
                 percentile_cont(0.5) WITHIN GROUP (
                   ORDER BY COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0) ASC
@@ -177,7 +177,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
               SELECT
                 percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
                 unit_id
-              FROM median_salaries_by_unit
+              FROM employer_median_salaries_by_unit
             )
             SELECT percentile
             FROM salary_percentiles
@@ -248,16 +248,16 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_payroll_expenditure(self, obj):
         return {
             'container': 'payroll-expenditure-chart',
-            'total_pay': self.entity_payroll['base_pay'] + self.entity_payroll['extra_pay'],
+            'total_pay': self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'],
             'series_data': {
                 'Name': 'Data',
                 'data': [{
                     'name': 'Reported Base Pay',
-                    'y': self.entity_payroll['base_pay'],
+                    'y': self.employer_payroll['base_pay'],
                     'label': 'base_pay',
                 }, {
                     'name': 'Reported Extra Pay',
-                    'y': self.entity_payroll['extra_pay'],
+                    'y': self.employer_payroll['extra_pay'],
                     'label': 'extra_pay',
                 }],
             },
@@ -323,7 +323,7 @@ class UnitSerializer(EmployerSerializer):
         composition_json = []
         percentage_tracker = 0
 
-        budget = self.entity_payroll['base_pay'] + self.entity_payroll['extra_pay']
+        budget = self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay']
 
         for i, value in enumerate(top_departments):
             proportion = (value['total_expenditure'] / budget) * 100
