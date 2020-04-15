@@ -46,6 +46,7 @@ class DepartmentViewSet(ReadOnlyModelViewSetWithDataYear):
     serializer_class = serializers.DepartmentSerializer
     queryset = Department.objects.all()
 
+
 class PersonViewSet(ReadOnlyModelViewSetWithDataYear):
     serializer_class = serializers.PersonSerializer
     queryset = Person.objects.all()
