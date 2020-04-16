@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models, connection
 from django.db.models import Q, CheckConstraint, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
@@ -26,7 +26,10 @@ class SourceFileMixin(object):
     removed from the unit.
     '''
     def source_file(self, year):
-        responding_agency = self.responding_agency(year)
+        try:
+            responding_agency = self.responding_agency(year)
+        except ObjectDoesNotExist:
+            return None
 
         try:
             source_file = responding_agency.source_files\
@@ -34,7 +37,7 @@ class SourceFileMixin(object):
                                            .source_file
 
         except SourceFile.DoesNotExist:
-            source_file = None
+            return None
 
         return source_file
 
@@ -176,6 +179,24 @@ class Employer(SluggedModel, VintagedModel):
             closest = min(population_years, key=lambda x: target_year - x)
 
             return self.population.get(data_year=closest).population
+
+    def get_salaries(self, year=None):
+        employer_and_children = Employer.objects.filter(Q(id=self.id) | Q(parent_id=self.id))
+
+        of_employer = Q(job__position__employer__in=employer_and_children)
+
+        if year:
+            in_year = Q(vintage__standardized_file__reporting_year=year)
+            criteria = of_employer & in_year
+        else:
+            criteria = of_employer
+
+        return Salary.objects.filter(criteria).select_related(
+            'job__person',
+            'job__position',
+            'job__position__employer',
+            'job__position__employer__parent'
+        ).order_by('-total_pay')
 
     @property
     def employee_salaries(self):
@@ -450,6 +471,23 @@ class Position(VintagedModel):
         return position
 
 
+class SalaryManager(models.Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            total_pay=Coalesce('amount', 0) + Coalesce('extra_pay', 0)
+        )
+
+    def with_related_objects(self):
+        return self.select_related(
+            'job',
+            'job__person',
+            'job__position',
+            'job__position__employer',
+            'job__position__employer__parent'
+        )
+
+
 class Salary(VintagedModel):
     '''
     The Salary object is a representation of prospective, annual salary. The
@@ -462,6 +500,8 @@ class Salary(VintagedModel):
     reported at hourly or per-appearance rates. This can be inferred, but is
     not explicitly specified in the source data.
     '''
+    objects = SalaryManager()
+
     job = models.ForeignKey('Job',
                             related_name='salaries',
                             on_delete=models.CASCADE)
@@ -478,15 +518,6 @@ class Salary(VintagedModel):
 
     def __str__(self):
         return '{0} {1}'.format(self.amount, self.job)
-
-    @property
-    def is_wage(self):
-        '''
-        Some salary data is hourly, or per appearance. This isn't explicit in
-        the source, but we can intuit based on the amount. Return True if the
-        salary amount is less than 1000, False otherwise.
-        '''
-        return self.amount < 1000
 
     @property
     def employer_percentile(self):
@@ -616,7 +647,7 @@ class Salary(VintagedModel):
     @classmethod
     def of_employer(cls, employer_id, n=None):
         '''
-        Return Salary objects for given employer.
+        TODO: Deprecate after API changes come in.
         '''
         employer = models.Q(job__position__employer_id=employer_id)
         parent_employer = models.Q(job__position__employer__parent_id=employer_id)
