@@ -35,7 +35,6 @@ EIGHT_HOURS = 60 * 60 * 8
 
 urlpatterns = [
     # client
-    path('', cache_page(EIGHT_HOURS)(payroll_views.IndexView.as_view()), name='home'),
     path('user-guide/', cache_page(EIGHT_HOURS)(payroll_views.UserGuideView.as_view()), name='user_guide'),
     path('unit/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.UnitView.as_view()), name='unit'),
     path('department/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.DepartmentView.as_view()), name='department'),
