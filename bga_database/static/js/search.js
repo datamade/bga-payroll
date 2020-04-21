@@ -18,7 +18,6 @@ function makeQuerystring(params, term) {
     return $.param(params);
 }
 
-/* jshint ignore:start */
 function initSearch(get_object) {
     $('#submit-button').click(function submitSearch(e) {
         e.preventDefault();
@@ -31,7 +30,6 @@ function initSearch(get_object) {
             window.location = '/search/?' + querystring;
         }
     });
-/* jshint ignore:end */
 
     $('#entity-lookup').on('input', function checkTermLength() {
         // Enable the search button only if the term >= 3 characters in length
@@ -49,5 +47,5 @@ function initSearch(get_object) {
                 $('#name-warning').collapse('show');
             }
         }
-    }); // jshint ignore:line
+    });
 }

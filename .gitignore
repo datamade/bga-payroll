@@ -140,3 +140,4 @@ keyrings/live/.gpg-v21-migrated
 
 # node modules
 node_modules/
+static/
