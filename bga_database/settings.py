@@ -131,8 +131,8 @@ STATIC_URL = '/static/'
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-STATIC_ROOT =  os.path.join(BASE_DIR, 'bga_database', 'static')
-COMPRESS_OUTPUT_DIR =  'compressor'
+STATIC_ROOT = os.path.join(BASE_DIR, 'bga_database', 'static')
+COMPRESS_OUTPUT_DIR = 'compressor'
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
