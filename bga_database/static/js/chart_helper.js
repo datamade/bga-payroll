@@ -20,7 +20,7 @@ var ChartHelper = {
   make_salary_chart: function(data, entity_type) {
     var values = ChartHelper.extract_values(data);
 
-    var tooltip_format = function(point) {
+    var tooltip_format = function() {
       var edges = data[this.x];
       return this.y.toLocaleString() + ' ' + entity_type + 's earn between $' + edges.lower_edge + ' and $' + edges.upper_edge;
     };
@@ -73,7 +73,7 @@ var ChartHelper = {
 
     var element = entity_type + '-distribution-chart';
 
-    Highcharts.setOptions({
+    Highcharts.setOptions({ // jshint ignore:line
       lang: {
         thousandsSep: ',',
       },
@@ -84,7 +84,7 @@ var ChartHelper = {
       }
     });
 
-    Highcharts.chart(element, {
+    Highcharts.chart(element, { // jshint ignore:line
       title: {
         text: '', // Done in template
       },
@@ -137,7 +137,7 @@ var ChartHelper = {
   make_composition_chart: function(data) {
     var element = 'department-composition-chart';
 
-    Highcharts.chart(element, {
+    Highcharts.chart(element, { // jshint ignore:line
       title: '',
       chart: {
         type: 'bar'
@@ -181,7 +181,7 @@ var ChartHelper = {
     var element = 'payroll-expenditure-chart';
 
     // Create the chart
-    Highcharts.chart(element, {
+    Highcharts.chart(element, { // jshint ignore:line
       chart: {
         type: 'pie'
       },
