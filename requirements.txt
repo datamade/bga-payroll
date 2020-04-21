@@ -1,4 +1,4 @@
-Django==2.2.9
+Django==2.2.10
 djangorestframework==3.11.0
 psycopg2-binary==2.7.4
 numpy==1.14.1
