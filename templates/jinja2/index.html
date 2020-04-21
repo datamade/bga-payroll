@@ -1,8 +1,12 @@
 {% extends "base.html" %}
-{% load compress %}
 
 {% compress js %}
-  <script type="module" src="{% static 'js/index.js' %}"></script>
+  <script type="module" src="{{ STATIC_URL }}js/index.js"></script>
+
+  <script>
+    console.log({{ STATIC_URL }})
+  </script>
+{% endcompress %}
 
 {% block title %}Home{% endblock %}
 
