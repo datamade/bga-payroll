@@ -4,7 +4,7 @@
 # version number in the pilot. YMMV. See this post for a discussion of
 # some options and their pros and cons:
 # https://pythonspeed.com/articles/base-image-python-docker-images/
-FROM python:3.5
+FROM nikolaik/python-nodejs:python3.5-nodejs13
 
 # Give ourselves some credit
 LABEL maintainer "DataMade <info@datamade.us>"
@@ -31,6 +31,9 @@ WORKDIR /app
 # https://blog.realkinetic.com/building-minimal-docker-containers-for-python-applications-37d0272c52f3
 COPY ./requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+COPY ./package.json /app/package.json
+RUN npm install
 
 # Copy the contents of the current host directory (i.e., our app code) into
 # the container.

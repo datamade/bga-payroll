@@ -1,0 +1,21 @@
+{
+  "name": "bga-payroll",
+  "version": "0.0.0",
+  "description": "Javascript development setup for bga-database",
+  "dependencies": {
+    "autoprefixer": "^9.7.6",
+    "node-sass": "^4.13.1",
+    "postcss-cli": "^7.1.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datamade/bga-payroll.git"
+  },
+  "author": "DataMade",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/datamade/bga-payroll/issues"
+  },
+  "homepage": "https://github.com/datamade/bga-payroll#readme"
+}
