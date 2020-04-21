@@ -1,0 +1,21 @@
+{
+  "name": "bga-payroll",
+  "version": "0.0.0",
+  "description": "Javascript development setup for bga-database",
+  "dependencies": {
+    "babel-preset-env": "^1.7.0",
+    "babelify": "^7.3.0",
+    "browserify": "^16.2.3"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datamade/bga-payroll.git"
+  },
+  "author": "DataMade",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/datamade/bga-payroll/issues"
+  },
+  "homepage": "https://github.com/datamade/bga-payroll#readme"
+}

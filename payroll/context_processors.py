@@ -12,4 +12,5 @@ def inspiration_slugs(request):
     return {
         'data_year': settings.DATA_YEAR,
         'chicago_slug': chicago_slug,
+        'STATIC_URL': settings.STATIC_URL,
     }

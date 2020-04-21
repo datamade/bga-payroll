@@ -31,10 +31,10 @@ function initSearch(get_object) {
         }
     });
 
-    $('#entity-lookup').on('input', function checkTermLength(e) {
+    $('#entity-lookup').on('input', function checkTermLength() {
         // Enable the search button only if the term >= 3 characters in length
         var term = $.trim($('#entity-lookup').val());
-        var searchDisabled = $('#submit-button').prop('disabled') == true;
+        var searchDisabled = $('#submit-button').prop('disabled') === true;
 
         if ( term.length >= 3 ) {
             if ( searchDisabled ) {

@@ -1,0 +1,34 @@
+{
+  // Set syntax to ES5 (e.g., complain about use of ES6 features)
+  "esversion": 6,
+
+  // Put curly braces around conditional blocks & loops
+  "curly": true,
+
+  // Use deep-equals for comparison
+  "eqeqeq": true,
+
+  // Complain about overwriting methods on native objects, i.e., String
+  "freeze": true,
+
+  // Set max depth of nested blocks
+  "maxdepth": 3,
+
+  // Set max number of statements allowed per function
+  "maxstatements": 25,
+
+  // Allow comparisons to null
+  "eqnull": true,
+
+  // Allow variables to be set in conditional blocks and used later
+  "funcscope": true,
+
+  // Complain about use of global variables from jquery
+  "jquery": true,
+
+  // Complain about use of global variables in browsers
+  "browser": true,
+
+  // Complain about errant console & alert statements
+  "devel": true
+}

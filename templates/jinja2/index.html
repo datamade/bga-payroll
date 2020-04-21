@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% compress js %}
+  <script type="module" src="{{ STATIC_URL }}js/index.js"></script>
+
+{% endcompress %}
+
 {% block title %}Home{% endblock %}
 
 {% block extra_meta %}

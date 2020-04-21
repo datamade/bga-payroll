@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'salsa_auth',
     'rest_framework',
+    'compressor',
+    'compressor_toolkit',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +86,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bga_database.wsgi.application'
 
+COMPRESS_PRECOMPILERS = (
+    ('module', 'compressor_toolkit.precompilers.ES6Compiler'),
+)
+
+COMPRESS_ES6_COMPILER_CMD = (
+    'export NODE_PATH="{paths}" && '
+    '{browserify_bin} "{infile}" -o "{outfile}" '
+    '-t [ "{node_modules}/babelify" --presets="{node_modules}/babel-preset-env" ]'
+)
+
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
@@ -118,6 +130,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'bga_database', 'static')
+COMPRESS_OUTPUT_DIR = 'compressor'
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
+)
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "bga_database", "static"),
