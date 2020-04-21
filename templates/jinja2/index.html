@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load compress %}
 
+{% compress js %}
+  <script type="module" src="{% static 'js/index.js' %}"></script>
+
 {% block title %}Home{% endblock %}
 
 {% block extra_meta %}

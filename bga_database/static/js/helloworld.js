@@ -1,4 +1,5 @@
 export helloWorld() {
-	console.log("Hello, world!");
-	return
+	console.log("I said hello, world!")
+	const hello = "Hello, world!";
+	return hello
 }
