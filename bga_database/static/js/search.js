@@ -49,5 +49,5 @@ function initSearch(get_object) {
                 $('#name-warning').collapse('show');
             }
         }
-    });
+    })
 }
