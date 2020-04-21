@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "description": "Javascript development setup for bga-database",
   "dependencies": {
-    "autoprefixer": "^9.7.6",
-    "node-sass": "^4.13.1",
-    "postcss-cli": "^7.1.0"
+    "babel-preset-env": "^1.7.0",
+    "babelify": "^7.3.0",
+    "browserify": "^16.2.3"
   },
   "devDependencies": {},
   "repository": {
