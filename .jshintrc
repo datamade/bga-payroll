@@ -20,16 +20,6 @@
   // Allow comparisons to null
   "eqnull": true,
 
-  // Complain about variables referenced but not defined
-  //
-  // n.b. If your variable is defined somewhere else, set globals in
-  // your jshintrc (http://jshint.com/docs/options/#globals), or inline
-  // (http://jshint.com/docs/#inline-configuration) to quiet this warning
-  "undef": true,
-
-  // Complain about variables defined but not referenced
-  "unused": true,
-
   // Allow variables to be set in conditional blocks and used later
   "funcscope": true,
 
