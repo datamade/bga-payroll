@@ -1,6 +1,6 @@
 {
   // Set syntax to ES5 (e.g., complain about use of ES6 features)
-  "esversion": 6,
+  "esversion": 8,
 
   // Put curly braces around conditional blocks & loops
   "curly": true,
