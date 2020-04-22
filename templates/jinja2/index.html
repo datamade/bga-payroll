@@ -90,19 +90,22 @@
     <div class="row mt-4">
       <div class="col-md">
         <h3>What's inside?</h3>
+        <label for="index-data-year">Select a year to display data for that year: </label>
+        <select id="index-data-year">
+          {% for year in distinct_years %}
+            <option value="{{ year.reporting_year }}">{{ year.reporting_year }}</option>
+          {% endfor %}
+        </select>
 
-        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong id='index-salary-count'></strong> state, municipal, school and many other government employees across Illinois. It covers <strong id='index-unit-count'></strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
+        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong id="index-salary-count">
+          
+        </strong> state, municipal, school and many other government employees across Illinois. It covers <strong id="index-unit-count"></strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
       </div>
     </div>
 
     <div class="row mb-3">
       <div class="col-md">
-        <h5><label for="index-data-year">Distribution of public salaries in </label>
-          <select id="index-data-year">
-            <option value="2018" selected>2018</option>
-            <option value="2017">2017</option>
-          </select>
-        </h5>
+        <h5>Distribution of public salaries in <span id="index-year"></span></h5>
       </div>
     </div>
 

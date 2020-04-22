@@ -9,6 +9,7 @@ function getYearData () {
             ChartHelper.make_salary_chart(result.salary_json, 'employee');
             $('#index-salary-count').text(result.salary_count);
             $('#index-unit-count').text(result.unit_count);
+            $('#index-year').text(e.currentTarget.value)
         } catch (error) {
             console.error(error);
         }

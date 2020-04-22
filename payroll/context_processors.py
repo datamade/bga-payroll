@@ -1,11 +1,15 @@
 from django.conf import settings
 
 from payroll.models import Unit
+from data_import.models import StandardizedFile
 
 
 def inspiration_slugs(request):
     try:
         chicago_slug = Unit.objects.get(name__iexact='City of Chicago').slug
+        years = StandardizedFile.objects.distinct('reporting_year')\
+                                                 .values('reporting_year')
+        distinct_years = reversed(years)
     except:
         chicago_slug = None
 
@@ -13,4 +17,5 @@ def inspiration_slugs(request):
         'data_year': settings.DATA_YEAR,
         'chicago_slug': chicago_slug,
         'STATIC_URL': settings.STATIC_URL,
+        'distinct_years': distinct_years,
     }
