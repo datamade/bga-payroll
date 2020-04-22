@@ -1,5 +1,6 @@
 {
   // Set syntax to ES5 (e.g., complain about use of ES6 features)
+  // ES8 features include async/await functionality, which this project makes use of to consume the metadata api
   "esversion": 8,
 
   // Put curly braces around conditional blocks & loops
