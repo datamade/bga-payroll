@@ -15,7 +15,6 @@ class IndexSerializer(serializers.Serializer, ChartHelperMixin):
 
     salary_count = serializers.SerializerMethodField()
     unit_count = serializers.SerializerMethodField()
-    department_count = serializers.SerializerMethodField()
     salary_json = serializers.SerializerMethodField()
 
     def get_salary_count(self, data_year):
@@ -25,9 +24,6 @@ class IndexSerializer(serializers.Serializer, ChartHelperMixin):
     def get_unit_count(self, data_year):
         count = Unit.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
         return format_exact_number(count)
-
-    def get_department_count(self, data_year):
-        return Department.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
 
     def get_salary_json(self, data_year):
         with connection.cursor() as cursor:
