@@ -1,0 +1,6 @@
+<label for="index-data-year">Select a year to display data for that year: </label>
+<select id="index-data-year">
+  {% for year in distinct_years %}
+    <option value="{{ year.reporting_year }}">{{ year.reporting_year }}</option>
+  {% endfor %}
+</select>

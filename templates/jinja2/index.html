@@ -90,12 +90,7 @@
     <div class="row mt-4">
       <div class="col-md">
         <h3>What's inside?</h3>
-        <label for="index-data-year">Select a year to display data for that year: </label>
-        <select id="index-data-year">
-          {% for year in distinct_years %}
-            <option value="{{ year.reporting_year }}">{{ year.reporting_year }}</option>
-          {% endfor %}
-        </select>
+        {% include 'partials/year_selector.html' %}
 
         <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong id="index-salary-count">
           
