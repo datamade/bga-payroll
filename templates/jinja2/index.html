@@ -102,14 +102,13 @@
 
     <div class="row mb-3">
       <div class="col-md">
-        <form><h5><label for="index-data-year">Distribution of public salaries in </label>
+        <h5><label for="index-data-year">Distribution of public salaries in </label>
           <select id="index-data-year">
             <option>Select Year</option>
             <option value="2017">2017</option>
             <option value="2018">2018</option>
           </select>
-          </h5>
-        </form>
+        </h5>
       </div>
     </div>
 
@@ -173,11 +172,15 @@
 
   initSearch({{ request.GET.dict()|safe }});
 
+</script>
+{% compress js %}
+<script>
+  import '{{ STATIC_URL }}js/index.js'
   // Set an event listener on year selector for querying
-  const inputYearSelector = document.getElementById("index-data-year")
-  inputYearSelector.addEventListener('change', (e) => {
+  $('#inputYearSelector'.change(function(e) {
     e.preventDefault()
     console.log(e.srcElement.value)
   })
 </script>
+{% endcompress %}
 {% endblock %}
