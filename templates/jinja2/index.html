@@ -91,7 +91,7 @@
       <div class="col-md">
         <h3>What's inside?</h3>
 
-        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong>{{ salary_count|format_exact_number }}</strong> state, municipal, school and many other government employees across Illinois. It covers <strong>{{ unit_count|format_exact_number }}</strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
+        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong id='index-salary-count'></strong> state, municipal, school and many other government employees across Illinois. It covers <strong id='index-unit-count'></strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
       </div>
     </div>
 
@@ -159,17 +159,13 @@
     }
   });
 
-  // var salary_json = {{ salary_json|safe }};
-
-  // if ( salary_json.length > 0 ) {
-  //   ChartHelper.make_salary_chart(salary_json, 'employee')
-  // };
-
   initSearch({{ request.GET.dict()|safe }});
 
 </script>
 
 {% compress js %}
-  <script type="module" src="{{ STATIC_URL }}js/index.js"></script>
+  <script type="module" src="{{ STATIC_URL }}js/index.js">
+    console.log(result)
+  </script>
 {% endcompress %}
 {% endblock %}
