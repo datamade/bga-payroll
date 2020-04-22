@@ -99,9 +99,8 @@
       <div class="col-md">
         <h5><label for="index-data-year">Distribution of public salaries in </label>
           <select id="index-data-year">
-            <option>Select Year</option>
+            <option value="2018" selected>2018</option>
             <option value="2017">2017</option>
-            <option value="2018">2018</option>
           </select>
         </h5>
       </div>
@@ -164,8 +163,9 @@
 </script>
 
 {% compress js %}
-  <script type="module" src="{{ STATIC_URL }}js/index.js">
-    console.log(result)
+  <script type="module" src="{{ STATIC_URL }}js/index.js"></script>
+  <script>
+    $('#index-data-year').trigger('change');
   </script>
 {% endcompress %}
 {% endblock %}
