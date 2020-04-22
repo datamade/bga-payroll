@@ -159,11 +159,11 @@
     }
   });
 
-  var salary_json = {{ salary_json|safe }};
+  // var salary_json = {{ salary_json|safe }};
 
-  if ( salary_json.length > 0 ) {
-    ChartHelper.make_salary_chart(salary_json, 'employee')
-  };
+  // if ( salary_json.length > 0 ) {
+  //   ChartHelper.make_salary_chart(salary_json, 'employee')
+  // };
 
   initSearch({{ request.GET.dict()|safe }});
 
