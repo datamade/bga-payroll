@@ -1,10 +1,5 @@
 {% extends "base.html" %}
 
-{% compress js %}
-  <script type="module" src="{{ STATIC_URL }}js/index.js"></script>
-
-{% endcompress %}
-
 {% block title %}Home{% endblock %}
 
 {% block extra_meta %}
@@ -173,14 +168,8 @@
   initSearch({{ request.GET.dict()|safe }});
 
 </script>
+
 {% compress js %}
-<script>
-  import '{{ STATIC_URL }}js/index.js'
-  // Set an event listener on year selector for querying
-  $('#inputYearSelector'.change(function(e) {
-    e.preventDefault()
-    console.log(e.srcElement.value)
-  })
-</script>
+  <script type="module" src="{{ STATIC_URL }}js/index.js"></script>
 {% endcompress %}
 {% endblock %}

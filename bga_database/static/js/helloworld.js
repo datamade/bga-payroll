@@ -1,4 +1,6 @@
 export function helloWorld () {
-	console.log("Hello, world!");
-	return;
+	$('#index-data-year').change(function(e) {
+		console.log("Hello, world!");
+
+	})
 }
