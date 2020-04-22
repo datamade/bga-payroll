@@ -1,3 +1,3 @@
-import { helloWorld } from "./helloWorld";
+import { getYearData } from "./helloWorld";
 
-helloWorld();
+getYearData();
