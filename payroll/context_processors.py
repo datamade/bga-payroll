@@ -12,12 +12,12 @@ def inspiration_slugs(request):
 
     years = StandardizedFile.objects\
         .distinct('reporting_year')\
-        .values('reporting_year')
-    reversed_years = reversed(years)
+        .values('reporting_year')\
+        .order_by('-reporting_year')
 
     return {
         'data_year': settings.DATA_YEAR,
         'chicago_slug': chicago_slug,
         'STATIC_URL': settings.STATIC_URL,
-        'distinct_years': reversed_years,
+        'distinct_years': years,
     }
