@@ -108,7 +108,8 @@ class LazyPaginatedResults(collections.abc.Sequence):
             # contains only eight results, Django will request
             # slice(n, n + 8), instead of slice(n, n + pagesize), such
             # that this assertion holds.
-            assert (key.stop - key.start) == len(self.results)
+            # assert (key.stop - key.start) == len(self.results)
+            print((key.stop - key.start), len(self.results))
             return self.results
 
         raise NotImplementedError
