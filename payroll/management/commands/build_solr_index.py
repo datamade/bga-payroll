@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.db.models import Sum, Q, Prefetch
+from django.db.models.functions import Coalesce
 import pysolr
 
 from django.conf import settings
@@ -76,6 +77,8 @@ class Command(BaseCommand):
             self.reporting_years = list(StandardizedFile.objects.distinct('reporting_year')
                                                                 .values_list('reporting_year', flat=True))
 
+        self.stdout.write('Building index for reporting years: {}'.format(self.reporting_years))
+
         if options['employer']:
             self.reindex_one('employer', options['employer'])
 
@@ -106,23 +109,27 @@ class Command(BaseCommand):
             in_year = Q(vintage__standardized_file__reporting_year=year)
 
             salaries = Salary.objects.filter(of_unit & in_year)
-            expenditure = salaries.aggregate(expenditure=Sum('amount'))['expenditure']
             headcount = salaries.count()
 
-            document = {
-                'id': 'unit.{0}.{1}'.format(unit.id, year),
-                'slug': unit.slug,
-                'name': name,
-                'entity_type': 'Employer',
-                'year': year,
-                'taxonomy_s': taxonomy,
-                'size_class_s': unit.size_class,
-                'expenditure_d': expenditure,
-                'headcount_i': headcount,
-                'text': name,
-            }
+            if headcount:
+                expenditure = salaries.aggregate(
+                    expenditure=Sum(Coalesce('amount', 0)) + Sum(Coalesce('extra_pay', 0))
+                )['expenditure']
 
-            yield document
+                document = {
+                    'id': 'unit.{0}.{1}'.format(unit.id, year),
+                    'slug': unit.slug,
+                    'name': name,
+                    'entity_type': 'Employer',
+                    'year': year,
+                    'taxonomy_s': taxonomy,
+                    'size_class_s': unit.size_class,
+                    'expenditure_d': expenditure,
+                    'headcount_i': headcount,
+                    'text': name,
+                }
+
+                yield document
 
     def index_units(self):
         if self.recreate:
@@ -170,25 +177,29 @@ class Command(BaseCommand):
             in_year = Q(vintage__standardized_file__reporting_year=year)
 
             salaries = Salary.objects.filter(of_department & in_year)
-            expenditure = salaries.aggregate(expenditure=Sum('amount'))['expenditure']
             headcount = salaries.count()
 
-            document = {
-                'id': 'department.{0}.{1}'.format(department.id, year),
-                'slug': department.slug,
-                'name': name,
-                'entity_type': 'Employer',
-                'year': year,
-                'expenditure_d': expenditure,
-                'headcount_i': headcount,
-                'parent_s': department.parent.slug,
-                'text': name,
-            }
+            if headcount:
+                expenditure = salaries.aggregate(
+                    expenditure=Sum(Coalesce('amount', 0)) + Sum(Coalesce('extra_pay', 0))
+                )['expenditure']
 
-            if department.universe:
-                document['universe_s'] = str(department.universe)
+                document = {
+                    'id': 'department.{0}.{1}'.format(department.id, year),
+                    'slug': department.slug,
+                    'name': name,
+                    'entity_type': 'Employer',
+                    'year': year,
+                    'expenditure_d': expenditure,
+                    'headcount_i': headcount,
+                    'parent_s': department.parent.slug,
+                    'text': name,
+                }
 
-            yield document
+                if department.universe:
+                    document['universe_s'] = str(department.universe)
+
+                yield document
 
     def index_departments(self):
         if self.recreate:

@@ -22,7 +22,7 @@
     {% endif %}<br /><br />
 
     <p>
-        <strong>Salary expenditure:</strong> ${{ result.search_meta.get('expenditure_d', 0)|format_ballpark_number }}<br />
+        <strong>Salary expenditure:</strong> ${{ result.search_meta.expenditure_d|format_ballpark_number }}<br />
         <strong>Number of positions:</strong> {{ result.search_meta.headcount_i|format_ballpark_number }}
     </p>
 
@@ -38,7 +38,7 @@
     {% endif %}<br /><br />
 
     <p>
-        <strong>Salary expenditure:</strong> ${{ result.search_meta.get('expenditure_d', 0)|format_ballpark_number }}<br />
+        <strong>Salary expenditure:</strong> ${{ result.search_meta.expenditure_d|format_ballpark_number }}<br />
         <strong>Number of positions:</strong> {{ result.search_meta.headcount_i|format_ballpark_number }}
     </p>
 
