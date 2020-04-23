@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from payroll.models import Unit, Department, Person
@@ -6,6 +7,7 @@ from payroll import serializers
 
 
 class IndexViewSet(viewsets.ViewSet):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = serializers.IndexSerializer
 
     def list(self, request):
@@ -23,7 +25,7 @@ class IndexViewSet(viewsets.ViewSet):
 
 
 class ReadOnlyModelViewSetWithDataYear(viewsets.ReadOnlyModelViewSet):
-
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     lookup_field = 'slug'
 
     def retrieve(self, request, slug=None):

@@ -163,10 +163,3 @@ try:
     assert DATA_YEAR  # noqa
 except NameError:
     DATA_YEAR = 2017
-
-
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ]
-}
