@@ -25,34 +25,6 @@ from bga_database.local_settings import CACHE_SECRET_KEY
 class IndexView(TemplateView, ChartHelperMixin):
     template_name = 'index.html'
 
-    def get_context_data(self):
-        context = super().get_context_data()
-
-        salary_count = Salary.objects.all().count()
-        unit_count = Unit.objects.all().count()
-        department_count = Department.objects.all().count()
-
-        with connection.cursor() as cursor:
-            cursor.execute('SELECT COALESCE(amount, 0) + COALESCE(extra_pay, 0) FROM payroll_salary')
-            all_salaries = [x[0] for x in cursor]
-
-        try:
-            binned_salaries = self.bin_salary_data(all_salaries)
-        except ValueError:
-            if settings.DEBUG:
-                binned_salaries = []
-            else:
-                raise
-
-        context.update({
-            'salary_count': salary_count,
-            'unit_count': unit_count,
-            'department_count': department_count,
-            'salary_json': json.dumps(binned_salaries),
-        })
-
-        return context
-
 
 class UserGuideView(TemplateView):
     template_name = 'user_guide.html'

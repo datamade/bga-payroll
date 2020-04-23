@@ -1,6 +1,7 @@
 from django.conf import settings
 
 from payroll.models import Unit
+from data_import.models import StandardizedFile
 
 
 def inspiration_slugs(request):
@@ -9,8 +10,14 @@ def inspiration_slugs(request):
     except:
         chicago_slug = None
 
+    years = StandardizedFile.objects\
+        .distinct('reporting_year')\
+        .values('reporting_year')\
+        .order_by('-reporting_year')
+
     return {
         'data_year': settings.DATA_YEAR,
         'chicago_slug': chicago_slug,
         'STATIC_URL': settings.STATIC_URL,
+        'distinct_years': years,
     }

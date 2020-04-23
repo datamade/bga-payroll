@@ -7,6 +7,7 @@ from rest_framework import serializers
 
 from payroll.models import Employer, Unit, Department, Salary, Person
 from payroll.charts import ChartHelperMixin
+from payroll.utils import format_exact_number
 
 
 # /v1/index/YEAR
@@ -14,17 +15,15 @@ class IndexSerializer(serializers.Serializer, ChartHelperMixin):
 
     salary_count = serializers.SerializerMethodField()
     unit_count = serializers.SerializerMethodField()
-    department_count = serializers.SerializerMethodField()
     salary_json = serializers.SerializerMethodField()
 
     def get_salary_count(self, data_year):
-        return Salary.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
+        count = Salary.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
+        return format_exact_number(count)
 
     def get_unit_count(self, data_year):
-        return Unit.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
-
-    def get_department_count(self, data_year):
-        return Department.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
+        count = Unit.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
+        return format_exact_number(count)
 
     def get_salary_json(self, data_year):
         with connection.cursor() as cursor:
