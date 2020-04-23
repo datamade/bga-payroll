@@ -163,3 +163,11 @@ try:
     assert DATA_YEAR  # noqa
 except NameError:
     DATA_YEAR = 2017
+
+
+# Turn off default authentication and handle it on the viewsets. This turns
+# off basic authentication, which gets confused because Nginx is sending an
+# unrelated authorization header for the staging site.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': []
+}
