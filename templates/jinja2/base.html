@@ -151,10 +151,6 @@
       gtag('config', 'UA-18960172-1');
     </script>
 
-    {% compress js %}
-      <script type="module" src="{{ static('js/index.js') }}"></script>
-    {% endcompress %}
-
     {% block extra_js %}{% endblock %}
   </body>
 </html>
