@@ -1,6 +1,17 @@
-<label for="index-data-year">Select a year to display data for that year: </label>
-<select id="index-data-year">
-  {% for year in distinct_years %}
-    <option value="{{ year.reporting_year }}">{{ year.reporting_year }}</option>
-  {% endfor %}
-</select>
+<div id="year-toggle" align="center">
+  <label for="data-year-select">
+    <small class="text-uppercase">
+      Data year
+    </small>
+  </label>
+  <div class="dropdown">
+    <button class="btn btn-secondary btn-lg dropdown-toggle" type="button" id="yearDropdownMenuButton" data-toggle="dropdown" data-flip="false" aria-haspopup="true" aria-expanded="false">
+      {{ data_years.0 }}
+    </button>
+    <div id="data-year-select" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+      {% for year in data_years %}
+        <span class="dropdown-item year-dropdown-item">{{ year }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>

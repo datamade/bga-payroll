@@ -89,8 +89,20 @@
 
     <div class="row mt-4">
       <div class="col-md">
-        <h3>What's inside?</h3>
-        {% include 'partials/year_selector.html' %}
+        <div class="clearfix mb-3">
+          <div class="row h-100">
+            <div class="col-9 my-auto">
+              <h3>What's inside?</h3>
+            </div>
+            <div class="col-3 my-auto">
+              {% include 'partials/year_selector.html' %}
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-secondary my-4" role="alert">
+          <i class="fas fa-info-circle fa-fw"></i> <strong>Use the "Data Year" dropdown menu</strong> to view data from other years.
+        </div>
 
         <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong id="index-salary-count">
           
@@ -143,7 +155,10 @@
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script src="{{ static('js/chart_helper.js') }}"></script>
 
-<script type="text/javascript">
+{% compress js %}
+<script type="module">
+  import { initDataYearToggle } from  "js/index"
+
   // Style the charts a little differently on the homepage.
   Highcharts.setOptions({
     chart: {
@@ -158,12 +173,16 @@
 
   initSearch({{ request.GET.dict()|safe }});
 
-</script>
+  const initialYear = $('button#yearDropdownMenuButton').text();
 
-{% compress js %}
-  <script type="module" src="{{ STATIC_URL }}js/index.js"></script>
-  <script>
-    $('#index-data-year').trigger('change');
-  </script>
+  function updateChart (year, result) {
+    ChartHelper.make_salary_chart(result.salary_json, 'employee');
+    $('#index-salary-count').text(result.salary_count);
+    $('#index-unit-count').text(result.unit_count);
+    $('#index-year').text(year);
+  }
+
+  initDataYearToggle('index', initialYear, updateChart); 
+</script>
 {% endcompress %}
 {% endblock %}

@@ -136,6 +136,7 @@
     </footer>
     {% block modals %}{% endblock %}
     <script src="{{ static('js/lib/jquery-3.3.1.min.js') }}"></script>
+    <script src="{{ static('js/lib/popper.min.js') }}"></script>
     <script src="{{ static('js/lib/bootstrap.min.js') }}"></script>
     <script src="{{ static('js/lib/fontawesome-all.min.js') }}"></script>
     <script src="{{ static('js/lib/highcharts.src.js') }}"></script>
@@ -149,6 +150,10 @@
       gtag('js', new Date());
       gtag('config', 'UA-18960172-1');
     </script>
+
+    {% compress js %}
+      <script type="module" src="{{ static('js/index.js') }}"></script>
+    {% endcompress %}
 
     {% block extra_js %}{% endblock %}
   </body>
