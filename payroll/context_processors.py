@@ -10,14 +10,14 @@ def inspiration_slugs(request):
     except:
         chicago_slug = None
 
-    years = StandardizedFile.objects\
+    data_years = StandardizedFile.objects\
         .distinct('reporting_year')\
-        .values('reporting_year')\
-        .order_by('-reporting_year')
+        .order_by('-reporting_year')\
+        .values_list('reporting_year', flat=True)
 
     return {
         'data_year': settings.DATA_YEAR,
         'chicago_slug': chicago_slug,
         'STATIC_URL': settings.STATIC_URL,
-        'distinct_years': years,
+        'data_years': data_years,
     }
