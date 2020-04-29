@@ -14,7 +14,7 @@ function initDataYearToggle (endpoint, initialYear, callback) {
         }
         
         return;
-    }
+    };
     
     getData(initialYear);
     
