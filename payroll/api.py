@@ -14,7 +14,7 @@ class IndexViewSet(viewsets.ViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = serializers.IndexSerializer
 
-    @method_decorator(cache_page(60*60*72))
+    @method_decorator(cache_page(60 * 60 * 72))
     @method_decorator(vary_on_cookie)
     def list(self, request):
         '''
@@ -34,7 +34,7 @@ class ReadOnlyModelViewSetWithDataYear(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     lookup_field = 'slug'
 
-    @method_decorator(cache_page(60*60*72))
+    @method_decorator(cache_page(60 * 60 * 72))
     @method_decorator(vary_on_cookie)
     def retrieve(self, request, slug=None):
         try:

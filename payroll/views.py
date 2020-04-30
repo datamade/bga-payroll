@@ -3,19 +3,17 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q, FloatField, Sum, Count
-from django.db.models.functions import Coalesce, NullIf
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from postgres_stats.aggregates import Percentile
 from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from payroll.charts import ChartHelperMixin
-from payroll.models import Person, Salary, Unit, Department, Employer
+from payroll.models import Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 
