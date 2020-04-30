@@ -8,7 +8,7 @@ from rest_framework import serializers
 from payroll.models import Employer, Unit, Department, Salary, Person
 from payroll.charts import ChartHelperMixin
 from payroll.utils import format_exact_number, format_ballpark_number, \
-    format_salary
+    format_salary, format_percentile
 
 
 # /v1/index/YEAR
@@ -192,7 +192,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0] * 100
+        return format_percentile(result[0] * 100)
 
     def get_expenditure_percentile(self, obj):
         if obj.is_unclassified:
@@ -238,7 +238,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0] * 100
+        return format_percentile(result[0] * 100)
 
     def get_employee_salary_json(self, obj):
         return self.bin_salary_data(
@@ -278,7 +278,6 @@ class UnitSerializer(EmployerSerializer):
         fields = '__all__'
 
     department_salaries = serializers.SerializerMethodField()
-    population_percentile = serializers.SerializerMethodField()
     highest_spending_department = serializers.SerializerMethodField()
     composition_json = serializers.SerializerMethodField()
 
@@ -319,7 +318,7 @@ class UnitSerializer(EmployerSerializer):
         else:
             return {
                 'name': top_department['name'],
-                'amount': top_department['total_expenditure'],
+                'amount': format_salary(top_department['total_expenditure']),
                 'slug': top_department['slug'],
             }
 
@@ -348,32 +347,6 @@ class UnitSerializer(EmployerSerializer):
         })
 
         return composition_json
-
-    def get_population_percentile(self, obj):
-        if obj.get_population() is None:
-            return 'N/A'
-
-        query = '''
-            WITH pop_percentile AS (
-              SELECT
-                percent_rank() OVER (ORDER BY pop.population ASC) AS percentile,
-                pop.employer_id AS unit_id
-              FROM payroll_employerpopulation AS pop
-              JOIN payroll_employer AS emp
-              ON pop.employer_id = emp.id
-              JOIN payroll_employertaxonomy AS tax
-              ON emp.taxonomy_id = tax.id
-              WHERE tax.id = {taxonomy}
-            )
-            SELECT percentile FROM pop_percentile
-            WHERE unit_id = {id}
-        '''.format(taxonomy=obj.taxonomy_id, id=obj.id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-        return result[0] * 100
 
 
 # /v1/departments/SLUG/YEAR

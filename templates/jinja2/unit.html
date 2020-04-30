@@ -49,27 +49,35 @@
               <i class="fas fa-list"></i> Summary
             </h3>
             {% if size_class %}
+            {# For now, population statistics do not vary by year, so handle
+               this section purely in Django. #}
               <p>
                 With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>.
 
                 {# There will only ever be one unit with a population in the
-                "Chicago Municipal" taxonomy: the city of Chicago. Ergo, don't
-                show this unhelpful number. #}
+                   "Chicago Municipal" taxonomy: the city of Chicago. So, don't
+                   show this unhelpful number. #}
                 {% if entity.taxonomy|string != 'Chicago Municipal' and entity.is_comparable %}
                   It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.
                 {% endif %}
               </p>
             {% endif %}
 
+            {# Whether an entity is comparable is True or False, regardless of
+               year. So, use Django conditionals here, and in the JavaScript
+               callback, to conditionally display and populate this section. #}
             {% if entity.is_comparable %}
-              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong>{{ salary_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
+              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong id="entity-salary-percentile"></strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
 
-              <p><strong>{{ entity }}</strong> spent more on payroll in {{ data_year }} than <strong>{{ expenditure_percentile|format_percentile }}</strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
+              <p><strong>{{ entity }}</strong> spent more on payroll in <span class="entity-data-year"></span> than <strong id="entity-expenditure-percentile"></strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
             {% endif %}
 
-            {% if department_salaries %}
-              <p>The highest spending department in <strong>{{ entity }}</strong> is the <strong><a href="{{ url('department', kwargs={'slug': highest_spending_department.slug}) }}">{{ highest_spending_department.name }}</a></strong>, with an annual payroll expenditure of <strong>{{ highest_spending_department.amount|format_salary }}</strong>.</p>
-            {% endif %}
+            {# Department statistics, including whether the unit reported salaries
+               on a department level, can vary by year, so handle the display
+               and population of this section in JavaScript. #}
+            <div id="entity-department-statistics">
+              <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
+            </div>
           </div>
           <div id="employee-distribution-chart" class="col-lg-6"></div>
         </div>
@@ -124,10 +132,24 @@
   const slug = '{{ entity.slug }}';
 
   function updateChart (year, result) {
-    $('#entity-data-year').text(year);
+    $('.entity-data-year').text(year);
     $('#entity-headcount').text(result.headcount);
     $('#entity-total-expenditure').text(result.total_expenditure);
     $('#entity-median-tp').text(result.median_tp);
+
+    {% if entity.is_comparable %}
+    $('#entity-salary-percentile').text(result.salary_percentile);
+    $('#entity-expenditure-percentile').text(result.expenditure_percentile);
+    {% endif %}
+
+    if ( result.highest_spending_department === null ) {
+      $('#entity-department-statistics').hide();
+    } else {
+      $('#entity-highest-spending-department').attr('href', '/department/' + result.highest_spending_department.slug);
+      $('#entity-highest-spending-department').text(result.highest_spending_department.name);
+      $('#entity-highest-spending-department-expenditure').text(result.highest_spending_department.amount);
+      $('#entity-department-statistics').show();
+    }
 
     ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
