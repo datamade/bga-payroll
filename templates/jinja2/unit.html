@@ -233,7 +233,10 @@
       }
     }
 
-    if ( result.headcount > 0 ) {
+    if ( result.headcount === 0 ) {
+      $('#unit-wrapper').hide();
+      $('#no-data').show();
+    } else {
       updateDataYear();
       updateBaseBallStats();
       updateSummaryCard();
@@ -243,9 +246,6 @@
 
       $('#no-data').hide();
       $('#unit-wrapper').show();
-    } else {
-      $('#unit-wrapper').hide();
-      $('#no-data').show();
     }
   }
 
