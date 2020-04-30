@@ -11,6 +11,7 @@ python:
 install:
 - pip install --upgrade pip
 - pip install --upgrade -r requirements.txt
+- npm install
 - npm install -g jshint
 
 sudo: required

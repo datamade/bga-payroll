@@ -4,7 +4,7 @@
     <tr>
       <th scope="col">Name</th>
       <th scope="col">Position</th>
-      {% if not entity.is_department and department_salaries %}
+      {% if not entity.is_department %}
       <th scope="col">Department</th>
       {% endif %}
       <th scope="col" class="text-right">Base Salary</th>
@@ -14,7 +14,7 @@
       {% endif %}
     </tr>
   </thead>
-  <tbody>
+  <tbody id="entity-salaries">
   {% for salary in salaries %}
     <tr>
       <td><a href="{{ url('person', kwargs={'slug': salary.job.person.slug}) }}">{{ salary.job.person }}</a></td>
@@ -34,7 +34,6 @@
           {% elif current_salary > salary.amount %}
             <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
           {% else %}
-            <!-- Empty placeholder for equal salaries -->
             <i class="fas invisible"></i>
           {% endif %}
         {% endif %}
@@ -60,6 +59,4 @@
   </tbody>
   </table>
 </div>
-<p class="text-right">
-  <small><strong>Data year:</strong> {{ data_year }} {% if source_link %}(<a href="{{ source_link }}" rel="nofollow">Source</a>){% else %}<em class="text-secondary">Source coming soon</em>{% endif %}</small>
-</p>
+{% include 'partials/source_link.html' %}

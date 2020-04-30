@@ -7,7 +7,8 @@ from rest_framework import serializers
 
 from payroll.models import Employer, Unit, Department, Salary, Person
 from payroll.charts import ChartHelperMixin
-from payroll.utils import format_exact_number
+from payroll.utils import format_exact_number, format_ballpark_number, \
+    format_salary, format_percentile
 
 
 # /v1/index/YEAR
@@ -118,33 +119,53 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         data = []
 
         for salary in self.employer_salaries[:5]:
+            if salary.amount:
+                amount = format_salary(salary.amount)
+            else:
+                amount = 'Not reported'
+
+            if salary.extra_pay:
+                extra_pay = format_salary(salary.extra_pay)
+            else:
+                extra_pay = 'Not reported'
+
             data.append({
                 'name': str(salary.job.person),
                 'slug': salary.job.person.slug,
                 'position': salary.job.position.title,
                 'employer': salary.job.position.employer.name,
+                'employer_endpoint': salary.job.position.employer.endpoint,
                 'employer_slug': salary.job.position.employer.slug,
-                'amount': salary.amount,
-                'extra_pay': salary.extra_pay,
+                'amount': amount,
+                'extra_pay': extra_pay,
                 'start_date': salary.job.start_date,
             })
 
         return data
 
     def get_median_tp(self, obj):
-        return self.employer_median_salaries['median_total_pay']
+        if self.employer_median_salaries['median_total_pay']:
+            return format_salary(self.employer_median_salaries['median_total_pay'])
+        else:
+            return 'Not reported'
 
     def get_median_bp(self, obj):
-        return self.employer_median_salaries['median_base_pay']
+        if self.employer_median_salaries['median_base_pay']:
+            return format_salary(self.employer_median_salaries['median_base_pay'])
+        else:
+            return 'Not reported'
 
     def get_median_ep(self, obj):
-        return self.employer_median_salaries['median_extra_pay']
+        if self.employer_median_salaries['median_extra_pay']:
+            return format_salary(self.employer_median_salaries['median_extra_pay'])
+        else:
+            return 'Not reported'
 
     def get_headcount(self, obj):
-        return self.employer_salaries.count()
+        return format_ballpark_number(self.employer_salaries.count())
 
     def get_total_expenditure(self, obj):
-        return self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay']
+        return format_ballpark_number(self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'])
 
     def get_salary_percentile(self, obj):
         if obj.is_unclassified:
@@ -191,7 +212,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0] * 100
+        return format_percentile(result[0] * 100)
 
     def get_expenditure_percentile(self, obj):
         if obj.is_unclassified:
@@ -237,7 +258,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             cursor.execute(query)
             result = cursor.fetchone()
 
-        return result[0] * 100
+        return format_percentile(result[0] * 100)
 
     def get_employee_salary_json(self, obj):
         return self.bin_salary_data(
@@ -277,7 +298,6 @@ class UnitSerializer(EmployerSerializer):
         fields = '__all__'
 
     department_salaries = serializers.SerializerMethodField()
-    population_percentile = serializers.SerializerMethodField()
     highest_spending_department = serializers.SerializerMethodField()
     composition_json = serializers.SerializerMethodField()
 
@@ -308,7 +328,20 @@ class UnitSerializer(EmployerSerializer):
         return self._department_statistics
 
     def get_department_salaries(self, obj):
-        return self.department_statistics[:5]
+        formatted_salaries = []
+
+        for salary in self.department_statistics[:5]:
+            formatted_salaries.append({
+                'name': salary['name'],
+                'slug': salary['slug'],
+                'headcount': format_exact_number(salary['headcount']),
+                'median_tp': format_salary(salary['median_tp']),
+                'entity_bp': format_ballpark_number(salary['entity_bp']),
+                'entity_ep': format_ballpark_number(salary['entity_ep']),
+                'total_expenditure': format_ballpark_number(salary['total_expenditure']),
+            })
+
+        return formatted_salaries
 
     def get_highest_spending_department(self, obj):
         try:
@@ -318,7 +351,7 @@ class UnitSerializer(EmployerSerializer):
         else:
             return {
                 'name': top_department['name'],
-                'amount': top_department['total_expenditure'],
+                'amount': format_salary(top_department['total_expenditure']),
                 'slug': top_department['slug'],
             }
 
@@ -347,32 +380,6 @@ class UnitSerializer(EmployerSerializer):
         })
 
         return composition_json
-
-    def get_population_percentile(self, obj):
-        if obj.get_population() is None:
-            return 'N/A'
-
-        query = '''
-            WITH pop_percentile AS (
-              SELECT
-                percent_rank() OVER (ORDER BY pop.population ASC) AS percentile,
-                pop.employer_id AS unit_id
-              FROM payroll_employerpopulation AS pop
-              JOIN payroll_employer AS emp
-              ON pop.employer_id = emp.id
-              JOIN payroll_employertaxonomy AS tax
-              ON emp.taxonomy_id = tax.id
-              WHERE tax.id = {taxonomy}
-            )
-            SELECT percentile FROM pop_percentile
-            WHERE unit_id = {id}
-        '''.format(taxonomy=obj.taxonomy_id, id=obj.id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-        return result[0] * 100
 
 
 # /v1/departments/SLUG/YEAR

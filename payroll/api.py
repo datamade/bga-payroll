@@ -1,3 +1,7 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
+
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -10,6 +14,8 @@ class IndexViewSet(viewsets.ViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = serializers.IndexSerializer
 
+    @method_decorator(cache_page(60 * 60 * 72))
+    @method_decorator(vary_on_cookie)
     def list(self, request):
         '''
         TODO: Should this be retrieve? Want to keep API consistent across Index
@@ -28,6 +34,8 @@ class ReadOnlyModelViewSetWithDataYear(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     lookup_field = 'slug'
 
+    @method_decorator(cache_page(60 * 60 * 72))
+    @method_decorator(vary_on_cookie)
     def retrieve(self, request, slug=None):
         try:
             data_year = request.query_params['data_year']

@@ -1,24 +1,24 @@
 <div class="col-md-3 col-6">
   <div class="card-body text-center">
-    <h3>{{ data_year }}</h3>
+    <h3 class="entity-data-year"></h3>
     <small class="text-muted">Data year</small>
   </div>
 </div>
 <div class="col-md-2 col-6">
   <div class="card-body text-center">
-    <h3>{{ headcount|format_ballpark_number }}</h3>
+    <h3 class="entity-headcount"></h3>
     <small class="text-muted">Employees</small>
   </div>
 </div>
 <div class="col-md-4 col-6">
   <div class="card-body text-center">
-    <h3>${{ total_expenditure|format_ballpark_number }}</h3>
+    <h3>$<span id="entity-total-expenditure"></span></h3>
     <small class="text-muted">Total expenditure</small>
   </div>
 </div>
 <div class="col-md-3 col-6">
   <div class="card-body text-center">
-    <h3>{{ median_tp|format_salary }}</h3>
+    <h3 class="entity-median-tp"></h3>
     <small class="text-muted">Median Total Pay</small>
   </div>
 </div>
