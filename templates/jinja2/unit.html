@@ -75,7 +75,7 @@
             {# Department statistics, including whether the unit reported salaries
                on a department level, can vary by year, so handle the display
                and population of this section in JavaScript. #}
-            <div id="entity-department-statistics">
+            <div class="entity-department-statistics">
               <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
             </div>
           </div>
@@ -95,18 +95,7 @@
   </div>
 </div>
 
-{% if elected_officials %}
-<div class="row">
-  <div class="col-md">
-    <div class="card mb-4">
-      {% include 'partials/elected_officials_card.html' %}
-    </div>
-  </div>
-</div>
-{% endif %}
-
-{% if department_salaries %}
-<div class="row">
+<div class="row" class="entity-department-statistics">
   <div class="col-md">
     <div class="card mb-4">
       {% include 'partials/department_card.html' %}
@@ -118,7 +107,6 @@
     </div>
   </div>
 </div>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -133,7 +121,7 @@
 
   function updateChart (year, result) {
     $('.entity-data-year').text(year);
-    $('#entity-headcount').text(result.headcount);
+    $('.entity-headcount').text(result.headcount);
     $('#entity-total-expenditure').text(result.total_expenditure);
     $('#entity-median-tp').text(result.median_tp);
 
@@ -151,12 +139,65 @@
       $('#entity-department-statistics').show();
     }
 
+    $('#entity-salaries').empty();
+
+    var makeLink = function (href, text) {
+      const link = $('<a>').attr('href', href);
+      link.text(text);
+      return link;
+    }
+
+    $.each(result.salaries, function (idx, salary) {
+      const tRow = $('<tr>');
+
+      const personLink = makeLink(
+        '/person/' + salary.slug,
+        salary.name
+      );
+      const employerLink = makeLink(
+        '/' + salary.employer_endpoint + '/' + salary.employer_slug,
+        salary.employer
+      );
+
+      tRow.append($('<td>').html(personLink));
+      tRow.append($('<td>').html(salary.position));
+      tRow.append($('<td>').html(employerLink));
+      tRow.append($('<td>').html(salary.amount).addClass('text-right'));
+      tRow.append($('<td>').html(salary.extra_pay).addClass('text-right'));
+
+      $('#entity-salaries').append(tRow);
+    });
+
+    $('#department-salaries').empty();
+
+    if ( result.department_salaries.length > 0 ) {
+      $.each(result.department_salaries, function (idx, salary) {
+        const tRow = $('<tr>');
+
+        const departmentLink = makeLink(
+          '/department/' + salary.slug,
+          salary.name
+        );
+
+        tRow.append($('<td>').html(departmentLink));
+        tRow.append($('<td>').html(salary.headcount).addClass('text-right'));
+        tRow.append($('<td>').html('$' + salary.median_tp).addClass('text-right'));
+        tRow.append($('<td>').html('$' + salary.entity_bp).addClass('text-right'));
+        tRow.append($('<td>').html('$' + salary.entity_ep).addClass('text-right'));
+        tRow.append($('<td>').html('$' + salary.total_expenditure).addClass('text-right'));
+
+        $('#department-salaries').append(tRow);
+      });
+
+      ChartHelper.make_composition_chart(result.composition_json);
+
+      $('.entity-department-statistics').show();
+    } else {
+      $('.entity-department-statistics').hide();
+    }
+
     ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
-
-    if ( result.composition_json.length > 0 ) {
-      ChartHelper.make_composition_chart(result.composition_json);
-    }
   }
 
   initDataYearToggle('units', slug, initialYear, updateChart);

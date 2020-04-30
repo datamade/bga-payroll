@@ -119,14 +119,25 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         data = []
 
         for salary in self.employer_salaries[:5]:
+            if salary.amount:
+                amount = format_salary(salary.amount)
+            else:
+                amount = 'Not reported'
+
+            if salary.extra_pay:
+                extra_pay = format_salary(salary.extra_pay)
+            else:
+                extra_pay = 'Not reported'
+
             data.append({
                 'name': str(salary.job.person),
                 'slug': salary.job.person.slug,
                 'position': salary.job.position.title,
                 'employer': salary.job.position.employer.name,
+                'employer_endpoint': salary.job.position.employer.endpoint,
                 'employer_slug': salary.job.position.employer.slug,
-                'amount': salary.amount,
-                'extra_pay': salary.extra_pay,
+                'amount': amount,
+                'extra_pay': extra_pay,
                 'start_date': salary.job.start_date,
             })
 
@@ -308,7 +319,20 @@ class UnitSerializer(EmployerSerializer):
         return self._department_statistics
 
     def get_department_salaries(self, obj):
-        return self.department_statistics[:5]
+        formatted_salaries = []
+
+        for salary in self.department_statistics[:5]:
+            formatted_salaries.append({
+                'name': salary['name'],
+                'slug': salary['slug'],
+                'headcount': format_exact_number(salary['headcount']),
+                'median_tp': format_salary(salary['median_tp']),
+                'entity_bp': format_ballpark_number(salary['entity_bp']),
+                'entity_ep': format_ballpark_number(salary['entity_ep']),
+                'total_expenditure': format_ballpark_number(salary['total_expenditure']),
+            })
+
+        return formatted_salaries
 
     def get_highest_spending_department(self, obj):
         try:

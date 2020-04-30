@@ -18,17 +18,7 @@
           <th scope="col" class="text-right" style="width:16.66%">Total expenditure</th>
         </tr>
       </thead>
-      <tbody>
-      {% for department in department_salaries %}
-        <tr>
-          <td><a href="{{ url('department', kwargs={'slug': department.slug}) }}">{{ department.name }}</a></td>
-          <td class="text-right" style="width:16.66%">{{ department.headcount|format_exact_number }}</td>
-          <td class="text-right" style="width:16.66%">{{ department.median_tp|format_salary }}</td>
-          <td class="text-right" style="width:16.66%">${{ department.entity_bp|format_ballpark_number }}</td>
-          <td class="text-right" style="width:16.66%">${{ department.entity_ep|format_ballpark_number }}</td>
-          <td class="text-right" style="width:16.66%">${{ department.total_expenditure|format_ballpark_number }}</td>
-        </tr>
-      {% endfor %}
+      <tbody id="department-salaries">
       </tbody>
     </table>
   </div>
