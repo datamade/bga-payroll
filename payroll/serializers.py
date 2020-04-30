@@ -144,13 +144,22 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return data
 
     def get_median_tp(self, obj):
-        return format_salary(self.employer_median_salaries['median_total_pay'])
+        if self.employer_median_salaries['median_total_pay']:
+            return format_salary(self.employer_median_salaries['median_total_pay'])
+        else:
+            return 'Not reported'
 
     def get_median_bp(self, obj):
-        return self.employer_median_salaries['median_base_pay']
+        if self.employer_median_salaries['median_base_pay']:
+            return format_salary(self.employer_median_salaries['median_base_pay'])
+        else:
+            return 'Not reported'
 
     def get_median_ep(self, obj):
-        return self.employer_median_salaries['median_extra_pay']
+        if self.employer_median_salaries['median_extra_pay']:
+            return format_salary(self.employer_median_salaries['median_extra_pay'])
+        else:
+            return 'Not reported'
 
     def get_headcount(self, obj):
         return format_ballpark_number(self.employer_salaries.count())

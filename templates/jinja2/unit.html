@@ -141,7 +141,7 @@
     var updateBaseBallStats = function () {
       $('.entity-headcount').text(result.headcount);
       $('#entity-total-expenditure').text(result.total_expenditure);
-      $('#entity-median-tp').text(result.median_tp);
+      $('.entity-median-tp').text(result.median_tp);
     }
 
     var updateSummaryCard = function () {
@@ -187,6 +187,10 @@
       });
 
       ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
+
+      $('.entity-median-tp').text(result.median_tp);
+      $('#entity-median-bp').text(result.median_bp);
+      $('#entity-median-ep').text(result.median_ep);
     }
 
     var updateDepartmentCard = function () {
