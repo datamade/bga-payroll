@@ -17,8 +17,8 @@
   </nav>
 </div>
 
-<div class="row h-100">
-  <div class="col-md-9">
+<div class="row">
+  <div class="col">
     <h2 class="mb-3"><i class="fas fa-building"></i> {{ entity }}</h2>
 
     <div class="badge badge-primary">
@@ -33,77 +33,87 @@
   </div>
 </div>
 
-<div class="row mb-4">
-  {% with context = aggregate_stats %}
-    {% include 'partials/baseball_stats.html' %}
-  {% endwith %}
-</div>
+<div id="unit-wrapper">
+  <div class="row mb-4">
+    {% with context = aggregate_stats %}
+      {% include 'partials/baseball_stats.html' %}
+    {% endwith %}
+  </div>
 
-<div class="row">
-  <div class="col-md">
-    <div class="card mb-4">
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-6" id="intro-text">
-            <h3 class="card-title mb-4">
-              <i class="fas fa-list"></i> Summary
-            </h3>
-            {% if size_class %}
-            {# For now, population statistics do not vary by year, so handle
-               this section purely in Django. #}
-              <p>
-                With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>.
+  <div class="row">
+    <div class="col-md">
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-lg-6" id="intro-text">
+              <h3 class="card-title mb-4">
+                <i class="fas fa-list"></i> Summary
+              </h3>
+              {% if size_class %}
+              {# For now, population statistics do not vary by year, so handle
+                 this section purely in Django. #}
+                <p>
+                  With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>.
 
-                {# There will only ever be one unit with a population in the
-                   "Chicago Municipal" taxonomy: the city of Chicago. So, don't
-                   show this unhelpful number. #}
-                {% if entity.taxonomy|string != 'Chicago Municipal' and entity.is_comparable %}
-                  It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.
-                {% endif %}
-              </p>
-            {% endif %}
+                  {# There will only ever be one unit with a population in the
+                     "Chicago Municipal" taxonomy: the city of Chicago. So, don't
+                     show this unhelpful number. #}
+                  {% if entity.taxonomy|string != 'Chicago Municipal' and entity.is_comparable %}
+                    It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.
+                  {% endif %}
+                </p>
+              {% endif %}
 
-            {# Whether an entity is comparable is True or False, regardless of
-               year. So, use Django conditionals here, and in the JavaScript
-               callback, to conditionally display and populate this section. #}
-            {% if entity.is_comparable %}
-              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong id="entity-salary-percentile"></strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
+              {# Whether an entity is comparable is True or False, regardless of
+                 year. So, use Django conditionals here, and in the JavaScript
+                 callback, to conditionally display and populate this section. #}
+              {% if entity.is_comparable %}
+                <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong id="entity-salary-percentile"></strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
 
-              <p><strong>{{ entity }}</strong> spent more on payroll in <span class="entity-data-year"></span> than <strong id="entity-expenditure-percentile"></strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
-            {% endif %}
+                <p><strong>{{ entity }}</strong> spent more on payroll in <span class="entity-data-year"></span> than <strong id="entity-expenditure-percentile"></strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
+              {% endif %}
 
-            {# Department statistics, including whether the unit reported salaries
-               on a department level, can vary by year, so handle the display
-               and population of this section in JavaScript. #}
-            <div class="entity-department-statistics">
-              <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
+              {# Department statistics, including whether the unit reported salaries
+                 on a department level, can vary by year, so handle the display
+                 and population of this section in JavaScript. #}
+              <div class="entity-department-statistics">
+                <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
+              </div>
             </div>
+            <div id="employee-distribution-chart" class="col-lg-6"></div>
           </div>
-          <div id="employee-distribution-chart" class="col-lg-6"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md">
+      <div class="card mb-4">
+        {% include 'partials/employee_card.html' %}
+        {% include 'partials/payroll_expenditure.html' %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row" class="entity-department-statistics">
+    <div class="col-md">
+      <div class="card mb-4">
+        {% include 'partials/department_card.html' %}
+        <div class="card-body">
+          <h4 class="card-subtitle mt-3">Top-spending departments as a proportion of total expenditure</h4>
+          <h4 class="card-subtitle mb-3"><small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small></h4>
+          <div id="department-composition-chart"></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="row">
-  <div class="col-md">
-    <div class="card mb-4">
-      {% include 'partials/employee_card.html' %}
-      {% include 'partials/payroll_expenditure.html' %}
-    </div>
-  </div>
-</div>
-
-<div class="row" class="entity-department-statistics">
-  <div class="col-md">
-    <div class="card mb-4">
-      {% include 'partials/department_card.html' %}
-      <div class="card-body">
-        <h4 class="card-subtitle mt-3">Top-spending departments as a proportion of total expenditure</h4>
-        <h4 class="card-subtitle mb-3"><small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small></h4>
-        <div id="department-composition-chart"></div>
-      </div>
+<div id="no-data">
+  <div class="row">
+    <div class="col mt-3 text-center">
+      <h1>No data :-(</h1>
     </div>
   </div>
 </div>
@@ -119,88 +129,123 @@
   const initialYear = $('button#yearDropdownMenuButton').text();
   const slug = '{{ entity.slug }}';
 
-  function updateChart (year, result) {
-    $('.entity-data-year').text(year);
-    $('.entity-headcount').text(result.headcount);
-    $('#entity-total-expenditure').text(result.total_expenditure);
-    $('#entity-median-tp').text(result.median_tp);
-
-    {% if entity.is_comparable %}
-    $('#entity-salary-percentile').text(result.salary_percentile);
-    $('#entity-expenditure-percentile').text(result.expenditure_percentile);
-    {% endif %}
-
-    if ( result.highest_spending_department === null ) {
-      $('#entity-department-statistics').hide();
-    } else {
-      $('#entity-highest-spending-department').attr('href', '/department/' + result.highest_spending_department.slug);
-      $('#entity-highest-spending-department').text(result.highest_spending_department.name);
-      $('#entity-highest-spending-department-expenditure').text(result.highest_spending_department.amount);
-      $('#entity-department-statistics').show();
-    }
-
-    $('#entity-salaries').empty();
-
+  function updateUnitPage (year, result) {
     var makeLink = function (href, text) {
       const link = $('<a>').attr('href', href);
       link.text(text);
       return link;
     }
 
-    $.each(result.salaries, function (idx, salary) {
-      const tRow = $('<tr>');
+    var updateDataYear = function () { $('.entity-data-year').text(year) };
 
-      const personLink = makeLink(
-        '/person/' + salary.slug,
-        salary.name
-      );
-      const employerLink = makeLink(
-        '/' + salary.employer_endpoint + '/' + salary.employer_slug,
-        salary.employer
-      );
-
-      tRow.append($('<td>').html(personLink));
-      tRow.append($('<td>').html(salary.position));
-      tRow.append($('<td>').html(employerLink));
-      tRow.append($('<td>').html(salary.amount).addClass('text-right'));
-      tRow.append($('<td>').html(salary.extra_pay).addClass('text-right'));
-
-      $('#entity-salaries').append(tRow);
-    });
-
-    $('#department-salaries').empty();
-
-    if ( result.department_salaries.length > 0 ) {
-      $.each(result.department_salaries, function (idx, salary) {
-        const tRow = $('<tr>');
-
-        const departmentLink = makeLink(
-          '/department/' + salary.slug,
-          salary.name
-        );
-
-        tRow.append($('<td>').html(departmentLink));
-        tRow.append($('<td>').html(salary.headcount).addClass('text-right'));
-        tRow.append($('<td>').html('$' + salary.median_tp).addClass('text-right'));
-        tRow.append($('<td>').html('$' + salary.entity_bp).addClass('text-right'));
-        tRow.append($('<td>').html('$' + salary.entity_ep).addClass('text-right'));
-        tRow.append($('<td>').html('$' + salary.total_expenditure).addClass('text-right'));
-
-        $('#department-salaries').append(tRow);
-      });
-
-      ChartHelper.make_composition_chart(result.composition_json);
-
-      $('.entity-department-statistics').show();
-    } else {
-      $('.entity-department-statistics').hide();
+    var updateBaseBallStats = function () {
+      $('.entity-headcount').text(result.headcount);
+      $('#entity-total-expenditure').text(result.total_expenditure);
+      $('#entity-median-tp').text(result.median_tp);
     }
 
-    ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
-    ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
+    var updateSummaryCard = function () {
+      {% if entity.is_comparable %}
+      $('#entity-salary-percentile').text(result.salary_percentile);
+      $('#entity-expenditure-percentile').text(result.expenditure_percentile);
+      {% endif %}
+
+      if ( result.highest_spending_department === null ) {
+        $('#entity-department-statistics').hide();
+      } else {
+        $('#entity-highest-spending-department').attr('href', '/department/' + result.highest_spending_department.slug);
+        $('#entity-highest-spending-department').text(result.highest_spending_department.name);
+        $('#entity-highest-spending-department-expenditure').text(result.highest_spending_department.amount);
+        $('#entity-department-statistics').show();
+      }
+
+      ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
+    }
+
+    var updateEmployeeCard = function () {
+      $('#entity-salaries').empty();
+
+      $.each(result.salaries, function (idx, salary) {
+        const tRow = $('<tr>');
+
+        const personLink = makeLink(
+          '/person/' + salary.slug,
+          salary.name
+        );
+        const employerLink = makeLink(
+          '/' + salary.employer_endpoint + '/' + salary.employer_slug,
+          salary.employer
+        );
+
+        tRow.append($('<td>').html(personLink));
+        tRow.append($('<td>').html(salary.position));
+        tRow.append($('<td>').html(employerLink));
+        tRow.append($('<td>').html(salary.amount).addClass('text-right'));
+        tRow.append($('<td>').html(salary.extra_pay).addClass('text-right'));
+
+        $('#entity-salaries').append(tRow);
+      });
+
+      ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
+    }
+
+    var updateDepartmentCard = function () {
+      $('#department-salaries').empty();
+
+      if ( result.department_salaries.length > 0 ) {
+        $.each(result.department_salaries, function (idx, salary) {
+          const tRow = $('<tr>');
+
+          const departmentLink = makeLink(
+            '/department/' + salary.slug,
+            salary.name
+          );
+
+          tRow.append($('<td>').html(departmentLink));
+          tRow.append($('<td>').html(salary.headcount).addClass('text-right'));
+          tRow.append($('<td>').html('$' + salary.median_tp).addClass('text-right'));
+          tRow.append($('<td>').html('$' + salary.entity_bp).addClass('text-right'));
+          tRow.append($('<td>').html('$' + salary.entity_ep).addClass('text-right'));
+          tRow.append($('<td>').html('$' + salary.total_expenditure).addClass('text-right'));
+
+          $('#department-salaries').append(tRow);
+        });
+
+        ChartHelper.make_composition_chart(result.composition_json);
+
+        $('.entity-department-statistics').show();
+      } else {
+        $('.entity-department-statistics').hide();
+      }
+    }
+
+    var updateSourceLink = function () {
+      if ( result.source_link ) {
+        $('.no-source-span').hide();
+        $('.source-span').show();
+      } else {
+        $('.source-span').hide();
+        $('.no-source-span').show();
+      }
+    }
+
+    if ( result.headcount > 0 ) {
+      updateDataYear();
+      updateBaseBallStats();
+      updateSummaryCard();
+      updateEmployeeCard();
+      updateDepartmentCard();
+      updateSourceLink();
+
+      $('#no-data').hide();
+      $('#unit-wrapper').show();
+    } else {
+      $('#unit-wrapper').hide();
+      $('#no-data').show();
+    }
   }
 
-  initDataYearToggle('units', slug, initialYear, updateChart);
+  initDataYearToggle('units', slug, initialYear, updateUnitPage);
 </script>
 {% endcompress %}
 {% endblock %}
