@@ -124,6 +124,11 @@
   const slug = '{{ entity.slug }}';
 
   function updateChart (year, result) {
+    $('#entity-data-year').text(year);
+    $('#entity-headcount').text(result.headcount);
+    $('#entity-total-expenditure').text(result.total_expenditure);
+    $('#entity-median-tp').text(result.median_tp);
+
     ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 

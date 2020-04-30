@@ -7,7 +7,8 @@ from rest_framework import serializers
 
 from payroll.models import Employer, Unit, Department, Salary, Person
 from payroll.charts import ChartHelperMixin
-from payroll.utils import format_exact_number
+from payroll.utils import format_exact_number, format_ballpark_number, \
+    format_salary
 
 
 # /v1/index/YEAR
@@ -132,7 +133,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return data
 
     def get_median_tp(self, obj):
-        return self.employer_median_salaries['median_total_pay']
+        return format_salary(self.employer_median_salaries['median_total_pay'])
 
     def get_median_bp(self, obj):
         return self.employer_median_salaries['median_base_pay']
@@ -141,10 +142,10 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self.employer_median_salaries['median_extra_pay']
 
     def get_headcount(self, obj):
-        return self.employer_salaries.count()
+        return format_ballpark_number(self.employer_salaries.count())
 
     def get_total_expenditure(self, obj):
-        return self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay']
+        return format_ballpark_number(self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'])
 
     def get_salary_percentile(self, obj):
         if obj.is_unclassified:
