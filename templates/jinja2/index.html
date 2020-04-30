@@ -104,9 +104,7 @@
           <i class="fas fa-info-circle fa-fw"></i> <strong>Use the "Data Year" dropdown menu</strong> to view data from other years.
         </div>
 
-        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong id="index-salary-count">
-          
-        </strong> state, municipal, school and many other government employees across Illinois. It covers <strong id="index-unit-count"></strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
+        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime) for <strong id="index-salary-count"></strong> state, municipal, school and many other government employees across Illinois. It covers <strong id="index-unit-count"></strong> units of government. We’ve recently updated the database so users find it easier to navigate. <a href="{{ url('user_guide') }}">You can learn how to use this new database here</a>.</p>
       </div>
     </div>
 
@@ -182,7 +180,7 @@
     $('#index-year').text(year);
   }
 
-  initDataYearToggle('index', initialYear, updateChart); 
+  initDataYearToggle('index', null, initialYear, updateChart);
 </script>
 {% endcompress %}
 {% endblock %}

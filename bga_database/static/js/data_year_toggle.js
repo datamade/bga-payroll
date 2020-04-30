@@ -1,7 +1,13 @@
-function initDataYearToggle (endpoint, initialYear, callback) {
+function initDataYearToggle (endpoint, slug, initialYear, callback) {
     var getData = async function (year) {
-        const url = `/${endpoint}/?data_year=${year}`;
-        
+        var url;
+
+        if ( slug === null ) {
+            url = `/${endpoint}/?data_year=${year}`;
+        } else {
+            url = `/${endpoint}/${slug}/?data_year=${year}`;
+        }
+
         try {
             const result = await $.ajax({
                 url: url,
@@ -12,12 +18,12 @@ function initDataYearToggle (endpoint, initialYear, callback) {
         } catch (error) {
             console.error(error);
         }
-        
+
         return;
     };
-    
+
     getData(initialYear);
-    
+
     $('#data-year-select > .year-dropdown-item').on('click', function(e) {
         const year = e.currentTarget.textContent;
         getData(year);
