@@ -65,6 +65,10 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     payroll_expenditure = serializers.SerializerMethodField()
 
     @property
+    def salary_q(self):
+        return Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year'])
+
+    @property
     def employer_queryset(self):
         return Employer.objects.filter(
             Q(id=self.instance.id) | Q(parent_id=self.instance.id)
@@ -82,13 +86,13 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             median_base_pay = Percentile(
                 'positions__jobs__salaries__amount',
                 0.5,
-                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year']),
+                filter=self.salary_q,
                 output_field=FloatField()
             )
             median_extra_pay = Percentile(
                 'positions__jobs__salaries__extra_pay',
                 0.5,
-                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year']),
+                filter=self.salary_q,
                 output_field=FloatField()
             )
             median_total_pay = Percentile(
@@ -97,7 +101,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
                     Coalesce('positions__jobs__salaries__extra_pay', 0), 0
                 ),
                 0.5,
-                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year']),
+                filter=self.salary_q,
                 output_field=FloatField()
             )
 
@@ -114,11 +118,11 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         if not hasattr(self, '_employer_payroll'):
             entity_base_pay = Sum(
                 Coalesce('positions__jobs__salaries__amount', 0),
-                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year'])
+                filter=self.salary_q
             )
             entity_extra_pay = Sum(
                 Coalesce('positions__jobs__salaries__extra_pay', 0),
-                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year'])
+                filter=self.salary_q
             )
 
             self._employer_payroll = self.employer_queryset.aggregate(
