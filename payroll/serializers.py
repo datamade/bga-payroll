@@ -450,8 +450,10 @@ class DepartmentSerializer(EmployerSerializer):
     percent_of_total_expenditure = serializers.SerializerMethodField()
 
     def get_percent_of_total_expenditure(self, obj):
-        department_expenditure = sum(self.instance.get_salaries(year=self.context['data_year']))
-        parent_expediture = sum(self.instance.parent.get_salaries(year=self.context['data_year']))
+        department_expenditure = sum(self.employer_salaries.values_list('total_pay', flat=True))
+        parent_expediture = sum(self.instance.parent\
+                                             .get_salaries(year=self.context['data_year'])\
+                                             .values_list('total_pay', flat=True))
 
         return department_expenditure / parent_expediture * 100
 
