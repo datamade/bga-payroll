@@ -333,26 +333,52 @@ class UnitSerializer(EmployerSerializer):
     @property
     def department_statistics(self):
         if not hasattr(self, '_department_statistics'):
-            entity_base_pay = Sum(Coalesce('positions__jobs__salaries__amount', 0))
-            entity_extra_pay = Sum(Coalesce('positions__jobs__salaries__extra_pay', 0))
-            median_total_pay = Percentile(
-                (
-                    NullIf(
-                        Coalesce('positions__jobs__salaries__amount', 0) +
-                        Coalesce('positions__jobs__salaries__extra_pay', 0), 0
-                    )
-                ), 0.5, output_field=FloatField()
-            )
-            headcount = Count('positions__jobs__salaries')
+            # Combining annotations doesn't work! :scream_cat:
+            # https://docs.djangoproject.com/en/3.0/topics/db/aggregation/#combining-multiple-aggregations
+            #
+            # Instead, use the raw manager to generate a queryset with the
+            # needed annotations. https://docs.djangoproject.com/en/3.0/topics/db/sql/#performing-raw-queries
+            aggregate_query = '''
+                WITH department_salaries AS (
+                  SELECT
+                    employer.id,
+                    employer.name,
+                    employer.slug,
+                    salary.amount,
+                    salary.extra_pay
+                  FROM payroll_salary AS salary
+                  JOIN payroll_job AS job
+                  ON salary.job_id = job.id
+                  JOIN payroll_position AS position
+                  ON position.id = job.position_id
+                  JOIN payroll_employer AS employer
+                  ON position.employer_id = employer.id
+                  JOIN data_import_upload AS vintage
+                  ON salary.vintage_id = vintage.id
+                  JOIN data_import_standardizedfile AS s_file
+                  ON s_file.upload_id = vintage.id
+                  WHERE employer.parent_id = {parent_id}
+                  AND s_file.reporting_year = {reporting_year}
+                )
+                SELECT
+                  id,
+                  name,
+                  slug,
+                  SUM(COALESCE(amount, 0)) AS entity_bp,
+                  SUM(COALESCE(extra_pay, 0)) AS entity_ep,
+                  SUM(COALESCE(amount, 0)) + SUM(COALESCE(extra_pay, 0)) AS total_expenditure,
+                  percentile_cont(0.5) within GROUP (
+                    ORDER BY
+                      NULLIF((COALESCE(amount, 0) + COALESCE(extra_pay, 0)), 0)
+                  ) AS median_tp,
+                  COUNT(*) AS headcount
+                FROM department_salaries
+                GROUP BY id, name, slug
+                ORDER BY total_expenditure DESC
+            '''.format(parent_id=self.instance.id,
+                       reporting_year=self.context['data_year'])
 
-            self._department_statistics = Employer.objects.filter(parent=self.instance)\
-                                                          .values('name', 'slug')\
-                                                          .annotate(headcount=headcount,
-                                                                    median_tp=median_total_pay,
-                                                                    entity_bp=entity_base_pay,
-                                                                    entity_ep=entity_extra_pay,
-                                                                    total_expenditure=entity_base_pay + entity_extra_pay)\
-                                                          .order_by('-total_expenditure')
+            self._department_statistics = Employer.objects.raw(aggregate_query)
 
         return self._department_statistics
 
@@ -361,13 +387,13 @@ class UnitSerializer(EmployerSerializer):
 
         for salary in self.department_statistics[:5]:
             formatted_salaries.append({
-                'name': salary['name'],
-                'slug': salary['slug'],
-                'headcount': format_exact_number(salary['headcount']),
-                'median_tp': format_salary(salary['median_tp']),
-                'entity_bp': format_ballpark_number(salary['entity_bp']),
-                'entity_ep': format_ballpark_number(salary['entity_ep']),
-                'total_expenditure': format_ballpark_number(salary['total_expenditure']),
+                'name': salary.name,
+                'slug': salary.slug,
+                'headcount': format_exact_number(salary.headcount),
+                'median_tp': format_salary(salary.median_tp),
+                'entity_bp': format_ballpark_number(salary.entity_bp),
+                'entity_ep': format_ballpark_number(salary.entity_ep),
+                'total_expenditure': format_ballpark_number(salary.total_expenditure),
             })
 
         return formatted_salaries
@@ -379,9 +405,9 @@ class UnitSerializer(EmployerSerializer):
             return None
         else:
             return {
-                'name': top_department['name'],
-                'amount': format_salary(top_department['total_expenditure']),
-                'slug': top_department['slug'],
+                'name': top_department.name,
+                'amount': format_salary(top_department.total_expenditure),
+                'slug': top_department.slug,
             }
 
     def get_composition_json(self, obj):
@@ -393,9 +419,9 @@ class UnitSerializer(EmployerSerializer):
         budget = self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay']
 
         for i, value in enumerate(top_departments):
-            proportion = (value['total_expenditure'] / budget) * 100
+            proportion = (value.total_expenditure / budget) * 100
             composition_json.append({
-                'name': value['name'],
+                'name': value.name,
                 'data': [proportion],
                 'index': i
             })
