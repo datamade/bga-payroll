@@ -106,9 +106,9 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             )
 
             self._employer_median_salaries = self.employer_queryset.aggregate(
-                median_base_pay=median_base_pay,
-                median_extra_pay=median_extra_pay,
-                median_total_pay=median_total_pay
+                median_base_pay=Coalesce(median_base_pay, 0),
+                median_extra_pay=Coalesce(median_extra_pay, 0),
+                median_total_pay=Coalesce(median_total_pay, 0)
             )
 
         return self._employer_median_salaries
@@ -126,8 +126,8 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             )
 
             self._employer_payroll = self.employer_queryset.aggregate(
-                base_pay=entity_base_pay,
-                extra_pay=entity_extra_pay
+                base_pay=Coalesce(entity_base_pay, 0),
+                extra_pay=Coalesce(entity_extra_pay, 0)
             )
 
         return self._employer_payroll
@@ -185,7 +185,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return format_ballpark_number(self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'])
 
     def get_salary_percentile(self, obj):
-        if obj.is_unclassified:
+        if obj.is_unclassified or self.employer_salaries.count() == 0:
             return 'N/A'
 
         query = '''
@@ -238,7 +238,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return format_percentile(result[0] * 100)
 
     def get_expenditure_percentile(self, obj):
-        if obj.is_unclassified:
+        if obj.is_unclassified or self.employer_salaries.count() == 0:
             return 'N/A'
 
         query = '''
@@ -290,9 +290,12 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return format_percentile(result[0] * 100)
 
     def get_employee_salary_json(self, obj):
-        return self.bin_salary_data(
-            list(s['total_pay'] for s in self.employer_salaries.values('total_pay'))
-        )
+        if self.employer_salaries.count() > 0:
+            return self.bin_salary_data(
+                list(s['total_pay'] for s in self.employer_salaries.values('total_pay'))
+            )
+        else:
+            return []
 
     def get_source_link(self, obj):
         source_file = obj.source_file(self.context['data_year'])
@@ -447,8 +450,8 @@ class DepartmentSerializer(EmployerSerializer):
     percent_of_total_expenditure = serializers.SerializerMethodField()
 
     def get_percent_of_total_expenditure(self, obj):
-        department_expenditure = sum(self.instance.employee_salaries)
-        parent_expediture = sum(self.instance.parent.employee_salaries)
+        department_expenditure = sum(self.instance.get_salaries(year=self.context['data_year']))
+        parent_expediture = sum(self.instance.parent.get_salaries(year=self.context['data_year']))
 
         return department_expenditure / parent_expediture * 100
 
