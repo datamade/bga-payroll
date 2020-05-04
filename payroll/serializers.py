@@ -73,25 +73,32 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     @property
     def employer_salaries(self):
         if not hasattr(self, '_salaries'):
-            self._salaries = self.instance.get_salaries()
+            self._salaries = self.instance.get_salaries(year=self.context['data_year'])
         return self._salaries
 
     @property
     def employer_median_salaries(self):
         if not hasattr(self, '_employer_median_salaries'):
             median_base_pay = Percentile(
-                'positions__jobs__salaries__amount', 0.5, output_field=FloatField()
+                'positions__jobs__salaries__amount',
+                0.5,
+                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year']),
+                output_field=FloatField()
             )
             median_extra_pay = Percentile(
-                'positions__jobs__salaries__extra_pay', 0.5, output_field=FloatField()
+                'positions__jobs__salaries__extra_pay',
+                0.5,
+                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year']),
+                output_field=FloatField()
             )
             median_total_pay = Percentile(
-                (
-                    NullIf(
-                        Coalesce('positions__jobs__salaries__amount', 0) +
-                        Coalesce('positions__jobs__salaries__extra_pay', 0), 0
-                    )
-                ), 0.5, output_field=FloatField()
+                NullIf(
+                    Coalesce('positions__jobs__salaries__amount', 0) +
+                    Coalesce('positions__jobs__salaries__extra_pay', 0), 0
+                ),
+                0.5,
+                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year']),
+                output_field=FloatField()
             )
 
             self._employer_median_salaries = self.employer_queryset.aggregate(
@@ -105,8 +112,14 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     @property
     def employer_payroll(self):
         if not hasattr(self, '_employer_payroll'):
-            entity_base_pay = Sum(Coalesce('positions__jobs__salaries__amount', 0))
-            entity_extra_pay = Sum(Coalesce('positions__jobs__salaries__extra_pay', 0))
+            entity_base_pay = Sum(
+                Coalesce('positions__jobs__salaries__amount', 0),
+                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year'])
+            )
+            entity_extra_pay = Sum(
+                Coalesce('positions__jobs__salaries__extra_pay', 0),
+                filter=Q(positions__jobs__salaries__vintage__standardized_file__reporting_year=self.context['data_year'])
+            )
 
             self._employer_payroll = self.employer_queryset.aggregate(
                 base_pay=entity_base_pay,
@@ -193,7 +206,12 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
               ON position.employer_id = lookup.id
               JOIN payroll_employer AS employer
               ON lookup.parent_id = employer.id
+              JOIN data_import_upload AS vintage
+              ON salary.vintage_id = vintage.id
+              JOIN data_import_standardizedfile AS s_file
+              ON vintage.id = s_file.upload_id
               WHERE employer.taxonomy_id = {taxonomy}
+              AND s_file.reporting_year = {reporting_year}
               GROUP BY lookup.parent_id
             ),
             salary_percentiles AS (
@@ -206,6 +224,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             FROM salary_percentiles
             WHERE unit_id = {id}
             '''.format(taxonomy=obj.taxonomy.id,
+                       reporting_year=self.context['data_year'],
                        id=obj.id)
 
         with connection.cursor() as cursor:
@@ -238,7 +257,12 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
               ON position.employer_id = lookup.id
               JOIN payroll_employer AS employer
               ON lookup.parent_id = employer.id
+              JOIN data_import_upload AS vintage
+              ON salary.vintage_id = vintage.id
+              JOIN data_import_standardizedfile AS s_file
+              ON vintage.id = s_file.upload_id
               WHERE employer.taxonomy_id = {taxonomy}
+              AND s_file.reporting_year = {reporting_year}
               GROUP BY lookup.parent_id
             ),
             exp_percentiles AS (
@@ -252,6 +276,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             FROM exp_percentiles
             WHERE unit_id = {id}
         '''.format(taxonomy=obj.taxonomy.id,
+                   reporting_year=self.context['data_year'],
                    id=obj.id)
 
         with connection.cursor() as cursor:
