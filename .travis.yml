@@ -14,12 +14,10 @@ install:
 - npm install
 - npm install -g jshint
 
-sudo: required
 dist: trusty
-group: deprecated-2017Q4
 
 services:
-- redis-server
+- redis
 
 addons:
   postgresql: '9.6'
