@@ -451,7 +451,8 @@ class DepartmentSerializer(EmployerSerializer):
 
     def get_percent_of_total_expenditure(self, obj):
         department_salaries = self.employer_salaries.values_list('total_pay', flat=True)
-        unit_salaries = self.instance.parent.get_salaries(year=self.context['data_year'])
+
+        unit_salaries = self.instance.parent.get_salaries(year=self.context['data_year'])\
                                             .values_list('total_pay', flat=True)
 
         return sum(department_salaries) / sum(unit_salaries) * 100
