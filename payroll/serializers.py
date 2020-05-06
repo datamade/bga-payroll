@@ -77,8 +77,14 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     @property
     def employer_salaries(self):
         if not hasattr(self, '_salaries'):
-            self._salaries = self.instance.get_salaries(year=self.context['data_year'])
-        return self._salaries
+            self._employer_salaries = self.instance.get_salaries(year=self.context['data_year'])
+        return self._employer_salaries
+
+    @property
+    def employer_salary_count(self):
+        if not hasattr(self, '_employer_salary_count'):
+            self._employer_salary_count = self._employer_salaries.count()
+        return self._employer_salary_count
 
     @property
     def employer_median_salaries(self):
@@ -179,13 +185,13 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
             return 'Not reported'
 
     def get_headcount(self, obj):
-        return format_ballpark_number(self.employer_salaries.count())
+        return format_ballpark_number(self.employer_salary_count)
 
     def get_total_expenditure(self, obj):
         return format_ballpark_number(self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'])
 
     def get_salary_percentile(self, obj):
-        if obj.is_unclassified or self.employer_salaries.count() == 0:
+        if obj.is_unclassified or self.employer_salary_count == 0:
             return 'N/A'
 
         query = '''
@@ -238,7 +244,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return format_percentile(result[0] * 100)
 
     def get_expenditure_percentile(self, obj):
-        if obj.is_unclassified or self.employer_salaries.count() == 0:
+        if obj.is_unclassified or self.employer_salary_count == 0:
             return 'N/A'
 
         query = '''
@@ -290,7 +296,7 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return format_percentile(result[0] * 100)
 
     def get_employee_salary_json(self, obj):
-        if self.employer_salaries.count() > 0:
+        if self.employer_salary_count > 0:
             return self.bin_salary_data(
                 list(s['total_pay'] for s in self.employer_salaries.values('total_pay'))
             )
