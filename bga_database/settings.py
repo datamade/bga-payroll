@@ -37,11 +37,11 @@ INSTALLED_APPS = [
     'data_import',
     'django.contrib.postgres',
     'postgres_stats',
-    'debug_toolbar',
     'salsa_auth',
     'rest_framework',
     'compressor',
     'compressor_toolkit',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
