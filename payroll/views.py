@@ -23,6 +23,10 @@ from bga_database.local_settings import CACHE_SECRET_KEY
 class IndexView(TemplateView, ChartHelperMixin):
     template_name = 'index.html'
 
+    def get_context_data(self, **kwargs):
+        print("IP Address for debug-toolbar: " + self.request.META['REMOTE_ADDR'])
+        return super().get_context_data(**kwargs)
+
 
 class UserGuideView(TemplateView):
     template_name = 'user_guide.html'
