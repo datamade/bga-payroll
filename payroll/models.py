@@ -191,12 +191,7 @@ class Employer(SluggedModel, VintagedModel):
         else:
             criteria = of_employer
 
-        return Salary.objects.filter(criteria).select_related(
-            'job__person',
-            'job__position',
-            'job__position__employer',
-            'job__position__employer__parent'
-        ).order_by('-total_pay')
+        return Salary.objects.filter(criteria)
 
     @property
     def employee_salaries(self):

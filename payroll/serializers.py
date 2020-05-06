@@ -141,7 +141,14 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_salaries(self, obj):
         data = []
 
-        for salary in self.employer_salaries[:5]:
+        top_5_salaries = self.employer_salaries.select_related(
+            'job__person',
+            'job__position',
+            'job__position__employer',
+            'job__position__employer__parent'
+        ).order_by('-total_pay')[:5]
+
+        for salary in top_5_salaries:
             if salary.amount:
                 amount = format_salary(salary.amount)
             else:
