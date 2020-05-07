@@ -23,7 +23,9 @@ class IndexSerializer(serializers.Serializer, ChartHelperMixin):
         return format_exact_number(count)
 
     def get_unit_count(self, data_year):
-        count = Unit.objects.filter(vintage__standardized_file__reporting_year=data_year).count()
+        count = Unit.objects.filter(
+          positions__jobs__salaries__vintage__standardized_file__reporting_year=data_year
+        ).distinct().count()
         return format_exact_number(count)
 
     def get_salary_json(self, data_year):
