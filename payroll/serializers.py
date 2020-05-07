@@ -141,14 +141,20 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_salaries(self, obj):
         data = []
 
-        top_5_salaries = self.employer_salaries.select_related(
-            'job__person',
-            'job__position',
-            'job__position__employer',
-            'job__position__employer__parent'
+        # Sorting is expensive! Use self.employer_salaries as a subquery so we
+        # are only ordering salaries from the given employer and year.
+        top_salaries = Salary.objects.filter(
+            id__in=self.employer_salaries.values_list('id', flat=True)
         ).order_by('-total_pay')[:5]
 
-        for salary in top_5_salaries:
+        # Only retrieve related objects of the top salaries, to further
+        # optimize the query. Repeat the ordering operation for those five
+        # salaries to ensure we retain order during display.
+        top_salaries_with_related_objects = Salary.objects.with_related_objects().filter(
+            id__in=top_salaries.values_list('id', flat=True)
+        ).order_by('-total_pay')
+
+        for salary in top_salaries_with_related_objects:
             if salary.amount:
                 amount = format_salary(salary.amount)
             else:
