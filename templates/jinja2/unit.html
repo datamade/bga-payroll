@@ -117,7 +117,7 @@
 <script type="module">
   import { initDataYearToggle } from  "js/data_year_toggle"
 
-  const initialYear = $('button#yearDropdownMenuButton').text();
+  const initialYear = $('button#yearDropdownMenuButton').text().replace(/(\n|\s)/gm, '');
   const slug = '{{ entity.slug }}';
 
   function updateUnitPage (year, result) {
