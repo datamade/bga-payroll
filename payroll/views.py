@@ -12,6 +12,7 @@ from django.views.generic.list import ListView
 from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
+from data_import.models import StandardizedFile
 from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
@@ -24,7 +25,15 @@ class IndexView(TemplateView, ChartHelperMixin):
     template_name = 'index.html'
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
+
+        data_years = StandardizedFile.objects.distinct('reporting_year')\
+                                             .order_by('-reporting_year')\
+                                             .values_list('reporting_year', flat=True)
+
+        context['data_years'] = list(data_years)
+
+        return context
 
 
 class UserGuideView(TemplateView):
@@ -46,9 +55,13 @@ class UnitView(EmployerView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        data_years = self.object.responding_agencies.order_by('-reporting_year')\
+                                                    .values_list('reporting_year', flat=True)
+
         context.update({
             'population_percentile': self.population_percentile(),
-            'size_class': self.object.size_class
+            'size_class': self.object.size_class,
+            'data_years': list(data_years),
         })
 
         return context

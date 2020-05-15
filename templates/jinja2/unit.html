@@ -33,90 +33,81 @@
   </div>
 </div>
 
-<div id="unit-wrapper">
-  <div class="row mb-4">
-    {% with context = aggregate_stats %}
-      {% include 'partials/baseball_stats.html' %}
-    {% endwith %}
-  </div>
+<div class="row mb-4">
+  {% with context = aggregate_stats %}
+    {% include 'partials/baseball_stats.html' %}
+  {% endwith %}
+</div>
 
-  <div class="row">
-    <div class="col-md">
-      <div class="card mb-4">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-6" id="intro-text">
-              <h3 class="card-title mb-4">
-                <i class="fas fa-list"></i> Summary
-              </h3>
-              {% if size_class %}
-              {# For now, population statistics do not vary by year, so handle
-                 this section purely in Django. #}
-                <p>
-                  With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>.
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-lg-6" id="intro-text">
+            <h3 class="card-title mb-4">
+              <i class="fas fa-list"></i> Summary
+            </h3>
+            {% if size_class %}
+            {# For now, population statistics do not vary by year, so handle
+               this section purely in Django. #}
+              <p>
+                With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>.
 
-                  {# There will only ever be one unit with a population in the
-                     "Chicago Municipal" taxonomy: the city of Chicago. So, don't
-                     show this unhelpful number. #}
-                  {% if entity.taxonomy|string != 'Chicago Municipal' and entity.is_comparable %}
-                    It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.
-                  {% endif %}
-                </p>
-              {% endif %}
+                {# There will only ever be one unit with a population in the
+                   "Chicago Municipal" taxonomy: the city of Chicago. So, don't
+                   show this unhelpful number. #}
+                {% if entity.taxonomy|string != 'Chicago Municipal' and entity.is_comparable %}
+                  It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.
+                {% endif %}
+              </p>
+            {% endif %}
 
-              {# Whether an entity is comparable is True or False, regardless of
-                 year. So, use Django conditionals here, and in the JavaScript
-                 callback, to conditionally display and populate this section. #}
-              {% if entity.is_comparable %}
-                <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong id="entity-salary-percentile"></strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
+            {# Whether an entity is comparable is True or False, regardless of
+               year. So, use Django conditionals here, and in the JavaScript
+               callback, to conditionally display and populate this section. #}
+            {% if entity.is_comparable %}
+              <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong id="entity-salary-percentile"></strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
 
-                <p><strong>{{ entity }}</strong> spent more on payroll in <span class="entity-data-year"></span> than <strong id="entity-expenditure-percentile"></strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
-              {% endif %}
+              <p><strong>{{ entity }}</strong> spent more on payroll in <span class="entity-data-year"></span> than <strong id="entity-expenditure-percentile"></strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
+            {% endif %}
 
-              {# Department statistics, including whether the unit reported salaries
-                 on a department level, can vary by year, so handle the display
-                 and population of this section in JavaScript. #}
-              <div class="entity-department-statistics">
-                <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
-              </div>
+            {# Department statistics, including whether the unit reported salaries
+               on a department level, can vary by year, so handle the display
+               and population of this section in JavaScript. #}
+            <div class="entity-department-statistics">
+              <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
             </div>
-            <div id="employee-distribution-chart" class="col-lg-6"></div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md">
-      <div class="card mb-4">
-        {% include 'partials/employee_card.html' %}
-        {% include 'partials/payroll_expenditure.html' %}
-      </div>
-    </div>
-  </div>
-
-  <div class="row" class="entity-department-statistics">
-    <div class="col-md">
-      <div class="card mb-4">
-        {% include 'partials/department_card.html' %}
-        <div class="card-body">
-          <h4 class="card-subtitle mt-3">Top-spending departments as a proportion of total expenditure</h4>
-          <h4 class="card-subtitle mb-3"><small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small></h4>
-          <div id="department-composition-chart"></div>
+          <div id="employee-distribution-chart" class="col-lg-6"></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div id="no-data">
-  <div class="row">
-    <div class="col mt-3 text-center">
-      <h1>No data :-(</h1>
+<div class="row">
+  <div class="col-md">
+    <div class="card mb-4">
+      {% include 'partials/employee_card.html' %}
+      {% include 'partials/payroll_expenditure.html' %}
     </div>
   </div>
 </div>
+
+<div class="row" class="entity-department-statistics">
+  <div class="col-md">
+    <div class="card mb-4">
+      {% include 'partials/department_card.html' %}
+      <div class="card-body">
+        <h4 class="card-subtitle mt-3">Top-spending departments as a proportion of total expenditure</h4>
+        <h4 class="card-subtitle mb-3"><small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small></h4>
+        <div id="department-composition-chart"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -126,7 +117,7 @@
 <script type="module">
   import { initDataYearToggle } from  "js/data_year_toggle"
 
-  const initialYear = $('button#yearDropdownMenuButton').text();
+  const initialYear = $('button#yearDropdownMenuButton').text().replace(/(\n|\s)/gm, '');
   const slug = '{{ entity.slug }}';
 
   function updateUnitPage (year, result) {
@@ -233,20 +224,12 @@
       }
     }
 
-    if ( parseInt(result.headcount) === 0 ) {
-      $('#unit-wrapper').hide();
-      $('#no-data').show();
-    } else {
-      updateDataYear();
-      updateBaseBallStats();
-      updateSummaryCard();
-      updateEmployeeCard();
-      updateDepartmentCard();
-      updateSourceLink();
-
-      $('#no-data').hide();
-      $('#unit-wrapper').show();
-    }
+    updateDataYear();
+    updateBaseBallStats();
+    updateSummaryCard();
+    updateEmployeeCard();
+    updateDepartmentCard();
+    updateSourceLink();
   }
 
   initDataYearToggle('units', slug, initialYear, updateUnitPage);
