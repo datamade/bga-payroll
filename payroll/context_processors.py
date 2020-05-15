@@ -1,7 +1,6 @@
 from django.conf import settings
 
 from payroll.models import Unit
-from data_import.models import StandardizedFile
 
 
 def inspiration_slugs(request):
