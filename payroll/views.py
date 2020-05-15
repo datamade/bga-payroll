@@ -12,6 +12,7 @@ from django.views.generic.list import ListView
 from django.conf import settings
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
+from data_import.models import StandardizedFile
 from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
