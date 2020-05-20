@@ -205,6 +205,102 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_total_expenditure(self, obj):
         return format_ballpark_number(self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'])
 
+    def get_employee_salary_json(self, obj):
+        if self.employer_salary_count > 0:
+            return self.bin_salary_data(
+                list(s['total_pay'] for s in self.employer_salaries.values('total_pay'))
+            )
+        else:
+            return []
+
+    def get_source_link(self, obj):
+        source_file = obj.source_file(self.context['data_year'])
+
+        if source_file:
+            return source_file.url
+
+    def get_payroll_expenditure(self, obj):
+        return {
+            'container': 'payroll-expenditure-chart',
+            'total_pay': self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'],
+            'series_data': {
+                'Name': 'Data',
+                'data': [{
+                    'name': 'Reported Base Pay',
+                    'y': self.employer_payroll['base_pay'],
+                    'label': 'base_pay',
+                }, {
+                    'name': 'Reported Extra Pay',
+                    'y': self.employer_payroll['extra_pay'],
+                    'label': 'extra_pay',
+                }],
+            },
+        }
+
+
+# /v1/units/SLUG/YEAR
+class UnitSerializer(EmployerSerializer):
+
+    class Meta:
+        model = Unit
+        fields = '__all__'
+
+    department_salaries = serializers.SerializerMethodField()
+    highest_spending_department = serializers.SerializerMethodField()
+    composition_json = serializers.SerializerMethodField()
+
+    @property
+    def department_statistics(self):
+        if not hasattr(self, '_department_statistics'):
+            # Combining annotations doesn't work! :scream_cat:
+            # https://docs.djangoproject.com/en/3.0/topics/db/aggregation/#combining-multiple-aggregations
+            #
+            # Instead, use the raw manager to generate a queryset with the
+            # needed annotations. https://docs.djangoproject.com/en/3.0/topics/db/sql/#performing-raw-queries
+            aggregate_query = '''
+                WITH department_salaries AS (
+                  SELECT
+                    employer.id,
+                    employer.name,
+                    employer.slug,
+                    salary.amount,
+                    salary.extra_pay
+                  FROM payroll_salary AS salary
+                  JOIN payroll_job AS job
+                  ON salary.job_id = job.id
+                  JOIN payroll_position AS position
+                  ON position.id = job.position_id
+                  JOIN payroll_employer AS employer
+                  ON position.employer_id = employer.id
+                  JOIN data_import_upload AS vintage
+                  ON salary.vintage_id = vintage.id
+                  JOIN data_import_standardizedfile AS s_file
+                  ON s_file.upload_id = vintage.id
+                  WHERE employer.parent_id = {parent_id}
+                  AND s_file.reporting_year = {reporting_year}
+                )
+                SELECT
+                  id,
+                  name,
+                  slug,
+                  SUM(COALESCE(amount, 0)) AS entity_bp,
+                  SUM(COALESCE(extra_pay, 0)) AS entity_ep,
+                  SUM(COALESCE(amount, 0)) + SUM(COALESCE(extra_pay, 0)) AS total_expenditure,
+                  percentile_cont(0.5) within GROUP (
+                    ORDER BY
+                      NULLIF((COALESCE(amount, 0) + COALESCE(extra_pay, 0)), 0)
+                  ) AS median_tp,
+                  COUNT(*) AS headcount
+                FROM department_salaries
+                GROUP BY id, name, slug
+                ORDER BY total_expenditure DESC
+            '''.format(parent_id=self.instance.id,
+                       reporting_year=self.context['data_year'])
+
+            self._department_statistics = Employer.objects.raw(aggregate_query)
+
+        return self._department_statistics
+
     def get_salary_percentile(self, obj):
         if obj.is_unclassified or self.employer_salary_count == 0:
             return 'N/A'
@@ -310,102 +406,6 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
         return format_percentile(result[0] * 100)
 
-    def get_employee_salary_json(self, obj):
-        if self.employer_salary_count > 0:
-            return self.bin_salary_data(
-                list(s['total_pay'] for s in self.employer_salaries.values('total_pay'))
-            )
-        else:
-            return []
-
-    def get_source_link(self, obj):
-        source_file = obj.source_file(self.context['data_year'])
-
-        if source_file:
-            return source_file.url
-
-    def get_payroll_expenditure(self, obj):
-        return {
-            'container': 'payroll-expenditure-chart',
-            'total_pay': self.employer_payroll['base_pay'] + self.employer_payroll['extra_pay'],
-            'series_data': {
-                'Name': 'Data',
-                'data': [{
-                    'name': 'Reported Base Pay',
-                    'y': self.employer_payroll['base_pay'],
-                    'label': 'base_pay',
-                }, {
-                    'name': 'Reported Extra Pay',
-                    'y': self.employer_payroll['extra_pay'],
-                    'label': 'extra_pay',
-                }],
-            },
-        }
-
-
-# /v1/units/SLUG/YEAR
-class UnitSerializer(EmployerSerializer):
-
-    class Meta:
-        model = Unit
-        fields = '__all__'
-
-    department_salaries = serializers.SerializerMethodField()
-    highest_spending_department = serializers.SerializerMethodField()
-    composition_json = serializers.SerializerMethodField()
-
-    @property
-    def department_statistics(self):
-        if not hasattr(self, '_department_statistics'):
-            # Combining annotations doesn't work! :scream_cat:
-            # https://docs.djangoproject.com/en/3.0/topics/db/aggregation/#combining-multiple-aggregations
-            #
-            # Instead, use the raw manager to generate a queryset with the
-            # needed annotations. https://docs.djangoproject.com/en/3.0/topics/db/sql/#performing-raw-queries
-            aggregate_query = '''
-                WITH department_salaries AS (
-                  SELECT
-                    employer.id,
-                    employer.name,
-                    employer.slug,
-                    salary.amount,
-                    salary.extra_pay
-                  FROM payroll_salary AS salary
-                  JOIN payroll_job AS job
-                  ON salary.job_id = job.id
-                  JOIN payroll_position AS position
-                  ON position.id = job.position_id
-                  JOIN payroll_employer AS employer
-                  ON position.employer_id = employer.id
-                  JOIN data_import_upload AS vintage
-                  ON salary.vintage_id = vintage.id
-                  JOIN data_import_standardizedfile AS s_file
-                  ON s_file.upload_id = vintage.id
-                  WHERE employer.parent_id = {parent_id}
-                  AND s_file.reporting_year = {reporting_year}
-                )
-                SELECT
-                  id,
-                  name,
-                  slug,
-                  SUM(COALESCE(amount, 0)) AS entity_bp,
-                  SUM(COALESCE(extra_pay, 0)) AS entity_ep,
-                  SUM(COALESCE(amount, 0)) + SUM(COALESCE(extra_pay, 0)) AS total_expenditure,
-                  percentile_cont(0.5) within GROUP (
-                    ORDER BY
-                      NULLIF((COALESCE(amount, 0) + COALESCE(extra_pay, 0)), 0)
-                  ) AS median_tp,
-                  COUNT(*) AS headcount
-                FROM department_salaries
-                GROUP BY id, name, slug
-                ORDER BY total_expenditure DESC
-            '''.format(parent_id=self.instance.id,
-                       reporting_year=self.context['data_year'])
-
-            self._department_statistics = Employer.objects.raw(aggregate_query)
-
-        return self._department_statistics
-
     def get_department_salaries(self, obj):
         formatted_salaries = []
 
@@ -477,6 +477,104 @@ class DepartmentSerializer(EmployerSerializer):
                                             .values_list('total_pay', flat=True)
 
         return format_percentile(sum(department_salaries) / sum(unit_salaries) * 100)
+
+    def expenditure_percentile(self):
+        if obj.is_unclassified or obj.parent.is_unclassified:
+            return 'N/A'
+
+        query = '''
+            WITH taxonomy_members AS (
+              SELECT
+                department.id,
+                department.universe_id
+              FROM payroll_employer AS unit
+              JOIN payroll_employer AS department
+              ON unit.id = department.parent_id
+              WHERE unit.taxonomy_id = {taxonomy}
+            ),
+            expenditure_by_department AS (
+              SELECT
+                SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS total_budget,
+                department.id AS department_id
+              FROM payroll_salary AS salary
+              JOIN payroll_job AS job
+              ON salary.job_id = job.id
+              JOIN payroll_position AS position
+              ON job.position_id = position.id
+              JOIN taxonomy_members AS department
+              ON position.employer_id = department.id
+              WHERE department.universe_id = {universe}
+              GROUP BY department.id
+            ),
+            exp_percentiles AS (
+              SELECT
+                percent_rank() OVER (ORDER BY total_budget ASC) AS percentile,
+                department_id
+              FROM expenditure_by_department
+            )
+            SELECT
+              percentile
+            FROM exp_percentiles
+            WHERE department_id = {id}
+        '''.format(taxonomy=obj.parent.taxonomy.id,
+                   universe=obj.universe.id,
+                   id=obj.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return format_percentile(result[0] * 100)
+
+    def get_salary_percentile(self, obj):
+      def salary_percentile(self):
+        if obj.is_unclassified or obj.parent.is_unclassified:
+            return 'N/A'
+
+        query = '''
+            WITH taxonomy_members AS (
+              SELECT
+                department.id,
+                department.universe_id
+              FROM payroll_employer AS unit
+              JOIN payroll_employer AS department
+              ON unit.id = department.parent_id
+              WHERE unit.taxonomy_id = {taxonomy}
+            ),
+            median_salaries_by_department AS (
+              SELECT
+                percentile_cont(0.5) WITHIN GROUP (
+                  ORDER BY COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0) ASC
+                ) AS median_salary,
+                department.id AS department_id
+              FROM payroll_salary AS salary
+              JOIN payroll_job AS job
+              ON salary.job_id = job.id
+              JOIN payroll_position AS position
+              ON job.position_id = position.id
+              JOIN taxonomy_members AS department
+              ON position.employer_id = department.id
+              WHERE department.universe_id = {universe}
+              GROUP BY department.id
+            ),
+            salary_percentiles AS (
+              SELECT
+                percent_rank() OVER (ORDER BY median_salary ASC) AS percentile,
+                department_id
+              FROM median_salaries_by_department
+            )
+            SELECT percentile
+            FROM salary_percentiles
+            WHERE department_id = {id}
+            '''.format(taxonomy=obj.parent.taxonomy.id,
+                       universe=obj.universe.id,
+                       id=obj.id)
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+        return format_percentile(result[0] * 100)
 
 
 # /v1/people/SLUG/YEAR
