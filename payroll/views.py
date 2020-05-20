@@ -104,8 +104,15 @@ class DepartmentView(EmployerView):
         parent_expediture = sum(self.object.parent.employee_salaries)
         percentage = department_expenditure / parent_expediture
 
+        data_years = self.object.get_salaries()\
+            .distinct('vintage__standardized_file__reporting_year')\
+            .values_list('vintage__standardized_file__reporting_year', flat=True)
+
+        data_years = sorted(list(data_years), reverse=True)
+
         context.update({
             'percent_of_total_expenditure': percentage * 100,
+            'data_years': data_years,
         })
 
         return context

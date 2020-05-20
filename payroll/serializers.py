@@ -476,7 +476,7 @@ class DepartmentSerializer(EmployerSerializer):
         unit_salaries = self.instance.parent.get_salaries(year=self.context['data_year'])\
                                             .values_list('total_pay', flat=True)
 
-        return sum(department_salaries) / sum(unit_salaries) * 100
+        return format_percentile(sum(department_salaries) / sum(unit_salaries) * 100)
 
 
 # /v1/people/SLUG/YEAR
