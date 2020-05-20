@@ -76,85 +76,15 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ static('js/chart_helper.js') }}"></script>
-
 {% compress js %}
 <script type="module">
   import { initDataYearToggle } from  "js/data_year_toggle"
+  import { Department } from  "js/employer"
 
   const initialYear = $('button#yearDropdownMenuButton').text().replace(/(\n|\s)/gm, '');
   const slug = '{{ entity.slug }}';
 
-  function updateDepartmentPage (year, result) {
-    var makeLink = function (href, text) {
-      const link = $('<a>').attr('href', href);
-      link.text(text);
-      return link;
-    }
-
-    var updateDataYear = function () { $('.entity-data-year').text(year) };
-
-    var updateBaseBallStats = function () {
-      $('.entity-headcount').text(result.headcount);
-      $('#entity-total-expenditure').text(result.total_expenditure);
-      $('.entity-median-tp').text(result.median_tp);
-    }
-
-    var updateSummaryCard = function () {
-      {% if entity.is_comparable %}
-      $('#entity-salary-percentile').text(result.salary_percentile);
-      $('#entity-expenditure-percentile').text(result.expenditure_percentile);
-      {% endif %}
-
-      $('#entity-percent-of-expenditure').text(result.percent_of_total_expenditure);
-
-      ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
-    }
-
-    var updateEmployeeCard = function () {
-      $('#entity-salaries').empty();
-
-      $.each(result.salaries, function (idx, salary) {
-        const tRow = $('<tr>');
-
-        const personLink = makeLink(
-          '/person/' + salary.slug,
-          salary.name
-        );
-
-        tRow.append($('<td>').html(personLink));
-        tRow.append($('<td>').html(salary.position));
-        tRow.append($('<td>').html(salary.amount).addClass('text-right'));
-        tRow.append($('<td>').html(salary.extra_pay).addClass('text-right'));
-
-        $('#entity-salaries').append(tRow);
-      });
-
-      ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
-
-      $('.entity-median-tp').text(result.median_tp);
-      $('#entity-median-bp').text(result.median_bp);
-      $('#entity-median-ep').text(result.median_ep);
-    }
-
-    var updateSourceLink = function () {
-      if ( result.source_link ) {
-        $('.no-source-span').hide();
-        $('.source-span').show();
-      } else {
-        $('.source-span').hide();
-        $('.no-source-span').show();
-      }
-    }
-
-    updateDataYear();
-    updateBaseBallStats();
-    updateSummaryCard();
-    updateEmployeeCard();
-    updateSourceLink();
-  }
-
-  initDataYearToggle('departments', slug, initialYear, updateDepartmentPage);
+  initDataYearToggle('departments', slug, initialYear, Department.update);
 </script>
 {% endcompress %}
 {% endblock %}

@@ -111,128 +111,15 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ static('js/chart_helper.js') }}"></script>
-
 {% compress js %}
 <script type="module">
   import { initDataYearToggle } from  "js/data_year_toggle"
+  import { Unit } from  "js/employer"
 
   const initialYear = $('button#yearDropdownMenuButton').text().replace(/(\n|\s)/gm, '');
   const slug = '{{ entity.slug }}';
 
-  function updateUnitPage (year, result) {
-    var makeLink = function (href, text) {
-      const link = $('<a>').attr('href', href);
-      link.text(text);
-      return link;
-    }
-
-    var updateDataYear = function () { $('.entity-data-year').text(year) };
-
-    var updateBaseBallStats = function () {
-      $('.entity-headcount').text(result.headcount);
-      $('#entity-total-expenditure').text(result.total_expenditure);
-      $('.entity-median-tp').text(result.median_tp);
-    }
-
-    var updateSummaryCard = function () {
-      {% if entity.is_comparable %}
-      $('#entity-salary-percentile').text(result.salary_percentile);
-      $('#entity-expenditure-percentile').text(result.expenditure_percentile);
-      {% endif %}
-
-      if ( result.highest_spending_department === null ) {
-        $('#entity-department-statistics').hide();
-      } else {
-        $('#entity-highest-spending-department').attr('href', '/department/' + result.highest_spending_department.slug);
-        $('#entity-highest-spending-department').text(result.highest_spending_department.name);
-        $('#entity-highest-spending-department-expenditure').text(result.highest_spending_department.amount);
-        $('#entity-department-statistics').show();
-      }
-
-      ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
-    }
-
-    var updateEmployeeCard = function () {
-      $('#entity-salaries').empty();
-
-      $.each(result.salaries, function (idx, salary) {
-        const tRow = $('<tr>');
-
-        const personLink = makeLink(
-          '/person/' + salary.slug,
-          salary.name
-        );
-        const employerLink = makeLink(
-          '/' + salary.employer_endpoint + '/' + salary.employer_slug,
-          salary.employer
-        );
-
-        tRow.append($('<td>').html(personLink));
-        tRow.append($('<td>').html(salary.position));
-        tRow.append($('<td>').html(employerLink));
-        tRow.append($('<td>').html(salary.amount).addClass('text-right'));
-        tRow.append($('<td>').html(salary.extra_pay).addClass('text-right'));
-
-        $('#entity-salaries').append(tRow);
-      });
-
-      ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
-
-      $('.entity-median-tp').text(result.median_tp);
-      $('#entity-median-bp').text(result.median_bp);
-      $('#entity-median-ep').text(result.median_ep);
-    }
-
-    var updateDepartmentCard = function () {
-      $('#department-salaries').empty();
-
-      if ( result.department_salaries.length > 0 ) {
-        $.each(result.department_salaries, function (idx, salary) {
-          const tRow = $('<tr>');
-
-          const departmentLink = makeLink(
-            '/department/' + salary.slug,
-            salary.name
-          );
-
-          tRow.append($('<td>').html(departmentLink));
-          tRow.append($('<td>').html(salary.headcount).addClass('text-right'));
-          tRow.append($('<td>').html(salary.median_tp).addClass('text-right'));
-          tRow.append($('<td>').html('$' + salary.entity_bp).addClass('text-right'));
-          tRow.append($('<td>').html('$' + salary.entity_ep).addClass('text-right'));
-          tRow.append($('<td>').html('$' + salary.total_expenditure).addClass('text-right'));
-
-          $('#department-salaries').append(tRow);
-        });
-
-        ChartHelper.make_composition_chart(result.composition_json);
-
-        $('.entity-department-statistics').show();
-      } else {
-        $('.entity-department-statistics').hide();
-      }
-    }
-
-    var updateSourceLink = function () {
-      if ( result.source_link ) {
-        $('.no-source-span').hide();
-        $('.source-span').show();
-      } else {
-        $('.source-span').hide();
-        $('.no-source-span').show();
-      }
-    }
-
-    updateDataYear();
-    updateBaseBallStats();
-    updateSummaryCard();
-    updateEmployeeCard();
-    updateDepartmentCard();
-    updateSourceLink();
-  }
-
-  initDataYearToggle('units', slug, initialYear, updateUnitPage);
+  initDataYearToggle('units', slug, initialYear, Unit.update);
 </script>
 {% endcompress %}
 {% endblock %}
