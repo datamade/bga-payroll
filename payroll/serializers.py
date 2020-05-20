@@ -478,7 +478,7 @@ class DepartmentSerializer(EmployerSerializer):
 
         return format_percentile(sum(department_salaries) / sum(unit_salaries) * 100)
 
-    def expenditure_percentile(self):
+    def get_expenditure_percentile(self, obj):
         if obj.is_unclassified or obj.parent.is_unclassified:
             return 'N/A'
 
@@ -527,7 +527,6 @@ class DepartmentSerializer(EmployerSerializer):
         return format_percentile(result[0] * 100)
 
     def get_salary_percentile(self, obj):
-      def salary_percentile(self):
         if obj.is_unclassified or obj.parent.is_unclassified:
             return 'N/A'
 
