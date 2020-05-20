@@ -151,10 +151,10 @@
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
 <script src="{{ static('js/search.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
-<script src="{{ static('js/chart_helper.js') }}"></script>
 
 {% compress js %}
 <script type="module">
+  import { ChartHelper } from  "js/chart_helper"
   import { initDataYearToggle } from  "js/data_year_toggle"
 
   // Style the charts a little differently on the homepage.
