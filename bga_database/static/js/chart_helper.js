@@ -205,3 +205,5 @@ var ChartHelper = {
     });
   }
 };
+
+export { ChartHelper };
