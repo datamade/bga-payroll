@@ -1,4 +1,4 @@
-import { ChartHelper } from  "./chart_helper"
+import { ChartHelper } from  "./chart_helper";
 
 const Employer = {
   commonUpdate: function (year, result) {
@@ -13,7 +13,7 @@ const Employer = {
     return link;
   },
 
-  updateDataYear: function (year) { $('.entity-data-year').text(year) },
+  updateDataYear: function (year) { $('.entity-data-year').text(year); },
 
   updateBaseBallStats: function (result) {
     $('.entity-headcount').text(result.headcount);
@@ -121,7 +121,7 @@ const Unit = {
       $('.entity-department-statistics').hide();
     }
   }
-}
+};
 
 const Department = {
   update: function (year, result) {
@@ -169,6 +169,6 @@ const Department = {
     $('#entity-median-bp').text(result.median_bp);
     $('#entity-median-ep').text(result.median_ep);
   }
-}
+};
 
 export { Unit, Department };
