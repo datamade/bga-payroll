@@ -6,7 +6,7 @@
 <div class="row">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      {% with entity = current_job.position.employer %}
+      {% with entity = current_employer %}
         {% include 'partials/breadcrumbs.html' %}
       {% endwith %}
       <li class="breadcrumb-item active" aria-current="page">{{ entity }}</li>
@@ -32,11 +32,11 @@
             <h3 class="card-title mb-4">
               <i class="fas fa-list"></i> Summary
             </h3>
-            <p><strong>{{ entity }}</strong> earned <strong class="bg-warning">{{ current_salary|format_salary }}</strong> in {{ data_year }} as {{ current_job.position.title|an_or_a(bold=True)|safe }} for <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer }}</a></strong>. {% if current_job.start_date %}{{ entity.last_name }} had worked in this position since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
+            <p><strong>{{ entity }}</strong> earned <strong class="bg-warning">{{ current_salary|format_salary }}</strong> in {{ data_year }} as {{ current_job.title|an_or_a(bold=True)|safe }} for <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer.name }}</a></strong>. {% if current_job.start_date %}{{ entity.last_name }} had worked in this position since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
 
-            <p>{{ entity.last_name }} earned more than <strong>{{ employer_percentile|format_percentile }}</strong> of employees in <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer }}</a></strong>.</p>
+            <p>{{ entity.last_name }} earned more than <strong>{{ employer_percentile|format_percentile }}</strong> of employees in <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer.name }}</a></strong>.</p>
 
-            {% if current_job.position.employer.is_comparable %}
+            {% if current_employer.is_comparable %}
               <p>{{ entity.last_name }} earned more than <strong>{{ like_employer_percentile|format_percentile }}</strong> of employees across all <strong><a href='{{ url("search") }}?{{ employer_type[0].api_param }}="{{ employer_type[0] }}"'>{{ employer_type[0]|pluralize }}</a></strong>{% if employer_type[0] != employer_type[-1] %} in the <strong><a href='{{ url("search") }}?{{ employer_type[1].api_param }}="{{ employer_type[1] }}"'>{{ employer_type[1] }}</a></strong> category{% endif %}.</p>
             {% endif %}
           </div>
@@ -55,7 +55,7 @@
   </div>
 </div>
 
-{% if all_jobs.count() > 1 %}
+{% if all_jobs|length > 1 %}
   <div class="row">
     <div class="col-md">
       <div class="card mb-4">
@@ -63,7 +63,7 @@
           <h3 class="card-title mb-4">
             <i class="fas fa-briefcase"></i> All positions
           </h3>
-          {% with salaries = salaries, entity = namespace(is_department=false), show_start_date = true %}
+          {% with salaries = all_jobs, entity = namespace(is_department=true), show_start_date = true %}
             {% include 'partials/person_table.html' %}
           {% endwith %}
         </div>
@@ -78,9 +78,9 @@
       <div class="card mb-4">
         <div class="card-body">
           <h3 class="card-title mb-4">
-            <i class="fas fa-users"></i> Other <strong>{{ current_job.position.title }}s</strong> at <strong>{{ current_job.position.employer }}</strong>
+            <i class="fas fa-users"></i> Other <strong>{{ current_job.title }}s</strong> at <strong>{{ current_employer.name }}</strong>
           </h3>
-          {% with entity = namespace(is_department=false), show_start_date = true %}
+          {% with entity = namespace(is_department=true), show_start_date = true %}
             {% include 'partials/person_table.html' %}
           {% endwith %}
         </div>
@@ -92,9 +92,10 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ static('js/chart_helper.js') }}"></script>
-
-<script type="text/javascript">
+{% compress js %}
+<script type="text/javascript" type="module">
+  import { ChartHelper } from 'js/chart_helper'
   ChartHelper.make_salary_chart({{ employer_salary_json|safe }}, 'employee');
 </script>
+{% endcompress %}
 {% endblock %}

@@ -17,10 +17,10 @@
   <tbody id="entity-salaries">
   {% for salary in salaries %}
     <tr>
-      <td><a href="{{ url('person', kwargs={'slug': salary.job.person.slug}) }}">{{ salary.job.person }}</a></td>
-      <td>{{ salary.job.position.title }}</td>
+      <td><a href="{{ url('person', kwargs={'slug': salary.slug}) }}">{{ salary.name }}</a></td>
+      <td>{{ salary.position }}</td>
       {% if not entity.is_department and department_salaries %}
-      <td><a href="{{ url('department', kwargs={'slug': salary.job.position.employer.slug}) }}">{{ salary.job.position.employer }}</a></td>
+      <td><a href="{{ url('department', kwargs={'slug': salary.employer_slug}) }}">{{ salary.employer }}</a></td>
       {% endif %}
       <td class="text-right">
         {% if salary.amount %}
@@ -29,9 +29,9 @@
           Not reported
         {% endif %}
         {% if current_salary %}
-          {% if current_salary < salary.amount %}
+          {% if current_salary < salary.total_pay %}
             <span class="text-success"><i class="fas fa-arrow-up"></i></span>
-          {% elif current_salary > salary.amount %}
+          {% elif current_salary > salary.total_pay %}
             <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
           {% else %}
             <i class="fas invisible"></i>
@@ -47,8 +47,8 @@
       </td>
       {% if show_start_date %}
       <td class="text-right">
-        {% if salary.job.start_date %}
-          {{ salary.job.start_date.strftime('%m-%d-%Y') }}
+        {% if salary.start_date %}
+          {{ salary.start_date.strftime('%m-%d-%Y') }}
         {% else %}
           N/A
         {% endif %}

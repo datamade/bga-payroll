@@ -3,6 +3,7 @@ import json
 
 from django.core.cache import cache
 from django.db import connection
+from django.db.models import Max
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -17,6 +18,7 @@ from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Salary, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
+from payroll.serializers import PersonSerializer
 
 from bga_database.local_settings import CACHE_SECRET_KEY
 
@@ -125,61 +127,16 @@ class PersonView(DetailView, ChartHelperMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        all_jobs = self.object.jobs.all()
-        current_job = self.object.most_recent_job
-        current_salary = current_job.salaries.get()
+        most_recent_year = self.object.jobs.aggregate(
+            most_recent_year=Max('vintage__standardized_file__reporting_year')
+        )['most_recent_year']
 
-        bp = Coalesce("amount", 0)
-        ep = Coalesce("extra_pay", 0)
-
-        fellow_job_holders = Salary.objects.exclude(job__person=self.object)\
-                                           .select_related('job__person', 'job__position')\
-                                           .filter(job__position=self.object.most_recent_job.position)\
-                                           .annotate(total_pay=bp + ep)\
-                                           .order_by('-total_pay')
-
-        employer_percentile = current_salary.employer_percentile
-        like_employer_percentile = current_salary.like_employer_percentile
-
-        current_employer = current_job.position.employer
-
-        if not current_employer.is_unclassified:
-            if current_employer.is_department:
-                employer_type = [current_employer.universe, current_employer.parent.taxonomy]
-
-            else:
-                employer_type = [current_employer.taxonomy]
-
-        else:
-            employer_type = None
-
-        # Must be set for salary binning to work
-        self.salary_amount = current_salary.amount
-
-        salary_data = current_job.position.employer.employee_salaries
-        binned_salary_data = self.bin_salary_data(salary_data)
-
-        source_file = self.object.source_file(settings.DATA_YEAR)
-
-        if source_file:
-            source_link = source_file.url
-        else:
-            source_link = None
-
-        context.update({
-            'data_year': settings.DATA_YEAR,
-            'current_job': current_job,
-            'all_jobs': all_jobs,
-            'current_salary': self.salary_amount,
-            'current_employer': current_employer,
-            'employer_type': employer_type,
-            'employer_salary_json': json.dumps(binned_salary_data),
-            'employer_percentile': employer_percentile,
-            'like_employer_percentile': like_employer_percentile,
-            'salaries': fellow_job_holders,
-            'source_link': source_link,
-            'noindex': self.salary_amount < 30000 or self.object.noindex,
+        serializer = PersonSerializer(self.object, context={
+            'data_year': most_recent_year
         })
+        context.update(serializer.data)
+
+        context['data_year'] = most_recent_year
 
         return context
 

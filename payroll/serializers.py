@@ -618,7 +618,10 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     @property
     def person_current_employer(self):
         if not hasattr(self, '_current_employer'):
-            self._current_employer = self.person_current_job.position.employer
+            employer = self.person_current_job.position.employer
+            self._current_employer = (Department.objects.get(id=employer.id)
+                                      if employer.is_department
+                                      else Unit.objects.get(id=employer.id))
         return self._current_employer
 
     def get_current_job(self, obj):
@@ -646,6 +649,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
                 'employer_slug': salary.job.position.employer.slug,
                 'amount': salary.amount,
                 'extra_pay': salary.extra_pay,
+                'total_pay': salary.total_pay,
                 'start_date': salary.job.start_date,
             })
 
@@ -655,11 +659,23 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self.person_current_salary.total_pay
 
     def get_current_employer(self, obj):
-        return {
-            'endoint': self.person_current_employer.endpoint,
+        employer = {
+            'endpoint': self.person_current_employer.endpoint,
             'slug': self.person_current_employer.slug,
             'name': self.person_current_employer.name,
+            'is_comparable': self.person_current_employer.is_comparable,
         }
+
+        if self.person_current_employer.parent:
+            parent = {
+                'endpoint': self.person_current_employer.parent.endpoint,
+                'slug': self.person_current_employer.parent.slug,
+                'name': self.person_current_employer.parent.name,
+            }
+
+            employer['parent'] = parent
+
+        return employer
 
     def get_employer_type(self, obj):
         if self.person_current_employer.is_unclassified:
@@ -669,7 +685,6 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         else:
             return [str(self.person_current_employer.taxonomy)]
 
-    def get_employer_salary_json(self, obj):
         return self.bin_salary_data(
             list(s['total_pay'] for s in self.person_current_employer.get_salaries().values('total_pay')),
             salary_amount=self.person_current_salary.total_pay
@@ -687,7 +702,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         for salary in Salary.objects.with_related_objects()\
                                     .filter(job__position=self.person_current_job.position)\
                                     .exclude(job__person=obj)\
-                                    .order_by('-total_pay'):
+                                    .order_by('-total_pay')[:50]:
 
             data.append({
                 'name': str(salary.job.person),
@@ -697,6 +712,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
                 'employer_slug': salary.job.position.employer.slug,
                 'amount': salary.amount,
                 'extra_pay': salary.extra_pay,
+                'total_pay': salary.total_pay,  # TODO: Table.should show total pay, probably
                 'start_date': salary.job.start_date,
             })
 
@@ -710,3 +726,10 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
     def get_noindex(self, obj):
         return self.person_current_salary.amount < 30000 or obj.noindex
+
+    def get_employer_salary_json(self, obj):
+        return self.bin_salary_data(
+            self.person_current_employer.get_salaries(self.context['data_year'])
+                                        .values_list('total_pay', flat=True),
+            salary_amount=self.person_current_salary.total_pay
+        )
