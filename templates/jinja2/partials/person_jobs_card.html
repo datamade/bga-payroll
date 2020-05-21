@@ -95,7 +95,7 @@
         </div>
 
         <div>
-          {% if change_in_salary.extra_pay_delta %}
+          {% if change_in_salary.extra_pay_delta != None %}
             <h4 class="d-inline">{{ change_in_salary.extra_pay_delta|format_salary }}</h4>
             <sup class="d-inline text-{% if change_in_salary.extra_pay_delta >= 0 %}success{% else%}danger{% endif %} px-1 m-0">
               {% if change_in_salary.extra_pay_delta >= 0 %}+{% endif %}
