@@ -61,7 +61,7 @@
       <div class="card mb-4">
         <div class="card-body">
           <h3 class="card-title mb-4">
-            <i class="fas fa-users"></i> Other people with the title <strong>{{ current_job.title }}</strong> at <strong>{{ current_employer.name }} in {{ data_year }}</strong>
+            <i class="fas fa-users"></i> Other employees with the title <strong>{{ current_job.title }}</strong> at <strong>{{ current_employer.name }} in {{ data_year }}</strong>
           </h3>
           <div class="table-responsive">
             <table class="table table-striped">
@@ -74,7 +74,7 @@
               </tr>
             </thead>
             <tbody id="entity-salaries">
-            {% for salary in salaries|sort(attribute='total_pay', reverse=True) %}
+            {% for salary in salaries %}
               <tr>
                 <td><a href="{{ url('person', kwargs={'slug': salary.slug}) }}">{{ salary.name }}</a></td>
                 <td>{{ salary.position }}</td>
@@ -100,7 +100,17 @@
             </tbody>
             </table>
           </div>
-          {% include 'partials/source_link.html' %}
+          <p class="text-right">
+            <small>
+              <strong>Data year:</strong> {{ data_year }}
+              {% if source_link %}
+              (<a href="{{ source_link }}" rel="nofollow">Source</a>)
+              {% else %}
+              <em class="text-secondary">Source coming soon</em>
+              {% endif %}
+            </small>
+          </p>
+
         </div>
       </div>
     </div>
