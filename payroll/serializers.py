@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import connection
-from django.db.models import Q, FloatField, Sum
+from django.db.models import Q, FloatField, Sum, Max
 from django.db.models.functions import Coalesce, NullIf
 from postgres_stats.aggregates import Percentile
 from rest_framework import serializers
@@ -584,9 +584,11 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     current_job = serializers.SerializerMethodField()
     all_jobs = serializers.SerializerMethodField()
     current_salary = serializers.SerializerMethodField()
+    change_in_salary = serializers.SerializerMethodField()
     current_employer = serializers.SerializerMethodField()
     employer_type = serializers.SerializerMethodField()
     employer_salary_json = serializers.SerializerMethodField()
+    employee_salary_json = serializers.SerializerMethodField()
     employer_percentile = serializers.SerializerMethodField()
     like_employer_percentile = serializers.SerializerMethodField()
     salaries = serializers.SerializerMethodField()
@@ -618,7 +620,10 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     @property
     def person_current_employer(self):
         if not hasattr(self, '_current_employer'):
-            self._current_employer = self.person_current_job.position.employer
+            employer = self.person_current_job.position.employer
+            self._current_employer = (Department.objects.get(id=employer.id)
+                                      if employer.is_department
+                                      else Unit.objects.get(id=employer.id))
         return self._current_employer
 
     def get_current_job(self, obj):
@@ -636,17 +641,17 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
         for salary in Salary.objects.with_related_objects()\
                                     .filter(job__person=obj)\
+                                    .annotate(data_year=Max('vintage__standardized_file__reporting_year'))\
                                     .order_by('-vintage__standardized_file__reporting_year'):
 
             data.append({
-                'name': str(salary.job.person),
-                'slug': salary.job.person.slug,
                 'position': salary.job.position.title,
                 'employer': salary.job.position.employer.name,
                 'employer_slug': salary.job.position.employer.slug,
                 'amount': salary.amount,
                 'extra_pay': salary.extra_pay,
                 'start_date': salary.job.start_date,
+                'data_year': salary.data_year,
             })
 
         return data
@@ -655,11 +660,23 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         return self.person_current_salary.total_pay
 
     def get_current_employer(self, obj):
-        return {
-            'endoint': self.person_current_employer.endpoint,
+        employer = {
+            'endpoint': self.person_current_employer.endpoint,
             'slug': self.person_current_employer.slug,
             'name': self.person_current_employer.name,
+            'is_comparable': self.person_current_employer.is_comparable,
         }
+
+        if self.person_current_employer.parent:
+            parent = {
+                'endpoint': self.person_current_employer.parent.endpoint,
+                'slug': self.person_current_employer.parent.slug,
+                'name': self.person_current_employer.parent.name,
+            }
+
+            employer['parent'] = parent
+
+        return employer
 
     def get_employer_type(self, obj):
         if self.person_current_employer.is_unclassified:
@@ -671,7 +688,8 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
     def get_employer_salary_json(self, obj):
         return self.bin_salary_data(
-            list(s['total_pay'] for s in self.person_current_employer.get_salaries().values('total_pay')),
+            self.person_current_employer.get_salaries(self.context['data_year'])
+                                        .values_list('total_pay', flat=True),
             salary_amount=self.person_current_salary.total_pay
         )
 
@@ -685,18 +703,16 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         data = []
 
         for salary in Salary.objects.with_related_objects()\
-                                    .filter(job__position=self.person_current_job.position)\
+                                    .filter(job__position=self.person_current_job.position,
+                                            vintage__standardized_file__reporting_year=self.context['data_year'])\
                                     .exclude(job__person=obj)\
-                                    .order_by('-total_pay'):
+                                    .order_by('-total_pay')[:25]:
 
             data.append({
                 'name': str(salary.job.person),
                 'slug': salary.job.person.slug,
                 'position': salary.job.position.title,
-                'employer': salary.job.position.employer.name,
-                'employer_slug': salary.job.position.employer.slug,
-                'amount': salary.amount,
-                'extra_pay': salary.extra_pay,
+                'total_pay': salary.total_pay,
                 'start_date': salary.job.start_date,
             })
 
@@ -710,3 +726,77 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
     def get_noindex(self, obj):
         return self.person_current_salary.amount < 30000 or obj.noindex
+
+    def get_employee_salary_json(self, obj):
+        base_pay = {
+            'name': 'Base Pay',
+            'data': []
+        }
+        extra_pay = {
+            'name': 'Extra Pay',
+            'data': []
+        }
+
+        for salary in Salary.objects.with_related_objects()\
+                                    .filter(job__person=obj)\
+                                    .annotate(data_year=Max('vintage__standardized_file__reporting_year'))\
+                                    .order_by('vintage__standardized_file__reporting_year'):
+
+            base_pay['data'].append({
+                'name': str(salary.data_year),
+                'y': float(salary.amount or 0),
+            })
+
+            extra_pay['data'].append({
+                'name': str(salary.data_year),
+                'y': float(salary.extra_pay or 0),
+            })
+
+        return [extra_pay, base_pay]
+
+    def get_change_in_salary(self, obj):
+        '''
+        Salaries must have either base or extra pay, but are not required to
+        have both. For that reason, total pay is never null. However, base or
+        extra pay can be.
+
+        Calculate the overall delta from the earliest and latest salaries.
+        Calculate the base and extra pay deltas from the earliest salaries that
+        have a value for each of them, respectively, and the latest salary,
+        if the latest salary has a value.
+        '''
+        current_salary = self.person_current_salary
+
+        ordered_salaries = list(Salary.objects.filter(job__person=obj)
+                                              .order_by('vintage__standardized_file__reporting_year'))
+
+        first_salary = ordered_salaries[0]
+
+        change = {
+            'total_pay_delta': current_salary.total_pay - first_salary.total_pay,
+            'total_pay_percent_change': (current_salary.total_pay - first_salary.total_pay) / first_salary.total_pay,
+        }
+
+        salaries_with_amount = list(filter(lambda x: x.amount is not None, ordered_salaries))
+
+        if len(salaries_with_amount) and salaries_with_amount[0] != current_salary and current_salary.amount:
+            earliest_amount = salaries_with_amount[0].amount
+            latest_amount = current_salary.amount
+
+            change.update({
+                'amount_delta': latest_amount - earliest_amount,
+                'amount_percent_change': (latest_amount - earliest_amount) / earliest_amount,
+            })
+
+        salaries_with_extra_pay = list(filter(lambda x: x.extra_pay is not None, ordered_salaries))
+
+        if len(salaries_with_extra_pay) and salaries_with_extra_pay[0] != current_salary and current_salary.extra_pay:
+            earliest_amount = salaries_with_extra_pay[0].extra_pay
+            latest_amount = current_salary.extra_pay
+
+            change.update({
+                'extra_pay_delta': latest_amount - earliest_amount,
+                'extra_pay_percent_change': (latest_amount - earliest_amount) / earliest_amount,
+            })
+
+        return change

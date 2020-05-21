@@ -6,13 +6,13 @@
 
   {% if entity.parent %}
     <li class="breadcrumb-item">
-      <a href="/{{ entity.parent.endpoint }}/{{ entity.parent.slug }}">{{ entity.parent }}</a>
+      <a href="/{{ entity.parent.endpoint }}/{{ entity.parent.slug }}">{{ entity.parent.name }}</a>
     </li>
   {% endif %}
 
   <li class="breadcrumb-item active" aria-current="page">
     {% if '/person/' in request.path %} {# Link if shown on person page #}
-      <a href="/{{ entity.endpoint }}/{{ entity.slug }}">{{ entity }}</a>
+      <a href="/{{ entity.endpoint }}/{{ entity.slug }}">{{ entity.name }}</a>
     {% else %}
       {{ entity }}
     {% endif %}

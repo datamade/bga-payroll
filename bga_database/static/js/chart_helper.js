@@ -203,6 +203,41 @@ var ChartHelper = {
       },
       series: [data.series_data]
     });
+  },
+  make_salary_over_time_chart: function(data) {
+    var element = 'salary-over-time-chart';
+
+    Highcharts.chart(element, { // jshint ignore:line
+      chart: {
+        type: 'column'
+      },
+      colors: ['#538BC2', '#004C76'],
+      title: {
+        text: ''
+      },
+      tooltip: {
+        formatter: function() {
+          return this.key + " " + this.series.name + ": $" +  this.y.toLocaleString();
+        }
+      },
+      series: data,
+      xAxis: {
+        type: 'category',
+      },
+      yAxis: {
+        title: {
+            text: 'Total pay ($)'
+        }
+      },
+      plotOptions: {
+        series: {
+          stacking: 'normal'
+        }
+      },
+      legend: {
+        reversed: true
+      }
+    });
   }
 };
 

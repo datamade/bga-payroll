@@ -25,6 +25,10 @@ def format_salary(i):
     if isinstance(i, str):
         return i
     rounded_i = Decimal(i).quantize(0, ROUND_HALF_UP)
+
+    if rounded_i < 0:
+        return "-${:,.0f}".format(abs(rounded_i))
+
     return "${:,.0f}".format(rounded_i)
 
 
