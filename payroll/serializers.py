@@ -731,16 +731,28 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         )
 
     def get_employee_salary_json(self, obj):
-        data = []
+        base_pay = {
+          'name': 'Base Pay',
+          'data': []
+        }
+        extra_pay = {
+          'name': 'Extra Pay',
+          'data': []
+        }
 
         for salary in Salary.objects.with_related_objects()\
                                     .filter(job__person=obj)\
                                     .annotate(data_year=Max('vintage__standardized_file__reporting_year'))\
                                     .order_by('vintage__standardized_file__reporting_year'):
 
-            data.append({
+            base_pay['data'].append({
                 'name': str(salary.data_year),
-                'y': float(salary.total_pay),
+                'y': float(salary.amount),
             })
 
-        return {'data': data}
+            extra_pay['data'].append({
+                'name': str(salary.data_year),
+                'y': float(salary.extra_pay),
+            })
+
+        return [extra_pay, base_pay]

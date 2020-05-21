@@ -211,16 +211,16 @@ var ChartHelper = {
       chart: {
         type: 'column'
       },
-      colors: ['#004C76'],
+      colors: ['#538BC2', '#004C76'],
       title: {
         text: ''
       },
       tooltip: {
         formatter: function() {
-          return this.key + " Total Pay: $" +  this.y.toLocaleString();
+          return this.key + " " + this.series.name + ": $" +  this.y.toLocaleString();
         }
       },
-      series: [data],
+      series: data,
       xAxis: {
         type: 'category',
       },
@@ -229,8 +229,13 @@ var ChartHelper = {
             text: 'Total pay ($)'
         }
       },
+      plotOptions: {
+        series: {
+          stacking: 'normal'
+        }
+      },
       legend: {
-        enabled: false,
+        reversed: true
       }
     });
   }
