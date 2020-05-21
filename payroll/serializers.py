@@ -778,7 +778,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
         salaries_with_amount = list(filter(lambda x: x.amount is not None, ordered_salaries))
 
-        if salaries_with_amount[0] != current_salary and current_salary.amount:
+        if len(salaries_with_amount) and salaries_with_amount[0] != current_salary and current_salary.amount:
             earliest_amount = salaries_with_amount[0].amount
             latest_amount = current_salary.amount
 
@@ -789,7 +789,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
         salaries_with_extra_pay = list(filter(lambda x: x.extra_pay is not None, ordered_salaries))
 
-        if salaries_with_extra_pay[0] != current_salary and current_salary.extra_pay:
+        if len(salaries_with_extra_pay) and salaries_with_extra_pay[0] != current_salary and current_salary.extra_pay:
             earliest_amount = salaries_with_extra_pay[0].extra_pay
             latest_amount = current_salary.extra_pay
 
