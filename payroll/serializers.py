@@ -686,8 +686,10 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         else:
             return [str(self.person_current_employer.taxonomy)]
 
+    def get_employer_salary_json(self, obj):
         return self.bin_salary_data(
-            list(s['total_pay'] for s in self.person_current_employer.get_salaries().values('total_pay')),
+            self.person_current_employer.get_salaries(self.context['data_year'])
+                                        .values_list('total_pay', flat=True),
             salary_amount=self.person_current_salary.total_pay
         )
 
@@ -723,13 +725,6 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
     def get_noindex(self, obj):
         return self.person_current_salary.amount < 30000 or obj.noindex
-
-    def get_employer_salary_json(self, obj):
-        return self.bin_salary_data(
-            self.person_current_employer.get_salaries(self.context['data_year'])
-                                        .values_list('total_pay', flat=True),
-            salary_amount=self.person_current_salary.total_pay
-        )
 
     def get_employee_salary_json(self, obj):
         base_pay = {
