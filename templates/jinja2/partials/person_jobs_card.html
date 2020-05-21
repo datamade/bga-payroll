@@ -53,29 +53,54 @@
   </div>
 
   {% if all_jobs|length > 1 %}
-  <h4 class="card-subtitle mb-4">Total pay over time</h4>
+  <h4 class="card-subtitle">Total pay over time</h4>
+  <h4 class="card-subtitle mb-3"><small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small></h4>
+
   <div class="row">
+
     <div id="salary-over-time-chart" class="col-lg-6"></div>
-    <div class="col-lg-6"><!-- col start -->
+
+    <div class="col-lg-6">
       <div class="text-center d-flex flex-column justify-content-around h-100">
-        <div class="row justify-content-around">
-          <div class="col-lg-6">
-            <div class="row justify-content-center">
-              <h4>$$$$$</h4>
-              <small class="text-success px-2 m-0">+%%</small>
-            </div>
-            <small class="text-muted">Net Base Salary Increase</small></br>
-          </div>
-          <div class="col-lg-6">
-            <div class="row justify-content-center">
-              <h4>$$$</h4>
-              <small class="text-danger px-2 m-0">-%%</small>
-            </div>
-            <small class="text-muted">Net Extra Pay Increase</small></br>
-          </div>
+        <div>
+          <h4 class="d-inline">{{ change_in_salary.total_pay_delta|format_salary }}</h4>
+          <sup class="d-inline text-{% if change_in_salary.total_pay_delta >= 0 %}success{% else%}danger{% endif %} px-1 mb-0">
+            {% if change_in_salary.total_pay_delta >= 0 %}+{% endif %}
+            {{ change_in_salary.total_pay_percent_change|format_percentile }}
+          </sup><br />
+          <small class="text-muted">Net Change in Total Pay</small>
+        </div>
+
+        <div>
+          {% if change_in_salary.amount_delta != None %}
+            <h4 class="d-inline">{{ change_in_salary.amount_delta|format_salary }}</h4>
+            <sup class="d-inline text-{% if change_in_salary.amount_delta >= 0 %}success{% else%}danger{% endif %} px-1 m-0">
+              {% if change_in_salary.amount_delta >= 0 %}+{% endif %}
+              {{ change_in_salary.amount_percent_change|format_percentile }}
+            </sup><br />
+            <small class="text-muted">Net Change in Base Salary</small>
+          {% else %}
+            <h4>Not reported</h4>
+            <small class="text-muted">Net Change in Base Salary</small>
+          {% endif %}
+        </div>
+
+        <div>
+          {% if change_in_salary.extra_pay_delta %}
+            <h4 class="d-inline">{{ change_in_salary.extra_pay_delta|format_salary }}</h4>
+            <sup class="d-inline text-{% if change_in_salary.extra_pay_delta >= 0 %}success{% else%}danger{% endif %} px-1 m-0">
+              {% if change_in_salary.extra_pay_delta >= 0 %}+{% endif %}
+              {{ change_in_salary.extra_pay_percent_change|format_percentile }}
+            </sup><br />
+            <small class="text-muted">Net Change in Extra Pay</small>
+          {% else %}
+            <h4>Not reported</h4>
+            <small class="text-muted">Net Change in Extra Pay</small>
+          {% endif %}
         </div>
       </div>
-    </div><!-- col end -->
-  </div><!-- row end -->
+    </div>
+
+  </div>
   {% endif %}
 </div>

@@ -584,6 +584,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     current_job = serializers.SerializerMethodField()
     all_jobs = serializers.SerializerMethodField()
     current_salary = serializers.SerializerMethodField()
+    change_in_salary = serializers.SerializerMethodField()
     current_employer = serializers.SerializerMethodField()
     employer_type = serializers.SerializerMethodField()
     employer_salary_json = serializers.SerializerMethodField()
@@ -747,12 +748,59 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
             base_pay['data'].append({
                 'name': str(salary.data_year),
-                'y': float(salary.amount),
+                'y': float(salary.amount or 0),
             })
 
             extra_pay['data'].append({
                 'name': str(salary.data_year),
-                'y': float(salary.extra_pay),
+                'y': float(salary.extra_pay or 0),
             })
 
         return [extra_pay, base_pay]
+
+    def get_change_in_salary(self, obj):
+        '''
+        Salaries must have either base or extra pay, but are not required to
+        have both. For that reason, total pay is never null. However, base or
+        extra pay can be.
+
+        Calculate the overall delta from the earliest and latest salaries.
+        Calculate the base and extra pay deltas from the earliest salaries that
+        have a value for each of them, respectively, and the latest salary,
+        if the latest salary has a value.
+        '''
+        current_salary = self.person_current_salary
+
+        ordered_salaries = list(Salary.objects.filter(job__person=obj)
+                                              .order_by('vintage__standardized_file__reporting_year'))
+
+        first_salary = ordered_salaries[0]
+
+        change = {
+            'total_pay_delta': current_salary.total_pay - first_salary.total_pay,
+            'total_pay_percent_change': (current_salary.total_pay - first_salary.total_pay) / first_salary.total_pay,
+        }
+
+        salaries_with_amount = list(filter(lambda x: x.amount is not None, ordered_salaries))
+
+        if salaries_with_amount[0] != current_salary and current_salary.amount:
+            earliest_amount = salaries_with_amount[0].amount
+            latest_amount = current_salary.amount
+
+            change.update({
+                'amount_delta': latest_amount - earliest_amount,
+                'amount_percent_change': (latest_amount - earliest_amount) / earliest_amount,
+            })
+
+        salaries_with_extra_pay = list(filter(lambda x: x.extra_pay is not None, ordered_salaries))
+
+        if salaries_with_extra_pay[0] != current_salary and current_salary.extra_pay:
+            earliest_amount = salaries_with_extra_pay[0].extra_pay
+            latest_amount = current_salary.extra_pay
+
+            change.update({
+                'extra_pay_delta': latest_amount - earliest_amount,
+                'extra_pay_percent_change': (latest_amount - earliest_amount) / earliest_amount,
+            })
+
+        return change
