@@ -703,7 +703,8 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         data = []
 
         for salary in Salary.objects.with_related_objects()\
-                                    .filter(job__position=self.person_current_job.position, vintage__standardized_file__reporting_year=self.context['data_year'])\
+                                    .filter(job__position=self.person_current_job.position,
+                                            vintage__standardized_file__reporting_year=self.context['data_year'])\
                                     .exclude(job__person=obj)\
                                     .order_by('-total_pay')[:25]:
 
@@ -728,12 +729,12 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
     def get_employee_salary_json(self, obj):
         base_pay = {
-          'name': 'Base Pay',
-          'data': []
+            'name': 'Base Pay',
+            'data': []
         }
         extra_pay = {
-          'name': 'Extra Pay',
-          'data': []
+            'name': 'Extra Pay',
+            'data': []
         }
 
         for salary in Salary.objects.with_related_objects()\

@@ -1,10 +1,8 @@
 from itertools import chain
-import json
 
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Max
-from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
@@ -15,7 +13,7 @@ from django.conf import settings
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from data_import.models import StandardizedFile
 from payroll.charts import ChartHelperMixin
-from payroll.models import Person, Salary, Unit, Department
+from payroll.models import Person, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 from payroll.serializers import PersonSerializer
