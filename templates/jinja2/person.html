@@ -55,34 +55,52 @@
   </div>
 </div>
 
-{% if all_jobs|length > 1 %}
-  <div class="row">
-    <div class="col-md">
-      <div class="card mb-4">
-        <div class="card-body">
-          <h3 class="card-title mb-4">
-            <i class="fas fa-briefcase"></i> All positions
-          </h3>
-          {% with salaries = all_jobs, entity = namespace(is_department=true), show_start_date = true %}
-            {% include 'partials/person_table.html' %}
-          {% endwith %}
-        </div>
-      </div>
-    </div>
-  </div>
-{% endif %}
-
 {% if salaries %}
   <div class="row">
     <div class="col-md">
       <div class="card mb-4">
         <div class="card-body">
           <h3 class="card-title mb-4">
-            <i class="fas fa-users"></i> Other <strong>{{ current_job.title }}s</strong> at <strong>{{ current_employer.name }}</strong>
+            <i class="fas fa-users"></i> Other people with the title <strong>{{ current_job.title }}</strong> at <strong>{{ current_employer.name }} in {{ data_year }}</strong>
           </h3>
-          {% with entity = namespace(is_department=true), show_start_date = true %}
-            {% include 'partials/person_table.html' %}
-          {% endwith %}
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead class="bg-dark text-light">
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Position</th>
+                <th scope="col" class="text-right">Total Pay</th>
+                <th scope="col" class="text-right">Start Date</th>
+              </tr>
+            </thead>
+            <tbody id="entity-salaries">
+            {% for salary in salaries|sort(attribute='total_pay', reverse=True) %}
+              <tr>
+                <td><a href="{{ url('person', kwargs={'slug': salary.slug}) }}">{{ salary.name }}</a></td>
+                <td>{{ salary.position }}</td>
+                <td class="text-right">
+                  {{ salary.total_pay|format_salary }}
+                  {% if current_salary < salary.total_pay %}
+                    <span class="text-success"><i class="fas fa-arrow-up"></i></span>
+                  {% elif current_salary > salary.total_pay %}
+                    <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
+                  {% else %}
+                    <i class="fas invisible"></i>
+                  {% endif %}
+                </td>
+                <td class="text-right">
+                  {% if salary.start_date %}
+                    {{ salary.start_date.strftime('%m-%d-%Y') }}
+                  {% else %}
+                    Not reported
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+          </div>
+          {% include 'partials/source_link.html' %}
         </div>
       </div>
     </div>
@@ -96,6 +114,7 @@
 <script type="text/javascript" type="module">
   import { ChartHelper } from 'js/chart_helper'
   ChartHelper.make_salary_chart({{ employer_salary_json|safe }}, 'employee');
+  ChartHelper.make_salary_over_time_chart({{ employee_salary_json|safe }});
 </script>
 {% endcompress %}
 {% endblock %}

@@ -15,47 +15,6 @@
     </tr>
   </thead>
   <tbody id="entity-salaries">
-  {% for salary in salaries %}
-    <tr>
-      <td><a href="{{ url('person', kwargs={'slug': salary.slug}) }}">{{ salary.name }}</a></td>
-      <td>{{ salary.position }}</td>
-      {% if not entity.is_department and department_salaries %}
-      <td><a href="{{ url('department', kwargs={'slug': salary.employer_slug}) }}">{{ salary.employer }}</a></td>
-      {% endif %}
-      <td class="text-right">
-        {% if salary.amount %}
-          {{ salary.amount|format_salary }}
-        {% else %}
-          Not reported
-        {% endif %}
-        {% if current_salary %}
-          {% if current_salary < salary.total_pay %}
-            <span class="text-success"><i class="fas fa-arrow-up"></i></span>
-          {% elif current_salary > salary.total_pay %}
-            <span class="text-danger"><i class="fas fa-arrow-down"></i></span>
-          {% else %}
-            <i class="fas invisible"></i>
-          {% endif %}
-        {% endif %}
-      </td>
-      <td class="text-right">
-        {% if salary.extra_pay %}
-          {{ salary.extra_pay|format_salary }}
-        {% else %}
-          Not reported
-        {% endif %}
-      </td>
-      {% if show_start_date %}
-      <td class="text-right">
-        {% if salary.start_date %}
-          {{ salary.start_date.strftime('%m-%d-%Y') }}
-        {% else %}
-          N/A
-        {% endif %}
-      </td>
-      {% endif %}
-    </tr>
-  {% endfor %}
   </tbody>
   </table>
 </div>

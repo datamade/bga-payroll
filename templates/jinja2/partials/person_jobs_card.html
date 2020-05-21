@@ -1,32 +1,81 @@
 <div class="card-body">
-  <h3 class="card-title mb-4">Employment history for {{ entity }}</h3>
-  <h4 class="card-subtitle">Over the last ##### years...</h4>
-  <div style="min-height: 300px; background-color: lavender" class="col-lg-12"></div>
+  <div class="row">
+    <div class="col">
+      <h3 class="card-title mb-4"><i class="fa fa-history fa-fw" aria-hidden="true"></i> Employment history for {{ entity }}</h3>
+      <h4 class="card-subtitle">Positions held</h4>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead class="bg-dark text-light">
+          <tr>
+            <th scope="col">Position</th>
+            <th scope="col" class="text-right">Base Salary</th>
+            <th scope="col" class="text-right">Extra Pay</th>
+            <th scope="col" class="text-right">Start Date</th>
+            <th scope="col" class="text-right">Data year</th>
+          </tr>
+        </thead>
+        <tbody id="entity-salaries">
+        {% for salary in all_jobs %}
+          <tr>
+            <td>{{ salary.position }}</td>
+            {% if not entity.is_department and department_salaries %}
+            <td><a href="{{ url('department', kwargs={'slug': salary.employer_slug}) }}">{{ salary.employer }}</a></td>
+            {% endif %}
+            <td class="text-right">
+              {% if salary.amount %}
+                {{ salary.amount|format_salary }}
+              {% else %}
+                Not reported
+              {% endif %}
+            </td>
+            <td class="text-right">
+              {% if salary.extra_pay %}
+                {{ salary.extra_pay|format_salary }}
+              {% else %}
+                Not reported
+              {% endif %}
+            </td>
+            <td class="text-right">
+              {% if salary.start_date %}
+                {{ salary.start_date.strftime('%m-%d-%Y') }}
+              {% else %}
+                Not reported
+              {% endif %}
+            </td>
+            <td class="text-right">{{ salary.data_year }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+      </div>
+      {% include 'partials/source_link.html' %}
+    </div>
+  </div>
 
-  <div class="card-body">
-    <h4 class="card-subtitle">Salary over time</h4>
-    <div class="row">
-      <div style="min-height: 300px; background-color: lavender" class="col-lg-6"></div>
-      <div class="col-lg-6">
-        <div class="text-center d-flex flex-column justify-content-around h-100">
-          <div class="row justify-content-around">
-            <div class="col-lg-6">
-              <div class="row justify-content-center">
-                <h4>$$$$$</h4>
-                <small class="text-success px-2 m-0">+%%</small>
-              </div>
-              <small class="text-muted">Base Salary Increase</small></br>
+  {% if all_jobs|length > 1 %}
+  <h4 class="card-subtitle mb-4">Total pay over time</h4>
+  <div class="row">
+    <div id="salary-over-time-chart" class="col-lg-6"></div>
+    <div class="col-lg-6"><!-- col start -->
+      <div class="text-center d-flex flex-column justify-content-around h-100">
+        <div class="row justify-content-around">
+          <div class="col-lg-6">
+            <div class="row justify-content-center">
+              <h4>$$$$$</h4>
+              <small class="text-success px-2 m-0">+%%</small>
             </div>
-            <div class="col-lg-6">
-              <div class="row justify-content-center">
-                <h4>$$$</h4>
-                <small class="text-danger px-2 m-0">-%%</small>
-              </div>
-              <small class="text-muted">Extra Pay Increase</small></br>
+            <small class="text-muted">Net Base Salary Increase</small></br>
+          </div>
+          <div class="col-lg-6">
+            <div class="row justify-content-center">
+              <h4>$$$</h4>
+              <small class="text-danger px-2 m-0">-%%</small>
             </div>
+            <small class="text-muted">Net Extra Pay Increase</small></br>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </div><!-- col end -->
+  </div><!-- row end -->
+  {% endif %}
 </div>

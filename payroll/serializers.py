@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import connection
-from django.db.models import Q, FloatField, Sum
+from django.db.models import Q, FloatField, Sum, Max
 from django.db.models.functions import Coalesce, NullIf
 from postgres_stats.aggregates import Percentile
 from rest_framework import serializers
@@ -587,6 +587,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     current_employer = serializers.SerializerMethodField()
     employer_type = serializers.SerializerMethodField()
     employer_salary_json = serializers.SerializerMethodField()
+    employee_salary_json = serializers.SerializerMethodField()
     employer_percentile = serializers.SerializerMethodField()
     like_employer_percentile = serializers.SerializerMethodField()
     salaries = serializers.SerializerMethodField()
@@ -639,18 +640,17 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
         for salary in Salary.objects.with_related_objects()\
                                     .filter(job__person=obj)\
+                                    .annotate(data_year=Max('vintage__standardized_file__reporting_year'))\
                                     .order_by('-vintage__standardized_file__reporting_year'):
 
             data.append({
-                'name': str(salary.job.person),
-                'slug': salary.job.person.slug,
                 'position': salary.job.position.title,
                 'employer': salary.job.position.employer.name,
                 'employer_slug': salary.job.position.employer.slug,
                 'amount': salary.amount,
                 'extra_pay': salary.extra_pay,
-                'total_pay': salary.total_pay,
                 'start_date': salary.job.start_date,
+                'data_year': salary.data_year,
             })
 
         return data
@@ -700,19 +700,15 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
         data = []
 
         for salary in Salary.objects.with_related_objects()\
-                                    .filter(job__position=self.person_current_job.position)\
+                                    .filter(job__position=self.person_current_job.position, vintage__standardized_file__reporting_year=self.context['data_year'])\
                                     .exclude(job__person=obj)\
-                                    .order_by('-total_pay')[:50]:
+                                    .order_by('-total_pay')[:25]:
 
             data.append({
                 'name': str(salary.job.person),
                 'slug': salary.job.person.slug,
                 'position': salary.job.position.title,
-                'employer': salary.job.position.employer.name,
-                'employer_slug': salary.job.position.employer.slug,
-                'amount': salary.amount,
-                'extra_pay': salary.extra_pay,
-                'total_pay': salary.total_pay,  # TODO: Table.should show total pay, probably
+                'total_pay': salary.total_pay,
                 'start_date': salary.job.start_date,
             })
 
@@ -733,3 +729,18 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
                                         .values_list('total_pay', flat=True),
             salary_amount=self.person_current_salary.total_pay
         )
+
+    def get_employee_salary_json(self, obj):
+        data = []
+
+        for salary in Salary.objects.with_related_objects()\
+                                    .filter(job__person=obj)\
+                                    .annotate(data_year=Max('vintage__standardized_file__reporting_year'))\
+                                    .order_by('vintage__standardized_file__reporting_year'):
+
+            data.append({
+                'name': str(salary.data_year),
+                'y': float(salary.total_pay),
+            })
+
+        return {'data': data}
