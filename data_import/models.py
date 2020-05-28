@@ -235,9 +235,6 @@ class StandardizedFile(models.Model):
         print('Removing related responding agencies')
         self.responding_agencies.clear()
 
-        print('Deleting upload')
-        self.upload.delete()
-
         with connection.cursor() as cursor:
             for table in ('raw_payroll_{}', 'raw_person_{}', 'raw_job_{}'):
                 table_name = table.format(self.id)

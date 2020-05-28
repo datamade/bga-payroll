@@ -58,6 +58,8 @@ def init_task(*args, **kwargs):
     our setup method automatically, achieving __init__-like behavior,
     in lieu of access to the actual __init__ method of our task class.
     '''
+    print(args, kwargs)
+
     sender = kwargs['sender']
 
     if isinstance(sender, DataImportTask):
