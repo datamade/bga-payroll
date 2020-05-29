@@ -23,7 +23,7 @@ class IndexSerializer(serializers.Serializer, ChartHelperMixin):
         return format_exact_number(count)
 
     def get_unit_count(self, data_year):
-        count = Unit.objects.filter(responding_agencies__reporting_year=2018).count()
+        count = Unit.objects.filter(responding_agencies__reporting_year=data_year).count()
         return format_exact_number(count)
 
     def get_salary_json(self, data_year):
