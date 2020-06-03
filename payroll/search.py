@@ -62,12 +62,12 @@ class PersonSearch(object):
         '''
         slugs = []
 
-        for result in results.values():
+        for result in results:
             slugs += result['employer_ss']
 
         slug_map = employers_from_slugs(slugs)
 
-        for result in results.values():
+        for result in results:
             result['employer_ss'] = [slug_map[e] for e in result['employer_ss']]
 
         return results
@@ -277,26 +277,14 @@ class PayrollSearchMixin(object):
             except AttributeError:
                 self.facets = {entity_type: results.facets}
 
-        # Retain ordering from Solr results when filtering the model objects.
-        sorted_results = collections.OrderedDict([(self._id_from_result(r), r) for r in results])
-        sort_order = list(sorted_results.keys())
-
         # If results contain Employer slugs, replace them with the appropriate
         # Unit and Department objects.
         try:
-            sorted_results = search_class._format_results(sorted_results)
+            results = search_class._format_results(results)
         except AttributeError:
             pass
 
-        objects = []
-
-        for o in sorted(search_class.model.objects.filter(id__in=sort_order),
-                        key=lambda o: sort_order.index(o.id)):
-
-            o.search_meta = sorted_results[o.id]
-            objects.append(o)
-
-        return objects, results.hits
+        return results, results.hits
 
     _search_unit = partialmethod(_search, 'unit')
     _search_department = partialmethod(_search, 'department')
