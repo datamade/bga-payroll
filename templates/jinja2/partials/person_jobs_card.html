@@ -81,7 +81,7 @@
         </div>
 
         <div>
-          {% if change_in_salary.amount_delta != None %}
+          {% if 'amount_delta' in change_in_salary %}
             <h4 class="d-inline">{{ change_in_salary.amount_delta|format_salary }}</h4>
             <sup class="d-inline text-{% if change_in_salary.amount_delta >= 0 %}success{% else%}danger{% endif %} px-1 m-0">
               {% if change_in_salary.amount_delta >= 0 %}+{% endif %}
@@ -95,7 +95,7 @@
         </div>
 
         <div>
-          {% if change_in_salary.extra_pay_delta != None %}
+          {% if 'extra_pay_delta' in change_in_salary %}
             <h4 class="d-inline">{{ change_in_salary.extra_pay_delta|format_salary }}</h4>
             <sup class="d-inline text-{% if change_in_salary.extra_pay_delta >= 0 %}success{% else%}danger{% endif %} px-1 m-0">
               {% if change_in_salary.extra_pay_delta >= 0 %}+{% endif %}
