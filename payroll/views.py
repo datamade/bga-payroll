@@ -200,6 +200,10 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
 
 class EntityLookup(ListView, PayrollSearchMixin):
+
+    def _endpoint_from_result(self, result):
+        return result['id'].split('.')[0]
+
     def get_queryset(self, *args, **kwargs):
         self.facets = {}
 
@@ -226,12 +230,14 @@ class EntityLookup(ListView, PayrollSearchMixin):
 
         for result in chain(units, people):
             data = {
-                'label': str(result),
-                'value': str(result),
+                'label': result['name'],
+                'value': result['name'],
             }
 
-            url = '{0}/{1}'.format(result.endpoint, result.slug)
-            category = result.__class__.__name__
+            result_type = self._endpoint_from_result(result)
+
+            url = '{0}/{1}'.format(result_type, result['slug'])
+            category = result_type.title()
 
             data.update({
                 'url': url,
