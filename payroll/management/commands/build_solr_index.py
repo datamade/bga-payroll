@@ -347,10 +347,9 @@ class Command(BaseCommand):
                 documents.append(document)
 
                 if len(documents) == self.chunksize:
-                    self.stdout.write('Indexed {}'.format(self.chunksize))
-                    self.searcher.add(documents)
                     document_count += len(documents)
                     documents = []
+                    self.stdout.write('Indexed {}'.format(document_count))
 
         if documents:
             self.searcher.add(documents)
