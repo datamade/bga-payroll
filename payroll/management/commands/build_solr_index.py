@@ -356,8 +356,7 @@ class Command(BaseCommand):
             self.searcher.add(documents)
             document_count += len(documents)
 
-        success_message = 'Added {0} documents for {1} people to the index'.format(document_count,
-                                                                                   people.count())
+        success_message = 'Added {0} documents to the index'.format(document_count)
 
         self.stdout.write(self.style.SUCCESS(success_message))
 
