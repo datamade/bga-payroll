@@ -338,13 +338,16 @@ class Command(BaseCommand):
         documents = []
         document_count = 0
 
-        people = Person.objects.all()
+        people = Person.objects.filter(
+            jobs__vintage__standardized_file__reporting_year__in=self.reporting_years
+        ).iterator()
 
         for person in people:
             for document in self._make_person_index(person):
                 documents.append(document)
 
                 if len(documents) == self.chunksize:
+                    self.stdout.write('Indexed {}'.format(self.chunksize))
                     self.searcher.add(documents)
                     document_count += len(documents)
                     documents = []
