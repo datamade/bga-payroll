@@ -212,6 +212,8 @@ class EntityLookup(ListView, PayrollSearchMixin):
         extra_search_kwargs = {
             'expenditure_d': '[1000000 TO *]',
             'salary_d': '[100000 TO *]',
+            'group': 'true',
+            'group.field': 'slug',
         }
 
         units = self.search(
