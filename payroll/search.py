@@ -274,8 +274,31 @@ class PayrollSearchMixin(object):
         if results:
             try:
                 self.facets.update({entity_type: results.facets})
+
             except AttributeError:
                 self.facets = {entity_type: results.facets}
+
+        elif results.grouped:
+            # This implementation assumes that we're using query grouping in
+            # order to retrieve results distinct on the grouped field, e.g.,
+            # grouping autosuggestions by slug in order to offer distinct
+            # suggestions in the search bar. YMMV!
+            grouped_results = []
+
+            for group, group_info in results.grouped.items():
+                for members in group_info['groups']:
+                    grouped_results += members['doclist']['docs']
+
+            # Mock a Solr response to instantiate a pysolr Results object, per
+            # the example here: https://github.com/django-haystack/pysolr/blob/493a9a0f01c80c71836fc5dd4df292599c06b17a/pysolr.py#L251-L285
+            result_dict = {
+                'response': {
+                    'docs': grouped_results,
+                    'numFound': len(grouped_results),
+                }
+            }
+
+            results = pysolr.Results(result_dict)
 
         # If results contain Employer slugs, replace them with the appropriate
         # Unit and Department objects.

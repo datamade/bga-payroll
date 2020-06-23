@@ -614,7 +614,9 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
     @property
     def person_current_salary(self):
         if not hasattr(self, '_current_salary'):
-            self._current_salary = self.person_current_job.salaries.get()
+            self._current_salary = self.person_current_job.salaries.get(
+                vintage__standardized_file__reporting_year=self.context['data_year']
+            )
         return self._current_salary
 
     @property
