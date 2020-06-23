@@ -126,7 +126,7 @@ class PersonView(DetailView, ChartHelperMixin):
         context = super().get_context_data(**kwargs)
 
         most_recent_year = self.object.jobs.aggregate(
-            most_recent_year=Max('vintage__standardized_file__reporting_year')
+            most_recent_year=Max('salaries__vintage__standardized_file__reporting_year')
         )['most_recent_year']
 
         serializer = PersonSerializer(self.object, context={
