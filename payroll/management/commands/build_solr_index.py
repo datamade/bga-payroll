@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Sum, Q, Prefetch
+from django.db.models import Sum, Q
 from django.db.models.functions import Coalesce
 import pysolr
 
 from django.conf import settings
 
 from data_import.models import StandardizedFile
-from payroll.models import Employer, Person, Salary, Job
+from payroll.models import Employer, Person, Salary
 
 
 class Command(BaseCommand):
@@ -242,51 +242,22 @@ class Command(BaseCommand):
         name = str(person)
 
         for year in self.reporting_years:
-            filtered_salaries = Salary.objects.filter(
-                vintage__standardized_file__reporting_year=year
-            )
-
-            reporting_year_salaries = Prefetch(
-                'salaries',
-                queryset=filtered_salaries,
-                to_attr='reporting_year_salaries'
-            )
-
             try:
-                job = person.jobs.select_related('position', 'position__employer')\
-                                 .prefetch_related(reporting_year_salaries)\
-                                 .get(vintage__standardized_file__reporting_year=year)
+                salary = Salary.objects.filter(
+                    vintage__standardized_file__reporting_year=year,
+                    job__person=person
+                ).select_related(
+                    'job__position',
+                    'job__position__employer',
+                    'job__position__employer__parent'
+                ).get()
 
-            except Job.DoesNotExist:
+                job = salary.job
+
+            except Salary.DoesNotExist:
                 # It's reasonable to expect every person won't appear in
                 # every year of data.
                 continue
-
-            except Job.MultipleObjectsReturned:
-                # A very, very small minority of people (less than 20) in
-                # the full 2017 data I'm using for testing were imported
-                # such that they have more than one job. I'm not totally
-                # certain why, but I suspect edge cases, e.g., Governors
-                # State University reported payroll itself, and was also
-                # reported by the state board of higher education.
-                #
-                # I've opened an issue to investigate these edge cases. In
-                # the meantime, I'm just going to log these inconsistencies
-                # (there's no guarantee they'll recur in the new data any-
-                # way) and add only one of the jobs to the index.
-                job_str = ', '.join('{0} for {1}'.format(
-                    j.position.title, j.position.employer) for j in person.jobs.all()
-                )
-
-                info = '{0} (#{1}) has more than one job in {2}: {3}'.format(name,
-                                                                             person.id,
-                                                                             year,
-                                                                             job_str)
-                self.stdout.write(self.style.NOTICE(info))
-
-                job = person.jobs.select_related('position', 'position__employer')\
-                                 .prefetch_related(reporting_year_salaries)\
-                                 .first()
 
             position = job.position
             employer = position.employer
@@ -297,15 +268,6 @@ class Command(BaseCommand):
                 employer_slug = [employer.parent.slug, employer.slug]
             else:
                 employer_slug = [employer.slug]
-
-            try:
-                salary, = job.reporting_year_salaries
-            except ValueError:
-                message = 'Job #{0} for Person {1} (#{2}) has more than one salary in {3}'.format(job.id,
-                                                                                                  name,
-                                                                                                  person.id,
-                                                                                                  year)
-                raise ValueError(message)
 
             document = {
                 'id': 'person.{0}.{1}'.format(person.id, year),
