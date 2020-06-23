@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Sum, Q, Prefetch
+from django.db.models import Sum, Q
 from django.db.models.functions import Coalesce
 import pysolr
 
 from django.conf import settings
 
 from data_import.models import StandardizedFile
-from payroll.models import Employer, Person, Salary, Job
+from payroll.models import Employer, Person, Salary
 
 
 class Command(BaseCommand):
