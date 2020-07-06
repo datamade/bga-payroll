@@ -14,7 +14,7 @@
     {% if '/person/' in request.path %} {# Link if shown on person page #}
       <a href="/{{ entity.endpoint }}/{{ entity.slug }}">{{ entity.name }}</a>
     {% else %}
-      {{ entity }}
+      {{ entity.name }}
     {% endif %}
   </li>
 
