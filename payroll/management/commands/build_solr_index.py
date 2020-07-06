@@ -276,7 +276,7 @@ class Command(BaseCommand):
                 'entity_type': 'Person',
                 'year': year,
                 'title_s': job.position.title,
-                'salary_d': salary.amount,
+                'salary_d': (salary.amount or 0) + (salary.extra_pay or 0),
                 'employer_ss': employer_slug,
                 'text': text,
             }

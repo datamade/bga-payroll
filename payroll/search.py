@@ -350,7 +350,7 @@ class PayrollSearchMixin(object):
 
             if index_field == 'name':
                 # Allow for terms to appear in any order
-                value = '({})'.format(value)
+                value = '({})'.format(self._santize(value))
 
             query_parts.append('{0}:{1}'.format(index_field, value))
 
@@ -378,6 +378,14 @@ class PayrollSearchMixin(object):
                 query_parts.append(range_q)
 
         return query_parts
+
+    def _santize(self, term):
+        '''
+        Escape characters for Solr. Taken verbatim from
+        https://github.com/django-haystack/pysolr/issues/23#issuecomment-21932681
+        '''
+        ESCAPE_CHARS_RE = re.compile(r'(?<!\\)(?P<char>[&|+\-!(){}[\]^"~*?:])')
+        return ESCAPE_CHARS_RE.sub(r'\\\g<char>', term)
 
 
 class FacetingMixin(object):
