@@ -727,7 +727,8 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
             return source_file.url
 
     def get_noindex(self, obj):
-        return self.person_current_salary.amount < 30000 or obj.noindex
+        total_pay = (self.person_current_salary.amount or 0) + (self.person_current_salary.extra_pay or 0)
+        return total_pay < 30000 or obj.noindex
 
     def get_employee_salary_json(self, obj):
         base_pay = {
