@@ -58,7 +58,11 @@ class EmployerView(DetailView, ChartHelperMixin):
         if not self.request.GET.get('data_year'):
             self.object = self.get_object()
             latest_year = self.data_years()[0]
-            return redirect('{0}?data_year={1}'.format(request.path, latest_year))
+
+            return redirect(
+                '{0}?data_year={1}'.format(request.path, latest_year),
+                permanent=True
+            )
 
         return super().get(request, *args, **kwargs)
 
