@@ -4,7 +4,19 @@ There are two Django applications in the BGA Public Salaries Database project:
 The public user interface (`payroll`), and the private interface for uploading
 data (`data_import`).
 
+- [Payroll](#the-payroll-application)
+  - [Models](#models)
+  - [Views](#views)
+  - [Search](#search)
+  - [Caching](#caching)
+- [Data import](#the-data_import-application)
+  - [Standardized file upload](#standardized-file-upload)
+  - [Source file upload](#source-file-upload)
+- [Tests](#tests)
+
 ## The `payroll` application
+
+### Models
 
 `payroll` is a fairly straightforward application. It contains [the core
 models](https://github.com/datamade/bga-payroll/tree/master/payroll/models.py) – Employer,
@@ -13,25 +25,53 @@ employer has many positions, more than one person can hold the same position,
 and a person in the same position can have many different salaries over the
 years.
 
+### Views
+
 The `payroll` app defines the homepage and detail views for Employer [proxy
 models](https://docs.djangoproject.com/en/3.0/topics/db/models/#proxy-models)
 Unit and Department, as well as the Person model. (Proxying Employer into Unit
 and Department means that we have a cleaner way to differentiate Python logic
 between the two types of Employer, while still leveraging the same underlying
-database table.) These views leverage [the Highcharts JavaScript
-library](https://www.highcharts.com/docs/index) for charting. **Also note that
-this project uses [the `jinja2` templating
-engine](https://jinja.palletsprojects.com/en/2.11.x/), not the default Django
-templating engine. There are subtle, and sometimes annoying, differences.**
+database table.)
 
-The `payroll` application also exposes Django admin views to edit employer name
-and classification.
+**🚨 Note that this project uses [the `jinja2` templating
+engine](https://jinja.palletsprojects.com/en/2.11.x/) for application views. 🚨**
+
+The `payroll` templates also make use of a modified version of [the DataMade
+`django-compressor` stack](https://github.com/datamade/how-to/blob/master/django/django-compressor.md)
+to translate contemporary ES6 JavaScript into more widely compatible ES5 syntax.
+
+In order to reduce load time on first visit, the `payroll` app separates template
+loading from most database queries. Instead, it performs the database queries
+asynchronously via AJAX calls to an API implemented with [the Django REST
+Framework](https://www.django-rest-framework.org/).
+
+Finally, the `payroll` application also exposes Django admin views to edit
+employer name and classification.
+
+### Search
 
 Search is a bit more complicated. `payroll` uses [the Solr search
 engine](https://lucene.apache.org/solr/) with custom Python adapters to
 [index](https://github.com/datamade/bga-payroll/tree/master/payroll/management/commands/build_solr_index.py)
 and [search](https://github.com/datamade/bga-payroll/tree/master/payroll/search.py) Employer
 and Person payroll records.
+
+### Caching
+
+We use Django's database cache backend to cache `payroll` views. More
+specifically:
+
+- Translating ES6 to ES5 is a relatively heavy operation, so the index and entity
+pages, including their compiled JavaScript, are cached in their entirety.
+- Database operations to gather display data for a given year are also fairly
+intensive, so API views are cached as well.
+
+Note that employer pages, which vary based on a provided `data_year` URL
+parameter, redirect to the employer page for the most recent year if that
+parameter is not provided. This helps to avoid duplicate entries in the site
+cache in order to keep the cache size as small, i.e., cache retrieval as fast
+as possible.
 
 ## The `data_import` application
 
