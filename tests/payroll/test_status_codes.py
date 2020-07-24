@@ -12,7 +12,7 @@ def test_parent_employer(client, salary, transactional_db):
 
     e = Employer.objects.first()
 
-    rv = client.get('/unit/{}/'.format(e.slug))
+    rv = client.get('/unit/{}/'.format(e.slug), follow=True)
 
     assert rv.status_code == 200
 
@@ -42,7 +42,7 @@ def test_child_employer(client,
 
     e = Employer.objects.get(name='Brew Staff')
 
-    rv = client.get('/department/{}/'.format(e.slug))
+    rv = client.get('/department/{}/'.format(e.slug), follow=True)
 
     assert rv.status_code == 200
 
