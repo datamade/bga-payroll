@@ -10,13 +10,16 @@ from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.conf import settings
 
+from rest_framework.renderers import JSONRenderer
+
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from data_import.models import StandardizedFile
 from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
-from payroll.serializers import PersonSerializer
+from payroll.serializers import UnitSerializer, DepartmentSerializer, \
+    PersonSerializer
 
 from bga_database.local_settings import CACHE_SECRET_KEY
 
@@ -47,10 +50,15 @@ def error(request, error_code):
 class EmployerView(DetailView, ChartHelperMixin):
     context_object_name = 'entity'
 
+    def entity_data(self, data_year):
+        data = self.serializer_class(self.object, context={'data_year': data_year}).data
+        return JSONRenderer().render(data).decode('utf-8')
+
 
 class UnitView(EmployerView):
     model = Unit
     template_name = 'unit.html'
+    serializer_class = UnitSerializer
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -63,6 +71,9 @@ class UnitView(EmployerView):
             'size_class': self.object.size_class,
             'data_years': list(data_years),
         })
+
+        data_year = self.request.GET.get('data_year', data_years[0])
+        context['entity_data'] = self.entity_data(data_year)
 
         return context
 
@@ -96,6 +107,7 @@ class UnitView(EmployerView):
 class DepartmentView(EmployerView):
     model = Department
     template_name = 'department.html'
+    serializer_class = DepartmentSerializer
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -107,6 +119,9 @@ class DepartmentView(EmployerView):
         data_years = sorted(list(data_years), reverse=True)
 
         context['data_years'] = data_years
+
+        data_year = self.request.GET.get('data_year', data_years[0])
+        context['entity_data'] = self.entity_data(data_year)
 
         return context
 

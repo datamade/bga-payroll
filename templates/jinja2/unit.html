@@ -113,13 +113,16 @@
 {% block extra_js %}
 {% compress js %}
 <script type="module">
-  import { initDataYearToggle } from  "js/data_year_toggle"
-  import { Unit } from  "js/employer"
+  import { initDataYearToggle } from  'js/data_year_toggle'
+  import { Unit } from  'js/employer'
 
-  const initialYear = $('button#yearDropdownMenuButton').text().replace(/(\n|\s)/gm, '');
   const slug = '{{ entity.slug }}';
+  const entityData = {{ entity_data|safe }};
+  const dataYear = {{ request.GET.get('data_year', data_years.0) }};
 
-  initDataYearToggle('units', slug, initialYear, Unit.update);
+  Unit.update(dataYear, entityData);
+
+  initDataYearToggle('units', slug, Unit.update);
 </script>
 {% endcompress %}
 {% endblock %}
