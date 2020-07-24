@@ -83,7 +83,7 @@
 
   const slug = '{{ entity.slug }}';
   const entityData = {{ entity_data|safe }};
-  const dataYear = {{ request.GET.get('data_year', data_years.0) }};
+  const dataYear = $('#selected-year').text();
 
   Department.update(dataYear, entityData);
 
