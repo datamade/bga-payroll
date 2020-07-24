@@ -82,12 +82,9 @@
   import { Department } from  'js/employer'
 
   const slug = '{{ entity.slug }}';
-  const entityData = {{ entity_data|safe }};
   const dataYear = $('#selected-year').text();
 
-  Department.update(dataYear, entityData);
-
-  initDataYearToggle('departments', slug, Department.update);
+  initDataYearToggle('departments', slug, dataYear, Department.update);
 </script>
 {% endcompress %}
 {% endblock %}

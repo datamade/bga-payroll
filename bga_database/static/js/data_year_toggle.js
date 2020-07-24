@@ -1,4 +1,4 @@
-function initDataYearToggle (endpoint, slug, callback) {
+function initDataYearToggle (endpoint, slug, initialYear, callback) {
     const cache = {};
 
     var getData = async function (year) {
@@ -42,6 +42,8 @@ function initDataYearToggle (endpoint, slug, callback) {
             $('#selected-year').removeClass('d-none');
         }
     };
+
+    getData(initialYear);
 
     $('#data-year-select > .year-dropdown-item').on('click', function(e) {
         const year = e.currentTarget.textContent;

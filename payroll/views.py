@@ -4,13 +4,11 @@ from django.core.cache import cache
 from django.db import connection
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.conf import settings
-
-from rest_framework.renderers import JSONRenderer
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from data_import.models import StandardizedFile
@@ -18,8 +16,7 @@ from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
-from payroll.serializers import UnitSerializer, DepartmentSerializer, \
-    PersonSerializer
+from payroll.serializers import PersonSerializer
 
 from bga_database.local_settings import CACHE_SECRET_KEY
 
@@ -50,32 +47,43 @@ def error(request, error_code):
 class EmployerView(DetailView, ChartHelperMixin):
     context_object_name = 'entity'
 
-    def entity_data(self, data_year):
-        data = self.serializer_class(self.object, context={'data_year': data_year}).data
-        return JSONRenderer().render(data).decode('utf-8')
+    def get(self, request, *args, **kwargs):
+        # Django creates a different cache entry for every combination of path
+        # and URL parameters. To keep the number of cache entries low, redirect
+        # requests without a data_year parameter to the URL with a parameter
+        # for the latest year available. This will prevent duplicate entries
+        # for effectively the same page (an employer page without a data_year
+        # parameter, which would show the most recent year, and an employer
+        # page with a data_year parameter for the most recent year).
+        if not self.request.GET.get('data_year'):
+            self.object = self.get_object()
+            latest_year = self.data_years()[0]
+            return redirect('{0}?data_year={1}'.format(request.path, latest_year))
+
+        return super().get(request, *args, **kwargs)
 
 
 class UnitView(EmployerView):
     model = Unit
     template_name = 'unit.html'
-    serializer_class = UnitSerializer
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        data_years = self.object.responding_agencies.order_by('-reporting_year')\
-                                                    .values_list('reporting_year', flat=True)
+        data_years = list(self.data_years())
+        population_percentile = self.population_percentile()
 
         context.update({
-            'population_percentile': self.population_percentile(),
+            'data_years': data_years,
+            'population_percentile': population_percentile,
             'size_class': self.object.size_class,
-            'data_years': list(data_years),
         })
 
-        data_year = self.request.GET.get('data_year', data_years[0])
-        context['entity_data'] = self.entity_data(data_year)
-
         return context
+
+    def data_years(self):
+        return self.object.responding_agencies.order_by('-reporting_year')\
+                                              .values_list('reporting_year', flat=True)
 
     def population_percentile(self):
         if (self.object.get_population() is None):
@@ -107,23 +115,21 @@ class UnitView(EmployerView):
 class DepartmentView(EmployerView):
     model = Department
     template_name = 'department.html'
-    serializer_class = DepartmentSerializer
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        data_years = self.data_years()
+        context['data_years'] = data_years
+
+        return context
+
+    def data_years(self):
         data_years = self.object.get_salaries()\
             .distinct('vintage__standardized_file__reporting_year')\
             .values_list('vintage__standardized_file__reporting_year', flat=True)
 
-        data_years = sorted(list(data_years), reverse=True)
-
-        context['data_years'] = data_years
-
-        data_year = self.request.GET.get('data_year', data_years[0])
-        context['entity_data'] = self.entity_data(data_year)
-
-        return context
+        return sorted(list(data_years), reverse=True)
 
 
 class PersonView(DetailView, ChartHelperMixin):

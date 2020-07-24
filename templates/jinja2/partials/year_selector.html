@@ -6,9 +6,9 @@
   </label>
   <div class="dropdown">
     <button class="btn btn-secondary btn-lg dropdown-toggle" type="button" id="yearDropdownMenuButton" data-toggle="dropdown" data-flip="false" aria-haspopup="true" aria-expanded="false">
-      <span id="selected-year">{{ request.GET.get('data_year', data_years.0) }}</span>
-      <span class="year-loading spinner-border d-none" role="status"></span>
-      <span class="year-loading sr-only d-none">Loading...</span>
+      <span id="selected-year" class="d-none">{{ request.GET.get('data_year', data_years.0) }}</span>
+      <span class="year-loading spinner-border" role="status"></span>
+      <span class="year-loading sr-only">Loading...</span>
     </button>
     <div id="data-year-select" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
       {% for year in data_years %}

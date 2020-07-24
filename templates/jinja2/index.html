@@ -171,7 +171,7 @@
 
   initSearch({{ request.GET.dict()|safe }});
 
-  const dataYear = $('button#yearDropdownMenuButton').text();
+  const dataYear = $('#selected-year').text();
 
   function updateChart (year, result) {
     ChartHelper.make_salary_chart(result.salary_json, 'employee');
@@ -180,9 +180,7 @@
     $('#index-year').text(year);
   }
 
-  initDataYearToggle('index', null, updateChart);
-
-  $('.year-dropdown-item').first().click();
+  initDataYearToggle('index', null, dataYear, updateChart);
 </script>
 {% endcompress %}
 {% endblock %}

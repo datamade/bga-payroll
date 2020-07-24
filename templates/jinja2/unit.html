@@ -117,12 +117,9 @@
   import { Unit } from  'js/employer'
 
   const slug = '{{ entity.slug }}';
-  const entityData = {{ entity_data|safe }};
   const dataYear = $('#selected-year').text();
 
-  Unit.update(dataYear, entityData);
-
-  initDataYearToggle('units', slug, Unit.update);
+  initDataYearToggle('units', slug, dataYear, Unit.update);
 </script>
 {% endcompress %}
 {% endblock %}
