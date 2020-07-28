@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.db import connection
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
