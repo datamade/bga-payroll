@@ -104,7 +104,23 @@ Search results
                     </table>
                 </div>
             {% elif allowed %}
-            <div class="col-md">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <h5 class="text-dark">Data year</h5>
+                    <div class="dropdown">
+                      <a class="btn btn-lg w-100 bg-light dropdown-toggle text-left" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{ request.GET.get('year', data_years.0) }}
+                      </a>
+
+                      <div class="dropdown-menu w-100" aria-labelledby="dropdownMenuLink">
+                        {% for year in data_years %}
+                            <a class="dropdown-item" href="{{ request.path }}?{{ request|query_transform(drop_keys=['year']) }}&year={{ year }}">{{ year }}</a>
+                        {% endfor %}
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
                 <h4>Dang! We have no results for your search.</h4>
                 Here’s why: You searched for an employee or government unit or department in Illinois that doesn’t exist or that we don’t yet have data on. Want to know more? See our note below.
             {% endif %}
