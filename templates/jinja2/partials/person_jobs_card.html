@@ -83,10 +83,12 @@
         <div>
           {% if 'amount_delta' in change_in_salary %}
             <h4 class="d-inline">{{ change_in_salary.amount_delta|format_salary }}</h4>
+            {% if change_in_salary.amount_percent_change %}
             <sup class="d-inline text-{% if change_in_salary.amount_delta >= 0 %}success{% else%}danger{% endif %} px-1 m-0">
               {% if change_in_salary.amount_delta >= 0 %}+{% endif %}
               {{ change_in_salary.amount_percent_change|format_percentile }}
-            </sup><br />
+            </sup>
+            {% endif %}<br />
             <small class="text-muted">Net Change in Base Salary</small>
           {% else %}
             <h4>Not reported</h4>
@@ -97,10 +99,12 @@
         <div>
           {% if 'extra_pay_delta' in change_in_salary %}
             <h4 class="d-inline">{{ change_in_salary.extra_pay_delta|format_salary }}</h4>
+            {% if change_in_salary.extra_pay_percent_change %}
             <sup class="d-inline text-{% if change_in_salary.extra_pay_delta >= 0 %}success{% else%}danger{% endif %} px-1 m-0">
               {% if change_in_salary.extra_pay_delta >= 0 %}+{% endif %}
               {{ change_in_salary.extra_pay_percent_change|format_percentile }}
-            </sup><br />
+            </sup>
+            {% endif %}<br />
             <small class="text-muted">Net Change in Extra Pay</small>
           {% else %}
             <h4>Not reported</h4>
