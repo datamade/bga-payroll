@@ -202,6 +202,12 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
         context['facets'] = facets
         context['search_limit'] = settings.SEARCH_LIMIT
 
+        data_years = StandardizedFile.objects.distinct('reporting_year')\
+                                             .order_by('-reporting_year')\
+                                             .values_list('reporting_year', flat=True)
+
+        context['data_years'] = list(data_years)
+
         return context
 
 

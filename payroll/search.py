@@ -5,8 +5,10 @@ import re
 import sys
 
 from django.conf import settings
+from django.db.models import Max
 import pysolr
 
+from data_import.models import StandardizedFile
 from payroll.models import Unit, Department, Person
 from payroll.utils import employers_from_slugs
 
@@ -333,6 +335,11 @@ class PayrollSearchMixin(object):
 
         value_params = {k: v for k, v in params.items()
                         if k not in range_params}
+
+        if 'year' not in value_params:
+            value_params['year'] = StandardizedFile.objects.aggregate(
+                latest_year=Max('reporting_year')
+            )['latest_year']
 
         query_parts = chain(self._value_q(value_params), self._range_q(range_params))
 
