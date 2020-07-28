@@ -13,6 +13,14 @@ const Employer = {
     return link;
   },
 
+  updateSearchLink: function (linkId, year) {
+    const searchLink = $(linkId);
+    const [url, querystring] = searchLink.attr('href').split('?');
+    const searchParams = new URLSearchParams(querystring);
+    searchParams.set('year', year);
+    searchLink.attr('href', url + '?' + searchParams.toString());
+  },
+
   updateDataYear: function (year) { $('.entity-data-year').text(year); },
 
   updateBaseBallStats: function (result) {
@@ -88,6 +96,8 @@ const Unit = {
 
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 
+    Employer.updateSearchLink('#employee-search-link', year);
+
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);
     $('#entity-median-ep').text(result.median_ep);
@@ -116,9 +126,11 @@ const Unit = {
 
       ChartHelper.make_composition_chart(result.composition_json);
 
-      $('.entity-department-statistics').show();
+      Employer.updateSearchLink('#department-search-link', year);
+
+      $('.entity-department-statistics').removeClass('d-none');
     } else {
-      $('.entity-department-statistics').hide();
+      $('.entity-department-statistics').addClass('d-none');
     }
   }
 };
@@ -164,6 +176,8 @@ const Department = {
     });
 
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
+
+    Employer.updateSearchLink('#employee-search-link', year);
 
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);

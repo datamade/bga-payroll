@@ -1,7 +1,7 @@
 <div class="card-body">
   <h3 class="card-title mb-4">
     <i class="far fa-building"></i> Departments
-    <small><a href="/search/?entity_type=department&parent={{ entity.slug }}">View all ({{ entity.departments.count() }})</a></small>
+    <small><a id="department-search-link" href="/search/?entity_type=department&parent={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all ({{ entity.departments.count() }})</a></small>
   </h3>
 
   <h4 class="card-subtitle">Top-spending departments in {{ entity }}</h4>
