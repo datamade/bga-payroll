@@ -47,25 +47,6 @@ def error(request, error_code):
 class EmployerView(DetailView, ChartHelperMixin):
     context_object_name = 'entity'
 
-    def get(self, request, *args, **kwargs):
-        # Django creates a different cache entry for every combination of path
-        # and URL parameters. To keep the number of cache entries low, redirect
-        # requests without a data_year parameter to the URL with a parameter
-        # for the latest year available. This will prevent duplicate entries
-        # for effectively the same page (an employer page without a data_year
-        # parameter, which would show the most recent year, and an employer
-        # page with a data_year parameter for the most recent year).
-        if not self.request.GET.get('data_year'):
-            self.object = self.get_object()
-            latest_year = self.data_years()[0]
-
-            return redirect(
-                '{0}?data_year={1}'.format(request.path, latest_year),
-                permanent=True
-            )
-
-        return super().get(request, *args, **kwargs)
-
 
 class UnitView(EmployerView):
     model = Unit
