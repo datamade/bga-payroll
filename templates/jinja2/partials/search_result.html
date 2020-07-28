@@ -1,5 +1,5 @@
 {% with endpoint=result.id.split('.')[0] %}
-    <a href="/{{ endpoint }}/{{ result.slug }}/" class="search-result">{{ result.name }}</a>
+    <a href="/{{ endpoint }}/{{ result.slug }}/{% if endpoint != 'person' %}?data_year={{ result['year'] }}{% endif %}" class="search-result">{{ result.name }}</a>
 
     {% if endpoint == 'person' %}
         <span class="badge badge-primary">
