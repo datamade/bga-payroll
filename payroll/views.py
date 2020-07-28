@@ -55,16 +55,20 @@ class UnitView(EmployerView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        data_years = self.object.responding_agencies.order_by('-reporting_year')\
-                                                    .values_list('reporting_year', flat=True)
+        data_years = list(self.data_years())
+        population_percentile = self.population_percentile()
 
         context.update({
-            'population_percentile': self.population_percentile(),
+            'data_years': data_years,
+            'population_percentile': population_percentile,
             'size_class': self.object.size_class,
-            'data_years': list(data_years),
         })
 
         return context
+
+    def data_years(self):
+        return self.object.responding_agencies.order_by('-reporting_year')\
+                                              .values_list('reporting_year', flat=True)
 
     def population_percentile(self):
         if (self.object.get_population() is None):
@@ -100,15 +104,17 @@ class DepartmentView(EmployerView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        data_years = self.data_years()
+        context['data_years'] = data_years
+
+        return context
+
+    def data_years(self):
         data_years = self.object.get_salaries()\
             .distinct('vintage__standardized_file__reporting_year')\
             .values_list('vintage__standardized_file__reporting_year', flat=True)
 
-        data_years = sorted(list(data_years), reverse=True)
-
-        context['data_years'] = data_years
-
-        return context
+        return sorted(list(data_years), reverse=True)
 
 
 class PersonView(DetailView, ChartHelperMixin):

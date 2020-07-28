@@ -15,10 +15,6 @@ class IndexViewSet(viewsets.ViewSet):
 
     @method_decorator(cache_page(60 * 60 * 72))
     def list(self, request):
-        '''
-        TODO: Should this be retrieve? Want to keep API consistent across Index
-        and entity-related views.
-        '''
         try:
             data_year = request.query_params['data_year']
         except KeyError:

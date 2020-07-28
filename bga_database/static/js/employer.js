@@ -17,7 +17,7 @@ const Employer = {
 
   updateBaseBallStats: function (result) {
     $('.entity-headcount').text(result.headcount);
-    $('#entity-total-expenditure').text(result.total_expenditure);
+    $('#entity-total-expenditure').text('$' + result.total_expenditure);
     $('.entity-median-tp').text(result.median_tp);
   },
 

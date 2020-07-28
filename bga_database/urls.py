@@ -15,14 +15,16 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.views.decorators.cache import cache_page
 
 from data_import import views as import_views
 from payroll import views as payroll_views
+from payroll import api as api_views
+from payroll import sitemaps as payroll_sitemaps
 
 from rest_framework import routers
-from payroll import api as api_views
 
 
 router = routers.DefaultRouter()
@@ -32,6 +34,11 @@ router.register(r'departments', api_views.DepartmentViewSet)
 router.register(r'people', api_views.PersonViewSet)
 
 EIGHT_HOURS = 60 * 60 * 8
+
+sitemaps = {
+    'units': payroll_sitemaps.UnitSitemap,
+    'departments': payroll_sitemaps.DepartmentSitemap,
+}
 
 urlpatterns = [
     # client
@@ -50,6 +57,7 @@ urlpatterns = [
     # admin
     path('admin/', admin.site.urls),
     path('flush-cache/<str:secret_key>', payroll_views.flush_cache, name='flush_cache'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 
     # data import
     path('data-import/', import_views.Uploads.as_view(), name='data-import'),

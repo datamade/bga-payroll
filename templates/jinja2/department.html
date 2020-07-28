@@ -2,6 +2,12 @@
 
 {% block title %}{{ entity }}{% endblock %}
 
+{% block extra_meta %}
+{% if request.GET %}
+<link rel="canonical" href="https://{{ request.get_host() }}{{ request.path }}" />
+{% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="sticky-top">
   <div class="float-right pt-2 ml-5">
@@ -78,13 +84,13 @@
 {% block extra_js %}
 {% compress js %}
 <script type="module">
-  import { initDataYearToggle } from  "js/data_year_toggle"
-  import { Department } from  "js/employer"
+  import { initDataYearToggle } from  'js/data_year_toggle'
+  import { Department } from  'js/employer'
 
-  const initialYear = $('button#yearDropdownMenuButton').text().replace(/(\n|\s)/gm, '');
   const slug = '{{ entity.slug }}';
+  const dataYear = $('#selected-year').text();
 
-  initDataYearToggle('departments', slug, initialYear, Department.update);
+  initDataYearToggle('departments', slug, dataYear, Department.update);
 </script>
 {% endcompress %}
 {% endblock %}
