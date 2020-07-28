@@ -67,12 +67,6 @@ pages, including their compiled JavaScript, are cached in their entirety.
 - Database operations to gather display data for a given year are also fairly
 intensive, so API views are cached as well.
 
-Note that employer pages, which vary based on a provided `data_year` URL
-parameter, redirect to the employer page for the most recent year if that
-parameter is not provided. This helps to avoid duplicate entries in the site
-cache in order to keep the cache size as small, i.e., cache retrieval as fast
-as possible.
-
 ## The `data_import` application
 
 The `data_import` application has more moving parts: If defines models to
