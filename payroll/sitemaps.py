@@ -12,10 +12,10 @@ class PayrollSitemap(Sitemap):
 class UnitSitemap(PayrollSitemap):
 
     def items(self):
-        return Unit.objects.all()
+        return Unit.objects.order_by('id').all()
 
 
 class DepartmentSitemap(PayrollSitemap):
 
     def items(self):
-        return Department.objects.all()
+        return Department.objects.order_by('id').all()
