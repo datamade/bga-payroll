@@ -36,12 +36,12 @@ const Unit = {
   update: function(year, result) {
     Employer.commonUpdate(year, result);
 
-    Unit.updateSummaryCard(result);
-    Unit.updateEmployeeCard(result);
-    Unit.updateDepartmentCard(result);
+    Unit.updateSummaryCard(year, result);
+    Unit.updateEmployeeCard(year, result);
+    Unit.updateDepartmentCard(year, result);
   },
 
-  updateSummaryCard: function (result) {
+  updateSummaryCard: function (year, result) {
     try {
       $('#entity-salary-percentile').text(result.salary_percentile);
       $('#entity-expenditure-percentile').text(result.expenditure_percentile);
@@ -52,7 +52,7 @@ const Unit = {
     if ( result.highest_spending_department === null ) {
       $('#entity-department-statistics').hide();
     } else {
-      $('#entity-highest-spending-department').attr('href', '/department/' + result.highest_spending_department.slug);
+      $('#entity-highest-spending-department').attr('href', '/department/' + result.highest_spending_department.slug + '/?data_year=' + year);
       $('#entity-highest-spending-department').text(result.highest_spending_department.name);
       $('#entity-highest-spending-department-expenditure').text(result.highest_spending_department.amount);
       $('#entity-department-statistics').show();
@@ -61,7 +61,7 @@ const Unit = {
     ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
   },
 
-  updateEmployeeCard: function (result) {
+  updateEmployeeCard: function (year, result) {
     $('#entity-salaries').empty();
 
     $.each(result.salaries, function (idx, salary) {
@@ -73,7 +73,7 @@ const Unit = {
       );
 
       const employerLink = Employer.makeLink(
-        '/' + salary.employer_endpoint + '/' + salary.employer_slug,
+        '/' + salary.employer_endpoint + '/' + salary.employer_slug + '/?data_year=' + year,
         salary.employer
       );
 
@@ -93,14 +93,14 @@ const Unit = {
     $('#entity-median-ep').text(result.median_ep);
   },
 
-  updateDepartmentCard: function (result) {
+  updateDepartmentCard: function (year, result) {
     $('#department-salaries').empty();
 
     if ( result.department_salaries.length > 0 ) {
       $.each(result.department_salaries, function (idx, salary) {
         const tRow = $('<tr>');
         const departmentLink = Employer.makeLink(
-          '/department/' + salary.slug,
+          '/department/' + salary.slug + '/?data_year=' + year,
           salary.name
         );
 
