@@ -206,7 +206,7 @@ class ImportUtility(TableNamesMixin):
               ON unit.id = ura.unit_id
               JOIN data_import_respondingagency AS ra
               ON ura.responding_agency_id = ra.id
-              WHERE ra.name ilike 'isbe'
+              WHERE ra.name ilike 'ISBE/All Elementary/High School Employees'
             ) AS isbe_reported
             WHERE payroll_employer.id = isbe_reported.unit_id
               AND payroll_employer.taxonomy_id IS NULL
