@@ -1,4 +1,6 @@
+import 'url-search-params-polyfill';
 import { ChartHelper } from  "./chart_helper";
+
 
 const Employer = {
   commonUpdate: function (year, result) {
@@ -140,7 +142,7 @@ const Department = {
     Employer.commonUpdate(year, result);
 
     Department.updateSummaryCard(result);
-    Department.updateEmployeeCard(result);
+    Department.updateEmployeeCard(year, result);
   },
 
   updateSummaryCard: function (result) {
@@ -156,7 +158,7 @@ const Department = {
     ChartHelper.make_salary_chart(result.employee_salary_json, 'employee');
   },
 
-  updateEmployeeCard: function (result) {
+  updateEmployeeCard: function (year, result) {
     $('#entity-salaries').empty();
 
     $.each(result.salaries, function (idx, salary) {
