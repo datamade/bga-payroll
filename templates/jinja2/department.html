@@ -9,73 +9,82 @@
 {% endblock %}
 
 {% block content %}
-<div class="sticky-top">
-  <div class="float-right pt-2 ml-5">
-    {% include 'partials/year_selector.html' %}
-  </div>
-</div>
-
 <div class="row">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      {% include 'partials/breadcrumbs.html' %}
-    </ol>
-  </nav>
-</div>
-
-<div class="row">
-  <div class="col-md">
-    <h2 class="mb-3"><i class="far fa-building"></i> {{ entity }}</h2>
-
-    <div class="badge badge-primary">
-      {% if entity.universe %}{{ entity.universe }}{% else %}Department{% endif %}
+  <div class="col-md-7 offset-md-1">
+    <div class="row">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          {% include 'partials/breadcrumbs.html' %}
+        </ol>
+      </nav>
     </div>
 
-    {% if entity.parent.taxonomy %}
-    <div class="badge badge-secondary">
-      {{ entity.parent.taxonomy }}
+    <div class="sticky-top">
+      <div class="float-right pt-2 ml-5">
+        {% include 'partials/year_selector.html' %}
+      </div>
     </div>
-    {% endif %}
-  </div>
-</div>
 
-<div class="row mb-4">
-  {% with context = aggregate_stats %}
-    {% include 'partials/baseball_stats.html' %}
-  {% endwith %}
-</div>
+    <div class="row">
+      <div class="col-md">
+        <h2 class="mb-3"><i class="far fa-building"></i> {{ entity }}</h2>
 
-<div class="row">
-  <div class="col-md">
-    <div class="card mb-4">
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-6" id="intro-text">
-            <h3 class="card-title mb-4">
-              <i class="fas fa-list"></i> Summary
-            </h3>
+        <div class="badge badge-primary">
+          {% if entity.universe %}{{ entity.universe }}{% else %}Department{% endif %}
+        </div>
 
-            <p><strong>{{ entity }}</strong> made up <strong id="entity-percent-of-expenditure"></strong> of the total payroll expenditure of <strong><a href='{{ url("unit", kwargs={"slug": entity.parent.slug}) }}'>{{ entity.parent }}</a></strong> in <strong class="entity-data-year"></strong>.</p>
+        {% if entity.parent.taxonomy %}
+        <div class="badge badge-secondary">
+          {{ entity.parent.taxonomy }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
 
-            {% if entity.is_comparable %}
-              <p>This department's total expenditure is higher than <strong id="entity-expenditure-percentile"></strong> of other <strong><a href='{{ url("search") }}?universe="{{ entity.universe }}"'>{{ entity.universe }}s</a></strong> in the <strong>{{ entity.parent.taxonomy }}</strong> category.</p>
+    <div class="row mb-4" style="clear: both;">
+      {% with context = aggregate_stats %}
+        {% include 'partials/baseball_stats.html' %}
+      {% endwith %}
+    </div>
 
-              <p>This department's median salary is higher than <strong id="entity-salary-percentile"></strong> of other <strong><a href='{{ url("search") }}?universe="{{ entity.universe }}"'>{{ entity.universe }}s</a></strong> in the <strong>{{ entity.parent.taxonomy }}</strong> category.</p>
-            {% endif %}
+    <div class="row">
+      <div class="col-md">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-lg-6" id="intro-text">
+                <h3 class="card-title mb-4">
+                  <i class="fas fa-list"></i> Summary
+                </h3>
+
+                <p><strong>{{ entity }}</strong> made up <strong id="entity-percent-of-expenditure"></strong> of the total payroll expenditure of <strong><a href='{{ url("unit", kwargs={"slug": entity.parent.slug}) }}'>{{ entity.parent }}</a></strong> in <strong class="entity-data-year"></strong>.</p>
+
+                {% if entity.is_comparable %}
+                  <p>This department's total expenditure is higher than <strong id="entity-expenditure-percentile"></strong> of other <strong><a href='{{ url("search") }}?universe="{{ entity.universe }}"'>{{ entity.universe }}s</a></strong> in the <strong>{{ entity.parent.taxonomy }}</strong> category.</p>
+
+                  <p>This department's median salary is higher than <strong id="entity-salary-percentile"></strong> of other <strong><a href='{{ url("search") }}?universe="{{ entity.universe }}"'>{{ entity.universe }}s</a></strong> in the <strong>{{ entity.parent.taxonomy }}</strong> category.</p>
+                {% endif %}
+              </div>
+              <div id="employee-distribution-chart" class="col-lg-6"></div>
+            </div>
           </div>
-          <div id="employee-distribution-chart" class="col-lg-6"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md">
+        <div class="card mb-4">
+          {% include 'partials/employee_card.html' %}
+          {% include 'partials/payroll_expenditure.html' %}
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="row">
-  <div class="col-md">
-    <div class="card mb-4">
-      {% include 'partials/employee_card.html' %}
-      {% include 'partials/payroll_expenditure.html' %}
-    </div>
+  <div class="col-md-3">
+    {% include 'partials/donate.html' %}
+    {% include 'partials/story_feed.html' %}
   </div>
 </div>
 

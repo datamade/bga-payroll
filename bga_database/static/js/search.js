@@ -32,11 +32,11 @@ function initSearch(get_object) {
     });
 
     $('#entity-lookup').on('input', function checkTermLength() {
-        // Enable the search button only if the term >= 3 characters in length
+        // Enable the search button when a term is entered
         var term = $.trim($('#entity-lookup').val());
         var searchDisabled = $('#submit-button').prop('disabled') === true;
 
-        if ( term.length >= 3 ) {
+        if ( term.length >= 1 ) {
             if ( searchDisabled ) {
                 $('#submit-button').prop('disabled', false);
                 $('#name-warning').collapse('hide');
