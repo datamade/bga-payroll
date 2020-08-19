@@ -35,7 +35,7 @@ div[id*="chart"] {
   height: 100%;
 }
 
-.breadcrumb, .lead, .navbar-brand {
+.breadcrumb, .lead, .navbar-brand, #story-feed.card {
   font-family: "acumin-pro-condensed", "Arial Narrow", Helvetica, sans-serif;
 }
 

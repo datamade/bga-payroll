@@ -81,22 +81,20 @@
       </div>
     </nav>
 
-    <div class="container" id="main-content"><br />
+    <div class="container-fluid" id="main-content">
       {% block content %}{% endblock %}
 
       {% block inspiration %}
-      {% if request.path != '/' %}
-        <div class="row mt-4">
-          <div class="col-md-8 offset-md-2 text-smaller">
-            <h4 class="text-center">What are you interested in?</h4>
-            <div class="row mt-3">
-              {% include 'partials/inspiration.html' %}
-            </div>
+      <div class="row my-5">
+        <div class="col-md-8 offset-md-2 text-smaller">
+          <h4 class="text-center">What are you curious about?</h4>
+          <div class="row mt-3">
+            {% include 'partials/inspiration.html' %}
           </div>
         </div>
-      {% endif %}
+      </div>
 
-      <div class="row mt-4">
+      <div class="row my-5">
         <div class="col-md-6 offset-md-3 text-smaller">
           <h4 class="text-center">Need help or see any problems or errors?</h4>
           <p>This database is a living document. We update it regularly and are always on the lookout to make it more robust and precise. If you think we are missing a government unit we should include, please let us know.</p>

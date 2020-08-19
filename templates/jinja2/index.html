@@ -12,25 +12,38 @@
 {% endblock %}
 
 {% block content %}
+<div class="row mb-5">
+  <div class="col-md-10 offset-md-1 pl-md-0">
+    <div class="alert alert-warning" role="alert">
+      <p class="lead">
+        <strong>Aliqua tempor officia tempor sed aute eu consectetur sunt sunt labore non.</strong>
+      </p>
+
+      <p>
+        Consequat ut nostrud sunt et dolore in id sint exercitation amet enim dolor cupidatat et proident elit proident cupidatat aute ut ullamco adipisicing est sit sed eu aute non irure duis laboris qui deserunt proident aute sint.
+      </p>
+
+      <p class="text-center">
+        <button class="btn btn-primary btn-lg">
+          Donate to the BGA
+        </button>
+      </p>
+    </div>
+  </div>
+</div>
 
 <div class="row">
-  <div class="col-md-10 offset-md-1">
-    {% if 'welcome' in request.GET %}
-    <div class="row mb-3">
-      <div class="alert alert-warning" role="alert">
-        <i class="fas fa-info-circle fa-fw"></i> <strong>Looking for the Better Government Association’s Payroll Database?</strong> We’ve updated and made it better. The old one isn’t currently available, but in the meantime check out our new work.
-      </div>
-    </div>
-    {% endif %}
+  <div class="col-md-7 offset-md-1">
     <div class="row">
       <div class="jumbotron bg-light">
         <div class="row mb-lg-5">
+          <div class="col-md-12">
+            <h1 class="mb-5">Search Illinois public employee salary data</h1>
+          </div>
           <div class="col-md-3 align-self-center d-none d-lg-block">
             <img src="{{ static('img/capitol-dome.png') }}" class="pr-2 img-fluid bga-blue-filter" />
           </div>
           <div class="col-md align-self-center">
-              <h1>Search Illinois public employee salary data</h1>
-
               <p class="lead">Every year, the Better Government Association compiles <strong class="bg-warning">Illinois’ most comprehensive database</strong> to review, explore and compare compensation for public employees throughout Illinois. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
           </div>
         </div>
@@ -64,14 +77,6 @@
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md mt-3 collapse show" id="name-warning">
-                <div class="alert alert-warning mb-0" role="alert">
-                  <i class="fas fa-info-circle fa-fw"></i> Please enter at least three characters of the name of a <strong>Unit, Department, or Person</strong> you'd like to look up.
-                </div>
             </div>
           </div>
 
@@ -120,29 +125,12 @@
       </div>
     </div>
 
-    <div class="row mt-4">
-      <div class="col-md-8 offset-md-2 alert alert-primary">
-        <p>It takes the BGA nearly a year to request, compile, organize and check data we receive from hundreds of taxing bodies across Illinois. Like what you see? <strong>Please consider making a donation to help us continue this work.</strong></p>
-
-        <div class="text-center">
-          <a class="btn btn-lg btn-success" href="https://bettergov.salsalabs.org/donationform/index.html">
-            <i class="fas fa-handshake"></i> Donate to the BGA
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="row mt-5">
-      <div class="col-md">
-        <h3>What are you curious about?</h3>
-      </div>
-    </div>
-
-    <div class="row mt-2">
-      {% include 'partials/inspiration.html' %}
-    </div>
-
     <div class="mt-4"></div>
+  </div>
+
+  <div class="col-md-3">
+    {% include 'partials/donate.html' %}
+    {% include 'partials/story_feed.html' %}
   </div>
 </div>
 {% endblock %}
