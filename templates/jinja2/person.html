@@ -130,6 +130,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
+
 {% compress js %}
 <script type="text/javascript" type="module">
   import { ChartHelper } from 'js/chart_helper'

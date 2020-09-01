@@ -6,7 +6,10 @@ function populateStoryFeed() {
             var storyItem = $('<div class="p-3" />');
 
             var title = $('<h5 />').append(
-                $('<a />').attr('href', entry.link).text(entry.title)
+                $('<a />').attr({
+                    'href': entry.link,
+                    'target': '_blank'
+                }).text(entry.title)
             );
 
             var summary = $('<p class="text-serif my-2" />').text(entry.summary);
