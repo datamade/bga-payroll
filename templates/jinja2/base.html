@@ -151,6 +151,16 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'UA-18960172-1');
+
+      // Track source file downloads
+      $('.entity-source-link').click(function(e) {
+        var sourceLink = e.target.href;
+
+        gtag('event', 'downloaded', {
+          'event_category': 'downloads',
+          'event_label': sourceLink
+        });
+      })
     </script>
 
     {% block extra_js %}{% endblock %}
