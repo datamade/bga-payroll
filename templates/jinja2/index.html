@@ -137,8 +137,9 @@
 
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/lib/jquery-ui.min.js') }}"></script>
-<script src="{{ static('js/search.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/search.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
 
 {% compress js %}
 <script type="module">

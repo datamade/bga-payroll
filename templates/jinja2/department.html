@@ -91,6 +91,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
+
 {% compress js %}
 <script type="module">
   import { initDataYearToggle } from  'js/data_year_toggle'
