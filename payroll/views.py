@@ -1,3 +1,4 @@
+import datetime
 from itertools import chain
 
 from django.core.cache import cache
@@ -9,6 +10,7 @@ from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.conf import settings
+import feedparser
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from data_import.models import StandardizedFile
@@ -266,6 +268,41 @@ class EntityLookup(ListView, PayrollSearchMixin):
         results = self.get_queryset(*args, **kwargs)
 
         return JsonResponse(results, safe=False)
+
+
+class StoryFeed(ListView):
+
+    response_class = JsonResponse
+    rss_feed_url = 'https://www.bettergov.org/feed/1555/rss.xml'
+    n_entries = 4
+
+    def render_to_response(self, context, **response_kwargs):
+        return JsonResponse(self.get_queryset())
+
+    def _get_date(self, date_parts):
+        date = datetime.date(*date_parts[:3])
+        return datetime.datetime.strftime(date, '%B %d, %Y')
+
+    def get_queryset(self):
+        try:
+            feed = feedparser.parse(self.rss_feed_url)
+
+        except Exception as e:
+            return {
+                'status_code': 500,
+                'message': str(e),
+            }
+
+        else:
+            return {
+                'status_code': 200,
+                'entries': [{
+                    'title': story['title'],
+                    'summary': story['summary'],
+                    'date': self._get_date(story['published_parsed']),
+                    'link': story['link'],
+                } for story in feed['entries'][:4]]
+            }
 
 
 def flush_cache(request, secret_key):

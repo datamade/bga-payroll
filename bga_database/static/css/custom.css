@@ -224,3 +224,15 @@ h5 {
   height: 1rem;
   border-width: 0.2em;
 }
+
+.text-serif {
+  font-family: Georgia, "Times New Roman", "DejaVu Serif", serif;
+}
+
+#story-feed-stories h5 {
+  text-transform: unset;
+}
+
+#story-feed-stories h5 > a {
+  color: unset;
+}

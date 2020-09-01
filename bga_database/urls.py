@@ -49,6 +49,7 @@ urlpatterns = [
     path('person/<str:slug>/', cache_page(EIGHT_HOURS)(payroll_views.PersonView.as_view()), name='person'),
     path('entity-lookup/', payroll_views.EntityLookup.as_view(), name='entity-lookup'),
     path('search/', payroll_views.SearchView.as_view(), name='search'),
+    path('story-feed/', payroll_views.StoryFeed.as_view(), name='story-feed'),
     path('<int:error_code>', payroll_views.error, name='error'),
 
     # user auth
