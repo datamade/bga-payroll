@@ -21,7 +21,7 @@ def post_save_refresh_cache(sender, instance, **kwargs):
 
         key = get_cache_key(request)
 
-        if cache.has_key(key):
+        if key in cache:
             cache.delete(key)
             print('Deleted key "{}"'.format(key))
 
