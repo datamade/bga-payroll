@@ -9,17 +9,19 @@ from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.conf import settings
+from extra_settings.models import Setting
 import feedparser
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
+from bga_database.local_settings import CACHE_SECRET_KEY
+
 from data_import.models import StandardizedFile
+
 from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 from payroll.serializers import PersonSerializer
-
-from bga_database.local_settings import CACHE_SECRET_KEY
 
 
 class IndexView(TemplateView, ChartHelperMixin):
@@ -200,6 +202,8 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
                                              .values_list('reporting_year', flat=True)
 
         context['data_years'] = list(data_years)
+
+        context['show_donate_banner'] = Setting.get('PAYROLL_SHOW_DONATE_BANNER', False)
 
         return context
 
