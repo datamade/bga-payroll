@@ -9,20 +9,21 @@ from extra_settings.models import Setting
 
 @receiver(post_save, sender=Setting, dispatch_uid='post_save_refresh_cache')
 def post_save_refresh_cache(sender, instance, **kwargs):
-    request = HttpRequest()
-    request.path = '/'
+    if instance.name == 'PAYROLL_SHOW_DONATE_BANNER':
+        request = HttpRequest()
+        request.path = '/'
 
-    # TODO: Does this need to vary in a deployment environment?
-    request.META = {
-        'SERVER_NAME': 'localhost',
-        'SERVER_PORT': 8000,
-    }
+        # TODO: Does this need to vary in a deployment environment?
+        request.META = {
+            'SERVER_NAME': 'localhost',
+            'SERVER_PORT': 8000,
+        }
 
-    key = get_cache_key(request)
+        key = get_cache_key(request)
 
-    if cache.has_key(key):
-        cache.delete(key)
-        print('Deleted key "{}"'.format(key))
+        if cache.has_key(key):
+            cache.delete(key)
+            print('Deleted key "{}"'.format(key))
 
-    else:
-        print('Key "{}" does not exist'.format(key))
+        else:
+            print('Key "{}" does not exist'.format(key))
