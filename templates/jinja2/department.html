@@ -59,7 +59,7 @@
 
                 <p><strong>{{ entity }}</strong> made up <strong id="entity-percent-of-expenditure"></strong> of the total payroll expenditure of <strong><a href='{{ url("unit", kwargs={"slug": entity.parent.slug}) }}'>{{ entity.parent }}</a></strong> in <strong class="entity-data-year"></strong>.</p>
 
-                {% if entity.is_comparable %}
+                {% if entity.is_comparable and entity.parent.taxonomy|string != 'Chicago Municipal' %}
                   <p>This department's total expenditure is higher than <strong id="entity-expenditure-percentile"></strong> of other <strong><a href='{{ url("search") }}?universe="{{ entity.universe }}"'>{{ entity.universe }}s</a></strong> in the <strong>{{ entity.parent.taxonomy }}</strong> category.</p>
 
                   <p>This department's median salary is higher than <strong id="entity-salary-percentile"></strong> of other <strong><a href='{{ url("search") }}?universe="{{ entity.universe }}"'>{{ entity.universe }}s</a></strong> in the <strong>{{ entity.parent.taxonomy }}</strong> category.</p>

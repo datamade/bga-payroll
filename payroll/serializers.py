@@ -777,7 +777,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
         change = {
             'total_pay_delta': current_salary.total_pay - first_salary.total_pay,
-            'total_pay_percent_change': (current_salary.total_pay - first_salary.total_pay) / first_salary.total_pay,
+            'total_pay_percent_change': (current_salary.total_pay - first_salary.total_pay) * 100 / first_salary.total_pay,
         }
 
         salaries_with_amount = list(filter(lambda x: x.amount is not None, ordered_salaries))
@@ -788,7 +788,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
             change.update({
                 'amount_delta': latest_amount - earliest_amount,
-                'amount_percent_change': (latest_amount - earliest_amount) / earliest_amount if earliest_amount > 0 else None,
+                'amount_percent_change': (latest_amount - earliest_amount) / earliest_amount * 100 if earliest_amount > 0 else None,
             })
 
         salaries_with_extra_pay = list(filter(lambda x: x.extra_pay is not None, ordered_salaries))
@@ -799,7 +799,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
             change.update({
                 'extra_pay_delta': latest_amount - earliest_amount,
-                'extra_pay_percent_change': (latest_amount - earliest_amount) / earliest_amount if earliest_amount > 0 else None,
+                'extra_pay_percent_change': (latest_amount - earliest_amount) / earliest_amount * 100 if earliest_amount > 0 else None,
             })
 
         return change

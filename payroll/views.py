@@ -2,7 +2,6 @@ import datetime
 from itertools import chain
 
 from django.core.cache import cache
-from django.db import connection
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -41,6 +40,18 @@ class IndexView(TemplateView, ChartHelperMixin):
 class UserGuideView(TemplateView):
     template_name = 'user_guide.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        try:
+            department_slug = Department.objects.get(name__iexact='city of chicago department of police').slug
+        except:
+            department_slug = Department.objects.first().slug
+
+        context['department_slug'] = department_slug
+
+        return context
+
 
 def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
@@ -58,11 +69,9 @@ class UnitView(EmployerView):
         context = super().get_context_data(**kwargs)
 
         data_years = list(self.data_years())
-        population_percentile = self.population_percentile()
 
         context.update({
             'data_years': data_years,
-            'population_percentile': population_percentile,
             'size_class': self.object.size_class,
         })
 
@@ -71,32 +80,6 @@ class UnitView(EmployerView):
     def data_years(self):
         return self.object.responding_agencies.order_by('-reporting_year')\
                                               .values_list('reporting_year', flat=True)
-
-    def population_percentile(self):
-        if (self.object.get_population() is None):
-            return 'N/A'
-
-        query = '''
-            WITH pop_percentile AS (
-              SELECT
-                percent_rank() OVER (ORDER BY pop.population ASC) AS percentile,
-                pop.employer_id AS unit_id
-              FROM payroll_employerpopulation AS pop
-              JOIN payroll_employer AS emp
-              ON pop.employer_id = emp.id
-              JOIN payroll_employertaxonomy AS tax
-              ON emp.taxonomy_id = tax.id
-              WHERE tax.id = {taxonomy}
-            )
-            SELECT percentile FROM pop_percentile
-            WHERE unit_id = {id}
-        '''.format(taxonomy=self.object.taxonomy_id, id=self.object.id)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-
-        return result[0] * 100
 
 
 class DepartmentView(EmployerView):
