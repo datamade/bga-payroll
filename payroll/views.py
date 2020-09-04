@@ -41,6 +41,18 @@ class IndexView(TemplateView, ChartHelperMixin):
 class UserGuideView(TemplateView):
     template_name = 'user_guide.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        try:
+            department_slug = Department.objects.get(name__iexact='city of chicago department of police').slug
+        except:
+            department_slug = Department.objects.first().slug
+
+        context['department_slug'] = department_slug
+
+        return context
+
 
 def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
