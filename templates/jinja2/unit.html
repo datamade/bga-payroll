@@ -56,11 +56,11 @@
                 <h3 class="card-title mb-4">
                   <i class="fas fa-list"></i> Summary
                 </h3>
-                {% if size_class %}
+                {% if entity.size_class %}
                 {# For now, population statistics do not vary by year, so handle
                    this section purely in Django. #}
                   <p>
-                    With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>.
+                    With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ entity.size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ entity.size_class }}</a></strong>.
                   </p>
                 {% endif %}
 
