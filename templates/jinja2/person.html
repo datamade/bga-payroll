@@ -34,7 +34,7 @@
                 <h3 class="card-title mb-4">
                   <i class="fas fa-list"></i> Summary
                 </h3>
-                <p><strong>{{ entity }}</strong> earned <strong class="bg-warning">{{ current_salary|format_salary }}</strong> in {{ data_year }} as {{ current_job.title|an_or_a(bold=True)|safe }} for <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer.name }}</a></strong>. {% if current_job.start_date %}{{ entity.last_name }} had worked in this position since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
+                <p><strong>{{ entity }}</strong> earned <strong class="bg-warning">{{ current_salary|format_salary }}</strong> in {{ data_year }} as {{ current_job.title|an_or_a(bold=True)|safe }} for <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer.name }}</a></strong>. {% if current_job.start_date %}{{ entity.last_name }} has worked in this position since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
 
                 <p>{{ entity.last_name }} earned more than <strong>{{ employer_percentile|format_percentile }}</strong> of employees in <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer.name }}</a></strong>.</p>
 
