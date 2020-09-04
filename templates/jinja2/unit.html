@@ -61,20 +61,13 @@
                    this section purely in Django. #}
                   <p>
                     With a population of <strong>{{ entity.get_population()|format_ballpark_number }}</strong>, <strong>{{ entity }}</strong> is classified as <strong><a href='{{ url("search") }}?size={{ size_class }}&taxonomy="{{ entity.taxonomy }}"'>{{ size_class }}</a></strong>.
-
-                    {# There will only ever be one unit with a population in the
-                       "Chicago Municipal" taxonomy: the city of Chicago. So, don't
-                       show this unhelpful number. #}
-                    {% if entity.taxonomy|string != 'Chicago Municipal' and entity.is_comparable %}
-                      It is larger than <strong>{{ population_percentile|format_percentile }}</strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> populations in Illinois.
-                    {% endif %}
                   </p>
                 {% endif %}
 
                 {# Whether an entity is comparable is True or False, regardless of
                    year. So, use Django conditionals here, and in the JavaScript
                    callback, to conditionally display and populate this section. #}
-                {% if entity.is_comparable %}
+                {% if entity.is_comparable and entity.taxonomy|string != 'Chicago Municipal' %}
                   <p>The median salary in <strong>{{ entity }}</strong> is higher than <strong id="entity-salary-percentile"></strong> of <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> median salaries in Illinois.</p>
 
                   <p><strong>{{ entity }}</strong> spent more on payroll in <span class="entity-data-year"></span> than <strong id="entity-expenditure-percentile"></strong> of other employers in the <strong><a href='{{ url("search") }}?taxonomy="{{ entity.taxonomy }}"'>{{ entity.taxonomy }}</a></strong> category.</p>
@@ -84,7 +77,7 @@
                    on a department level, can vary by year, so handle the display
                    and population of this section in JavaScript. #}
                 <div class="entity-department-statistics">
-                  <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
+                  <p>The highest spending department in <strong>{{ entity }}</strong> in <span class="entity-data-year"></span> was the <strong><a id="entity-highest-spending-department"></a></strong>, with an annual payroll expenditure in <span class="entity-data-year"></span> of <strong id="entity-highest-spending-department-expenditure"></strong>.</p>
                 </div>
               </div>
               <div id="employee-distribution-chart" class="col-lg-6"></div>
@@ -108,8 +101,8 @@
         <div class="card mb-4">
           {% include 'partials/department_card.html' %}
           <div class="card-body">
-            <h4 class="card-subtitle mt-3">Top-spending departments as a proportion of total expenditure</h4>
-            <h4 class="card-subtitle mb-3"><small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small></h4>
+            <h4 class="card-subtitle my-3">Top-spending departments as a proportion of total expenditure</h4>
+            <h4 class="card-subtitle mb-3"><small class="text-muted">Total expenditure, broken into expenditure of the top five spending departments compared to expenditure in all other departments, is displayed in the stacked horizontal bar car.</small></h4>
             <div id="department-composition-chart"></div>
           </div>
         </div>
