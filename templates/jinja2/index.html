@@ -151,7 +151,9 @@
   </div>
 
   <div class="col-md-3">
-    {% include 'partials/donate.html' %}
+    {% if not show_donate_banner %}
+      {% include 'partials/donate.html' %}
+    {% endif %}
     {% include 'partials/story_feed.html' %}
   </div>
 </div>

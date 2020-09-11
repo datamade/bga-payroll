@@ -36,6 +36,8 @@ class IndexView(TemplateView, ChartHelperMixin):
 
         context['data_years'] = list(data_years)
 
+        context['show_donate_banner'] = Setting.get('PAYROLL_SHOW_DONATE_BANNER', False)
+
         try:
             state_officers_slug = Department.objects.get(name='State Officers',
                                                          parent__name='Illinois').slug
