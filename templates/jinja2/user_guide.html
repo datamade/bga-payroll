@@ -1,12 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}User Guide - Illinois Public Salaries Database{% endblock %}
+{% block title %}FAQ - Illinois Public Salaries Database{% endblock %}
 
 {% block content %}
 
 <div class="row">
   <div class="col-md-8 offset-md-2">
     <h1>FAQ</h1>
+
+    <p class="lead mt-3"><strong>The Illinois Public Salary Database is Illinois’ most comprehensive collection of salaries for public employees throughout the state.</strong> It takes us more than a year to compile.</p>
+
+    <div class="row m-5">
+      <div class="col-md-8 offset-md-2">
+        {% include 'partials/donate.html' %}
+      </div>
+    </div>
+
+    <p>As always, you can <a href="/search/?entity_type=unit,department,person">research</a> taxpayer-funded compensation for a broad range of government employees from attorney general to firefighter to office clerk and beyond. But we also continue to place <a href="/department/{{ department_slug }}/">greater emphasis</a> on salary costs affecting governments across Illinois.
 
     <ul class="my-5">
       <li><a href="#what-has-changed">What has changed since last year?</a></li>
@@ -21,10 +31,6 @@
       <li><a href="#other-questions">What if I have other questions?</a></li>
     </ul>
 
-    <p><strong>The Illinois Public Salary Database is Illinois’ most comprehensive collection of salaries for public employees throughout the state.</strong> It takes us more than a year to compile.</p>
-
-    <p>As always, you can <a href="/search/?entity_type=unit,department,person">research</a> taxpayer-funded compensation for a broad range of government employees from attorney general to firefighter to office clerk and beyond. But we also continue to place <a href="/department/{{ department_slug }}/">greater emphasis</a> on salary costs affecting governments across Illinois.
-
     <h3 class="mt-5" id="what-has-changed">What has changed since last year?</h3>
 
     <p>We now break out employees’ base pay and extra pay, which includes overtime, bonuses and other additional compensation. We do this to better track how much governments are spending beyond basic salaries in their budgets. For this tool, we do not include government costs for health care and retirement benefits.</p>
@@ -35,7 +41,7 @@
 
     <p>We try to update this tool once per year. All records contained in the database are public and are obtained under open records laws. Because we seek actual payments made to employees, we don’t ask for base and extra pay for employees until after the year is complete.</p>
 
-    <p>This database is resource intensive, both in money and time. We request, compile, organize and check data we receive from hundreds of taxing bodies across Illinois and put it into an easy-to-use site for you. Like what you see? Please consider <a href="https://bettergov.salsalabs.org/donationform/index.html" target="_blank">donating</a> to help us continue this work.</p>
+    <p>This database is resource intensive, both in money and time. We request, compile, organize and check data we receive from hundreds of taxing bodies across Illinois and put it into an easy-to-use site for you. Like what you see? Please consider <a href="https://donate.bettergov.org/?utm_source=database&utm_medium=other" target="_blank">donating</a> to help us continue this work.</p>
 
     <h3 class="mt-5" id="search">How do I find the records I’m looking for?</h3>
 
