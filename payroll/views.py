@@ -205,8 +205,6 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
         context['data_years'] = list(data_years)
 
-        context['show_donate_banner'] = Setting.get('PAYROLL_SHOW_DONATE_BANNER', False)
-
         return context
 
 
