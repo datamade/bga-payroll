@@ -38,7 +38,10 @@ SOLR_URL = 'http://127.0.0.1:8983/solr/bga'
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-    }
+    },
+    'vary_on_setting': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    },
 }
 
 CACHE_SECRET_KEY = 'a key'

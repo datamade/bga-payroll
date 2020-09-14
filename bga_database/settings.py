@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'compressor',
     'compressor_toolkit',
+    'extra_settings',
     'debug_toolbar',
 ]
 

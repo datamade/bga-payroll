@@ -12,6 +12,7 @@
 {% endblock %}
 
 {% block content %}
+{% if show_donate_banner %}
 <div class="row mb-5">
   <div class="col-md-10 offset-md-1 pl-md-0">
     <div class="alert alert-warning" role="alert">
@@ -39,6 +40,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <div class="row">
   <div class="col-md-7 offset-md-1">
@@ -149,7 +151,9 @@
   </div>
 
   <div class="col-md-3">
-    {% include 'partials/donate.html' %}
+    {% if not show_donate_banner %}
+      {% include 'partials/donate.html' %}
+    {% endif %}
     {% include 'partials/story_feed.html' %}
   </div>
 </div>

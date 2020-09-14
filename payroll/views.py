@@ -1,7 +1,7 @@
 import datetime
 from itertools import chain
 
-from django.core.cache import cache
+from django.core.cache import caches
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -9,17 +9,19 @@ from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.conf import settings
+from extra_settings.models import Setting
 import feedparser
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
+from bga_database.local_settings import CACHE_SECRET_KEY
+
 from data_import.models import StandardizedFile
+
 from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Unit, Department
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 from payroll.serializers import PersonSerializer
-
-from bga_database.local_settings import CACHE_SECRET_KEY
 
 
 class IndexView(TemplateView, ChartHelperMixin):
@@ -33,6 +35,8 @@ class IndexView(TemplateView, ChartHelperMixin):
                                              .values_list('reporting_year', flat=True)
 
         context['data_years'] = list(data_years)
+
+        context['show_donate_banner'] = Setting.get('PAYROLL_SHOW_DONATE_BANNER', False)
 
         try:
             state_officers_slug = Department.objects.get(name='State Officers',
@@ -298,7 +302,9 @@ class StoryFeed(ListView):
 
 def flush_cache(request, secret_key):
     if secret_key == CACHE_SECRET_KEY:
-        cache.clear()
+        for cache_label in settings.CACHES.keys():
+            caches[cache_label].clear()
+
         status_code = 200
     else:
         status_code = 403

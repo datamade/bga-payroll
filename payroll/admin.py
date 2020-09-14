@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
+from django.core.cache import caches, InvalidCacheBackendError
 from django.core.management import call_command
+
+from extra_settings.admin import SettingAdmin
+from extra_settings.models import Setting
 
 from payroll.models import Employer, EmployerUniverse, EmployerTaxonomy, \
     Person
@@ -55,8 +59,27 @@ class PersonAdmin(admin.ModelAdmin):
         return obj.most_recent_job
 
 
+class PayrollSettingAdmin(SettingAdmin):
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        if change:
+            try:
+                cache = caches['vary_on_setting']
+
+            except InvalidCacheBackendError:
+                print('vary_on_setting cache does not exist')
+
+            else:
+                cache.clear()
+                print('Cleared vary_on_setting cache')
+
+
 admin.site.register(Person, PersonAdmin)
 admin.site.register(Employer, AdminEmployer)
 admin.site.register(EmployerUniverse, AdminEmployerUniverse)
 admin.site.register(EmployerTaxonomy, AdminEmployerTaxonomy)
 admin.site.register(LogEntry, LogEntryAdmin)
+
+admin.site.unregister(Setting)
+admin.site.register(Setting, PayrollSettingAdmin)
