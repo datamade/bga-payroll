@@ -1,7 +1,7 @@
 import datetime
 from itertools import chain
 
-from django.core.cache import cache
+from django.core.cache import caches
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -302,7 +302,9 @@ class StoryFeed(ListView):
 
 def flush_cache(request, secret_key):
     if secret_key == CACHE_SECRET_KEY:
-        cache.clear()
+        for cache_label in settings.CACHES.keys():
+            caches[cache_label].clear()
+
         status_code = 200
     else:
         status_code = 403
