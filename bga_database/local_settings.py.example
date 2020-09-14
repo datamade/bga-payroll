@@ -55,23 +55,23 @@ CACHES = {
     }
 }
 
-# Uncomment to test caching
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-#         'LOCATION': 'bga_payroll_cache',
-#         'OPTIONS': {
-#             'MAX_ENTRIES': 10,
-#         },
-#     },
-#     'vary_on_setting': {
-#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-#         'LOCATION': 'vary_on_setting_cache',
-#         'OPTIONS': {
-#             'MAX_ENTRIES': 10,
-#         },
-#     },
-# }
+# Comment out to turn off caching
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'bga_payroll_cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 10,
+        },
+    },
+    'vary_on_setting': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'vary_on_setting_cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 10,
+        },
+    },
+}
 
 CACHE_SECRET_KEY = 'a key'
 
