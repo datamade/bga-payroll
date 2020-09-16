@@ -2,9 +2,12 @@ import datetime
 from itertools import chain
 
 from django.core.cache import caches
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models import Max
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, \
+    HttpResponsePermanentRedirect, HttpResponseGone
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
@@ -57,7 +60,7 @@ class UserGuideView(TemplateView):
 
         try:
             department_slug = Department.objects.get(name__iexact='city of chicago department of police').slug
-        except:
+        except Department.DoesNotExist:
             department_slug = Department.objects.first().slug
 
         context['department_slug'] = department_slug
@@ -69,7 +72,36 @@ def error(request, error_code):
     return render(request, '{}.html'.format(error_code))
 
 
-class EmployerView(DetailView, ChartHelperMixin):
+class RedirectDispatchMixin:
+    def dispatch(self, request, *args, **kwargs):
+        slug = kwargs['slug']
+
+        try:
+            entity = self.model.objects.get(slug=slug)
+
+        except ObjectDoesNotExist:
+            entity = None
+
+        else:
+            response = super().dispatch(request, *args, **kwargs)
+
+        if not entity:
+            short_slug = '-'.join(slug.split('-')[:-1])
+
+            try:
+                entity = self.model.objects.get(slug__startswith=short_slug)
+
+            except (ObjectDoesNotExist, MultipleObjectsReturned):
+                response = HttpResponseGone()
+
+            else:
+                redirect_url = reverse(entity.endpoint, args=[entity.slug])
+                response = HttpResponsePermanentRedirect(redirect_url)
+
+        return response
+
+
+class EmployerView(RedirectDispatchMixin, DetailView, ChartHelperMixin):
     context_object_name = 'entity'
 
 
@@ -114,7 +146,7 @@ class DepartmentView(EmployerView):
         return sorted(list(data_years), reverse=True)
 
 
-class PersonView(DetailView, ChartHelperMixin):
+class PersonView(RedirectDispatchMixin, DetailView, ChartHelperMixin):
     model = Person
     context_object_name = 'entity'
     template_name = 'person.html'
