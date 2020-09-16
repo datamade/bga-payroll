@@ -33,6 +33,8 @@ const Employer = {
 
   updateSourceLink: function (result) {
     if ( result.source_link ) {
+      $.each($('.source-span > a'), function (idx, el) { $(el).attr('href', result.source_link) });
+
       $('.no-source-span').hide();
       $('.source-span').show();
     } else {
