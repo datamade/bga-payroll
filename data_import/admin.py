@@ -1,6 +1,8 @@
 import datetime
 
+from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 
 from data_import.models import SourceFile, Upload, RespondingAgency, StandardizedFile
 from data_import.forms import UploadForm
@@ -17,17 +19,32 @@ class AdminRespondingAgency(admin.ModelAdmin):
         '''
         return {}
 
-    def get_search_results(self, request, queryset, search_term):
-        '''
-        Only show responding agencies without a source file.
-        '''
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset = queryset.exclude(source_files__reporting_year=2017)
-        return queryset, use_distinct
+
+class SourceFileForm(forms.ModelForm):
+    def clean(self):
+        super().clean()
+
+        try:
+            source_file = SourceFile.objects.get(
+                responding_agency=self.cleaned_data['responding_agency'],
+                reporting_year=self.cleaned_data['reporting_year']
+            )
+
+        except SourceFile.DoesNotExist:
+            pass
+
+        else:
+            message = '{0} already has a source file for {1}: {2}'.format(
+                self.cleaned_data['responding_agency'],
+                self.cleaned_data['reporting_year'],
+                source_file.source_file
+            )
+            raise ValidationError(message)
 
 
 class AdminSourceFile(admin.ModelAdmin):
     model = SourceFile
+    form = SourceFileForm
 
     fields = (
         'source_file',

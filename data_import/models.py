@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import connection, models
+from django.utils.text import slugify
 from django_fsm import FSMField, transition
 
 from bga_database.base_models import AliasModel, SluggedModel
@@ -63,10 +64,12 @@ class RespondingAgencyAlias(AliasModel):
 
 
 def source_file_upload_name(instance, filename):
-    fmt = '{year}/payroll/source/{agency}/{filename}'
+    fmt = '{year}/payroll/source/{agency_slug}/{filename}'
+
+    agency_slug = slugify(instance.responding_agency.name)
 
     return fmt.format(year=instance.reporting_year,
-                      agency=instance.responding_agency.slug,
+                      agency_slug=agency_slug,
                       filename=filename)
 
 
