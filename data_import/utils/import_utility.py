@@ -638,8 +638,8 @@ class ImportUtility(TableNamesMixin):
             INSERT INTO payroll_salary (job_id, amount, extra_pay, vintage_id)
               SELECT
                 job_id,
-                REGEXP_REPLACE(base_salary, '[^0-9.]', '', 'g')::NUMERIC,
-                REGEXP_REPLACE(extra_pay, '[^0-9.]', '', 'g')::NUMERIC,
+                NULLIF(REGEXP_REPLACE(base_salary, '[^0-9.]', '', 'g'), '')::NUMERIC,
+                NULLIF(REGEXP_REPLACE(extra_pay, '[^0-9.]', '', 'g'), '')::NUMERIC,
                 {vintage}
               FROM {raw_payroll}
               JOIN {raw_job} AS raw_job
