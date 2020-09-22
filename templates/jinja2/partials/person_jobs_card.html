@@ -76,7 +76,7 @@
             {% if change_in_salary.total_pay_delta >= 0 %}+{% endif %}
             {{ change_in_salary.total_pay_percent_change|format_percentile }}
           </sup><br />
-          <small class="text-muted">Net Change in Total Pay</small>
+          <small class="text-muted">Overall Net Change in Total Pay</small>
         </div>
 
         <div>
@@ -88,10 +88,10 @@
               {{ change_in_salary.amount_percent_change|format_percentile }}
             </sup>
             {% endif %}<br />
-            <small class="text-muted">Net Change in Base Salary</small>
+            <small class="text-muted">Overall Net Change in Base Salary</small>
           {% else %}
             <h4>Not reported</h4>
-            <small class="text-muted">Net Change in Base Salary</small>
+            <small class="text-muted">Overall Net Change in Base Salary</small>
           {% endif %}
         </div>
 
