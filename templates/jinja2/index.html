@@ -165,7 +165,7 @@
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
 
-{% compress js %}
+{% compress js inline %}
 <script type="module">
   import { ChartHelper } from  "js/chart_helper"
   import { initDataYearToggle } from  "js/data_year_toggle"

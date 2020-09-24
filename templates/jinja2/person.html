@@ -132,7 +132,7 @@
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
 
-{% compress js %}
+{% compress js inline %}
 <script type="text/javascript" type="module">
   import { ChartHelper } from 'js/chart_helper'
   ChartHelper.make_salary_chart({{ employer_salary_json|safe }}, 'employee');

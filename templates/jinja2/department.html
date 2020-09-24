@@ -93,7 +93,7 @@
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
 
-{% compress js %}
+{% compress js inline %}
 <script type="module">
   import { initDataYearToggle } from  'js/data_year_toggle'
   import { Department } from  'js/employer'
