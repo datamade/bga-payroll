@@ -15,7 +15,7 @@ django-debug-toolbar==1.9.1
 django-storages==1.6.5
 django-fsm==2.6.0
 django-postgres-stats==1.0.0
-git+https://github.com/hancush/django-salsa-auth.git
+git+https://github.com/hancush/django-salsa-auth.git@hcg/honeypot
 boto==2.48.0
 gunicorn==19.7.1
 celery==4.2.1

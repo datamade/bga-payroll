@@ -237,6 +237,8 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
         context['data_years'] = list(data_years)
 
+        context['captcha_site_key'] = getattr(settings, 'RECAPTCHA_PUBLIC_KEY')
+
         return context
 
 
