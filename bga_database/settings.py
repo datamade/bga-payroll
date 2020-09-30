@@ -15,6 +15,8 @@ from .local_settings import *  # noqa
 from .chart_settings import *  # noqa
 
 
+TEMPLATE_DEBUG = False
+
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
@@ -86,7 +88,18 @@ TEMPLATES = [
     },
 ]
 
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.Loader',
+)
+
+TEMPLATE_DIRS = (
+    'templates/jinja2', 'jinja2',
+)
+
 WSGI_APPLICATION = 'bga_database.wsgi.application'
+
+COMPRESS_ENABLED = True
+COMPRESS_OFFLINE = True
 
 COMPRESS_PRECOMPILERS = (
     ('module', 'compressor_toolkit.precompilers.ES6Compiler'),

@@ -3,7 +3,7 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
 from django.contrib import messages
 
-from jinja2 import Environment
+from jinja2 import Environment, FileSystemLoader
 
 from payroll.utils import format_ballpark_number, format_salary, \
     query_transform, format_percentile, url_from_facet, \
@@ -12,6 +12,8 @@ from payroll.utils import format_ballpark_number, format_salary, \
 
 
 def environment(**options):
+    options['loader'] = FileSystemLoader(['templates/jinja2', 'jinja2/'])
+
     env = Environment(**options, extensions=[CompressorExtension])
 
     env.globals.update({
