@@ -53,6 +53,9 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     },
+    'api': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    },
     'vary_on_setting': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     },
@@ -63,6 +66,13 @@ CACHES = {
 #     'default': {
 #         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
 #         'LOCATION': 'bga_payroll_cache',
+#         'OPTIONS': {
+#             'MAX_ENTRIES': 10,
+#         },
+#     },
+#     'api': {
+#         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+#         'LOCATION': 'bga_payroll_api_cache',
 #         'OPTIONS': {
 #             'MAX_ENTRIES': 10,
 #         },
