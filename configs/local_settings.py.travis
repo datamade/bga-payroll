@@ -39,6 +39,9 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     },
+    'api': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    },
     'vary_on_setting': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     },
