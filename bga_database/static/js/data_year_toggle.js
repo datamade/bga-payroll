@@ -34,13 +34,15 @@ function initDataYearToggle (endpoint, slug, initialYear, callback) {
                     // Store the result in the user's cache
                     cache[year] = result;
 
+                    $('.year-loading').addClass('d-none');
+                    $('#selected-year').removeClass('d-none');
                 });
             } catch (error) {
                 console.error(error);
-            }
 
-            $('.year-loading').addClass('d-none');
-            $('#selected-year').removeClass('d-none');
+                $('.year-loading').addClass('d-none');
+                $('#selected-year').removeClass('d-none');
+            }
         }
     };
 
