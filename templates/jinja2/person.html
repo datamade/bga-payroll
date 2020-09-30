@@ -131,12 +131,10 @@
 
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/chart_helper_es5.js') }}"></script>
 
-{% compress js inline %}
-<script type="text/javascript" type="module">
-  import { ChartHelper } from 'js/chart_helper'
+<script type="text/javascript">
   ChartHelper.make_salary_chart({{ employer_salary_json|safe }}, 'employee');
   ChartHelper.make_salary_over_time_chart({{ employee_salary_json|safe }});
 </script>
-{% endcompress %}
 {% endblock %}
