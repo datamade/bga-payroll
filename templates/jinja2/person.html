@@ -131,7 +131,7 @@
 
 {% block extra_js %}
 <script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
-<script type="text/javascript" src="{{ static('js/chart_helper_es5.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/chart_helper.js') }}"></script>
 
 <script type="text/javascript">
   ChartHelper.make_salary_chart({{ employer_salary_json|safe }}, 'employee');
