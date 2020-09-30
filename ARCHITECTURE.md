@@ -37,10 +37,6 @@ database table.)
 **🚨 Note that this project uses [the `jinja2` templating
 engine](https://jinja.palletsprojects.com/en/2.11.x/) for application views. 🚨**
 
-The `payroll` templates also make use of a modified version of [the DataMade
-`django-compressor` stack](https://github.com/datamade/how-to/blob/master/django/django-compressor.md)
-to translate contemporary ES6 JavaScript into more widely compatible ES5 syntax.
-
 In order to reduce load time on first visit, the `payroll` app separates template
 loading from most database queries. Instead, it performs the database queries
 asynchronously via AJAX calls to an API implemented with [the Django REST
@@ -62,8 +58,7 @@ and Person payroll records.
 We use Django's database cache backend to cache `payroll` views. More
 specifically:
 
-- Translating ES6 to ES5 is a relatively heavy operation, so the index and entity
-pages, including their compiled JavaScript, are cached in their entirety.
+- The index and entity pages are cached in their entirety.
 - Database operations to gather display data for a given year are also fairly
 intensive, so API views are cached as well.
 
