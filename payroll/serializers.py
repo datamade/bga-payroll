@@ -310,34 +310,18 @@ class UnitSerializer(EmployerSerializer):
             return 'N/A'
 
         query = '''
-            WITH employer_parent_lookup AS (
+            WITH employer_median_salaries_by_unit AS (
               SELECT
-                id,
-                COALESCE(parent_id, id) AS parent_id
-              FROM payroll_employer
-            ),
-            employer_median_salaries_by_unit AS (
-              SELECT
+                COALESCE(employer_parent_id, employer_id) AS unit_id,
                 percentile_cont(0.5) WITHIN GROUP (
-                  ORDER BY COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0) ASC
-                ) AS median_salary,
-                lookup.parent_id AS unit_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN employer_parent_lookup AS lookup
-              ON position.employer_id = lookup.id
-              JOIN payroll_employer AS employer
-              ON lookup.parent_id = employer.id
-              JOIN data_import_upload AS vintage
-              ON salary.vintage_id = vintage.id
-              JOIN data_import_standardizedfile AS s_file
-              ON vintage.id = s_file.upload_id
-              WHERE employer.taxonomy_id = {taxonomy}
-              AND s_file.reporting_year = {reporting_year}
-              GROUP BY lookup.parent_id
+                  ORDER BY total_pay ASC
+                ) AS median_salary
+              FROM payroll_employer_highest_salaries
+              WHERE COALESCE(employer_parent_id, employer_id) IN (
+                SELECT id FROM payroll_employer WHERE taxonomy_id = {taxonomy}
+              )
+              AND reporting_year = {reporting_year}
+              GROUP BY COALESCE(employer_parent_id, employer_id)
             ),
             salary_percentiles AS (
               SELECT
@@ -345,12 +329,13 @@ class UnitSerializer(EmployerSerializer):
                 unit_id
               FROM employer_median_salaries_by_unit
             )
-            SELECT percentile
+            SELECT
+              percentile
             FROM salary_percentiles
             WHERE unit_id = {id}
-            '''.format(taxonomy=obj.taxonomy.id,
-                       reporting_year=self.context['data_year'],
-                       id=obj.id)
+        '''.format(taxonomy=obj.taxonomy.id,
+                   reporting_year=self.context['data_year'],
+                   id=obj.id)
 
         with connection.cursor() as cursor:
             cursor.execute(query)
