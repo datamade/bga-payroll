@@ -242,7 +242,7 @@ class EmployerAlias(AliasModel):
             raise ValidationError('{} name must be unique.'.format(self))
 
 
-class EmployerHighestSalaries(pg.View):
+class EmployerHighestSalaries(pg.MaterializedView):
     '''
     Materialized view of employer total pay, for retrieving highest salaries
     in a given year.
