@@ -76,14 +76,14 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
     @property
     def employer_salaries(self):
-        if not hasattr(self, '_salaries'):
+        if not hasattr(self, '_employer_salaries'):
             self._employer_salaries = self.instance.get_salaries(year=self.context['data_year'])
         return self._employer_salaries
 
     @property
     def employer_salary_count(self):
         if not hasattr(self, '_employer_salary_count'):
-            self._employer_salary_count = self._employer_salaries.count()
+            self._employer_salary_count = self.employer_salaries.count()
         return self._employer_salary_count
 
     @property
@@ -141,17 +141,23 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_salaries(self, obj):
         data = []
 
-        # Sorting is expensive! Use self.employer_salaries as a subquery so we
-        # are only ordering salaries from the given employer and year.
-        top_salaries = Salary.objects.filter(
-            id__in=self.employer_salaries.values_list('id', flat=True)
-        ).order_by('-total_pay')[:5]
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT payroll_salary_id
+                FROM payroll_employer_highest_salaries
+                WHERE (employer_id = {employer_id} OR employer_parent_id = {employer_id})
+                  AND reporting_year = {reporting_year}
+                ORDER BY total_pay DESC
+                LIMIT 5
+            '''.format(employer_id=obj.id, reporting_year=self.context['data_year']))
+
+            top_salaries = [x[0] for x in cursor]
 
         # Only retrieve related objects of the top salaries, to further
         # optimize the query. Repeat the ordering operation for those five
         # salaries to ensure we retain order during display.
         top_salaries_with_related_objects = Salary.objects.with_related_objects().filter(
-            id__in=top_salaries.values_list('id', flat=True)
+            id__in=top_salaries
         ).order_by('-total_pay')
 
         for salary in top_salaries_with_related_objects:
@@ -357,32 +363,16 @@ class UnitSerializer(EmployerSerializer):
             return 'N/A'
 
         query = '''
-            WITH employer_parent_lookup AS (
+            WITH expenditure_by_unit AS (
               SELECT
-                id,
-                COALESCE(parent_id, id) AS parent_id
-              FROM payroll_employer
-            ),
-            expenditure_by_unit AS (
-              SELECT
-                SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS total_budget,
-                lookup.parent_id AS unit_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN employer_parent_lookup AS lookup
-              ON position.employer_id = lookup.id
-              JOIN payroll_employer AS employer
-              ON lookup.parent_id = employer.id
-              JOIN data_import_upload AS vintage
-              ON salary.vintage_id = vintage.id
-              JOIN data_import_standardizedfile AS s_file
-              ON vintage.id = s_file.upload_id
-              WHERE employer.taxonomy_id = {taxonomy}
-              AND s_file.reporting_year = {reporting_year}
-              GROUP BY lookup.parent_id
+                COALESCE(employer_parent_id, employer_id) AS unit_id,
+                SUM(total_pay) AS total_budget
+              FROM payroll_employer_highest_salaries
+              WHERE COALESCE(employer_parent_id, employer_id) IN (
+                SELECT id FROM payroll_employer WHERE taxonomy_id = {taxonomy}
+              )
+              AND reporting_year = {reporting_year}
+              GROUP BY COALESCE(employer_parent_id, employer_id)
             ),
             exp_percentiles AS (
               SELECT
@@ -489,20 +479,18 @@ class DepartmentSerializer(EmployerSerializer):
               JOIN payroll_employer AS department
               ON unit.id = department.parent_id
               WHERE unit.taxonomy_id = {taxonomy}
+              AND department.universe_id = {universe}
             ),
             expenditure_by_department AS (
               SELECT
-                SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS total_budget,
-                department.id AS department_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN taxonomy_members AS department
-              ON position.employer_id = department.id
-              WHERE department.universe_id = {universe}
-              GROUP BY department.id
+                SUM(total_pay) AS total_budget,
+                employer_id AS department_id
+              FROM payroll_employer_highest_salaries
+              WHERE employer_id IN (
+                SELECT id FROM taxonomy_members
+              )
+              AND reporting_year = {reporting_year}
+              GROUP BY employer_id
             ),
             exp_percentiles AS (
               SELECT
@@ -516,7 +504,8 @@ class DepartmentSerializer(EmployerSerializer):
             WHERE department_id = {id}
         '''.format(taxonomy=obj.parent.taxonomy.id,
                    universe=obj.universe.id,
-                   id=obj.id)
+                   id=obj.id,
+                   reporting_year=self.context['data_year'])
 
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -537,22 +526,20 @@ class DepartmentSerializer(EmployerSerializer):
               JOIN payroll_employer AS department
               ON unit.id = department.parent_id
               WHERE unit.taxonomy_id = {taxonomy}
+              AND department.universe_id = {universe}
             ),
             median_salaries_by_department AS (
               SELECT
                 percentile_cont(0.5) WITHIN GROUP (
-                  ORDER BY COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0) ASC
+                  ORDER BY total_pay ASC
                 ) AS median_salary,
-                department.id AS department_id
-              FROM payroll_salary AS salary
-              JOIN payroll_job AS job
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN taxonomy_members AS department
-              ON position.employer_id = department.id
-              WHERE department.universe_id = {universe}
-              GROUP BY department.id
+                employer_id AS department_id
+              FROM payroll_employer_highest_salaries
+              WHERE employer_id IN (
+                SELECT id FROM taxonomy_members
+              )
+              AND reporting_year = {reporting_year}
+              GROUP BY employer_id
             ),
             salary_percentiles AS (
               SELECT
@@ -565,7 +552,8 @@ class DepartmentSerializer(EmployerSerializer):
             WHERE department_id = {id}
             '''.format(taxonomy=obj.parent.taxonomy.id,
                        universe=obj.universe.id,
-                       id=obj.id)
+                       id=obj.id,
+                       reporting_year=self.context['data_year'])
 
         with connection.cursor() as cursor:
             cursor.execute(query)

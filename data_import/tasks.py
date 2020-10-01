@@ -174,6 +174,8 @@ def insert_salaries(self, *, s_file_id):
     self.import_utility.insert_job()
     self.import_utility.insert_salary()
 
+    call_command('sync_pgviews')
+
     self.update_status('complete')
 
     return 'Inserted salaries'

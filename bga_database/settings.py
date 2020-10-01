@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'data_import',
     'django.contrib.postgres',
     'postgres_stats',
+    'django_pgviews',
     'salsa_auth',
     'rest_framework',
     'extra_settings',
