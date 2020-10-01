@@ -3,6 +3,7 @@ from django.db import models, connection
 from django.db.models import Q, CheckConstraint, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
 from django.db.models.functions import Coalesce
+from django_pgviews import view as pg
 
 from bga_database.base_models import AliasModel, SluggedModel
 from data_import.models import Upload, RespondingAgency, SourceFile
@@ -239,6 +240,32 @@ class EmployerAlias(AliasModel):
 
         if len(duplicate_alias) == 1:
             raise ValidationError('{} name must be unique.'.format(self))
+
+
+class EmployerHighestSalaries(pg.View):
+    '''
+    Materialized view of employer total pay, for retrieving highest salaries
+    in a given year.
+    '''
+    sql = '''
+        SELECT
+          salary."id" as payroll_salary_id,
+          employer.id as employer_id,
+          employer.parent_id as employer_parent_id,
+          s_file.reporting_year as reporting_year,
+          Coalesce(salary."amount", 0) + Coalesce(salary."extra_pay", 0) as total_pay
+        FROM "payroll_salary" salary
+        INNER JOIN "payroll_job" job ON (salary."job_id" = job."id")
+        INNER JOIN "payroll_position" position ON (job."position_id" = position."id")
+        INNER JOIN "data_import_upload" upload ON (salary."vintage_id" = upload."id")
+        INNER JOIN "data_import_standardizedfile" s_file ON (upload."id" = s_file."upload_id")
+        INNER JOIN "payroll_employer" employer ON (position."employer_id" = employer."id")
+    '''
+
+    class Meta:
+        app_label = 'payroll'
+        db_table = 'payroll_employer_highest_salaries'
+        managed = False
 
 
 class UnitManager(models.Manager):

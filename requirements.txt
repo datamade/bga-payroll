@@ -25,6 +25,7 @@ sentry-sdk==0.5.1
 kombu==4.3.0
 feedparser==5.2.1
 django-extra-settings==0.1.1
+django-pgviews==0.5.7
 
 pytest==3.4.1
 attrs==19.1.0

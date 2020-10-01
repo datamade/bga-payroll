@@ -76,14 +76,14 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
 
     @property
     def employer_salaries(self):
-        if not hasattr(self, '_salaries'):
+        if not hasattr(self, '_employer_salaries'):
             self._employer_salaries = self.instance.get_salaries(year=self.context['data_year'])
         return self._employer_salaries
 
     @property
     def employer_salary_count(self):
         if not hasattr(self, '_employer_salary_count'):
-            self._employer_salary_count = self._employer_salaries.count()
+            self._employer_salary_count = self.employer_salaries.count()
         return self._employer_salary_count
 
     @property
@@ -141,17 +141,23 @@ class EmployerSerializer(serializers.ModelSerializer, ChartHelperMixin):
     def get_salaries(self, obj):
         data = []
 
-        # Sorting is expensive! Use self.employer_salaries as a subquery so we
-        # are only ordering salaries from the given employer and year.
-        top_salaries = Salary.objects.filter(
-            id__in=self.employer_salaries.values_list('id', flat=True)
-        ).order_by('-total_pay')[:5]
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT payroll_salary_id
+                FROM payroll_employer_highest_salaries
+                WHERE (employer_id = {employer_id} OR employer_parent_id = {employer_id})
+                  AND reporting_year = {reporting_year}
+                ORDER BY total_pay DESC
+                LIMIT 5
+            '''.format(employer_id=obj.id, reporting_year=self.context['data_year']))
+
+            top_salaries = [x[0] for x in cursor]
 
         # Only retrieve related objects of the top salaries, to further
         # optimize the query. Repeat the ordering operation for those five
         # salaries to ensure we retain order during display.
         top_salaries_with_related_objects = Salary.objects.with_related_objects().filter(
-            id__in=top_salaries.values_list('id', flat=True)
+            id__in=top_salaries
         ).order_by('-total_pay')
 
         for salary in top_salaries_with_related_objects:
