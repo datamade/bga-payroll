@@ -1,5 +1,3 @@
-var ChartHelper = ChartHelper || {};
-
 var ChartHelper = {
   extract_values: function(data) {
     var values = Array();
@@ -240,5 +238,3 @@ var ChartHelper = {
     });
   }
 };
-
-export { ChartHelper };

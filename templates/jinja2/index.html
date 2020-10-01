@@ -164,12 +164,10 @@
 <script type="text/javascript" src="{{ static('js/search.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/entity_auto_complete.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/story_feed.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/chart_helper.js') }}"></script>
+<script type="text/javascript" src="{{ static('js/data_year_toggle.js') }}"></script>
 
-{% compress js inline %}
-<script type="module">
-  import { ChartHelper } from  "js/chart_helper"
-  import { initDataYearToggle } from  "js/data_year_toggle"
-
+<script type="text/javascript">
   // Style the charts a little differently on the homepage.
   Highcharts.setOptions({
     chart: {
@@ -184,7 +182,7 @@
 
   initSearch({{ request.GET.dict()|safe }});
 
-  const dataYear = $('#selected-year').text();
+  dataYear = $('#selected-year').text();
 
   function updateChart (year, result) {
     ChartHelper.make_salary_chart(result.salary_json, 'employee');
@@ -195,5 +193,4 @@
 
   initDataYearToggle('index', null, dataYear, updateChart);
 </script>
-{% endcompress %}
 {% endblock %}

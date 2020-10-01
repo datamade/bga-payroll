@@ -1,7 +1,7 @@
 function initDataYearToggle (endpoint, slug, initialYear, callback) {
-    const cache = {};
+    var cache = {};
 
-    var getData = async function (year) {
+    var getData = function (year) {
         if ( cache[year] !== undefined ) {
             $('#selected-year').addClass('d-none');
             $('.year-loading').removeClass('d-none');
@@ -16,39 +16,40 @@ function initDataYearToggle (endpoint, slug, initialYear, callback) {
             var url;
 
             if ( slug === null ) {
-                url = `/${endpoint}/?data_year=${year}`;
+                url = '/' + endpoint + '/?data_year=' + year;
             } else {
-                url = `/${endpoint}/${slug}/?data_year=${year}`;
+                url = '/' + endpoint + '/' + slug + '/?data_year=' + year;
             }
+
+            $('#selected-year').addClass('d-none');
+            $('.year-loading').removeClass('d-none');
 
             try {
-                $('#selected-year').addClass('d-none');
-                $('.year-loading').removeClass('d-none');
+                $.when(
+                    $.ajax({url: url, type: 'GET'})
+                ).then(function (result) {
+                    callback(year, result);
+                    $('#selected-year').text(year);
 
-                const result = await $.ajax({
-                    url: url,
-                    type: 'GET',
+                    // Store the result in the user's cache
+                    cache[year] = result;
+
+                    $('.year-loading').addClass('d-none');
+                    $('#selected-year').removeClass('d-none');
                 });
-                callback(year, result);
-                $('#selected-year').text(year);
-
-                // Store the result in the user's cache
-                cache[year] = result;
             } catch (error) {
                 console.error(error);
-            }
 
-            $('.year-loading').addClass('d-none');
-            $('#selected-year').removeClass('d-none');
+                $('.year-loading').addClass('d-none');
+                $('#selected-year').removeClass('d-none');
+            }
         }
     };
 
     getData(initialYear);
 
     $('#data-year-select > .year-dropdown-item').on('click', function(e) {
-        const year = e.currentTarget.textContent;
+        var year = e.currentTarget.textContent;
         getData(year);
     });
 }
-
-export { initDataYearToggle };

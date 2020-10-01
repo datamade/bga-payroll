@@ -1,8 +1,4 @@
-import 'url-search-params-polyfill';
-import { ChartHelper } from  "./chart_helper";
-
-
-const Employer = {
+var Employer = {
   commonUpdate: function (year, result) {
     Employer.updateDataYear(year);
     Employer.updateBaseBallStats(result);
@@ -10,15 +6,17 @@ const Employer = {
   },
 
   makeLink: function (href, text) {
-    const link = $('<a>').attr('href', href);
+    var link = $('<a>').attr('href', href);
     link.text(text);
     return link;
   },
 
   updateSearchLink: function (linkId, year) {
-    const searchLink = $(linkId);
-    const [url, querystring] = searchLink.attr('href').split('?');
-    const searchParams = new URLSearchParams(querystring);
+    var searchLink = $(linkId);
+    var urlParts = searchLink.attr('href').split('?');
+    var url = urlParts[0];
+    var querystring = urlParts[1];
+    var searchParams = new URLSearchParams(querystring);
     searchParams.set('year', year);
     searchLink.attr('href', url + '?' + searchParams.toString());
   },
@@ -46,7 +44,7 @@ const Employer = {
   }
 };
 
-const Unit = {
+var Unit = {
   update: function(year, result) {
     Employer.commonUpdate(year, result);
 
@@ -79,14 +77,14 @@ const Unit = {
     $('#entity-salaries').empty();
 
     $.each(result.salaries, function (idx, salary) {
-      const tRow = $('<tr>');
+      var tRow = $('<tr>');
 
-      const personLink = Employer.makeLink(
+      var personLink = Employer.makeLink(
         '/person/' + salary.slug,
         salary.name
       );
 
-      const employerLink = Employer.makeLink(
+      var employerLink = Employer.makeLink(
         '/' + salary.employer_endpoint + '/' + salary.employer_slug + '/?data_year=' + year,
         salary.employer
       );
@@ -114,8 +112,8 @@ const Unit = {
 
     if ( result.department_salaries.length > 0 ) {
       $.each(result.department_salaries, function (idx, salary) {
-        const tRow = $('<tr>');
-        const departmentLink = Employer.makeLink(
+        var tRow = $('<tr>');
+        var departmentLink = Employer.makeLink(
           '/department/' + salary.slug + '/?data_year=' + year,
           salary.name
         );
@@ -141,7 +139,7 @@ const Unit = {
   }
 };
 
-const Department = {
+var Department = {
   update: function (year, result) {
     Employer.commonUpdate(year, result);
 
@@ -166,9 +164,9 @@ const Department = {
     $('#entity-salaries').empty();
 
     $.each(result.salaries, function (idx, salary) {
-      const tRow = $('<tr>');
+      var tRow = $('<tr>');
 
-      const personLink = Employer.makeLink(
+      var personLink = Employer.makeLink(
         '/person/' + salary.slug,
         salary.name
       );
@@ -190,5 +188,3 @@ const Department = {
     $('#entity-median-ep').text(result.median_ep);
   }
 };
-
-export { Unit, Department };
