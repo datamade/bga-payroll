@@ -294,7 +294,8 @@ class EntityLookup(ListView, PayrollSearchMixin):
         return entities
 
     def render_to_response(self, *args, **kwargs):
-        results = self.get_queryset(*args, **kwargs)
+        # results = self.get_queryset(*args, **kwargs)
+        results = []
 
         return JsonResponse(results, safe=False)
 
