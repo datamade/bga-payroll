@@ -549,18 +549,16 @@ class Salary(VintagedModel):
             WITH salary_percentiles AS (
               SELECT
                 percent_rank() OVER (
-                  ORDER BY COALESCE(amount, 0) + COALESCE(extra_pay, 0) ASC
+                  ORDER BY total_pay ASC
                 ) AS percentile,
-                job.person_id
-              FROM payroll_job AS job
-              JOIN payroll_salary AS salary
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN payroll_employer as employer
-              ON position.employer_id = employer.id
-              WHERE employer.id = {employer_id}
-              OR employer.parent_id = {employer_id}
+                j.person_id
+              FROM payroll_employer_highest_salaries AS hs
+              JOIN payroll_salary AS s
+                ON hs.payroll_salary_id = s.id
+              JOIN payroll_job AS j
+                ON s.job_id = j.id
+              WHERE employer_id = {employer_id}
+                OR employer_parent_id = {employer_id}
             )
             SELECT percentile
             FROM salary_percentiles
@@ -589,27 +587,21 @@ class Salary(VintagedModel):
 
     def _like_unit_percentile(self, employer):
         query = '''
-            WITH employer_parent_lookup AS (
+            WITH salary_percentiles AS (
               SELECT
-                id,
-                COALESCE(parent_id, id) AS parent_id
-              FROM payroll_employer
-            ), salary_percentiles AS (
-              SELECT
+                j.person_id,
                 percent_rank() OVER (
-                  ORDER BY COALESCE(amount, 0) + COALESCE(extra_pay, 0) ASC
-                ) AS percentile,
-                job.person_id
-              FROM payroll_job AS job
-              JOIN payroll_salary AS salary
-              ON salary.job_id = job.id
-              JOIN payroll_position AS position
-              ON job.position_id = position.id
-              JOIN employer_parent_lookup AS lookup
-              ON position.employer_id = lookup.id
-              JOIN payroll_employer AS employer
-              ON lookup.parent_id = employer.id
-              WHERE employer.taxonomy_id = {taxonomy}
+                  ORDER BY total_pay ASC
+                ) AS percentile
+                FROM payroll_employer_highest_salaries AS hs
+                JOIN payroll_salary AS s
+                  ON hs.payroll_salary_id = s.id
+                JOIN payroll_job AS j
+                  ON s.job_id = j.id
+                WHERE COALESCE(employer_parent_id, employer_id) IN (
+                  SELECT id FROM payroll_employer WHERE taxonomy_id = {taxonomy}
+              )
+              GROUP BY COALESCE(employer_parent_id, employer_id)
             )
             SELECT percentile
             FROM salary_percentiles
@@ -631,27 +623,27 @@ class Salary(VintagedModel):
             query = '''
                 WITH taxonomy_members AS (
                   SELECT
-                    department.id,
-                    department.universe_id
+                    department.id AS department_id
                   FROM payroll_employer AS unit
                   JOIN payroll_employer AS department
                   ON unit.id = department.parent_id
                   WHERE unit.taxonomy_id = {taxonomy}
+                  AND department.universe_id = {universe}
                 ),
                 salary_percentiles AS (
                   SELECT
                     percent_rank() OVER (
-                      ORDER BY COALESCE(amount, 0) + COALESCE(extra_pay, 0) ASC
+                      ORDER BY total_pay ASC
                     ) AS percentile,
-                    job.person_id
-                  FROM payroll_job AS job
-                  JOIN payroll_salary AS salary
-                  ON salary.job_id = job.id
-                  JOIN payroll_position AS position
-                  ON job.position_id = position.id
-                  JOIN taxonomy_members AS department
-                  ON position.employer_id = department.id
-                  WHERE department.universe_id = {universe}
+                    j.person_id
+                  FROM payroll_employer_highest_salaries AS hs
+                  JOIN payroll_salary AS s
+                    ON hs.payroll_salary_id = s.id
+                  JOIN payroll_job AS j
+                    ON s.job_id = j.id
+                  WHERE employer_id IN (
+                    SELECT department_id FROM taxonomy_members
+                  )
                 )
                 SELECT percentile
                 FROM salary_percentiles

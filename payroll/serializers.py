@@ -681,7 +681,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
                                     .filter(job__position=self.person_current_job.position,
                                             vintage__standardized_file__reporting_year=self.context['data_year'])\
                                     .exclude(job__person=obj)\
-                                    .order_by('-total_pay')[:25]:
+                                    .order_by('-total_pay')[:10]:
 
             data.append({
                 'name': str(salary.job.person),
@@ -713,8 +713,7 @@ class PersonSerializer(serializers.ModelSerializer, ChartHelperMixin):
             'data': []
         }
 
-        for salary in Salary.objects.with_related_objects()\
-                                    .filter(job__person=obj)\
+        for salary in Salary.objects.filter(job__person=obj)\
                                     .annotate(data_year=Max('vintage__standardized_file__reporting_year'))\
                                     .order_by('vintage__standardized_file__reporting_year'):
 
