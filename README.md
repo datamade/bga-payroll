@@ -18,7 +18,15 @@ Perform the following steps from your terminal.
     git clone https://github.com/datamade/bga-payroll.git
     cd bga-payroll
     ```
-2. Build and run the applicaton.
+2. Copy `bga_database/local-settings.example.py` to `bga_database/local-settings.py`.
+
+    ```bash
+    cp bga_database/local-settings.example.py bga_database/local-settings.py
+    ```
+
+3. Add `POSTGRES_PASSWORD=password` as an environment variable for the `postgres` service in `docker-compose.yml`.
+
+4. Build and run the applicaton.
 
     ```bash
     docker-compose up -d --build
@@ -31,7 +39,9 @@ Perform the following steps from your terminal.
     `docker-compose.yml`, run `docker-compose logs -f <SERVICE_NAME>`, e.g.,
     `docker-compose logs -f app`.
 
-3. The application will work without data, but if you'd like to add some,
+    The migrations should run via the migration service when you do `docker-compose up`, but we've had issues with race conditions in the past. In this case, run `docker-compose run --rm app python manage.py migrate`.
+
+5. The application will work without data, but if you'd like to add some,
 first make a formatted data file.
 
     ```bash
