@@ -70,6 +70,7 @@ services:
       # any additional code. Specify the name of your database, and any other
       # variables, here. https://hub.docker.com/_/postgres/#environment-variables
       - POSTGRES_DB=bga_payroll
+      - POSTGRES_PASSWORD=password
     volumes:
       # By default, Postgres instantiates an anonymous volume. Use a named
       # one, so your data persists beyond the life of the container. See this
