@@ -24,9 +24,7 @@ Perform the following steps from your terminal.
     cp bga_database/local-settings.example.py bga_database/local-settings.py
     ```
 
-3. Add `POSTGRES_PASSWORD=password` as an environment variable for the `postgres` service in `docker-compose.yml`.
-
-4. Build and run the applicaton.
+3. Build and run the applicaton.
 
     ```bash
     docker-compose up -d --build
@@ -41,7 +39,7 @@ Perform the following steps from your terminal.
 
     The migrations should run via the migration service when you do `docker-compose up`, but we've had issues with race conditions in the past. In this case, run `docker-compose run --rm app python manage.py migrate`.
 
-5. The application will work without data, but if you'd like to add some,
+4. The application will work without data, but if you'd like to add some,
 first make a formatted data file.
 
     ```bash
@@ -50,13 +48,13 @@ first make a formatted data file.
 
     This will process `data/raw/payroll-actual-2017-pt-1.csv` into a file called `payroll-actual-2017-pt-1.csv`.
 
-4. Next, create a superuser, so you can log into the data import interface.
+5. Next, create a superuser, so you can log into the data import interface.
 
     ```bash
     docker-compose exec app python manage.py createsuperuser
     ```
 
-5. Finally, go to http://localhost:8000/data-import/ and follow the steps to upload the CSV you just made. Don't forget to put in the data year!
+6. Finally, go to http://localhost:8000/data-import/ and follow the steps to upload the CSV you just made. Don't forget to put in the data year!
 
     It will take a bit to complete each step of the data import. You can refresh the page to see if it's ready to move on to the next section. (The status will have changed.) You can also keep track of progress in your worker terminal by running:
 
