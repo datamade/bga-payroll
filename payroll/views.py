@@ -14,6 +14,7 @@ from django.views.generic.list import ListView
 from django.conf import settings
 from extra_settings.models import Setting
 import feedparser
+import bleach
 
 from bga_database.chart_settings import BAR_HIGHLIGHT
 from bga_database.local_settings import CACHE_SECRET_KEY
@@ -40,6 +41,9 @@ class IndexView(TemplateView, ChartHelperMixin):
         context['data_years'] = list(data_years)
 
         context['show_donate_banner'] = Setting.get('PAYROLL_SHOW_DONATE_BANNER', False)
+
+        donate_text = Setting.get('DONATE_MESSAGE', None)
+        context['donate_message'] = bleach.clean(donate_text, tags=['p', 'strong'])
 
         try:
             state_officers_slug = Department.objects.get(name='State Officers',
