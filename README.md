@@ -19,7 +19,13 @@ git clone https://github.com/datamade/bga-payroll.git
 cd bga-payroll
 ```
 
+<<<<<<< HEAD
 Next, copy `bga_database/local-settings.example.py` to `bga_database/local-settings.py`.
+=======
+    ```bash
+    cp bga_database/local_settings.py.example bga_database/local-settings.py
+    ```
+>>>>>>> fix readme error
 
 ```bash
 cp bga_database/local-settings.example.py bga_database/local-settings.py
