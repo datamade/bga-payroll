@@ -86,15 +86,21 @@ def salary(standardized_file, job):
 
 
 @pytest.fixture
-def donate_message():
+def show_donate():
     show_donate, _ = Setting.objects.get_or_create(name='PAYROLL_SHOW_DONATE_BANNER',  # noqa
                                                    defaults={'value_type': Setting.TYPE_BOOL})  # noqa
     show_donate.value = True
     show_donate.save()
 
+    return show_donate
+
+
+@pytest.fixture
+def donate_message():
     message, _ = Setting.objects.get_or_create(name='DONATE_MESSAGE',
-                                               defaults={'value_type': Setting.TYPE_TEXT})  # now
+                                               defaults={'value_type': Setting.TYPE_TEXT})
     return message
+
 
 # flake8: noqa
 @pytest.fixture
