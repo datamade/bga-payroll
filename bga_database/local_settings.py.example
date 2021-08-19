@@ -13,7 +13,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'bga_payroll',
         'USER': 'postgres',
-        'PASSWORD': '',
+        'PASSWORD': 'password',
         'HOST': 'postgres',
         'PORT': '5432',
     }
