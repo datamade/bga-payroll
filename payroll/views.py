@@ -45,7 +45,7 @@ class IndexView(TemplateView, ChartHelperMixin):
         donate_text = Setting.get('DONATE_MESSAGE', None)
         context['donate_message'] = bleach.clean(donate_text,
                                                  tags=['p', 'strong', 'a'],
-                                                 attributes={'a': ['href', 'target'], '*': ['class']})
+                                                 attributes={'a': ['href', 'target'], '*': ['class', 'style']})
 
         try:
             state_officers_slug = Department.objects.get(name='State Officers',
