@@ -9,17 +9,16 @@ def test_malicious_input(client, show_donate, donate_message):
     request = client.get('/')
 
     # test to see if the script was sanitized
-    assert "&lt;script&gt;console.log('oh no!')&lt;/script&gt;" \
-           in request.rendered_content
+    sanitized = "&lt;script&gt;console.log('oh no!')&lt;/script&gt;"
+    assert sanitized in request.rendered_content
 
     # double check this isn't lurking in the html somewhere
-    assert "<script>console.log('oh no!')</script>" \
-           not in request.rendered_content
+    assert donate_message.value not in request.rendered_content
 
 
 @pytest.mark.django_db
-def test_valid_user_input(client, show_donate, donate_message, allowed_user_input):
-    donate_message.value = allowed_user_input
+def test_valid_user_input(client, show_donate, donate_message, allowed_input):
+    donate_message.value = allowed_input
     donate_message.save()
 
     request = client.get('/')

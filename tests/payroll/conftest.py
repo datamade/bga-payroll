@@ -104,7 +104,7 @@ def donate_message():
 
 # flake8: noqa
 @pytest.fixture
-def allowed_user_input(): 
+def allowed_input(): 
     return """<p class="lead"><strong>Dear BGA readers,</strong></p>
         <p>First, thanks very much for visiting our Salary Database site. We know hundreds of thousands of people use it throughout the year and find it useful.</p>
         <p><strong>But we need your help to keep this important source of information going.</strong> This database costs money and time to complete. We contract with outside organizations, and BGA staffers spend more than a year requesting, compiling, organizing and checking data from hundreds of government bodies across Illinois to bring this site to you for free. We don't run ads and we are a small nonprofit.</p>
