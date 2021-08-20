@@ -1,6 +1,6 @@
 from django.core.files import File
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 from django.db.models import Count
 
@@ -9,9 +9,10 @@ from sqlalchemy.engine.url import URL
 
 from data_import.models import Upload, StandardizedFile
 from data_import.tasks import copy_to_database
-from data_import.utils import ImportUtility
+from data_import.utils import ImportUtility, CsvMeta
 
 from payroll.models import Unit, Job, Department, Person
+
 
 class Command(BaseCommand):
     help = 'Load specified data file'
@@ -33,9 +34,10 @@ class Command(BaseCommand):
         except AssertionError:
             raise ValueError('Please provide a data file and reporting year')
 
-        self.data_file = options['data_file']
         self.reporting_year = options['reporting_year']
         self.amend = options.get('amend', False)
+
+        self.data_file = self.validate(options['data_file'])
 
         django_conn = connection.get_connection_params()
 
@@ -49,7 +51,6 @@ class Command(BaseCommand):
 
         self.engine = sa.create_engine(URL('postgresql', **conn_kwargs))
 
-        self.validate()
         self.upload()
 
     def prompt(self, prompt):
@@ -57,8 +58,22 @@ class Command(BaseCommand):
         if confirm.lower() != 'y':
             sys.exit()
 
-    def validate(self):
-        ...
+    def validate(self, data_file):
+        with open(data_file, 'rb') as df:
+            meta = CsvMeta(File(df))
+
+            if meta.file_type != 'csv':
+                raise CommandError('Data file must be a CSV')
+
+            missing_fields = ', '.join(set(CsvMeta.REQUIRED_FIELDS) - set(meta.field_names))
+
+            if missing_fields:
+                message = 'Standardized file missing fields: {}'.format(missing_fields)
+                raise CommandError(message)
+
+            valid_file_name = meta.trim_extra_fields()
+
+        return valid_file_name
 
     def get_units(self, s_file):
         if not getattr(self, '_units', None):
@@ -107,11 +122,6 @@ class Command(BaseCommand):
                 summary = salaries.delete()
                 self.stdout.write('Deletion summary: {}'.format(summary))
 
-                jobs = Job.objects.filter(salaries__isnull=True)
-                self.prompt('Found {0} jobs without salaries.\n{1}\nDo you wish to delete? '.format(jobs.count(), jobs))
-                summary = jobs.delete()
-                self.stdout.write('Deletion summary: {}'.format(summary))
-
     def upload(self):
         upload = Upload.objects.create()
 
@@ -119,7 +129,7 @@ class Command(BaseCommand):
             s_file = StandardizedFile.objects.create(
                 standardized_file=File(data_file),
                 reporting_year=self.reporting_year,
-                upload=upload,
+                upload=upload
             )
 
         # Call task directly so it blocks until the file has been copied
@@ -138,9 +148,13 @@ class Command(BaseCommand):
         self.post_import(s_file)
 
     def post_import(self, s_file):
+        jobs = Job.objects.filter(salaries__isnull=True)
+        self.prompt('Found {0} jobs with no salaries.\n{1}\nDo you wish to delete? '.format(jobs.count(), jobs))
+        summary = jobs.delete()
+        self.stdout.write('Deletion summary: {}'.format(summary))
+
         departments = Department.objects.annotate(n_employees=Count('positions__jobs')).filter(n_employees=0)
         self.prompt('Found {0} departments with no jobs.\n{1}\nDo you wish to delete? '.format(departments.count(), departments))
-        departments.delete()
         summary = departments.delete()
         self.stdout.write('Deletion summary: {}'.format(summary))
 
