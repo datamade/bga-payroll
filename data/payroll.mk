@@ -1,19 +1,19 @@
-VPATH=data
-
-
 .INTERMEDIATE : %-with-agencies.csv %-with-data-year.csv \
 	%-with-valid-start-dates.csv %-salary-summed.csv \
 	%-no-salary-omitted.csv %-with-agencies.csv
 
 .PRECIOUS : %-with-agencies.csv
 
-import/% : % database
-	python manage.py import_data $< --reporting_year $$(echo "$<" | grep -Eo "\d{4}")
+import/% : data/output/%
+	python manage.py import_data --data_file $< \
+		--reporting_year $$(echo "$<" | grep -Eo "[0-9]{4}")
 
-amend/% : % database
-	python manage.py import_data $< --reporting_year $$(echo "$<" | grep -Eo "\d{4}") --amend
+amend/% : data/output/%
+	python manage.py import_data --data_file $< \
+		--reporting_year $$(echo "$<" | grep -Eo "[0-9]{4}") \
+		--amend
 
-payroll-actual-%.csv : %-with-data-year.csv
+data/output/payroll-actual-%.csv : %-with-data-year.csv
 	# Rename fields.
 	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,_,responding_agency,data_year; \
 	tail -n +2 $<) > $@
@@ -26,13 +26,13 @@ payroll-actual-%.csv : %-with-data-year.csv
 	perl -pe 's/^\s+//' $< > $@
 
 %-no-salary-omitted.csv : %-with-valid-start-dates.csv
-	# Remove records where no salary was reported.
+	# Remove records where no salary was reported and validate that the output
+	# file has the expected number of lines.
 	csvgrep -c base_salary,extra_pay -r '^$$' -i $< > $@; \
 	N_REMOVED=$$(csvgrep -c base_salary,extra_pay -r '^$$' $< | tail -n +2 | wc -l | xargs); \
 	echo "Removed $$N_REMOVED records without salary"; \
-	# Validate that the output file has the expected number of lines.
-	EXPECTED_LINES=$$(expr $$(grep . $< | wc -l | grep -Eo '\d+' | head -n 1) - $$N_REMOVED); \
-	OUTFILE_LINES=$$(grep . $@ | wc -l | grep -Eo '\d+' | head -n 1); \
+	EXPECTED_LINES=$$(expr $$(grep . $< | wc -l | grep -Eo '[0-9]+' | head -n 1) - $$N_REMOVED); \
+	OUTFILE_LINES=$$(grep . $@ | wc -l | grep -Eo '[0-9]+' | head -n 1); \
 	if [ $$EXPECTED_LINES -eq $$OUTFILE_LINES ]; then \
 		echo "Outfile has expected number of lines. Proceeding..."; \
 	else \
@@ -44,12 +44,12 @@ payroll-actual-%.csv : %-with-data-year.csv
 	# Remove invalid dates.
 	cat $< | python data/processors/validate_dates.py > $@
 
-%-with-agencies.csv : raw/payroll-actual-%.csv raw/foia-source-lookup.csv
-	# Join standard data with agency lookup.
+%-with-agencies.csv : data/raw/payroll-actual-%.csv data/raw/foia-source-lookup.csv
+	# Join standard data with agency lookup and validate that the output file
+	# has the expected number of lines.
 	csvjoin -c id,ID -e IBM852 $^ > $@ && \
-	# Validate that the output file has the expected number of joins.
-	INFILE_LINES=$$(grep . $< | wc -l | grep -Eo '\d+' | head -n 1); \
-	OUTFILE_LINES=$$(grep . $@ | wc -l | grep -Eo '\d+' | head -n 1); \
+	INFILE_LINES=$$(grep . $< | wc -l | grep -Eo '[0-9]+' | head -n 1); \
+	OUTFILE_LINES=$$(grep . $@ | wc -l | grep -Eo '[0-9]+' | head -n 1); \
 	if [ $$INFILE_LINES -eq $$OUTFILE_LINES ]; then \
 		echo "No lines lost in join. Proceeding..."; \
 	else \
@@ -57,7 +57,7 @@ payroll-actual-%.csv : %-with-data-year.csv
 		make $*-missing-agencies.csv; \
 	fi
 
-%-missing-agencies.csv : raw/payroll-actual-%.csv raw/foia-source-lookup.csv
+%-missing-agencies.csv : data/raw/payroll-actual-%.csv data/raw/foia-source-lookup.csv
 	# If this recipe fires, one or more responding agencies cited in incoming
 	# data are missing from the FOIA source lookup. The output contains their
 	# id and employer name. Either the lookup table needs to be updated, or the

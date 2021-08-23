@@ -150,20 +150,21 @@ class Command(BaseCommand):
         self.post_import(s_file)
 
     def post_import(self, s_file):
-        jobs = Job.objects.filter(salaries__isnull=True)
-        self.prompt('Found {0} jobs with no salaries.\n{1}\nDo you wish to delete? '.format(jobs.count(), jobs))
-        summary = jobs.delete()
-        self.stdout.write('Deletion summary: {}'.format(summary))
+        if self.amend:
+            jobs = Job.objects.filter(salaries__isnull=True)
+            self.prompt('Found {0} jobs with no salaries.\n{1}\nDo you wish to delete? '.format(jobs.count(), jobs))
+            summary = jobs.delete()
+            self.stdout.write('Deletion summary: {}'.format(summary))
 
-        departments = Department.objects.annotate(n_employees=Count('positions__jobs')).filter(n_employees=0)
-        self.prompt('Found {0} departments with no jobs.\n{1}\nDo you wish to delete? '.format(departments.count(), departments))
-        summary = departments.delete()
-        self.stdout.write('Deletion summary: {}'.format(summary))
+            departments = Department.objects.annotate(n_employees=Count('positions__jobs')).filter(n_employees=0)
+            self.prompt('Found {0} departments with no jobs.\n{1}\nDo you wish to delete? '.format(departments.count(), departments))
+            summary = departments.delete()
+            self.stdout.write('Deletion summary: {}'.format(summary))
 
-        people = Person.objects.annotate(n_jobs=Count('jobs')).filter(n_jobs=0)
-        self.prompt('Found {0} people with no jobs.\n{1}\nDo you wish to delete? '.format(people.count(), people))
-        summary = people.delete()
-        self.stdout.write('Deletion summary: {}'.format(summary))
+            people = Person.objects.annotate(n_jobs=Count('jobs')).filter(n_jobs=0)
+            self.prompt('Found {0} people with no jobs.\n{1}\nDo you wish to delete? '.format(people.count(), people))
+            summary = people.delete()
+            self.stdout.write('Deletion summary: {}'.format(summary))
 
         call_command('sync_pgviews')
 

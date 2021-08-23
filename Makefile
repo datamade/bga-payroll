@@ -1,6 +1,4 @@
 SHELL := bash
-.SHELLFLAGS := -eu -o pipefail
-
 PG_DB=bga_payroll
 
 .PHONY : clean database
