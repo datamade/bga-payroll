@@ -1,7 +1,7 @@
 from django.core.files import File
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count
 
 import sqlalchemy as sa
@@ -51,7 +51,8 @@ class Command(BaseCommand):
 
         self.engine = sa.create_engine(URL('postgresql', **conn_kwargs))
 
-        self.upload()
+        with transaction.atomic():
+            self.upload()
 
     def prompt(self, prompt):
         confirm = input('{} [y/n] '.format(prompt))
