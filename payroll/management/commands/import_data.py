@@ -73,6 +73,8 @@ class Command(BaseCommand):
 
             valid_file_name = meta.trim_extra_fields()
 
+        self.stdout.write('Validated {}'.format(data_file))
+
         return valid_file_name
 
     def get_units(self, s_file):
