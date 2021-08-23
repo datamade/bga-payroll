@@ -6,8 +6,6 @@ from cchardet import UniversalDetector
 from csvkit.convert import guess_format
 from django.db.models.fields.files import FieldFile
 
-from data_import.exceptions import OperationNotPermittedOnInstance
-
 
 class CsvMeta(object):
     '''
