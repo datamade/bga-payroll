@@ -1,3 +1,5 @@
+import sys
+
 from django.core.files import File
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
@@ -100,11 +102,11 @@ class Command(BaseCommand):
                     unit = Unit.objects.get(name=unit_name)
 
                 except Unit.DoesNotExist:
-                    self.stdout.write('Could not find unit "{}"'.format(name))
+                    self.stdout.write('Could not find unit "{}"'.format(unit_name))
                     self.prompt('Do you wish to continue?')
 
                 except Unit.MultipleObjectsExist:
-                    self.stdout.write('Found more than one Unit named "{}"'.format(name))
+                    self.stdout.write('Found more than one Unit named "{}"'.format(unit_name))
                     self.prompt('Do you know the unit slug?')
                     slug = input('Please provide the slug of the Unit you wish to amend: ')
 

@@ -4,7 +4,6 @@ from os.path import basename
 
 from cchardet import UniversalDetector
 from csvkit.convert import guess_format
-from django.db.models.fields.files import FieldFile
 
 
 class CsvMeta(object):
