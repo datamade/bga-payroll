@@ -1,5 +1,6 @@
 import datetime
 from itertools import chain
+import csv
 
 from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -21,7 +22,7 @@ from bga_database.local_settings import CACHE_SECRET_KEY
 from data_import.models import StandardizedFile
 
 from payroll.charts import ChartHelperMixin
-from payroll.models import Person, Unit, Department
+from payroll.models import Person, Unit, Department, Employer
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 from payroll.serializers import PersonSerializer
@@ -172,6 +173,46 @@ class PersonView(RedirectDispatchMixin, DetailView, ChartHelperMixin):
         context['data_year'] = most_recent_year
 
         return context
+
+
+class DownloadView(TemplateView):
+    def get(self, request, *args, **kwargs):
+        slug = request.GET.get('employer')
+        year = request.GET.get('year')
+        employer = Employer.objects.get(slug=slug)
+        employer_salaries = employer.get_salaries(year=year)
+
+        response = HttpResponse(content_type='text/csv')
+        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)  # noqa
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # noqa
+        writer = csv.writer(response)
+
+        header = ['name',
+                  'unit',
+                  'department',
+                  'title',
+                  'tenure',
+                  'salary',
+                  'overtime']
+
+        writer.writerow(header)
+
+        for salary in employer_salaries:
+            first_name = salary.job.person.first_name
+            last_name = salary.job.person.first_name
+            name = '{first_name} {last_name}'.format(first_name=first_name,
+                                                     last_name=last_name)
+
+            start_date = salary.job.start_date.strftime('%m/%d/%Y') if salary.job.start_date else ''  # noqa
+
+            writer.writerow([name,
+                            employer.parent,
+                            employer.name,
+                            salary.job.position.title,
+                            start_date,
+                            salary.amount,
+                            salary.extra_pay])
+        return response
 
 
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
