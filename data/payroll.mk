@@ -2,7 +2,7 @@
 	%-with-valid-start-dates.csv %-salary-summed.csv \
 	%-no-salary-omitted.csv %-with-agencies.csv
 
-.PRECIOUS : %-with-agencies.csv
+.PRECIOUS : %-with-agencies.csv data/output/%
 
 import/% : data/output/%
 	python manage.py import_data --data_file $< \

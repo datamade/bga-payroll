@@ -53,8 +53,7 @@ class Command(BaseCommand):
 
         self.engine = sa.create_engine(URL('postgresql', **conn_kwargs))
 
-        with transaction.atomic():
-            self.upload()
+        self.upload()
 
     def prompt(self, prompt):
         confirm = input('{} [y/n] '.format(prompt))
@@ -142,15 +141,19 @@ class Command(BaseCommand):
         copy.get()
 
         self.stdout.write('Copied standardized file {} to database'.format(s_file.id))
+        self.stdout.write('Beginning import')
 
-        self.pre_import(s_file)
+        with transaction.atomic():
+            self.pre_import(s_file)
 
-        import_util = ImportUtility(s_file.id)
-        import_util.populate_models_from_raw_data()
+            import_util = ImportUtility(s_file.id)
+            import_util.populate_models_from_raw_data()
 
-        self.stdout.write('Populated models from standardized file {}'.format(s_file.id))
+            self.stdout.write('Populated models from standardized file {}'.format(s_file.id))
 
-        self.post_import(s_file)
+            self.post_import(s_file)
+
+        self.stdout.write('Import complete')
 
     def post_import(self, s_file):
         if self.amend:
