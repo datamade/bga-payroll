@@ -151,7 +151,11 @@ class Command(BaseCommand):
 
             self.stdout.write('Populated models from standardized file {}'.format(s_file.id))
 
-            self.post_import(s_file)
+        # Do this after commit, so search index updates don't reference database
+        # changes that have not yet been committed. The post import steps perform
+        # cleanup and update derived data views (pg_views and the search index).
+        # They need not be atomic with the import updates.
+        self.post_import(s_file)
 
         self.stdout.write('Import complete')
 
@@ -180,7 +184,7 @@ class Command(BaseCommand):
             'build_solr_index',
             reporting_year=self.reporting_year,
             recreate=True,
-            chunksize=100
+            chunksize=25
         )
 
         self.stdout.write('Updated index for standardized_file {}'.format(s_file.id))
