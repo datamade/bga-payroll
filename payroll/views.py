@@ -1,6 +1,8 @@
 import datetime
 from itertools import chain
 import csv
+from io import StringIO
+from collections import OrderedDict
 
 from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -182,36 +184,40 @@ class DownloadView(TemplateView):
         employer = Employer.objects.get(slug=slug)
         employer_salaries = employer.get_salaries(year=year)
 
-        response = HttpResponse(content_type='text/csv')
-        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)  # noqa
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # noqa
-        writer = csv.writer(response)
-
-        header = ['name',
-                  'unit',
-                  'department',
-                  'title',
-                  'tenure',
-                  'salary',
-                  'overtime']
-
-        writer.writerow(header)
+        rows = []
 
         for salary in employer_salaries:
-            first_name = salary.job.person.first_name
-            last_name = salary.job.person.first_name
-            name = '{first_name} {last_name}'.format(first_name=first_name,
-                                                     last_name=last_name)
+            name_kwargs = {
+                'first_name': salary.job.person.first_name,
+                'last_name': salary.job.person.last_name
+            }
+            name = '{first_name} {last_name}'.format(**name_kwargs)
 
             start_date = salary.job.start_date.strftime('%m/%d/%Y') if salary.job.start_date else ''  # noqa
 
-            writer.writerow([name,
-                            employer.parent,
-                            employer.name,
-                            salary.job.position.title,
-                            start_date,
-                            salary.amount,
-                            salary.extra_pay])
+            row = OrderedDict([
+                ('name', name),
+                ('unit', employer.parent),
+                ('department', employer.name),
+                ('title', salary.job.position.title),
+                ('tenure', start_date),
+                ('salary', salary.amount),
+                ('overtime', salary.extra_pay)
+            ])
+
+            rows.append(row)
+
+        buffer = StringIO()
+
+        dict_writer = csv.DictWriter(f=buffer, fieldnames=rows[0].keys())
+        dict_writer.writeheader()
+        dict_writer.writerows(rows)
+
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='text/csv')
+        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)  # noqa
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # noqa
+
         return response
 
 
