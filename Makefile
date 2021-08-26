@@ -4,7 +4,7 @@ PG_DB=bga_payroll
 .PHONY : clean database
 
 clean :
-	rm *.csv
+	rm *.csv data/output/payroll*.csv
 
 database : $(PG_DB)
 
