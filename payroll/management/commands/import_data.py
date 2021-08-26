@@ -55,9 +55,9 @@ class Command(BaseCommand):
 
         self.upload()
 
-    def prompt(self, prompt):
+    def prompt(self, prompt, bail=True):
         confirm = input('{} [y/n] '.format(prompt))
-        if confirm.lower() != 'y':
+        if confirm.lower() != 'y' and bail:
             sys.exit()
 
     def validate(self, data_file):
