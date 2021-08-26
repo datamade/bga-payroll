@@ -169,6 +169,6 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'DEBUG' if DEBUG else 'WARNING',
+        'level': 'DEBUG' if DEBUG else 'WARNING',  # noqa
     },
 }
