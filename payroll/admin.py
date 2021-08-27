@@ -18,6 +18,9 @@ class AdminEmployer(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+
+        # TODO: If the name changed, create an alias
+
         call_command('build_solr_index', employer=obj.id)
 
 

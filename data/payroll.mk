@@ -22,12 +22,9 @@ data/output/payroll-actual-%.csv : %-with-data-year.csv
 	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,_,responding_agency,data_year; \
 	tail -n +2 $<) > $@
 
-%-with-data-year.csv : %-leading-whitespace-trimmed.csv
+%-with-data-year.csv : %-no-salary-omitted.csv
 	# Add required data year field.
 	perl -pe "s/$$/,$$(cut -d '-' -f1 <<< $*)/" $< > $@
-
-%-leading-whitespace-trimmed.csv : %-no-salary-omitted.csv
-	perl -pe 's/^\s+//' $< > $@
 
 %-no-salary-omitted.csv : %-with-valid-start-dates.csv
 	# Remove records where no salary was reported.
@@ -39,7 +36,7 @@ data/output/payroll-actual-%.csv : %-with-data-year.csv
 	# Remove invalid dates.
 	cat $< | python data/processors/validate_dates.py > $@
 
-%-with-agencies.csv : data/raw/payroll-actual-%.csv data/raw/foia-source-lookup.csv
+%-with-agencies.csv : %-whitespace-trimmed.csv data/raw/foia-source-lookup.csv
 	# Join standard data with agency lookup and validate that the output file
 	# has the expected number of lines.
 	csvjoin -c id,ID -e IBM852 $^ > $@
@@ -50,7 +47,13 @@ data/output/payroll-actual-%.csv : %-with-data-year.csv
 		make $*-missing-agencies.csv; \
 	fi
 
-%-missing-agencies.csv : data/raw/payroll-actual-%.csv data/raw/foia-source-lookup.csv
+%-whitespace-trimmed.csv : data/raw/payroll-actual-%.csv
+	# Trim whitespace from the beginning of lines and around column names.
+	perl -pe 's/^\s+//' $< | \
+	perl -pe 's/,\s+/,/g' | \
+	perl -pe 's/\s+,/,/g' > $@
+
+%-missing-agencies.csv : %-whitespace-trimmed.csv data/raw/foia-source-lookup.csv
 	# If this recipe fires, one or more responding agencies cited in incoming
 	# data are missing from the FOIA source lookup. The output contains their
 	# id and employer name. Either the lookup table needs to be updated, or the
