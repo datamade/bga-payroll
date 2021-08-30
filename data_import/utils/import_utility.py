@@ -480,8 +480,10 @@ class ImportUtility(TableNamesMixin):
               LEFT JOIN payroll_employeralias AS department_alias
                 ON child.id = department_alias.employer_id
             ), existing AS (
-              /* Create a view of existing people and their employers. */
-              SELECT
+              /* Create a view of existing people and their employers. Select
+              distinct on person ID, because a person can have more than one
+              salary, causing them to appear many times in this select. */
+              SELECT DISTINCT ON (per.id)
                 per.id AS e_person_id,
                 per.first_name AS e_first_name,
                 per.last_name AS e_last_name,
