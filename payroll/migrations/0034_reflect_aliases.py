@@ -9,7 +9,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('payroll', '0032_refactor_unique_indexes_to_constraints'),
+        ('payroll', '0033_add_salary_view'),
     ]
 
     operations = [
