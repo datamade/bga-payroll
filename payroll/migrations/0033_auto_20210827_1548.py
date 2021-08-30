@@ -3,13 +3,8 @@
 from django.db import migrations
 from extra_settings.models import Setting
 
-# flake8: noqa
-def add_donate_banner_settings():
-    banner_toggle = Setting(name='PAYROLL_SHOW_DONATE_BANNER',
-                            value_type=Setting.TYPE_BOOL,
-                            value_bool=False)
-    banner_toggle.save()
-    
+
+def add_donate_banner_message(apps, schema_editor):
     donate_message_html = """<p class="lead"><strong>Dear BGA readers,</strong></p>
         <p>First, thanks very much for visiting our Salary Database site. We know hundreds of thousands of people use it throughout the year and find it useful.</p>
         <p><strong>But we need your help to keep this important source of information going.</strong> This database costs money and time to complete. We contract with outside organizations, and BGA staffers spend more than a year requesting, compiling, organizing and checking data from hundreds of government bodies across Illinois to bring this site to you for free. We don't run ads and we are a small nonprofit.</p>
@@ -32,5 +27,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_donate_banner_settings),
+        migrations.RunPython(add_donate_banner_message),
     ]
