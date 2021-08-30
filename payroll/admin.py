@@ -2,12 +2,13 @@ from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.core.cache import caches, InvalidCacheBackendError
 from django.core.management import call_command
+from django.db import transaction
 
 from extra_settings.admin import SettingAdmin
 from extra_settings.models import Setting
 
 from payroll.models import Employer, EmployerUniverse, EmployerTaxonomy, \
-    Person
+    Person, EmployerAlias
 
 
 class AdminEmployer(admin.ModelAdmin):
@@ -17,9 +18,19 @@ class AdminEmployer(admin.ModelAdmin):
     readonly_fields = ('slug', 'parent', 'vintage',)
 
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
+        with transaction.atomic():
+            super().save_model(request, obj, form, change)
 
-        # TODO: If the name changed, create an alias
+            if change:
+                # Get or create an alias for the given employer. Don't filter
+                # on preferred in case someone is changing the name to an alias
+                # we already have on hand.
+                alias, _ = EmployerAlias.objects.get_or_create(employer=obj, name=obj.name)
+
+                # Mark the given alias as preferred, marking all other aliases
+                # for the given employer as not preferred.
+                alias.preferred = True
+                alias.save()
 
         call_command('build_solr_index', employer=obj.id)
 

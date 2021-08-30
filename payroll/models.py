@@ -229,17 +229,17 @@ class EmployerAlias(AliasModel):
     def clean(self):
         super().clean()
 
-        if self.employer.is_department:
-            duplicate_alias = type(self).objects.filter(
-                Q(name=self.name) & Q(employer__parent_id=self.employer.parent.id)
-            )
-        else:
-            duplicate_alias = type(self).objects.filter(
-                Q(name=self.name) & Q(employer__parent_id__isnull=True)
-            )
+        existing_alias = type(self).objects.filter(
+            name=self.name,
+            employer=self.employer
+        ).exclude(
+            id=self.id
+        )
 
-        if len(duplicate_alias) == 1:
-            raise ValidationError('{} name must be unique.'.format(self))
+        if existing_alias.exists():
+            msg = 'Alias "{0}" already exists for employer "{1}".'.format(self.name,
+                                                                          self.employer)
+            raise ValidationError(msg)
 
 
 class EmployerHighestSalaries(pg.MaterializedView):
