@@ -4,6 +4,7 @@ from django.db import migrations
 from extra_settings.models import Setting
 
 
+# flake8: noqa
 def add_donate_banner_message(apps, schema_editor):
     donate_message_html = """<p class="lead"><strong>Dear BGA readers,</strong></p>
         <p>First, thanks very much for visiting our Salary Database site. We know hundreds of thousands of people use it throughout the year and find it useful.</p>
@@ -11,14 +12,13 @@ def add_donate_banner_message(apps, schema_editor):
         <p>If every person who visited this site gave us $1, we could complete our fundraising for the year right now. If you find this database valuable, please take just a few minutes to support it. Thank you.</p>
         <p class="text-center"><a class="btn btn-primary btn-lg" href="https://donate.bettergov.org" target="_blank">Please support this work today!</a></p>
         """
-        
+
     donate_message = Setting(name='DONATE_MESSAGE',
                              value_type=Setting.TYPE_TEXT,
                              value_text=donate_message_html)
-    
+
     donate_message.save()
-    
-    
+
 
 class Migration(migrations.Migration):
 
