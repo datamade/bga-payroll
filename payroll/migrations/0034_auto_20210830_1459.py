@@ -23,7 +23,7 @@ def add_donate_banner_message(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('payroll', '0032_refactor_unique_indexes_to_constraints'),
+        ('payroll', '0033_employerhighestsalaries'),
     ]
 
     operations = [
