@@ -8,6 +8,8 @@ define get_record_count
 $$(csvstat --count $(1) | cut -d ' ' -f3)
 endef
 
+.PHONY : import/% amend/%
+
 import/% : data/output/%
 	python manage.py import_data --data_file $< \
 		--reporting_year $$(echo "$<" | grep -Eo "[0-9]{4}")
