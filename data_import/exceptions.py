@@ -1,2 +1,0 @@
-class OperationNotPermittedOnInstance(Exception):
-    pass

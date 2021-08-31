@@ -4,9 +4,6 @@ from os.path import basename
 
 from cchardet import UniversalDetector
 from csvkit.convert import guess_format
-from django.db.models.fields.files import FieldFile
-
-from data_import.exceptions import OperationNotPermittedOnInstance
 
 
 class CsvMeta(object):
@@ -72,32 +69,27 @@ class CsvMeta(object):
         From standardized upload, grab REQUIRED_FIELDS and write them
         to a UTF-8 temp file for copying to the database.
         '''
-        if isinstance(self.file, FieldFile):
-            infile = self.file.open(mode='r')
-            lines = infile.read().decode(self.file_encoding).splitlines()
-            reader = csv.DictReader(lines)
+        infile = self.file.open(mode='r')
+        lines = infile.read().decode(self.file_encoding).splitlines()
+        reader = csv.DictReader(lines)
 
-            # Downcase and underscore field names, so they will match with
-            # REQUIRED_FIELDS.
-            reader.fieldnames = self.field_names
+        # Downcase and underscore field names, so they will match with
+        # REQUIRED_FIELDS.
+        reader.fieldnames = self.field_names
 
-            # Discard header.
-            next(reader)
+        # Discard header.
+        next(reader)
 
-            outfile_name = '/tmp/{}'.format(basename(self.file.name))
+        outfile_name = '/tmp/{}'.format(basename(self.file.name))
 
-            with open(outfile_name, 'w', encoding='utf-8') as outfile:
-                writer = csv.DictWriter(outfile, fieldnames=self.REQUIRED_FIELDS)
-                writer.writeheader()
+        with open(outfile_name, 'w', encoding='utf-8') as outfile:
+            writer = csv.DictWriter(outfile, fieldnames=self.REQUIRED_FIELDS)
+            writer.writeheader()
 
-                for row in reader:
-                    out_row = {field: row[field] for field in self.REQUIRED_FIELDS}
-                    writer.writerow(out_row)
+            for row in reader:
+                out_row = {field: row[field] for field in self.REQUIRED_FIELDS}
+                writer.writerow(out_row)
 
-            infile.close()
+        infile.close()
 
-            return outfile_name
-
-        else:
-            message = 'Cannot alter instance of {}'.format(type(self.file))
-            raise OperationNotPermittedOnInstance(message)
+        return outfile_name

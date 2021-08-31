@@ -38,8 +38,6 @@ To view logs for `app`, `worker`, or any of the other services defined in
 `docker-compose.yml`, run `docker-compose logs -f <SERVICE_NAME>`, e.g.,
 `docker-compose logs -f app`.
 
-The migrations should run via the migration service when you do `docker-compose up`, but we've had issues with race conditions in the past. In this case, run `docker-compose run --rm app python manage.py migrate`.
-
 ### Adding data
 
 The application will work without data, but if you'd like to add some,

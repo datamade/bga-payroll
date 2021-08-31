@@ -1,6 +1,8 @@
 from __future__ import absolute_import, unicode_literals
 
+import logging
 from io import StringIO
+import sys
 
 from celery import shared_task, Task
 from celery.signals import task_prerun
@@ -8,6 +10,9 @@ from django.core.management import call_command
 from django.db import connection
 
 from data_import.utils import CsvMeta, ImportUtility
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataImportTask(Task):
@@ -36,8 +41,17 @@ class DataImportTask(Task):
         '''
         from data_import.models import StandardizedFile
 
-        self.s_file = StandardizedFile.objects.get(id=s_file_id)
+        logger.debug('Setup fired')
+
+        try:
+            self.s_file = StandardizedFile.objects.get(id=s_file_id)
+        except StandardizedFile.DoesNotExist:
+            raise Exception('Could not find standardized file {} specified by task'.format(s_file_id))
+            sys.exit()
+
         self.import_utility = ImportUtility(s_file_id)
+
+        logger.debug('Setup succeeded for {}'.format(str(self.s_file)))
 
     def update_status(self, status):
         self.s_file.status = status
@@ -60,7 +74,10 @@ def init_task(*args, **kwargs):
     '''
     sender = kwargs['sender']
 
+    logger.debug('init_task fired by sender {}'.format(sender))
+
     if isinstance(sender, DataImportTask):
+        logger.debug('sender is instance of dataimporttask')
         # Each task method must receive an s_file_id keyword-only
         # argument, hence we can assume its existence.
         s_file_id = kwargs['kwargs']['s_file_id']

@@ -117,6 +117,7 @@ scratch.txt
 /scripts/app_start.sh
 
 dump.rdb
+dumps/
 
 data/output/*
 !data/output/2018-09-12-employer_taxonomy.csv

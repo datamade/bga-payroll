@@ -16,7 +16,7 @@ def add_donate_banner_setting(apps, schema_editor):
     donate_message = Setting.objects.get_or_create(name='DONATE_MESSAGE',
                                                    value_type=Setting.TYPE_TEXT,
                                                    value_text=donate_message_html)
-    
+
     banner_toggle = Setting.objects.get_or_create(name='PAYROLL_SHOW_DONATE_BANNER',
                                                   value_type=Setting.TYPE_BOOL,
                                                   value_bool=False)

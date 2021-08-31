@@ -24,7 +24,7 @@ class AliasModel(models.Model):
         entity = getattr(self, self.entity_type)
         preferred_alias = entity.aliases.filter(preferred=True)
 
-        if len(preferred_alias) == 1 and self.preferred:
+        if preferred_alias.exists() and self.preferred:
             preferred_alias.update(preferred=False)
 
     def save(self, * args, **kwargs):

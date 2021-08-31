@@ -144,8 +144,7 @@ SEARCH_LIMIT = 1
 
 # Remote storage options
 if not DEBUG:  # noqa
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Stopgap to render most recent data year until multi-year support is added
 try:
@@ -153,10 +152,23 @@ try:
 except NameError:
     DATA_YEAR = 2017
 
-
 # Turn off default authentication and handle it on the viewsets. This turns
 # off basic authentication, which gets confused because Nginx is sending an
 # unrelated authorization header for the staging site.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': []
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG' if DEBUG else 'WARNING',  # noqa
+    },
 }
