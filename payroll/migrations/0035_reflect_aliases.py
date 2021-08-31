@@ -9,7 +9,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('payroll', '0033_employerhighestsalaries'),
+        ('payroll', '0034_auto_20210830_1459'),
     ]
 
     operations = [
