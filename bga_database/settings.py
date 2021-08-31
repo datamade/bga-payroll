@@ -144,7 +144,7 @@ SEARCH_LIMIT = 1
 
 # Remote storage options
 if not DEBUG:  # noqa
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Stopgap to render most recent data year until multi-year support is added
 try:

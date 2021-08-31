@@ -129,7 +129,7 @@ class Command(BaseCommand):
     def upload(self):
         upload = Upload.objects.create()
 
-        with open(self.data_file, 'r') as data_file:
+        with open(self.data_file, 'rb') as data_file:
             s_file = StandardizedFile.objects.create(
                 standardized_file=File(data_file),
                 reporting_year=self.reporting_year,
