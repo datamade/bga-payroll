@@ -1,6 +1,7 @@
 import datetime
 
 import pytest
+from extra_settings.models import Setting
 
 from payroll.models import Person, Position, Job, Salary
 
@@ -82,3 +83,31 @@ def salary(standardized_file, job):
             return Salary.objects.create(**data)
 
     return SalaryFactory()
+
+
+@pytest.fixture
+def show_donate():
+    show_donate, _ = Setting.objects.get_or_create(name='PAYROLL_SHOW_DONATE_BANNER',  # noqa
+                                                   defaults={'value_type': Setting.TYPE_BOOL})  # noqa
+    show_donate.value = True
+    show_donate.save()
+
+    return show_donate
+
+
+@pytest.fixture
+def donate_message():
+    message, _ = Setting.objects.get_or_create(name='DONATE_MESSAGE',
+                                               defaults={'value_type': Setting.TYPE_TEXT})
+    return message
+
+
+# flake8: noqa
+@pytest.fixture
+def allowed_input(): 
+    return """<p class="lead"><strong>Dear BGA readers,</strong></p>
+        <p>First, thanks very much for visiting our Salary Database site. We know hundreds of thousands of people use it throughout the year and find it useful.</p>
+        <p><strong>But we need your help to keep this important source of information going.</strong> This database costs money and time to complete. We contract with outside organizations, and BGA staffers spend more than a year requesting, compiling, organizing and checking data from hundreds of government bodies across Illinois to bring this site to you for free. We don't run ads and we are a small nonprofit.</p>
+        <p>If every person who visited this site gave us $1, we could complete our fundraising for the year right now. If you find this database valuable, please take just a few minutes to support it. Thank you.</p>
+        <p class="text-center"><a class="btn btn-primary btn-lg" href="https://donate.bettergov.org" target="_blank">Please support this work today!</a></p>
+      """
