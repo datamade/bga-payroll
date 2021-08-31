@@ -183,8 +183,11 @@ class DownloadView(TemplateView):
         year = request.GET.get('year')
         employer = Employer.objects.get(slug=slug)
         employer_salaries = employer.get_salaries(year=year)
-
-        rows = []
+        
+        buffer = StringIO()
+        header = ['name', 'unit', 'department', 'title', 'tenure', 'salary', 'overtime']
+        dict_writer = csv.DictWriter(f=buffer, fieldnames=header)
+        dict_writer.writeheader()
 
         for salary in employer_salaries:
             name_kwargs = {
@@ -195,23 +198,15 @@ class DownloadView(TemplateView):
 
             start_date = salary.job.start_date.strftime('%m/%d/%Y') if salary.job.start_date else ''  # noqa
 
-            row = OrderedDict([
-                ('name', name),
-                ('unit', employer.parent),
-                ('department', employer.name),
-                ('title', salary.job.position.title),
-                ('tenure', start_date),
-                ('salary', salary.amount),
-                ('overtime', salary.extra_pay)
-            ])
-
-            rows.append(row)
-
-        buffer = StringIO()
-
-        dict_writer = csv.DictWriter(f=buffer, fieldnames=rows[0].keys())
-        dict_writer.writeheader()
-        dict_writer.writerows(rows)
+            dict_writer.writerow({
+                'name': name,
+                'unit': employer.parent,
+                'department': employer.name,
+                'title': salary.job.position.title,
+                'tenure': start_date,
+                'salary': salary.amount,
+                'overtime': salary.extra_pay
+            })
 
         buffer.seek(0)
         response = HttpResponse(buffer, content_type='text/csv')
