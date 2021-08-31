@@ -445,7 +445,7 @@ class Person(SluggedModel, VintagedModel, SourceFileMixin):
         '''
         return self.jobs\
                    .select_related('position', 'position__employer', 'position__employer__parent')\
-                   .order_by('-vintage__standardized_file__reporting_year')\
+                   .order_by('-salaries__vintage__standardized_file__reporting_year')\
                    .first()
 
     def responding_agency(self, year):
