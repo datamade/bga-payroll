@@ -42,18 +42,22 @@ data/output/payroll-actual-%.csv : %-with-data-year.csv
 	# Join standard data with agency lookup and validate that the output file
 	# has the expected number of lines.
 	csvjoin -c id,ID -e IBM852 $^ > $@
-	if [ $(call get_record_count,$<) -eq $(call get_record_count,$@) ]; then \
+	INFILE_LINES=$(call get_record_count,$<); \
+	OUTFILE_LINES=$(call get_record_count,$@); \
+	if [ $$INFILE_LINES -eq $$OUTFILE_LINES ]; then \
 		echo "No lines lost in join. Proceeding..."; \
 	else \
 		echo "$< has $$INFILE_LINES lines, but $@ has $$OUTFILE_LINES lines. Generating missing agencies..."; \
 		make $*-missing-agencies.csv; \
+		echo "Contact the BGA for clarification on agencies missing from the lookup table."; \
+		exit 1; \
 	fi
 
 %-whitespace-trimmed.csv : data/raw/payroll-actual-%.csv
 	# Trim whitespace from the beginning of lines and around column names.
 	perl -pe 's/^\s+//' $< | \
-	perl -pe 's/,\s+/,/g' | \
-	perl -pe 's/\s+,/,/g' > $@
+		perl -pe 's/,\s+/,/g' | \
+		perl -pe 's/\s+,/,/g' > $@
 
 %-missing-agencies.csv : %-whitespace-trimmed.csv data/raw/foia-source-lookup.csv
 	# If this recipe fires, one or more responding agencies cited in incoming
@@ -64,5 +68,3 @@ data/output/payroll-actual-%.csv : %-with-data-year.csv
 		csvgrep -c Employer -r "^$$" | \
 		csvcut -c 1,9 | \
 		uniq > $@
-	echo "Contact the BGA for clarification on agencies missing from the lookup table."
-	exit 1
