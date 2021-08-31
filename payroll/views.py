@@ -8,7 +8,7 @@ from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponse, \
-    HttpResponsePermanentRedirect, HttpResponseGone
+    HttpResponsePermanentRedirect, HttpResponseGone, StreamingHttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic.base import TemplateView
@@ -177,42 +177,64 @@ class PersonView(RedirectDispatchMixin, DetailView, ChartHelperMixin):
         return context
 
 
+class PsuedoBuffer:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+
 class DownloadView(TemplateView):
     def get(self, request, *args, **kwargs):
         slug = request.GET.get('employer')
         year = request.GET.get('year')
         employer = Employer.objects.get(slug=slug)
-        employer_salaries = employer.get_salaries(year=year)
+        employer_salaries = employer.get_salaries(year=year).select_related(
+            'job',
+            'job__person',
+            'job__position',
+            'job__position__employer',
+            'job__position__employer__parent'
+        )
         
-        buffer = StringIO()
-        header = ['name', 'unit', 'department', 'title', 'tenure', 'salary', 'overtime']
-        dict_writer = csv.DictWriter(f=buffer, fieldnames=header)
-        dict_writer.writeheader()
+        buffer = PsuedoBuffer()
+        # todo: don't worry ab this rn. DictWriter requires the argument so leaving it here for now
+        headers = ['name', 'unit', 'department', 'title', 'tenure', 'salary', 'overtime']
+        dict_writer = csv.DictWriter(f=buffer, fieldnames=headers)
 
-        for salary in employer_salaries:
-            name_kwargs = {
-                'first_name': salary.job.person.first_name,
-                'last_name': salary.job.person.last_name
-            }
-            name = '{first_name} {last_name}'.format(**name_kwargs)
+        # todo: move outside the scope of this `get` method?
+        def row_generator():
+            for salary in employer_salaries:
+                name_kwargs = {
+                    'first_name': salary.job.person.first_name,
+                    'last_name': salary.job.person.last_name
+                }
+                name = '{first_name} {last_name}'.format(**name_kwargs)
 
-            start_date = salary.job.start_date.strftime('%m/%d/%Y') if salary.job.start_date else ''  # noqa
-
-            dict_writer.writerow({
-                'name': name,
-                'unit': employer.parent,
-                'department': employer.name,
-                'title': salary.job.position.title,
-                'tenure': start_date,
-                'salary': salary.amount,
-                'overtime': salary.extra_pay
-            })
-
-        buffer.seek(0)
-        response = HttpResponse(buffer, content_type='text/csv')
-        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)  # noqa
+                start_date = salary.job.start_date.strftime('%m/%d/%Y') if salary.job.start_date else ''  # noqa
+                
+                yield {
+                    'name': name,
+                    'unit': employer.parent,
+                    'department': employer.name,
+                    'title': salary.job.position.title,
+                    'tenure': start_date,
+                    'salary': salary.amount,
+                    'overtime': salary.extra_pay
+                }
+                
+        rows = row_generator()
+        
+        response = StreamingHttpResponse(
+            (dict_writer.writerow(row) for row in rows),
+            content_type='text/csv'
+        )
+        
+        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # noqa
-
         return response
 
 
