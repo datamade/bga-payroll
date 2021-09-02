@@ -1,8 +1,6 @@
 import datetime
 from itertools import chain
 import csv
-from io import StringIO
-from collections import OrderedDict
 
 from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -201,11 +199,9 @@ class DownloadView(TemplateView):
         )
         
         buffer = PsuedoBuffer()
-        # todo: don't worry ab this rn. DictWriter requires the argument so leaving it here for now
         headers = ['name', 'unit', 'department', 'title', 'tenure', 'salary', 'overtime']
         dict_writer = csv.DictWriter(f=buffer, fieldnames=headers)
 
-        # todo: move outside the scope of this `get` method?
         def row_generator():
             for salary in employer_salaries:
                 name_kwargs = {
@@ -226,10 +222,14 @@ class DownloadView(TemplateView):
                     'overtime': salary.extra_pay
                 }
                 
-        rows = row_generator()
-        
+        # DictWriter.writeheader() doesn't work in python 3.5,
+        # so this workaround adds the header from dict_writer.fieldnames.
+        flat_writer = csv.writer(buffer)
+        rows = chain([flat_writer.writerow(dict_writer.fieldnames)],
+                     (dict_writer.writerow(row) for row in row_generator()))
+
         response = StreamingHttpResponse(
-            (dict_writer.writerow(row) for row in rows),
+            rows,
             content_type='text/csv'
         )
         
