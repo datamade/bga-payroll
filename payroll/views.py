@@ -197,9 +197,15 @@ class DownloadView(TemplateView):
             'job__position__employer',
             'job__position__employer__parent'
         )
-        
+
         buffer = PsuedoBuffer()
-        headers = ['name', 'unit', 'department', 'title', 'tenure', 'salary', 'overtime']
+        headers = ['name',
+                   'unit',
+                   'department',
+                   'title',
+                   'tenure',
+                   'salary',
+                   'overtime']
         dict_writer = csv.DictWriter(f=buffer, fieldnames=headers)
 
         def row_generator():
@@ -211,7 +217,7 @@ class DownloadView(TemplateView):
                 name = '{first_name} {last_name}'.format(**name_kwargs)
 
                 start_date = salary.job.start_date.strftime('%m/%d/%Y') if salary.job.start_date else ''  # noqa
-                
+
                 yield {
                     'name': name,
                     'unit': employer.parent,
@@ -221,7 +227,7 @@ class DownloadView(TemplateView):
                     'salary': salary.amount,
                     'overtime': salary.extra_pay
                 }
-                
+
         # DictWriter.writeheader() doesn't work in python 3.5,
         # so this workaround adds the header from dict_writer.fieldnames.
         flat_writer = csv.writer(buffer)
@@ -232,8 +238,8 @@ class DownloadView(TemplateView):
             rows,
             content_type='text/csv'
         )
-        
-        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)
+
+        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)  # noqa
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # noqa
         return response
 
