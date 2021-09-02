@@ -1,11 +1,12 @@
 import datetime
 from itertools import chain
+import csv
 
 from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponse, \
-    HttpResponsePermanentRedirect, HttpResponseGone
+    HttpResponsePermanentRedirect, HttpResponseGone, StreamingHttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic.base import TemplateView
@@ -22,7 +23,7 @@ from bga_database.local_settings import CACHE_SECRET_KEY
 from data_import.models import StandardizedFile
 
 from payroll.charts import ChartHelperMixin
-from payroll.models import Person, Unit, Department
+from payroll.models import Person, Unit, Department, Employer
 from payroll.search import PayrollSearchMixin, FacetingMixin, \
     DisallowedSearchException
 from payroll.serializers import PersonSerializer
@@ -178,6 +179,75 @@ class PersonView(RedirectDispatchMixin, DetailView, ChartHelperMixin):
         context['data_year'] = most_recent_year
 
         return context
+
+
+class PsuedoBuffer:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+
+class DownloadView(TemplateView):
+    def get(self, request, *args, **kwargs):
+        slug = request.GET.get('employer')
+        year = request.GET.get('year')
+        employer = Employer.objects.get(slug=slug)
+        employer_salaries = employer.get_salaries(year=year).select_related(
+            'job',
+            'job__person',
+            'job__position',
+            'job__position__employer',
+            'job__position__employer__parent'
+        )
+
+        buffer = PsuedoBuffer()
+        headers = ['name',
+                   'unit',
+                   'department',
+                   'title',
+                   'tenure',
+                   'salary',
+                   'overtime']
+        dict_writer = csv.DictWriter(f=buffer, fieldnames=headers)
+
+        def row_generator():
+            for salary in employer_salaries:
+                name_kwargs = {
+                    'first_name': salary.job.person.first_name,
+                    'last_name': salary.job.person.last_name
+                }
+                name = '{first_name} {last_name}'.format(**name_kwargs)
+
+                start_date = salary.job.start_date.strftime('%m/%d/%Y') if salary.job.start_date else ''  # noqa
+
+                yield {
+                    'name': name,
+                    'unit': employer.parent,
+                    'department': employer.name,
+                    'title': salary.job.position.title,
+                    'tenure': start_date,
+                    'salary': salary.amount,
+                    'overtime': salary.extra_pay
+                }
+
+        # DictWriter.writeheader() doesn't work in python 3.5,
+        # so this workaround adds the header from dict_writer.fieldnames.
+        flat_writer = csv.writer(buffer)
+        rows = chain([flat_writer.writerow(dict_writer.fieldnames)],
+                     (dict_writer.writerow(row) for row in row_generator()))
+
+        response = StreamingHttpResponse(
+            rows,
+            content_type='text/csv'
+        )
+
+        filename = '{employer}-{year}.csv'.format(employer=employer.name, year=year)  # noqa
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # noqa
+        return response
 
 
 class SearchView(ListView, PayrollSearchMixin, FacetingMixin):

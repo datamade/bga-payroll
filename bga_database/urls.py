@@ -51,6 +51,7 @@ urlpatterns = [
     path('search/', payroll_views.SearchView.as_view(), name='search'),
     path('story-feed/', cache_page(EIGHT_HOURS)(payroll_views.StoryFeed.as_view()), name='story-feed'),
     path('<int:error_code>', payroll_views.error, name='error'),
+    path('download/', payroll_views.DownloadView.as_view(), name='download'),
 
     # user auth
     path('salsa/', include('salsa_auth.urls')),

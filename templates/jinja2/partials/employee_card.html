@@ -2,6 +2,7 @@
   <h3 class="card-title mb-4">
     <i class="fas fa-users"></i> Employees
     <small><a id="employee-search-link" href="/search/?entity_type=person&employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all (<span class="entity-headcount"></span>)</a></small>
+    <small><a id="employee-search-link" href="/download/?employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">Download Data</a></small>
   </h3>
 
   <h4 class="card-subtitle">Top earners in {{ entity }}</h4>
