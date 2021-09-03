@@ -300,11 +300,14 @@ class Command(BaseCommand):
         documents = []
         document_count = 0
 
+        # Select people with salaries in the given data year. Use distinct
+        # because a person can have multiple jobs and salaries, which will
+        # cause them to appear more than once in this queryset.
         people = Person.objects.filter(
-            jobs__vintage__standardized_file__reporting_year__in=self.reporting_years
-        ).iterator()
+            jobs__salaries__vintage__standardized_file__reporting_year__in=self.reporting_years
+        ).distinct()
 
-        for person in people:
+        for person in people.iterator():
             for document in self._make_person_index(person):
                 documents.append(document)
 
