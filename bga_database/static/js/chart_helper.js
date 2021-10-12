@@ -35,7 +35,7 @@ var ChartHelper = {
         edges = data[this.value];
       }
 
-      var composite_last_bin = edges.upper_edge !== '200k';
+      var composite_last_bin = edges && edges.upper_edge !== '200k';
 
       if ( last_bin ) {
         if ( composite_last_bin ) {
