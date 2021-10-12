@@ -65,13 +65,13 @@ var ChartHelper = {
 
     var finalBucket = data[data.length - 1];
 
-    var upperEdgeIsNot200k = finalBucket && finalBucket.upper_edge !== '200k'
+    var upperEdgeIsNot200k = finalBucket && finalBucket.upper_edge !== '200k';
 
     // Handle case where the highest salary is just over 200k, i.e., both edges
     // are 200k when the upper edge is rounded.
     var edgesAreBoth200k = finalBucket &&
-      finalBucket.lower_edge == '200k' &&
-      finalBucket.upper_edge == '200k';
+      finalBucket.lower_edge === '200k' &&
+      finalBucket.upper_edge === '200k';
 
     if ( upperEdgeIsNot200k || edgesAreBoth200k ) {
         end_on_tick = false;
