@@ -12,6 +12,12 @@ from data_import.models import Upload, RespondingAgency, SourceFile
 class VintagedModel(models.Model):
     vintage = models.ForeignKey(Upload, on_delete=models.CASCADE)
 
+    @property
+    def reporting_year(self):
+        if not hasattr(self, '_reporting_year'):
+            self._reporting_year = self.vintage.standardized_file.get().reporting_year
+        return self._reporting_year
+
     class Meta:
         abstract = True
 
@@ -473,7 +479,7 @@ class Job(VintagedModel):
     start_date = models.DateField(null=True)
 
     def __str__(self):
-        return '{0} – {1}'.format(self.person, self.position)
+        return '{0} – {1}'.format(self.person, self.position)
 
 
 class Position(VintagedModel):
@@ -543,8 +549,6 @@ class Salary(VintagedModel):
 
     @property
     def employer_percentile(self):
-        employer = self.job.position.employer
-
         query = '''
             WITH salary_percentiles AS (
               SELECT
@@ -554,19 +558,24 @@ class Salary(VintagedModel):
                 job.person_id
               FROM payroll_job AS job
               JOIN payroll_salary AS salary
-              ON salary.job_id = job.id
+                ON salary.job_id = job.id
               JOIN payroll_position AS position
-              ON job.position_id = position.id
+                ON job.position_id = position.id
               JOIN payroll_employer as employer
-              ON position.employer_id = employer.id
-              WHERE employer.id = {employer_id}
-              OR employer.parent_id = {employer_id}
+                ON position.employer_id = employer.id
+              JOIN data_import_upload AS upload
+                ON salary.vintage_id = upload.id
+              JOIN data_import_standardizedfile AS s_file
+                ON upload.id = s_file.upload_id
+              WHERE (employer.id = {employer_id} OR employer.parent_id = {employer_id})
+                AND s_file.reporting_year = {reporting_year}
             )
             SELECT percentile
             FROM salary_percentiles
             WHERE person_id = {id}
-        '''.format(employer_id=employer.id,
-                   id=self.job.person.id)
+        '''.format(employer_id=self.job.position.employer.id,
+                   id=self.job.person.id,
+                   reporting_year=self.reporting_year)
 
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -602,20 +611,26 @@ class Salary(VintagedModel):
                 job.person_id
               FROM payroll_job AS job
               JOIN payroll_salary AS salary
-              ON salary.job_id = job.id
+                ON salary.job_id = job.id
               JOIN payroll_position AS position
-              ON job.position_id = position.id
+                ON job.position_id = position.id
               JOIN employer_parent_lookup AS lookup
-              ON position.employer_id = lookup.id
+                ON position.employer_id = lookup.id
               JOIN payroll_employer AS employer
-              ON lookup.parent_id = employer.id
+                ON lookup.parent_id = employer.id
+              JOIN data_import_upload AS upload
+                ON salary.vintage_id = upload.id
+              JOIN data_import_standardizedfile AS s_file
+                ON upload.id = s_file.upload_id
               WHERE employer.taxonomy_id = {taxonomy}
+                AND s_file.reporting_year = {reporting_year}
             )
             SELECT percentile
             FROM salary_percentiles
             WHERE person_id = {id}
         '''.format(taxonomy=employer.taxonomy.id,
-                   id=self.job.person.id)
+                   id=self.job.person.id,
+                   reporting_year=self.reporting_year)
 
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -646,53 +661,28 @@ class Salary(VintagedModel):
                     job.person_id
                   FROM payroll_job AS job
                   JOIN payroll_salary AS salary
-                  ON salary.job_id = job.id
+                    ON salary.job_id = job.id
                   JOIN payroll_position AS position
-                  ON job.position_id = position.id
+                    ON job.position_id = position.id
                   JOIN taxonomy_members AS department
-                  ON position.employer_id = department.id
+                    ON position.employer_id = department.id
+                  JOIN data_import_upload AS upload
+                    ON salary.vintage_id = upload.id
+                  JOIN data_import_standardizedfile AS s_file
+                    ON upload.id = s_file.upload_id
                   WHERE department.universe_id = {universe}
+                    AND s_file.reporting_year = {reporting_year}
                 )
                 SELECT percentile
                 FROM salary_percentiles
                 WHERE person_id = {id}
             '''.format(taxonomy=employer.parent.taxonomy.id,
                        universe=employer.universe.id,
-                       id=self.job.person.id)
+                       id=self.job.person.id,
+                       reporting_year=self.reporting_year)
 
             with connection.cursor() as cursor:
                 cursor.execute(query)
                 result = cursor.fetchone()
 
             return result[0] * 100
-
-    @classmethod
-    def of_employer(cls, employer_id, n=None):
-        '''
-        TODO: Deprecate after API changes come in.
-        '''
-        employer = models.Q(job__position__employer_id=employer_id)
-        parent_employer = models.Q(job__position__employer__parent_id=employer_id)
-
-        # Return only salaries of the given employer's jobs, if that employer is a
-        # department. Otherwise, return salaries of the given employer's jobs, as
-        # well as the employer's child employers.
-
-        if Employer.objects.select_related('parent').get(id=employer_id).is_department:
-            criterion = employer
-        else:
-            criterion = employer | parent_employer
-
-        bp = Coalesce("amount", 0)
-        ep = Coalesce("extra_pay", 0)
-
-        salaries = cls.objects.filter(criterion)\
-            .annotate(total_pay=bp + ep)\
-            .order_by('-total_pay')\
-            .select_related(
-                'job__person',
-                'job__position',
-                'job__position__employer',
-                'job__position__employer__parent')[:n]
-
-        return salaries
