@@ -63,7 +63,7 @@ var ChartHelper = {
     // the last tick is not "200k"
     var end_on_tick;
 
-    if ( data[data.length - 1].upper_edge !== '200k' ) {
+    if ( data[data.length - 1] && data[data.length - 1].upper_edge !== '200k' ) {
         end_on_tick = false;
     } else {
         end_on_tick = true;
