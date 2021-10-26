@@ -155,7 +155,7 @@ class Command(BaseCommand):
                     self.prompt('Found {0} salaries for unit {1}.\n{2}\nDo you wish to delete? '.format(salaries.count(), unit.name, salaries))
 
                 summary = salaries.delete()
-                self.stdout.write('Salary deletion summary for unit {0}: {1}'.format(unit.name summary))
+                self.stdout.write('Salary deletion summary for unit {0}: {1}'.format(unit.name, summary))
 
     def upload(self):
         upload = Upload.objects.create()
