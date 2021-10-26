@@ -350,6 +350,8 @@ class UnitRespondingAgency(models.Model):
     '''
     Associate units and responding agencies for a given year, so data from
     that year can be linked to a specific source file.
+
+    There should only be one responding agency per unit, per year.
     '''
     unit = models.ForeignKey(
         'Employer',
@@ -362,6 +364,9 @@ class UnitRespondingAgency(models.Model):
         on_delete=models.CASCADE
     )
     reporting_year = models.IntegerField()
+
+    class Meta:
+        unique_together = ('unit', 'reporting_year')
 
 
 class EmployerTaxonomy(models.Model):
