@@ -4,7 +4,7 @@ Chicago Park District,2
 Chicago Public Schools,3
 Chicago State University,4
 Chicago Transit Authority,5
-City Colleges Of Chicago,6
+City Colleges of Chicago,6
 Alton,7
 Aurora,8
 Belleville,9
@@ -14,10 +14,10 @@ Bourbonnais,12
 Carbondale,13
 Champaign,14
 Charleston,15
-Chicago,16
+City of Chicago,16
 Crystal Lake,17
 Danville,18
-Dekalb,19
+DeKalb,19
 Effingham,20
 Elgin,21
 Galena,22
@@ -26,7 +26,7 @@ Hoffman Estates,24
 Jacksonville,25
 Joliet,26
 Kankakee,27
-Lasalle,28
+LaSalle,28
 Macomb,29
 Marion,30
 Naperville,31
@@ -153,8 +153,8 @@ Cumberland County,154
 Darien,155
 Deer Park,156
 Deerfield,157
-Dekalb County,158
-Dewitt County,159
+DeKalb County,158
+DeWitt County,159
 Diamond,160
 Dixmoor,161
 Dolton,162
@@ -170,7 +170,7 @@ Elmhurst,172
 Elmwood Park,173
 Elwood,174
 Evergreen Park,175
-Fairmont,176
+Fairmont City,176
 Fayette County,177
 Flossmoor,178
 Ford County,179
@@ -233,12 +233,12 @@ La Grange,235
 Lake Barrington,236
 Lake Bluff,237
 Lake Forest,238
-Lake In The Hills,239
+Lake in the Hills,239
 Lake Zurich,240
 Lakemoor,241
 Lakewood,242
 Lansing,243
-Lasalle County,244
+LaSalle County,244
 Lemont,245
 Libertyville,246
 Lily Lake,247
@@ -290,7 +290,7 @@ North Riverside,293
 Northbrook,294
 Northfield,295
 Northlake,296
-Oak Brook,297
+Oakbrook,297
 Oakbrook Terrace,298
 Oak Forest,299
 Oak Lawn,300
@@ -520,7 +520,7 @@ Hickory Hills Park District,537
 Highland Park Park District,538
 Hodgkins Park District,539
 Hoffman Estates Park District,540
-Homewood-Flossmoor Park District,541
+Homewood Flossmoor Park District,541
 Huntley Park District,542
 Inverness Park District,543
 Itasca Park District,544
@@ -528,9 +528,9 @@ Riverdale Park District,545
 Joliet Park District,546
 Justice Park District,547
 Kenilworth Park District,548
-La Grange Park District,549
+LaGrange Park District,549
 Lake Bluff Park District,550
-Lan Oak Park District,551
+Lan-Oak Park District,551
 Lemont Park District,552
 Lindenhurst Park District,553
 Lisle Park District,554
@@ -659,7 +659,7 @@ Indian Trails Library District,681
 Johnsburg Library District,682
 Justice Library District,683
 Kaneville Library District,684
-La Grange Library District,686
+LaGrange Library District,686
 La Grange Park Library District,687
 Lake Villa Library District,688
 Lemont Library District,689
@@ -673,7 +673,7 @@ Messenger Library District,696
 Mokena Library District,697
 Mount Prospect Library District,698
 McConathy Library District,699
-New Lennox Library District,700
+New Lenox Library District,700
 Niles Library District,701
 Nippersink Library District,702
 North Riverside Library District,703
@@ -707,7 +707,7 @@ Three Rivers Library District,731
 Town & Country Library District,732
 University Park Library District,733
 Vernon Area Library District,734
-Warren-Newport Library District,735
+Warren Newport Library District,735
 Warrenville Library District,736
 Wauconda Library District,737
 West Chicago Library District,738
@@ -738,7 +738,7 @@ Channahon FPD,769
 Countryside FPD,770
 Crete FPD,771
 Darien Woodridge FPD,774
-Deerfield Bannockburn FPD,775
+Deerfield-Bannockburn FPD,775
 East Dundee Countryside FPD,776
 East Joliet FPD,777
 Elburn Countryside FPD,778
@@ -891,10 +891,10 @@ York Township,950
 Zion Township,951
 Aurora Township FPD,952
 Big Rock FPD,953
-Carpentersville Countryside,954
+Carpentersville Countryside FPD,954
 Crystal Lake FPD,955
-Fox River Grove Fire Protection District,956
-Illinois Community College Board,957
+Fox River Grove FPD,956
+Illinois Community Colleges Board,957
 Illinois Sports Facilities Authority,958
 ISBE,959
 Norwood Township,960
@@ -905,7 +905,7 @@ Union FPD,964
 Warren-Waukegan FPD,965
 Greenwood,966
 Hoffman Estates FPD,967
-Housing Authority of Cook County,968
+Libertyville FPD,968
 Old Mill Creek,969
 Rockland FPD,970
 Symerton,971
@@ -917,3 +917,5 @@ Town-Country Library District,976
 Pleasantview FPD,977
 Barrington Countryside FPD,978
 North Aurora FPD,979
+Housing Authority of Cook County,980
+DeKalb Park District,994

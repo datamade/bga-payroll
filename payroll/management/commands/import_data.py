@@ -29,6 +29,15 @@ class Command(BaseCommand):
                                  'existing data for the given responding agency '
                                  'and reporting year',
                             action='store_true')
+        parser.add_argument('--no_input',
+                            help='Specify flag if you want to amend without '
+                                 'delete confirmation prompts',
+                            action='store_true')
+        parser.add_argument('--no_index',
+                            help='Specify flag if you do not want to update the '
+                                 'search index. Useful for uploading more than '
+                                 'one file in a row',
+                            action='store_true')
 
     def handle(self, *args, **options):
         try:
@@ -38,6 +47,8 @@ class Command(BaseCommand):
 
         self.reporting_year = options['reporting_year']
         self.amend = options.get('amend', False)
+        self.prompt_for_delete = not options.get('no_input', False)
+        self.update_index = not options.get('no_index', False)
 
         self.data_file = self.validate(options['data_file'])
 
@@ -92,6 +103,20 @@ class Command(BaseCommand):
 
         return self._units
 
+    def get_unit_from_slug_prompt(self):
+        knows_slug = input('Do you know the unit slug? [y/n] ')
+
+        if knows_slug.lower() == 'y':
+            slug = input('Please provide the slug of the Unit you wish to amend: ')
+
+            try:
+                unit = Unit.objects.get(slug=slug)
+            except Unit.DoesNotExist:
+                self.stdout.write('Could not find Unit with slug "{}"'.format(slug))
+                sys.exit()
+            else:
+                return unit
+
     def pre_import(self, s_file):
         if self.amend:
             existing_units = []
@@ -102,29 +127,35 @@ class Command(BaseCommand):
 
                 except Unit.DoesNotExist:
                     self.stdout.write('Could not find unit "{}"'.format(unit_name))
-                    self.prompt('Do you wish to continue?')
+
+                    unit = self.get_unit_from_slug_prompt()
+
+                    if unit:
+                        existing_units.append(unit)
+                    else:
+                        self.prompt('Do you wish to continue?')
 
                 except Unit.MultipleObjectsExist:
                     self.stdout.write('Found more than one Unit named "{}"'.format(unit_name))
-                    self.prompt('Do you know the unit slug?')
-                    slug = input('Please provide the slug of the Unit you wish to amend: ')
 
-                    try:
-                        unit = Unit.objects.get(slug=slug)
-                    except Unit.DoesNotExist:
-                        self.stdout.write('Could not find Unit with slug "{}"'.format(slug))
-                        sys.exit()
-                    else:
+                    unit = self.get_unit_from_slug_prompt()
+
+                    if unit:
                         existing_units.append(unit)
+                    else:
+                        self.prompt('Do you wish to continue?')
 
                 else:
                     existing_units.append(unit)
 
             for unit in existing_units:
                 salaries = unit.get_salaries(year=self.reporting_year)
-                self.prompt('Found {0} salaries for unit {1}.\n{2}\nDo you wish to delete? '.format(salaries.count(), unit.name, salaries))
+
+                if self.prompt_for_delete:
+                    self.prompt('Found {0} salaries for unit {1}.\n{2}\nDo you wish to delete? '.format(salaries.count(), unit.name, salaries))
+
                 summary = salaries.delete()
-                self.stdout.write('Deletion summary: {}'.format(summary))
+                self.stdout.write('Salary deletion summary for unit {0}: {1}'.format(unit.name summary))
 
     def upload(self):
         upload = Upload.objects.create()
@@ -162,29 +193,39 @@ class Command(BaseCommand):
     def post_import(self, s_file):
         if self.amend:
             jobs = Job.objects.filter(salaries__isnull=True)
-            self.prompt('Found {0} jobs with no salaries.\n{1}\nDo you wish to delete? '.format(jobs.count(), jobs))
+
+            if self.prompt_for_delete:
+                self.prompt('Found {0} jobs with no salaries.\n{1}\nDo you wish to delete? '.format(jobs.count(), jobs))
+
             summary = jobs.delete()
-            self.stdout.write('Deletion summary: {}'.format(summary))
+            self.stdout.write('Job deletion summary: {}'.format(summary))
 
             departments = Department.objects.annotate(n_employees=Count('positions__jobs')).filter(n_employees=0)
-            self.prompt('Found {0} departments with no jobs.\n{1}\nDo you wish to delete? '.format(departments.count(), departments))
+
+            if self.prompt_for_delete:
+                self.prompt('Found {0} departments with no jobs.\n{1}\nDo you wish to delete? '.format(departments.count(), departments))
+
             summary = departments.delete()
-            self.stdout.write('Deletion summary: {}'.format(summary))
+            self.stdout.write('Department deletion summary: {}'.format(summary))
 
             people = Person.objects.annotate(n_jobs=Count('jobs')).filter(n_jobs=0)
-            self.prompt('Found {0} people with no jobs.\n{1}\nDo you wish to delete? '.format(people.count(), people))
+
+            if self.prompt_for_delete:
+                self.prompt('Found {0} people with no jobs.\n{1}\nDo you wish to delete? '.format(people.count(), people))
+
             summary = people.delete()
-            self.stdout.write('Deletion summary: {}'.format(summary))
+            self.stdout.write('People deletion summary: {}'.format(summary))
 
         call_command('sync_pgviews')
 
         self.stdout.write('Synced pg_views for standardized file {}'.format(s_file.id))
 
-        call_command(
-            'build_solr_index',
-            reporting_year=self.reporting_year,
-            recreate=True,
-            chunksize=25
-        )
+        if self.update_index:
+            call_command(
+                'build_solr_index',
+                reporting_year=self.reporting_year,
+                recreate=True,
+                chunksize=25
+            )
 
-        self.stdout.write('Updated index for standardized_file {}'.format(s_file.id))
+            self.stdout.write('Updated index for standardized_file {}'.format(s_file.id))
