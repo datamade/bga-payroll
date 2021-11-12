@@ -48,14 +48,6 @@ class IndexView(TemplateView, ChartHelperMixin):
                                                  tags=['p', 'strong', 'a'],
                                                  attributes={'a': ['href', 'target'], '*': ['class', 'style']})
 
-        try:
-            state_officers_slug = Department.objects.get(name='State Officers',
-                                                         parent__name='Illinois').slug
-        except Department.DoesNotExist:
-            state_officers_slug = None
-
-        context['state_officers_slug'] = state_officers_slug
-
         return context
 
 
