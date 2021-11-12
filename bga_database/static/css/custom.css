@@ -1,3 +1,7 @@
+html {
+  scroll-padding-top: 70px; /* keeps sticky header from hiding content */
+}
+
 ul.ui-autocomplete > li {
   font-family: "acumin-pro", Helvetica, Arial, sans-serif;
 }
