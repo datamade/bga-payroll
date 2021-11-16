@@ -218,8 +218,8 @@ class DownloadView(TemplateView):
 
                 yield {
                     'name': name,
-                    'unit': employer.parent,
-                    'department': employer.name,
+                    'unit': salary.job.position.employer.parent,
+                    'department': salary.job.position.employer,
                     'title': salary.job.position.title,
                     'tenure': start_date,
                     'salary': salary.amount,
