@@ -21,12 +21,6 @@ var Employer = {
     searchLink.attr('href', url + '?' + searchParams.toString());
   },
 
-  // updateDownloadLink: function (linkId, year) {
-  //   var searchLink = $(linkId);
-  //   var urlParts = searchLink.attr('href').split('?');
-
-  // },
-
   updateDataYear: function (year) { $('.entity-data-year').text(year); },
 
   updateBaseBallStats: function (result) {
