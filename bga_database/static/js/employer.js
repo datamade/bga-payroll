@@ -11,7 +11,7 @@ var Employer = {
     return link;
   },
 
-  updateSearchLink: function (linkId, year) {
+  updateLink: function (linkId, year) {
     var searchLink = $(linkId);
     var urlParts = searchLink.attr('href').split('?');
     var url = urlParts[0];
@@ -100,8 +100,8 @@ var Unit = {
 
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 
-    Employer.updateSearchLink('#employee-search-link', year);
-    Employer.updateSearchLink('#employee-download-link', year);
+    Employer.updateLink('#employee-search-link', year);
+    Employer.updateLink('#employee-download-link', year);
 
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);
@@ -131,7 +131,7 @@ var Unit = {
 
       ChartHelper.make_composition_chart(result.composition_json);
 
-      Employer.updateSearchLink('#department-search-link', year);
+      Employer.updateLink('#department-search-link', year);
 
       $('.entity-department-statistics').removeClass('d-none');
     } else {
@@ -182,8 +182,8 @@ var Department = {
 
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 
-    Employer.updateSearchLink('#employee-search-link', year);
-    Employer.updateSearchLink('#employee-download-link', year);
+    Employer.updateLink('#employee-search-link', year);
+    Employer.updateLink('#employee-download-link', year);
 
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);
