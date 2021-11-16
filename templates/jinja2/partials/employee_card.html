@@ -1,12 +1,12 @@
 <div class="card-body">
-  <div class="d-flex flex-row justify-content-around">
-    <h3 class="card-title mb-4">
+  <div class="d-flex flex-row justify-content-around flex-wrap mb-4">
+    <h3 class="card-title">
       <i class="fas fa-users"></i> Employees
     </h3>
     <div class="d-flex justify-content-between w-75">
       <a class="lead" id="employee-search-link" href="/search/?entity_type=person&employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all (<span class="entity-headcount"></span>)</a>
       <div>
-        <a class="btn btn-primary" id="employee-download-link" href="/download/?employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">Download Data</a>
+        <a class="btn btn-download" id="employee-download-link" href="/download/?employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">Download Data</a>
       </div>
     </div>
   </div>

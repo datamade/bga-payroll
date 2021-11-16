@@ -78,7 +78,7 @@ div#intro-text {
   color: #fff;
 }
 
-.btn-primary:hover {
+.btn-primary:hover, .btn-download:hover {
   color: #fff200;
   background-color: #003a63;
   border-color: #003a63;
@@ -89,6 +89,21 @@ div#intro-text {
   color: #003a63;
   text-decoration: none;
 }
+
+.btn-download {
+  color: #fff;
+  background-color: #003a63;
+  border-color: #003a63;
+}
+
+@media only screen and (max-width: 900px) {
+  .btn-download {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+}
+
 
 .search-results > .table {
   margin: -1px;
