@@ -21,6 +21,12 @@ var Employer = {
     searchLink.attr('href', url + '?' + searchParams.toString());
   },
 
+  // updateDownloadLink: function (linkId, year) {
+  //   var searchLink = $(linkId);
+  //   var urlParts = searchLink.attr('href').split('?');
+
+  // },
+
   updateDataYear: function (year) { $('.entity-data-year').text(year); },
 
   updateBaseBallStats: function (result) {
@@ -101,6 +107,7 @@ var Unit = {
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 
     Employer.updateSearchLink('#employee-search-link', year);
+    Employer.updateSearchLink('#employee-download-link', year);
 
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);
@@ -182,6 +189,7 @@ var Department = {
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 
     Employer.updateSearchLink('#employee-search-link', year);
+    Employer.updateSearchLink('#employee-download-link', year);
 
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);
