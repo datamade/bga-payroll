@@ -5251,12 +5251,6 @@ button.bg-dark:focus {
     top: 0;
     z-index: 1020; 
   } 
-  
-  .sticky-top-button {
-    position: sticky;
-    top: 55px;
-    z-index: 1020; 
-  } 
 }
 
 .sr-only {

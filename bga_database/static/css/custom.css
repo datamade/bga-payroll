@@ -255,3 +255,11 @@ h5 {
 #story-feed-stories h5 > a {
   color: unset;
 }
+
+@supports (position: sticky) {
+  .sticky-top-button {
+    position: sticky;
+    top: 55px;
+    z-index: 1020; 
+  } 
+}
