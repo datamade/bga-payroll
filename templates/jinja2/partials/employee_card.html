@@ -5,9 +5,11 @@
     </h3>
     <div class="d-flex justify-content-between w-75">
       <a class="lead" id="employee-search-link" href="/search/?entity_type=person&employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all (<span class="entity-headcount"></span>)</a>
-      <div>
-        <a class="btn btn-download" id="employee-download-link" href="/download/?employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}" rel="nofollow">Download Data</a>
-      </div>
+      {% if authenticated %}
+        <div>
+          <a class="btn btn-download" id="employee-download-link" href="/download/?employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}" rel="nofollow">Download Data</a>
+        </div>
+      {% endif %}
     </div>
   </div>
 
