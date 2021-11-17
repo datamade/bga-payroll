@@ -101,7 +101,11 @@ var Unit = {
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 
     Employer.updateLink('#employee-search-link', year);
-    Employer.updateLink('#employee-download-link', year);
+
+    // check if it exists in case it's not on the page due to unauthenticated user
+    if ($('#employee-download-link').length) {
+      Employer.updateLink('#employee-download-link', year);
+    }
 
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);
@@ -183,7 +187,11 @@ var Department = {
     ChartHelper.make_payroll_expenditure_chart(result.payroll_expenditure);
 
     Employer.updateLink('#employee-search-link', year);
-    Employer.updateLink('#employee-download-link', year);
+    
+    // check if it exists in case it's not on the page due to unauthenticated user
+    if ($('#employee-download-link').length) {
+      Employer.updateLink('#employee-download-link', year);
+    }
 
     $('.entity-median-tp').text(result.median_tp);
     $('#entity-median-bp').text(result.median_bp);
