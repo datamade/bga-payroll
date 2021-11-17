@@ -105,7 +105,7 @@ class EmployerView(RedirectDispatchMixin, DetailView, ChartHelperMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         context['authenticated'] = self.request.COOKIES.get(settings.SALSA_AUTH_COOKIE_NAME)
 
         return context
