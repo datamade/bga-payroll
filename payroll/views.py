@@ -203,7 +203,7 @@ class DownloadView(TemplateView):
                    'title',
                    'tenure',
                    'salary',
-                   'overtime']
+                   'other']
         dict_writer = csv.DictWriter(f=buffer, fieldnames=headers)
 
         def row_generator():
@@ -223,7 +223,7 @@ class DownloadView(TemplateView):
                     'title': salary.job.position.title,
                     'tenure': start_date,
                     'salary': salary.amount,
-                    'overtime': salary.extra_pay
+                    'other': salary.extra_pay
                 }
 
         # DictWriter.writeheader() doesn't work in python 3.5,
