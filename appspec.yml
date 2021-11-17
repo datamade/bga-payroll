@@ -20,3 +20,10 @@ hooks:
     - location: scripts/after_install.sh
       timeout: 1000
       runas: root
+
+branch_config:
+  master:
+    deploymentGroupName: staging
+
+  deploy:
+    deploymentGroupName: production
