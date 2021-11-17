@@ -203,7 +203,7 @@ class DownloadView(TemplateView):
                    'title',
                    'tenure',
                    'salary',
-                   'overtime']
+                   'other']
         dict_writer = csv.DictWriter(f=buffer, fieldnames=headers)
 
         def row_generator():
