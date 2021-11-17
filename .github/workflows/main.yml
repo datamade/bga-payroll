@@ -50,6 +50,11 @@ jobs:
         pytest -sv
         jshint bga_database/static/js/*.js
   deploy:
+    if:
+      contains('
+        refs/heads/master
+        refs/heads/deploy
+      ', github.ref)
     needs: test
     name: Deploy to AWS
     runs-on: ubuntu-latest
