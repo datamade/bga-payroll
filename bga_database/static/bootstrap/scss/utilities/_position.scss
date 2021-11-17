@@ -35,3 +35,11 @@ $positions: static, relative, absolute, fixed, sticky;
     z-index: $zindex-sticky;
   }
 }
+
+.sticky-top-button {
+  @supports (position: sticky) {
+    position: sticky;
+    top: 55px;
+    z-index: $zindex-sticky;
+  }
+} 
