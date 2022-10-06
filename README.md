@@ -97,7 +97,12 @@ docker-compose exec app python manage.py build_solr_index --reporting_year 2018 
 
 #### Upload a data file
 
-First, make a formatted data file.
+First, make a formatted data file in the `data/raw` folder. 
+
+* The file should have a name like payroll-actual-*.csv
+* The data should have these columns in this order: employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,year
+
+`data/raw/payroll-actual-2017-pt-1.csv`
 
 ```bash
 docker-compose exec app make import/payroll-actual-2017-pt-1.csv
