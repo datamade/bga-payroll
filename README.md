@@ -95,26 +95,12 @@ N.b., if you need search for development, you also need to build the search inde
 docker-compose exec app python manage.py build_solr_index --reporting_year 2018 --entity-types units,departments --chunksize=25
 ```
 
-#### Create and upload a data file
+#### Upload a data file
 
 First, make a formatted data file.
 
 ```bash
-docker-compose exec app make payroll-actual-2017-pt-1.csv
+docker-compose exec app make import/payroll-actual-2017-pt-1.csv
 ```
 
-This will process `data/raw/payroll-actual-2017-pt-1.csv` into a file called `payroll-actual-2017-pt-1.csv`.
-
-Next, create a superuser, so you can log into the data import interface.
-
-```bash
-docker-compose exec app python manage.py createsuperuser
-```
-
-Finally, go to http://localhost:8000/data-import/ and follow the steps to upload the CSV you just made. Don't forget to put in the data year!
-
-It will take a bit to complete each step of the data import. You can refresh the page to see if it's ready to move on to the next section. (The status will have changed.) You can also keep track of progress in your worker terminal by running:
-
-```bash
-docker-compose logs -f worker
-```
+This will process and import the file `data/raw/payroll-actual-2017-pt-1.csv`. So to add data, first put the new data in that directory with that naming convention.
