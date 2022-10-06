@@ -50,7 +50,7 @@ DataMaders can make or request a dump of the staging database in the #bga-payrol
 To create a dump, you must have SSH access to the staging server. Provided that's true, run the following command in your terminal, swapping in the correct value for `${STAGING_URL}`:
 
 ```bash
-ssh ubuntu@${STAGING_URL} pg_dump -U postgres -Fc -O -d bga_payroll > bga_payroll.dump
+ssh ubuntu@${STAGING_URL} pg_dump -U postgres -Fc -O -d bga_payroll -h ${RDS_URL} > bga_payroll.dump
 ```
 
 When restoring a database, it's important that your local database is empty. So, remove your data volumes prior to restoring.
