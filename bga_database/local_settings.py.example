@@ -23,7 +23,7 @@ AWS_STORAGE_BUCKET_NAME = '<bucket_name>'
 AWS_ACCESS_KEY_ID = '<key>'
 AWS_SECRET_ACCESS_KEY = '<secret>'
 
-REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
+REDIS_HOST = os.getenv('REDIS_HOST', 'bga-payroll-redis')
 REDIS_PORT = 6379
 REDIS_DB = 0
 REDIS_FMT = 'redis://{host}:{port}/{db}'
