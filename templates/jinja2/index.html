@@ -27,21 +27,15 @@
     <div class="row">
       <div class="jumbotron bg-light">
         <div class="row mb-lg-5">
-          <div class="col-md-12">
-            <h1 class="mb-5">Search Illinois public employee salary data</h1>
-          </div>
-          <div class="col-md-3 align-self-center d-none d-lg-block">
-            <img src="{{ static('img/capitol-dome.png') }}" class="pr-2 img-fluid bga-blue-filter" />
-          </div>
           <div class="col-md align-self-center">
-              <p class="lead">Every year, the Better Government Association compiles <strong class="bg-warning">Illinois’ most comprehensive database</strong> to review, explore and compare compensation for public employees throughout Illinois. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
+              <p class="lead">Every year, the Better Government Association compiles Illinois’ most comprehensive database to review, explore and compare compensation for public employees throughout Illinois. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
           </div>
         </div>
 
         <form id="entity-form">
           <div class="row">
             <div class="col-md mb-3">
-              <strong class="mr-3">I'm looking for a:</strong>
+              <strong class="mr-3 text-uppercase">I'm looking for a</strong>
               <div class="form-check form-check-inline">
                 <input class="form-check-input entity-type-check" type="checkbox" id="unit-check" value="unit" checked>
                 <label class="form-check-label" for="unit-check"><i class="fas fa-building"></i> Unit</label>
@@ -60,7 +54,7 @@
           <div class="row">
             <div class="col-md">
               <div class="input-group">
-                <input type="text" id="entity-lookup" class="form-control form-control-lg" autofocus />
+                <input type="text" id="entity-lookup" class="form-control form-control-lg" autofocus placeholder="&#xF002; Search our archives" />
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-primary btn-lg" id="submit-button" disabled>
                     <i class="fas fa-search"></i> Search
@@ -70,14 +64,7 @@
             </div>
           </div>
 
-          <div class="row">
-            <div class="col-md mt-3 text-smaller">
-              <strong class="pr-2">For example,</strong>
-              <a href="/search/?name=Cook County&entity_type=unit" class="pr-2"><i class="fa-fw fas fa-building"></i> Cook County</a>
-              <a href="/search/?name=Chicago Police Department&entity_type=department" class="pr-2"><i class="fa-fw far fa-building"></i> Chicago Police Department</a>
-              <a href="/search/?name=Toni Preckwinkle&entity_type=person" class="pr-2"><i class="fa-fw far fa-address-card"></i> Toni Preckwinkle</a>
-            </div>
-          </div>
+          
         </form>
       </div><!-- .jumbotron -->
     </div>
@@ -89,14 +76,10 @@
             <div class="col-9 my-auto">
               <h3>What's inside?</h3>
             </div>
-            <div class="col-3 my-auto">
+            <!-- <div class="col-3 my-auto">
               {% include 'partials/year_selector.html' %}
-            </div>
+            </div> -->
           </div>
-        </div>
-
-        <div class="alert alert-secondary my-4" role="alert">
-          <i class="fas fa-info-circle fa-fw"></i> <strong>Use the "Data Year" dropdown menu</strong> to view data from other years.
         </div>
 
         <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime, sick pay and vacation) for <strong id="index-salary-count"></strong> state, municipal, school and other government employees across Illinois. It covers <strong id="index-unit-count"></strong> units of government. We’ve recently updated the database to highlight how much is being spent in base salaries and now also extra pay. We also have improved the site’s navigation to make it easier to use. <a href="{{ url('user_guide') }}">Learn how to use the database and more about the recent changes we’ve made</a>.</p>
@@ -107,23 +90,15 @@
       <div class="col-md">
         <h5>Distribution of public salaries in <span id="index-year"></span></h5>
       </div>
+      <!-- insert year select here -->
+      <div class="col-3 my-auto">
+        {% include 'partials/year_selector.html' %}
+      </div>
     </div>
 
     <div class="row">
       <div class="col-md">
         <div id="employee-distribution-chart"></div>
-      </div>
-    </div>
-
-    <div class="row mt-4">
-      <div class="col-md-8 offset-md-2 alert alert-primary">
-        <p>This database is resource intensive, both in money and time. We request, compile, organize and check data we receive from hundreds of taxing bodies across Illinois and put it into an easy-to-use site for you. Like what you see? <strong>Please consider making a donation to help us continue this work.</strong></p>
-
-        <div class="text-center">
-          <a class="btn btn-lg btn-success" href="https://donate.bettergov.org/?utm_source=database&utm_medium=other" target="_blank">
-            Donate to the BGA
-          </a>
-        </div>
       </div>
     </div>
 
