@@ -33,7 +33,7 @@ services:
 
   worker:
     container_name: bga-payroll-worker
-    image: bga-payroll:latest
+    image: ghcr.io/datamade/bga-payroll:latest
     stdin_open: true
     tty: true
     volumes:
