@@ -308,7 +308,7 @@ header hr {
   letter-spacing: 2px;
 }
 
-.transparent-btn { /* not used as of yet, intended for buttons on light bg's */
+.transparent-btn {
   border: 2px solid #FAC346;
   font-family: "halyard-display", Helvetica, Arial, sans-serif;
   font-weight: 600;
@@ -358,7 +358,7 @@ footer {
   margin-top: 25px;
 }
 
-.footer-middle, .footer-middle ul, .footer-bottom {
+.footer-middle, .footer-middle ul, .footer-bottom, .story-item {
   display: flex;
   flex-direction: row;
 }
@@ -413,8 +413,84 @@ footer .fill-btn {
 
 #entity-lookup {
   font-family: FontAwesome, "halyard-text", "Arial Narrow", sans-serif;
+  border-radius: 0px;
+  margin-right: 15px;
+}
+
+#submit-button {
+  border-radius: 0px;
 }
 
 #year-toggle {
   display: flex;
+}
+
+#yearDropdownMenuButton {
+  background-color: transparent;
+  color: gray;
+  border-radius: 0px;
+}
+
+.jumbotron {
+  background-color: transparent;
+}
+
+input:placeholder-shown {
+   font-style: italic;
+}
+
+.inspiration {
+  display: flex;
+  background-color: #D8E3FC;
+  align-items: center;
+  width: 90%;
+  margin: auto;
+  /*height: 491px;*/
+}
+
+.inspiration-left {
+  width: 49%;
+  padding: 80px;
+}
+
+.inspiration-right {
+  width: 49%;
+}
+
+.inspiration-card {
+  flex-direction: row;
+}
+
+.inspiration-card .transparent-btn {
+  width: 229px;
+  height: 56px;
+  line-height: 40px;
+}
+
+.vl {
+  border-left: 1px solid rgb(0 0 0 / 15%);
+  height: 80%;
+  width: 2%;
+  margin-left: 50px;
+  margin-right: 50px;
+}
+
+.section-divider {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+.story-img {
+  height: 169px;
+  width: 273px;
+  padding-left: 0px;
+}
+
+.center {
+  margin: auto;
+}
+
+.tall-btn {
+  padding-top: 22px;
+  padding-bottom: 22px;
 }

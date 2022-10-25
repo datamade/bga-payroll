@@ -23,9 +23,16 @@
 {% endif %}
 
 <div class="row">
+  <div class="col-md-3 donate-card">
+    {% if not show_donate_banner %}
+      {% include 'partials/donate.html' %}
+    {% endif %}
+    <!-- {% include 'partials/story_feed.html' %} -->
+  </div>
+
   <div class="col-md-7 offset-md-1">
     <div class="row">
-      <div class="jumbotron bg-light">
+      <div class="jumbotron">
         <div class="row mb-lg-5">
           <div class="col-md align-self-center">
               <p class="lead">Every year, the Better Government Association compiles Illinois’ most comprehensive database to review, explore and compare compensation for public employees throughout Illinois. We do this because the BGA believes detailing how tax dollars are spent serves the public interest.</p>
@@ -56,7 +63,7 @@
               <div class="input-group">
                 <input type="text" id="entity-lookup" class="form-control form-control-lg" autofocus placeholder="&#xF002; Search our archives" />
                 <div class="input-group-append">
-                  <button type="submit" class="btn btn-primary btn-lg" id="submit-button" disabled>
+                  <button type="submit" class="btn transparent-btn" id="submit-button" disabled>
                     <i class="fas fa-search"></i> Search
                   </button>
                 </div>
@@ -68,17 +75,14 @@
         </form>
       </div><!-- .jumbotron -->
     </div>
-
+    <hr class="section-divider">
     <div class="row mt-4">
       <div class="col-md">
         <div class="clearfix mb-3">
           <div class="row h-100">
             <div class="col-9 my-auto">
-              <h3>What's inside?</h3>
+              <h5 class="text-uppercase">What's inside</h5>
             </div>
-            <!-- <div class="col-3 my-auto">
-              {% include 'partials/year_selector.html' %}
-            </div> -->
           </div>
         </div>
 
@@ -86,11 +90,10 @@
       </div>
     </div>
 
-    <div class="row mb-3">
+    <div class="row mb-3 mt-4">
       <div class="col-md">
-        <h5>Distribution of public salaries in <span id="index-year"></span></h5>
+        <h3>Distribution of Public Salaries in <span id="index-year"></span></h3>
       </div>
-      <!-- insert year select here -->
       <div class="col-3 my-auto">
         {% include 'partials/year_selector.html' %}
       </div>
@@ -103,14 +106,12 @@
     </div>
 
     <div class="mt-4"></div>
-  </div>
 
-  <div class="col-md-3">
-    {% if not show_donate_banner %}
-      {% include 'partials/donate.html' %}
-    {% endif %}
+    <hr class="section-divider">
+
     {% include 'partials/story_feed.html' %}
   </div>
+  
 </div>
 {% endblock %}
 
