@@ -19,13 +19,14 @@ function populateStoryFeed() {
                 })
             );
 
-            var type = $('<div class="text-uppercase"/>').text(
+            var type = $('<div class="text-uppercase story-detail mb-2"/>').text(
                     // TODO: see if there is a category for 
                     // each story to display
                     'Investigations'
                 );
 
-            var title = $('<h5 />').append(
+            // Giving this a class of h3 applies size, but preserves color
+            var title = $('<h5 class="h3"/>').append(
                 $('<a />').attr({
                     'href': entry.link,
                     'target': '_blank'
@@ -33,7 +34,7 @@ function populateStoryFeed() {
             );
 
             var summary = $('<p class="text-serif my-2" />').text(entry.summary);
-            var date = $('<p class="mb-0" />').text(entry.date);
+            var date = $('<p class="mb-0 story-detail" />').text(entry.date);
 
             itemLeft.append(image)
             itemRight.append(type, title, summary, date)

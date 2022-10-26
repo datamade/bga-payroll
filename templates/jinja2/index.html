@@ -27,7 +27,6 @@
     {% if not show_donate_banner %}
       {% include 'partials/donate.html' %}
     {% endif %}
-    <!-- {% include 'partials/story_feed.html' %} -->
   </div>
 
   <div class="col-md-7 offset-md-1">
@@ -39,10 +38,10 @@
           </div>
         </div>
 
-        <form id="entity-form">
+        <form id="entity-form" class="mt-5">
           <div class="row">
             <div class="col-md mb-3">
-              <strong class="mr-3 text-uppercase">I'm looking for a</strong>
+              <strong class="mr-3 text-uppercase letter-spacing-sm">I'm looking for a</strong>
               <div class="form-check form-check-inline">
                 <input class="form-check-input entity-type-check" type="checkbox" id="unit-check" value="unit" checked>
                 <label class="form-check-label" for="unit-check"><i class="fas fa-building"></i> Unit</label>
@@ -61,10 +60,10 @@
           <div class="row">
             <div class="col-md">
               <div class="input-group">
-                <input type="text" id="entity-lookup" class="form-control form-control-lg" autofocus placeholder="&#xF002; Search our archives" />
+                <input type="text" id="entity-lookup" class="form-control form-control-lg" autofocus placeholder="&#xf002; Search our archives" />
                 <div class="input-group-append">
-                  <button type="submit" class="btn transparent-btn" id="submit-button" disabled>
-                    <i class="fas fa-search"></i> Search
+                  <button type="submit" class="btn transparent-btn text-uppercase" id="submit-button" disabled>
+                    Search
                   </button>
                 </div>
               </div>
@@ -81,20 +80,20 @@
         <div class="clearfix mb-3">
           <div class="row h-100">
             <div class="col-9 my-auto">
-              <h5 class="text-uppercase">What's inside</h5>
+              <h5 class="text-uppercase letter-spacing-sm">What's inside</h5>
             </div>
           </div>
         </div>
 
-        <p>The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime, sick pay and vacation) for <strong id="index-salary-count"></strong> state, municipal, school and other government employees across Illinois. It covers <strong id="index-unit-count"></strong> units of government. We’ve recently updated the database to highlight how much is being spent in base salaries and now also extra pay. We also have improved the site’s navigation to make it easier to use. <a href="{{ url('user_guide') }}">Learn how to use the database and more about the recent changes we’ve made</a>.</p>
+        <p class="line-height-m">The <strong>Illinois Public Salaries Database</strong> contains the base and additional pay (such as overtime, sick pay and vacation) for <strong id="index-salary-count"></strong> state, municipal, school and other government employees across Illinois. It covers <strong id="index-unit-count"></strong> units of government. We’ve recently updated the database to highlight how much is being spent in base salaries and now also extra pay. We also have improved the site’s navigation to make it easier to use. <a href="{{ url('user_guide') }}">Learn how to use the database and more about the recent changes we’ve made</a>.</p>
       </div>
     </div>
 
     <div class="row mb-3 mt-4">
       <div class="col-md">
-        <h3>Distribution of Public Salaries in <span id="index-year"></span></h3>
+        <h3 class="pt-2 text-blue">Distribution of Public Salaries in <span id="index-year"></span></h3>
       </div>
-      <div class="col-3 my-auto">
+      <div class="col-5 my-auto">
         {% include 'partials/year_selector.html' %}
       </div>
     </div>

@@ -324,6 +324,7 @@ h6, .h6 {
   font-size: 1rem; }
 
 .lead {
+  line-height: 1.2;
   font-size: 150%;
   font-weight: 400; }
 
@@ -1526,6 +1527,7 @@ textarea.form-control {
     color: #666666; }
 
 .form-check-label {
+  font-weight: 300;
   margin-bottom: 0; }
 
 .form-check-inline {

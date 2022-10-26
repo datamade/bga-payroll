@@ -139,11 +139,12 @@ Search results
 {% endif %}
 
 <script type="text/javascript">
-    {% if allowed %}
+    //TODO: uncomment these lines before finalizing
+    // {% if allowed %}
     initSearch({{ request.GET.dict()|safe }});
-    {% elif not get_messages(request)|length %}
-    $('#loginModal').modal();
-    {% endif %}
+    // {% elif not get_messages(request)|length %}
+    // $('#loginModal').modal();
+    // {% endif %}
 
     $('[id*="facet-toggle"]').click(function toggleClick(e) {
         // On click, content has not yet been expanded, i.e., if aria-expanded
