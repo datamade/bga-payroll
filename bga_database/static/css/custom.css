@@ -501,6 +501,14 @@ input[type=checkbox] {
     display: none;
   }
 
+  .display-block-md {
+    display: block;
+  }
+
+  .col-md-10 {
+  flex: 0 0 83.3333333333%;
+  max-width: 83.3333333333%; }
+
   #story-feed {
     padding-left: 15px;
     padding-right: 15px;
@@ -530,6 +538,23 @@ input[type=checkbox] {
 
   .story-img {
     display: none;
+  }
+
+  footer .transparent-btn {
+    margin-right: 0;
+  }
+
+  .footer-middle {
+    flex-direction: column;
+  }
+
+  .footer-middle .navbar-brand{
+    margin: auto;
+  }
+
+  .footer-nav {
+    flex-wrap: wrap;
+    justify-content: space-around;
   }
 }
 
