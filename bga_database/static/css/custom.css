@@ -69,7 +69,8 @@ div[id*="chart"] {
   padding-top: 5px; /* offset top padding for proper alignment */
 }
 
-.badge, small, div#intro-text, .btn, .list-group, .page-link, .header-bottom p {
+.badge, small, div#intro-text, .btn, .list-group,
+.page-link, .header-bottom p, .navbar, .body-sans-serif {
   font-family: "halyard-text", Helvetica, Arial, sans-serif;
 }
 
@@ -251,8 +252,20 @@ h5 {
   font-family: "ibm-plex-serif", "Times New Roman", "DejaVu Serif", serif;
 }
 
-.story-header {
+.text-black {
   color: #000000;
+}
+
+.text-blue {
+  color: #003282;
+}
+
+.bg-light-gray {
+  background-color: #F3F5F6;
+}
+
+.bg-blue {
+  background-color: #003282;
 }
 
 #story-feed-stories h5 {
@@ -320,7 +333,14 @@ header hr {
 }
 
 .transparent-btn, .transparent-btn:disabled {
-  border: 2px solid #FAC346;
+  border: 2px solid #FAC346; 
+}
+
+.transparent-btn-gray {
+  border: 2px solid #C7CCCD;
+}
+
+.transparent-btn, .transparent-btn:disabled, .transparent-btn-gray {
   font-family: "halyard-display", Helvetica, Arial, sans-serif;
   font-weight: 600;
   color: black;
@@ -330,23 +350,22 @@ header hr {
 
 #donate-header {
   width: 141px;
+  margin-right: 1rem;
 }
 
 .search-btn {
   background-color: #003282;
+  font-family: "halyard-display", Helvetica, Arial, sans-serif;
+  font-weight: 600;
   color: white;
-  width: 56px;
-  margin-right: 10px;
+  width: fit-content;
+  letter-spacing: 2px;
 }
 
 .header-bottom h1 {
   font-family: "ivypresto-display", Helvetica, Arial, sans-serif;
   font-weight: 600;
   color: white;
-}
-
-.navbar {
-  font-family: "halyard-text", Helvetica, Arial, sans-serif;
 }
 
 .alert-primary a {
@@ -442,10 +461,11 @@ footer .fill-btn {
   display: flex;
 }
 
-#yearDropdownMenuButton {
-  background-color: transparent;
+.year-dropdown-button {
+  background-color: white;
   color: gray;
   border-radius: 0px;
+  border-color: #C7CCCD;
 }
 
 .jumbotron {
@@ -487,7 +507,16 @@ input[type=checkbox] {
   line-height: 40px;
 }
 
+.display-collapse-sm {
+  display: none;
+}
+
 @media (max-width: 768px) {
+  .header-bottom {
+    margin-left: 25px;
+    margin-right: 25px;
+  }
+
   .donate-card {
     padding: 0;
   }
@@ -505,9 +534,18 @@ input[type=checkbox] {
     display: block;
   }
 
-  .col-md-10 {
+  .display-collapse-sm {
+    display: block;
+  }
+
+  .year-selector {
   flex: 0 0 83.3333333333%;
   max-width: 83.3333333333%; }
+
+  .search-results{
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
 
   #story-feed {
     padding-left: 15px;
@@ -590,10 +628,6 @@ input[type=checkbox] {
 
 .font-size-m {
   font-size: 1rem;
-}
-
-.text-blue {
-  color: #003282;
 }
 
 .letter-spacing-sm {

@@ -10,6 +10,9 @@
 
 {% block content %}
 <div class="row">
+  <div class="col-md-3">
+    {% include 'partials/donate.html' %}
+  </div>
   <div class="col-md-7 offset-md-1">
     <div class="row">
       <nav aria-label="breadcrumb">
@@ -18,7 +21,9 @@
         </ol>
       </nav>
     </div>
-
+    <span class="body-sans-serif text-uppercase">
+        Department
+    </span>
     <div class="sticky-top-button">
       <div class="float-right pt-2 ml-5">
         {% include 'partials/year_selector.html' %}
@@ -26,18 +31,8 @@
     </div>
 
     <div class="row">
-      <div class="col-md">
-        <h2 class="mb-3"><i class="far fa-building"></i> {{ entity }}</h2>
-
-        <div class="badge badge-primary">
-          {% if entity.universe %}{{ entity.universe }}{% else %}Department{% endif %}
-        </div>
-
-        {% if entity.parent.taxonomy %}
-        <div class="badge badge-secondary">
-          {{ entity.parent.taxonomy }}
-        </div>
-        {% endif %}
+      <div class="col-md pl-0">
+        <h2 class="mb-3">{{ entity }}</h2>
       </div>
     </div>
 
@@ -51,10 +46,10 @@
       <div class="col-md">
         <div class="card mb-4">
           <div class="card-body">
-            <div class="row">
-              <div class="col-lg-6" id="intro-text">
+            <div class="row flex-column">
+              <div id="intro-text">
                 <h3 class="card-title mb-4">
-                  <i class="fas fa-list"></i> Summary
+                  Summary
                 </h3>
 
                 <p><strong>{{ entity }}</strong> made up <strong id="entity-percent-of-expenditure"></strong> of the total payroll expenditure of <strong><a href='{{ url("unit", kwargs={"slug": entity.parent.slug}) }}'>{{ entity.parent }}</a></strong> in <strong class="entity-data-year"></strong>.</p>
@@ -65,7 +60,7 @@
                   <p>This department's median salary is higher than <strong id="entity-salary-percentile"></strong> of other <strong><a href='{{ url("search") }}?universe="{{ entity.universe }}"'>{{ entity.universe }}s</a></strong> in the <strong>{{ entity.parent.taxonomy }}</strong> category.</p>
                 {% endif %}
               </div>
-              <div id="employee-distribution-chart" class="col-lg-6"></div>
+              <div id="employee-distribution-chart"></div>
             </div>
           </div>
         </div>
@@ -82,10 +77,6 @@
     </div>
   </div>
 
-  <div class="col-md-3">
-    {% include 'partials/donate.html' %}
-    {% include 'partials/story_feed.html' %}
-  </div>
 </div>
 
 {% endblock %}

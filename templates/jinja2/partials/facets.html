@@ -1,26 +1,69 @@
 <div id="accordian">
     <div class="card mb-3">
-        <div class="card-header bg-dark">
-            <h5 class="text-light">
+        <div class="card-header bg-light-gray">
+            <h3>
                 Filter <strong>{{ entity_type.title() }}</strong> by
-                <button id="{{ entity_type }}-facet-toggle" class="btn btn-sm btn-link bg-dark text-light float-right" align="right" data-toggle="collapse" data-target="#{{ entity_type }}-facets" aria-expanded="false">
+                <button id="{{ entity_type }}-facet-toggle" class="btn btn-sm btn-link bg-dark text-light float-right display-collapse-sm" align="right" data-toggle="collapse" data-target="#{{ entity_type }}-facets" aria-expanded="false">
                     <i class="fa fa-chevron-circle-down" aria-hidden="true"></i>
                     Expand
                 </button>
-            </h5>
+            </h3>
         </div>
-        <div class="collapse collapsed" id="{{ entity_type }}-facets" data-parent="#accordion">
+        <div class="" id="{{ entity_type }}-facets" data-parent="#accordion">
+            <div class="bg-light-gray list-group-item border-0">
+                <h5 class="text-blue letter-spacing-sm text-uppercase">Data year</h5>
+                <div class="dropdown text-center">
+                  <a class="btn btn-lg w-100 year-dropdown-button dropdown-toggle text-left mb-2" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{ request.GET.get('year', data_years.0) }}
+                  </a>
+
+                  <div class="dropdown-menu w-100" aria-labelledby="dropdownMenuLink">
+                    {% for year in data_years %}
+                        <a class="dropdown-item" href="{{ request.path }}?{{ request|query_transform(drop_keys=['year']) }}&year={{ year }}">{{ year }}</a>
+                    {% endfor %}
+                  </div>
+                </div>
+            </div>
             <ul class="list-group list-group-flush">
+                <li class="list-group-item bg-light-gray border-0">
+                    <strong class="letter-spacing-sm text-blue">Type</strong><br />
+
+                    <div class="row">
+                        <div class="col-12">
+                        <input type="checkbox">
+                        <a class="text-black" href="{{ request.path }}?entity_type=unit&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}">
+                            <i class="fas fa-building"></i> Unit
+                        </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                        <input type="checkbox">
+                        <a class="text-black" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}">
+                            <i class="far fa-building"></i> Department
+                        </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                        <input type="checkbox">
+                        <a class="text-black" href="{{ request.path }}?entity_type=person&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}">
+                            <i class="far fa-address-card"></i> Person
+                        </a>
+                        </div>
+                    </div>
+                </li>
                 {% for facet, value_counts in entity_facets.items() %}
                     {% if value_counts %}
-                    <li class="list-group-item">
+                    <li class="list-group-item bg-light-gray border-0">
                         {% with current_facet=facet.split(',')[0]|param_from_index %}
-                            <strong>{{ current_facet.title() }}</strong><br />
+                            <strong class="letter-spacing-sm text-blue">{{ current_facet.title() }}</strong><br />
 
                             {% for vc in value_counts %}
                                 <div class="row">
-                                    <div class="col-10">
-                                    <a href="/search/?{% if not requested_entities %}entity_type={{ entity_type }}&{% endif %}{{ [(facet.split(',')[0], vc.value)]|url_from_facet(request) }}">
+                                    <div class="col-12">
+                                    <input type="checkbox">
+                                    <a class="text-black" href="/search/?{% if not requested_entities %}entity_type={{ entity_type }}&{% endif %}{{ [(facet.split(',')[0], vc.value)]|url_from_facet(request) }}">
                                         {% if current_facet in ('employer', 'parent') %}
                                             {{ vc.value }}
                                         {% elif current_facet in ('headcount', 'salary', 'expenditure') %}
@@ -29,9 +72,6 @@
                                             {{ vc.value }}
                                         {% endif %}
                                     </a>
-                                    </div>
-                                    <div class="col-2">
-                                    <span class="badge badge-pill badge-light float-right">{{ vc.count }}</span>
                                     </div>
                                 </div>
 

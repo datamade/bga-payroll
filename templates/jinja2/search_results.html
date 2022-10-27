@@ -21,28 +21,7 @@ Search results
             </nav>
         </div>
 
-        <div class="row">
-            <div class="col">
-                <h2>Search</h2>
-            </div>
-        </div>
-
-        <form id="entity-form">
-            <div class="row">
-                <div class="col-md">
-                    <div class="input-group">
-                        <input type="text" id="entity-lookup" class="form-control form-control-lg" value="{{ request.GET.get('name', '') }}" autofocus />
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary btn-lg" id="submit-button"{% if request.GET.get('name', '')|length < 3 %} disabled{% endif %}>
-                                <i class="fas fa-search"></i> Search
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <div class="row mb-4 mt-3">
+        <!-- <div class="row mb-4 mt-3">
             <div class="col">
                 <h5 class="mr-2 d-inline text-dark">Result type:</h5> <a class="btn {% if 'entity_type' in request.GET and 'unit' in request.GET['entity_type'] %}bg-light{% endif %} p-1 rounded" href="{{ request.path }}?entity_type=unit&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="fas fa-building"></i> Unit</a> &nbsp;
                 <a class="btn {% if 'entity_type' in request.GET and 'department' in request.GET['entity_type'] %}bg-light{% endif %} p-1" href="{{ request.path }}?entity_type=department&{{ request|query_transform(drop_keys=['entity_type', 'page']) }}"><i class="far fa-building"></i> Department</a> &nbsp;
@@ -51,26 +30,11 @@ Search results
                 {% set drop_keys=request.GET.keys() | reject('in', ['entity_type', 'name']) | list %}
                 <a class="p-1 btn {% if drop_keys %}text-danger" href="{{ request.path }}?{{ request|query_transform(drop_keys=drop_keys) }}"{% else %}disabled"{% endif %}><i class="fas fa-times"></i> Clear filters</a>
             </div>
-        </div>
+        </div> -->
 
         <div class="row">
             {% if results %}
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <h5 class="text-dark">Data year</h5>
-                    <div class="dropdown">
-                      <a class="btn btn-lg w-100 bg-light dropdown-toggle text-left" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        {{ request.GET.get('year', data_years.0) }}
-                      </a>
-
-                      <div class="dropdown-menu w-100" aria-labelledby="dropdownMenuLink">
-                        {% for year in data_years %}
-                            <a class="dropdown-item" href="{{ request.path }}?{{ request|query_transform(drop_keys=['year']) }}&year={{ year }}">{{ year }}</a>
-                        {% endfor %}
-                      </div>
-                    </div>
-                </div>
-
+            <div class="col-md-3">
                 {% if request.GET.entity_type %}
                     {% set requested_entities = request.GET.entity_type.split(',') %}
                 {% else %}
@@ -79,16 +43,39 @@ Search results
                 {% for entity_type, entity_facets in facets.items() if entity_type in requested_entities %}
                     {% include 'partials/facets.html' %}
                 {% endfor %}
-            </div>
-            <div class="col-md-8">
+
                 {% include 'partials/donate.html' %}
+            </div>
+            <div class="col-md-9">
+                <div class="row">
+                    <div class="col">
+                        <h2>Search</h2>
+                    </div>
+                </div>
+
+                <form id="entity-form" class="mb-5">
+                    <div class="row">
+                        <div class="col-md">
+                            <div class="input-group">
+                                <input type="text" id="entity-lookup" class="form-control form-control-lg" value="{{ request.GET.get('name', '') }}" autofocus placeholder="&#xf002; Search our archives" />
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn transparent-btn text-uppercase" id="submit-button"{% if request.GET.get('name', '')|length < 3 %} disabled{% endif %}>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <hr class="section-divider">
+                <h6 class="text-uppercase letter-spacing-sm mb-3">Search Results</h6>
                 <div class="card search-results">
                     <table class="table">
                         <tbody>
                             {% for result in results %}
                                 <tr>
-                                    <td>
-                                        {{ loop.index0 + page_obj.start_index() }}.
+                                    <td class="px-0">
+                                        <!-- {{ loop.index0 + page_obj.start_index() }}. -->
                                         {% include 'partials/search_result.html' %}
                                     </td>
                                 </tr>
@@ -101,7 +88,7 @@ Search results
                 <div class="mb-3">
                     <h5 class="text-dark">Data year</h5>
                     <div class="dropdown">
-                      <a class="btn btn-lg w-100 bg-light dropdown-toggle text-left" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <a class="btn btn-lg w-100 year-dropdown-button dropdown-toggle text-left" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         {{ request.GET.get('year', data_years.0) }}
                       </a>
 
@@ -112,8 +99,29 @@ Search results
                       </div>
                     </div>
                 </div>
+
             </div>
             <div class="col-md-8">
+                <div class="row">
+                    <div class="col">
+                        <h2>Search</h2>
+                    </div>
+                </div>
+
+                <form id="entity-form" class="mb-5">
+                    <div class="row">
+                        <div class="col-md">
+                            <div class="input-group">
+                                <input type="text" id="entity-lookup" class="form-control form-control-lg" value="{{ request.GET.get('name', '') }}" autofocus />
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn transparent-btn text-uppercase" id="submit-button"{% if request.GET.get('name', '')|length < 3 %} disabled{% endif %}>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
                 <h4>Dang! We have no results for your search.</h4>
                 Here’s why: You searched for an employee or government unit or department in Illinois that doesn’t exist or that we don’t yet have data on. Want to know more? See our note below.
             {% endif %}
@@ -139,12 +147,11 @@ Search results
 {% endif %}
 
 <script type="text/javascript">
-    //TODO: uncomment these lines before finalizing
-    // {% if allowed %}
+    {% if allowed %}
     initSearch({{ request.GET.dict()|safe }});
-    // {% elif not get_messages(request)|length %}
-    // $('#loginModal').modal();
-    // {% endif %}
+    {% elif not get_messages(request)|length %}
+    $('#loginModal').modal();
+    {% endif %}
 
     $('[id*="facet-toggle"]').click(function toggleClick(e) {
         // On click, content has not yet been expanded, i.e., if aria-expanded
