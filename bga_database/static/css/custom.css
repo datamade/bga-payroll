@@ -74,6 +74,15 @@ div[id*="chart"] {
   font-family: "halyard-text", Helvetica, Arial, sans-serif;
 }
 
+.roboto * {
+  font-family: "Roboto", Helvetica, sans-serif;
+}
+
+.roboto tbody tr td {
+  background-color: white;
+  border: 1px solid #E8E7E7;
+}
+
 div#intro-text {
   font-size: 1.2em;
   letter-spacing: -0.01em;
@@ -248,6 +257,10 @@ h5 {
   border-width: 0.2em;
 }
 
+.bold {
+  font-weight: 600;
+}
+
 .text-serif {
   font-family: "ibm-plex-serif", "Times New Roman", "DejaVu Serif", serif;
 }
@@ -317,7 +330,7 @@ header hr {
   margin: auto;
 }
 
-.support-btn, .search-btn {
+.support-btn, .btn-newsletter {
   display: inline-block;
   height: 56px;
   text-align: center;
@@ -353,7 +366,7 @@ header hr {
   margin-right: 1rem;
 }
 
-.search-btn {
+.btn-newsletter {
   background-color: #003282;
   font-family: "halyard-display", Helvetica, Arial, sans-serif;
   font-weight: 600;
@@ -459,6 +472,7 @@ footer .fill-btn {
 
 #year-toggle {
   display: flex;
+  justify-content: end;
 }
 
 .year-dropdown-button {
@@ -512,6 +526,10 @@ input[type=checkbox] {
 }
 
 @media (max-width: 768px) {
+  .header-buttons {
+    display: none;
+  }
+
   .header-bottom {
     margin-left: 25px;
     margin-right: 25px;
@@ -528,6 +546,16 @@ input[type=checkbox] {
 
   .donate-aside-text {
     display: none;
+  }
+
+  .overgrow-mx {
+    margin-left: -2rem;
+    margin-right: -2rem;
+    width: 150%;
+  }
+
+  .w-unset {
+    width: unset;
   }
 
   .display-block-md {
@@ -574,9 +602,10 @@ input[type=checkbox] {
     justify-content: center;
   }
 
-  .story-img {
+  /* Bring this back when images are retrieved dynamically */
+  /*.story-img {   
     display: none;
-  }
+  }*/
 
   footer .transparent-btn {
     margin-right: 0;
@@ -594,6 +623,11 @@ input[type=checkbox] {
     flex-wrap: wrap;
     justify-content: space-around;
   }
+}
+
+/* Remove when images are retrieved dynamically */
+.story-img {
+  display: none;
 }
 
 .vl {
@@ -633,3 +667,10 @@ input[type=checkbox] {
 .letter-spacing-sm {
   letter-spacing: 1px;
 }
+
+@media (min-width: 1018px) {
+  .col-md-2-half {
+    flex: 0 0 22%;
+  }
+}
+

@@ -1,12 +1,14 @@
-<div class="card-body">
-  <h3 class="card-title mb-4">
-    Departments
-    <small><a id="department-search-link" href="/search/?entity_type=department&parent={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all ({{ entity.departments.count() }})</a></small>
-  </h3>
+<div class="card-body px-0">
+  <div class="d-flex flex-row justify-content-between flex-wrap mb-4">
+    <h3 class="card-title mb-4">
+      Departments
+    </h3> 
+    <small><a class="btn transparent-btn-gray text-uppercase py-2" id="department-search-link" href="/search/?entity_type=department&parent={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all ({{ entity.departments.count() }})</a></small>
+  </div>
+  <hr class="section-divider">
+  <h5 class="card-subtitle letter-spacing-sm text-black text-uppercase">Top-spending departments in {{ entity }}</h5>
 
-  <h4 class="card-subtitle">Top-spending departments in {{ entity }}</h4>
-
-  <div class="table-responsive">
+  <div class="table-responsive text-center roboto">
     <table class="table table-striped">
       <thead class="bg-blue text-light">
         <tr>

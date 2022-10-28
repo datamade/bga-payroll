@@ -913,8 +913,11 @@ pre {
   .offset-md-11 {
     margin-left: 91.6666666667%; } 
   
-  .donate-card {
-    margin-top: 400px; } }
+  .donate-mt-lg {
+    margin-top: 400px; }
+
+  .donate-mt-sm{
+    margin-top: 50px; } }
 @media (min-width: 992px) {
   .col-lg {
     flex-basis: 0;
@@ -1202,7 +1205,7 @@ pre {
     padding: 0.75rem;
     vertical-align: top; }
   .table thead th {
-    vertical-align: bottom;
+    vertical-align: middle;
     border-bottom: 2px solid #dee2e6; }
   .table tbody + tbody {
     border-top: 2px solid #dee2e6; }
@@ -1412,7 +1415,6 @@ pre {
   background-color: #fff;
   background-clip: padding-box;
   border: 1px solid #ced4da;
-  border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
   @media screen and (prefers-reduced-motion: reduce) {
     .form-control {
@@ -3145,7 +3147,8 @@ input[type="button"].btn-block {
 
 .card-subtitle {
   margin-top: -0.375rem;
-  margin-bottom: 0; }
+  margin-bottom: 0; 
+}
 
 .card-text:last-child {
   margin-bottom: 0; }
@@ -3328,12 +3331,11 @@ input[type="button"].btn-block {
 .page-link {
   position: relative;
   display: block;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0rem;
   margin-left: -1px;
   line-height: 1.25;
   color: #4580bb;
-  background-color: #fff;
-  border: 1px solid #dee2e6; }
+  background-color: #fff; }
   .page-link:hover {
     z-index: 2;
     color: #305a83;
@@ -3347,13 +3349,15 @@ input[type="button"].btn-block {
   .page-link:not(:disabled):not(.disabled) {
     cursor: pointer; }
 
+.page-item {
+  margin: 0}
 .page-item:first-child .page-link {
   margin-left: 0;
-  border-top-left-radius: 0.25rem;
-  border-bottom-left-radius: 0.25rem; }
+  border-top-left-radius: 0rem;
+  border-bottom-left-radius: 0rem; }
 .page-item:last-child .page-link {
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem; }
+  border-top-right-radius: 0rem;
+  border-bottom-right-radius: 0rem; }
 .page-item.active .page-link {
   z-index: 1;
   color: #fff;
@@ -3868,7 +3872,8 @@ button.close {
 .modal-body {
   position: relative;
   flex: 1 1 auto;
-  padding: 1rem; }
+  padding: 1rem; 
+  font-family: "halyard-text", Helvetica, Arial, sans-serif; }
 
 .modal-footer {
   display: flex;

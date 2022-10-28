@@ -3,8 +3,8 @@
 {% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-3">
+<div class="row px-3">
+  <div class="col-md-3 donate-mt-sm overgrow-mx">
     {% include 'partials/donate.html' %}
   </div>
   <div class="col-md-7 offset-md-1">
@@ -63,11 +63,12 @@
       <div class="row">
         <div class="col-md">
           <div class="card mb-4">
-            <div class="card-body">
+            <div class="card-body px-0">
+              <hr class="section-divider">
               <h3 class="card-title mb-4">
                 Other employees with the title <strong>{{ current_job.title }}</strong> at <strong>{{ current_employer.name }} in {{ data_year }}</strong>
               </h3>
-              <div class="table-responsive">
+              <div class="table-responsive text-center roboto">
                 <table class="table table-striped">
                   <thead class="bg-blue text-light">
                   <tr>

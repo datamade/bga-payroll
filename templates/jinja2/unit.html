@@ -9,8 +9,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-3">
+<div class="row px-3">
+  <div class="col-md-3 donate-mt-sm overgrow-mx">
     {% include 'partials/donate.html' %}
   </div>
   <div class="col-md-7 offset-md-1">
@@ -25,7 +25,7 @@
             Unit
         </span>
     <div class="sticky-top-button">
-      <div class="float-right pt-2 ml-5">
+      <div class="float-lg-right pt-2 ml-5">
         {% include 'partials/year_selector.html' %}
       </div>
     </div>
@@ -36,7 +36,7 @@
       </div>
     </div>
 
-    <div class="row mb-4" style="clear: both;">
+    <div class="row mb-4 justify-content-around" style="clear: both;">
       {% with context = aggregate_stats %}
         {% include 'partials/baseball_stats.html' %}
       {% endwith %}
@@ -95,8 +95,9 @@
       <div class="col-md">
         <div class="card mb-4">
           {% include 'partials/department_card.html' %}
-          <div class="card-body">
-            <h4 class="card-subtitle my-3">Top-spending departments as a proportion of total expenditure</h4>
+          <div class="card-body px-0">
+            <hr class="section-divider">
+            <h5 class="card-subtitle letter-spacing-sm text-black text-uppercase my-3">Top-spending departments as a proportion of total expenditure</h5><br>
             <h4 class="card-subtitle mb-3"><small class="text-muted">Total expenditure, broken into expenditure of the top five spending departments compared to expenditure in all other departments, is displayed in the stacked horizontal bar car.</small></h4>
             <div id="department-composition-chart"></div>
           </div>

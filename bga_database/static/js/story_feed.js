@@ -14,19 +14,19 @@ function populateStoryFeed() {
             });
             
             image.append(
+                // Images from articles not currently available
                 $('<img />').attr({
                     'src': '/static/img/newsroom-placeholder.png'
                 })
             );
 
             var type = $('<div class="text-uppercase story-detail mb-2"/>').text(
-                    // TODO: see if there is a category for 
-                    // each story to display
+                    // TODO: grab type of story if possible
                     'Investigations'
                 );
 
-            // Giving this a class of h3 applies size, but preserves color
-            var title = $('<h5 class="h3"/>').append(
+            // Giving this a class of h3 applies size
+            var title = $('<h5 class="h3 text-black"/>').append(
                 $('<a />').attr({
                     'href': entry.link,
                     'target': '_blank'
