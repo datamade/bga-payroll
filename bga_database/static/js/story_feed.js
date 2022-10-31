@@ -36,8 +36,8 @@ function populateStoryFeed() {
             var summary = $('<p class="text-serif my-2" />').text(entry.summary);
             var date = $('<p class="mb-0 story-detail" />').text(entry.date);
 
-            itemLeft.append(image)
-            itemRight.append(type, title, summary, date)
+            itemLeft.append(image);
+            itemRight.append(type, title, summary, date);
             storyItem.append(itemLeft, itemRight);
 
             container.append(storyItem);
