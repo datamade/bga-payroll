@@ -521,6 +521,10 @@ input[type=checkbox] {
   line-height: 40px;
 }
 
+.inspiration-icon {
+  height: 5rem;
+}
+
 .display-collapse-sm {
   display: none;
 }
@@ -671,6 +675,13 @@ input[type=checkbox] {
 @media (min-width: 1018px) {
   .col-md-2-half {
     flex: 0 0 22%;
+  }
+}
+
+@media (max-width: 1018px) {
+
+  .inspiration-icon {
+    display: none;
   }
 }
 
