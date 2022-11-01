@@ -48,6 +48,13 @@
     <link href="{{ static('css/bootstrap-overrides.css') }}" rel="stylesheet">
     <link href="{{ static('css/custom.css') }}" rel="stylesheet">
 
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://use.typekit.net/hid5kve.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/solid.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
     {% block extra_css %}{% endblock %}
 
     <!-- jQuery -->
@@ -55,93 +62,153 @@
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark pl-2 pl-md-4 pt-0 pb-0 mb-3 mb-lg-5 sticky-top">
-      <div class="justify-content-left va-container">
-        <a class="navbar-brand" href="https://www.bettergov.org/">
-          <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image">
+    <header>
+      <div class="header-top va-container">
+        <a class="navbar-brand" href="https://www.bettergov.org/data-tools">
+          <img src="{{ static('img/logo-subtitled.svg') }}" alt="Home" class="header__logo-image">
         </a>
-        <div class="d-inline-block vertical-divider mx-1 mx-sm-2">
-          &nbsp;
+        <div class="header-buttons">
+          <a href="https://bettergov.salsalabs.org/donationform/index.html" class="support-btn fill-btn text-uppercase" id="donate-header">Donate</a>
+          <a href="https://www.bettergov.org/sign-up-for-e-alerts/" class="btn-newsletter text-uppercase px-3">Newsletter</a>
         </div>
-        <a class="navbar-brand" href="/">
-          <div id="navbar-title" class="d-inline-block">
-            <span class="d-none d-sm-inline">Illinois </span>Public Salaries Database
+        
+      </div>
+      <nav class="navbar navbar-expand-lg navbar-dark pl-2 pl-md-4 pt-0 pb-0 mb-3 mb-lg-5">
+        <div>
+          <div class="justify-content-right">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
           </div>
-        </a>
+          <div class="collapse navbar-collapse pl-3" id="navbarSupportedContent">
+            <ul class="navbar-nav text-uppercase">
+              <li class="nav-item">
+                <a class="nav-link" href="/">Investigations <i class="fas fa-thin fa-chevron-down"></i></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/">Solutions</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/">Opinion</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="https://www.bettergov.org/data-tools/">Databases</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="https://www.bettergov.org/sign-up-for-e-alerts/">Newsletters</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="https://www.bettergov.org/events/">Events</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="https://www.bettergov.org/about-us/">About</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <hr>
+      <div class="header-bottom">
+        <h1>Illinois Public Salaries Database</h1>
+        <p class="text-uppercase">Search Illinois Public Employee Salary Data</p>
       </div>
-      <div class="justify-content-right">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-      </div>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/"><i class="fas fa-home fa-fw"></i> Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/search/?entity_type=unit,department,person"><i class="fas fa-search fa-fw"></i> Search</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/user-guide/"><i class="fas fa-question fa-fw"></i> FAQ</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="https://www.bettergov.org/data-tools/"><i class="fas fa-chart-line fa-fw"></i> Data & Tools</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="https://donate.bettergov.org/"><i class="fas fa-gift fa-fw"></i> Donate</a>
-          </li>
-        </ul>
-      </div>
-    </nav>
+      
+    </header>
 
     <div class="container-fluid" id="main-content">
       {% block content %}{% endblock %}
 
       {% block inspiration %}
       <div class="row my-5">
-        <div class="col-md-8 offset-md-2 text-smaller">
-          <h4 class="text-center">What are you curious about?</h4>
-          <div class="row mt-3">
+        <div class="text-smaller inspiration">
+          <div class="inspiration-left">
+            <h3 class="text-black">What are you curious about?</h3>
+            <p class="mt-3 body-sans-serif">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+            </p>
+          </div>
+          <div class="vl"></div>
+          <div class="row inspiration-right">
             {% include 'partials/inspiration.html' %}
           </div>
         </div>
       </div>
 
-      <div class="row my-5">
-        <div class="col-md-6 offset-md-3 text-smaller">
-          <h4 class="text-center">Need help or see any problems or errors?</h4>
-          <p>This database is a living document and we want to make it more user-friendly and precise. If you think we are missing a government unit, please let us know.</p>
-
-          <p>While we make every reasonable effort to vet the accuracy of compensation included in the database, it is impossible to double-check all numbers in an undertaking of this magnitude. The basic building blocks of this database are reports provided by public agencies and it is possible errors in those initial reports or others made along the way will be reflected in the numbers we publish. That is why we welcome help from the public to identify problems.</p>
-
-          <p>If you spot something that isn’t right, or if information is missing for a government unit you care about, <a href="https://www.bettergov.org/team/jared-rutecki" target="_blank">please contact our data coordinator</a>.</p>
-        </div>
-      </div>
       {% endblock %}
     </div> <!-- /container -->
-    <footer class="footer bg-dark mt-5 pt-5 pb-3">
+    <footer class="footer mt-5 pt-5 pb-3">
       <div class="container-fluid text-center">
-          <h4 class="text-uppercase mb-1">Illinois Public Salaries Database</h4>
-          <p>
-            <a href="/"><i class="fas fa-home fa-fw"></i> Home</a> |
-            <a href="/search/?entity_type=unit,department,person"><i class="fas fa-search fa-fw"></i> Search</a> |
-            <a href="{{ url('user_guide') }}"><i class="fas fa-question fa-fw"></i> FAQ</a> |
-            <a href="https://www.bettergov.org/data-tools/"><i class="fas fa-chart-line fa-fw"></i> Data & Tools</a>
-          </p>
-
-          <a href="https://bettergov.org" class="navbar-brand mt-3">
-            <img src="{{ static('img/bga_logo.png') }}" alt="Home" class="header__logo-image" />
-          </a><br />
-          <p>
-            <strong>Better Government Association</strong>
-          </p>
-          <p>
-            223 W Jackson Blvd, Suite 300<br />
-            Chicago, IL 60606<br />
-            TEL (312) 427-8330
-          </p>
-
+          <div class="footer-top">
+            <p class="footer-paragraph">
+              Our newsroom uncovers waste and wrongdoing in government,<br>
+              holds elected officials accountable, litigates for open records<br>
+              and meetings, advocates for good government and empowers<br>
+              citizens to engage and act.
+            </p>
+            <div>
+              <a href="/" class="support-btn transparent-btn text-uppercase">Subscribe</a>
+              <a href="https://bettergov.salsalabs.org/donationform/index.html" class="support-btn fill-btn text-uppercase">Support Us</a>
+            </div>
+          </div>
+          <hr>
+          <div class="footer-middle">
+            <a href="https://www.bettergov.org/data-tools" class="navbar-brand mt-3">
+              <img src="{{ static('img/logo-no-subtitle.svg') }}" alt="Home" class="footer__logo-image">
+            </a>
+            <div>
+              <ul class="navbar-nav text-uppercase footer-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="/">Investigations</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="/">Solutions</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="/">Opinion</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="https://www.bettergov.org/data-tools/">Databases</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="https://www.bettergov.org/sign-up-for-e-alerts/">Newsletters</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="https://www.bettergov.org/about-us/">About</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <hr>
+          <div class="footer-bottom">
+            <div>
+              <span>
+                223 W Jackson Blvd, Suite 300 
+                Chicago, IL 60606
+              </span>
+              <span>
+                (312) 427-8330
+              </span>
+              <a href="https://www.bettergov.org/privacy-policy/">Privacy Policy</a>
+              <a href="/">Cookie Policy</a>
+            </div>
+            <div>
+              <a href="https://www.facebook.com/bettergov?_rdr=p">
+                <i class="fab fa-facebook-square"></i>
+              </a>
+              <a href="https://twitter.com/bettergov">
+                <i class="fab fa-twitter-square"></i>
+              </a>
+              <a href="https://www.linkedin.com/company/better-government-association">
+                <i class="fab fa-linkedin"></i>
+              </a>
+              <a href="https://www.instagram.com/bettergov_/?hl=en">
+                <i class="fab fa-instagram"></i>
+              </a>
+              <a href="https://www.youtube.com/user/BGAIllinois">
+                <i class="fab fa-youtube"></i>
+              </a>
+            </div>
+          </div>
           <p class="mt-5">
             Website by <a href="https://datamade.us"><img src="{{ static('img/datamade_logo.png') }}" alt="Home" class="datamade-logo align-top ml-1" /></a>
           </p>

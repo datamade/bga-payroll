@@ -55,13 +55,13 @@ article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
 
 body {
   margin: 0;
-  font-family: "acumin-pro", Helvetica, Arial, sans-serif;
+  font-family: "ibm-plex-serif", Helvetica, Arial, sans-serif;
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
   color: #333333;
   text-align: left;
-  background-color: #f7f7f7; }
+  background-color: #ffffff; }
 
 [tabindex="-1"]:focus {
   outline: 0 !important; }
@@ -300,16 +300,16 @@ template {
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
   margin-bottom: 0.5rem;
-  font-family: "acumin-pro-condensed", "Arial Narrow", Helvetica, sans-serif;
+  font-family: "halyard-display", "Arial Narrow", Helvetica, sans-serif;
   font-weight: bold;
   line-height: 1.2;
-  color: #003a63; }
+  color: #003282; }
 
 h1, .h1 {
-  font-size: 2.5rem; }
+  font-size: 3rem; }
 
 h2, .h2 {
-  font-size: 2rem; }
+  font-size: 3rem; }
 
 h3, .h3 {
   font-size: 1.75rem; }
@@ -324,6 +324,7 @@ h6, .h6 {
   font-size: 1rem; }
 
 .lead {
+  line-height: 1.2;
   font-size: 150%;
   font-weight: 400; }
 
@@ -880,7 +881,7 @@ pre {
     margin-left: 0; }
 
   .offset-md-1 {
-    margin-left: 8.3333333333%; }
+    margin-left: 4.3333333333%; }
 
   .offset-md-2 {
     margin-left: 16.6666666667%; }
@@ -910,7 +911,13 @@ pre {
     margin-left: 83.3333333333%; }
 
   .offset-md-11 {
-    margin-left: 91.6666666667%; } }
+    margin-left: 91.6666666667%; } 
+  
+  .donate-mt-lg {
+    margin-top: 400px; }
+
+  .donate-mt-sm{
+    margin-top: 50px; } }
 @media (min-width: 992px) {
   .col-lg {
     flex-basis: 0;
@@ -1196,10 +1203,9 @@ pre {
   .table th,
   .table td {
     padding: 0.75rem;
-    vertical-align: top;
-    border-top: 1px solid #dee2e6; }
+    vertical-align: top; }
   .table thead th {
-    vertical-align: bottom;
+    vertical-align: middle;
     border-bottom: 2px solid #dee2e6; }
   .table tbody + tbody {
     border-top: 2px solid #dee2e6; }
@@ -1409,7 +1415,6 @@ pre {
   background-color: #fff;
   background-clip: padding-box;
   border: 1px solid #ced4da;
-  border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
   @media screen and (prefers-reduced-motion: reduce) {
     .form-control {
@@ -1523,6 +1528,7 @@ textarea.form-control {
     color: #666666; }
 
 .form-check-label {
+  font-weight: 300;
   margin-bottom: 0; }
 
 .form-check-inline {
@@ -1741,7 +1747,6 @@ textarea.form-control {
   padding: 0.375rem 0.75rem;
   font-size: 1rem;
   line-height: 1.5;
-  border-radius: 0.25rem;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
   @media screen and (prefers-reduced-motion: reduce) {
     .btn {
@@ -1784,7 +1789,7 @@ fieldset:disabled a.btn {
 .btn-secondary {
   color: #fff;
   background-color: #6c757d;
-  border-color: #6c757d; }
+  border-color: #ced4da; }
   .btn-secondary:hover {
     color: #fff;
     background-color: #5a6268;
@@ -2998,7 +3003,7 @@ input[type="button"].btn-block {
 @media (min-width: 992px) {
   .navbar-expand-lg {
     flex-flow: row nowrap;
-    justify-content: flex-start; }
+    justify-content: flex-end; }
     .navbar-expand-lg .navbar-nav {
       flex-direction: row; }
       .navbar-expand-lg .navbar-nav .dropdown-menu {
@@ -3121,9 +3126,7 @@ input[type="button"].btn-block {
   flex-direction: column;
   min-width: 0;
   word-wrap: break-word;
-  background-color: #fff;
   background-clip: border-box;
-  border: 1px solid rgba(0, 0, 0, 0.125);
   border-radius: 0.25rem; }
   .card > hr {
     margin-right: 0;
@@ -3144,7 +3147,8 @@ input[type="button"].btn-block {
 
 .card-subtitle {
   margin-top: -0.375rem;
-  margin-bottom: 0; }
+  margin-bottom: 0; 
+}
 
 .card-text:last-child {
   margin-bottom: 0; }
@@ -3157,8 +3161,7 @@ input[type="button"].btn-block {
 .card-header {
   padding: 0.75rem 1.25rem;
   margin-bottom: 0;
-  background-color: #fff200;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.125); }
+  background-color: #fff200; }
   .card-header:first-child {
     border-radius: calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0; }
   .card-header + .list-group .list-group-item:first-child {
@@ -3328,12 +3331,11 @@ input[type="button"].btn-block {
 .page-link {
   position: relative;
   display: block;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0rem;
   margin-left: -1px;
   line-height: 1.25;
   color: #4580bb;
-  background-color: #fff;
-  border: 1px solid #dee2e6; }
+  background-color: #fff; }
   .page-link:hover {
     z-index: 2;
     color: #305a83;
@@ -3347,13 +3349,15 @@ input[type="button"].btn-block {
   .page-link:not(:disabled):not(.disabled) {
     cursor: pointer; }
 
+.page-item {
+  margin: 0}
 .page-item:first-child .page-link {
   margin-left: 0;
-  border-top-left-radius: 0.25rem;
-  border-bottom-left-radius: 0.25rem; }
+  border-top-left-radius: 0rem;
+  border-bottom-left-radius: 0rem; }
 .page-item:last-child .page-link {
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem; }
+  border-top-right-radius: 0rem;
+  border-bottom-right-radius: 0rem; }
 .page-item.active .page-link {
   z-index: 1;
   color: #fff;
@@ -3476,12 +3480,12 @@ input[type="button"].btn-block {
 
 .jumbotron {
   padding: 2rem 1rem;
-  margin-bottom: 2rem;
   background-color: #e9ecef;
   border-radius: 0.3rem; }
   @media (min-width: 576px) {
     .jumbotron {
-      padding: 4rem 2rem; } }
+      padding-top: 60px;
+      padding-left: 15px; } }
 
 .jumbotron-fluid {
   padding-right: 0;
@@ -3868,7 +3872,8 @@ button.close {
 .modal-body {
   position: relative;
   flex: 1 1 auto;
-  padding: 1rem; }
+  padding: 1rem; 
+  font-family: "halyard-text", Helvetica, Arial, sans-serif; }
 
 .modal-footer {
   display: flex;
@@ -4309,7 +4314,7 @@ button.close {
   vertical-align: text-top !important; }
 
 .bg-primary {
-  background-color: #003a63 !important; }
+  background-color: #003282 !important; }
 
 a.bg-primary:hover, a.bg-primary:focus,
 button.bg-primary:hover,
@@ -5491,7 +5496,7 @@ button.bg-dark:focus {
   padding-left: 0.5rem !important; }
 
 .p-3 {
-  padding: 1rem !important; }
+  padding: 1rem 0rem !important; }
 
 .pt-3,
 .py-3 {
@@ -6169,7 +6174,7 @@ button.bg-dark:focus {
 
   .mb-lg-5,
   .my-lg-5 {
-    margin-bottom: 3rem !important; }
+    margin-bottom: 0rem !important; }
 
   .ml-lg-5,
   .mx-lg-5 {
@@ -6604,6 +6609,9 @@ button.bg-dark:focus {
 
   .text-lg-center {
     text-align: center !important; } }
+@media (min-width: 1015px) {
+  .inspiration {
+    height: 491px;} }
 @media (min-width: 1200px) {
   .text-xl-left {
     text-align: left !important; }

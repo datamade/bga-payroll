@@ -3,7 +3,10 @@
 {% block title %}{{ entity }}{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row px-3">
+  <div class="col-md-3 donate-mt-sm overgrow-mx">
+    {% include 'partials/donate.html' %}
+  </div>
   <div class="col-md-7 offset-md-1">
     <div class="row">
       <nav aria-label="breadcrumb">
@@ -15,13 +18,12 @@
         </ol>
       </nav>
     </div>
-
+    <span class="body-sans-serif text-uppercase">
+        Person
+    </span>
     <div class="row">
       <div class="col-md">
-        <h2 class="mb-3">
-          <i class="far fa-address-card"></i>
-          {{ entity }}
-        </h2>
+        <h2 class="mb-3">{{ entity }}</h2>
       </div>
     </div>
 
@@ -29,10 +31,10 @@
       <div class="col-md">
         <div class="card mb-4">
           <div class="card-body">
-            <div class="row">
-              <div class="col-md-6" id="intro-text">
+            <div class="row flex-column">
+              <div id="intro-text">
                 <h3 class="card-title mb-4">
-                  <i class="fas fa-list"></i> Summary
+                  Summary
                 </h3>
                 <p><strong>{{ entity }}</strong> earned <strong class="bg-warning">{{ current_salary|format_salary }}</strong> in {{ data_year }} as {{ current_job.title|an_or_a(bold=True)|safe }} for <strong><a href="{{ url(current_employer.endpoint, kwargs={"slug": current_employer.slug}) }}">{{ current_employer.name }}</a></strong>. {% if current_job.start_date %}{{ entity.last_name }} had worked for this employer since <strong>{{ current_job.start_date.strftime('%B %d, %Y') }}</strong>.{% endif %}</p>
 
@@ -42,7 +44,7 @@
                   <p>{{ entity.last_name }} earned more than <strong>{{ like_employer_percentile|format_percentile }}</strong> of employees across all <strong><a href='{{ url("search") }}?{{ employer_type[0].api_param }}="{{ employer_type[0] }}"'>{{ employer_type[0]|pluralize }}</a></strong>{% if employer_type[0] != employer_type[-1] %} in the <strong><a href='{{ url("search") }}?{{ employer_type[1].api_param }}="{{ employer_type[1] }}"'>{{ employer_type[1] }}</a></strong> category{% endif %}.</p>
                 {% endif %}
               </div>
-              <div id="employee-distribution-chart" class="col-lg-6"></div>
+              <div id="employee-distribution-chart"></div>
             </div>
           </div>
         </div>
@@ -61,13 +63,14 @@
       <div class="row">
         <div class="col-md">
           <div class="card mb-4">
-            <div class="card-body">
+            <div class="card-body px-0">
+              <hr class="section-divider">
               <h3 class="card-title mb-4">
-                <i class="fas fa-users"></i> Other employees with the title <strong>{{ current_job.title }}</strong> at <strong>{{ current_employer.name }} in {{ data_year }}</strong>
+                Other employees with the title <strong>{{ current_job.title }}</strong> at <strong>{{ current_employer.name }} in {{ data_year }}</strong>
               </h3>
-              <div class="table-responsive">
+              <div class="table-responsive text-center roboto">
                 <table class="table table-striped">
-                  <thead class="bg-dark text-light">
+                  <thead class="bg-blue text-light">
                   <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Position</th>
@@ -119,11 +122,6 @@
       </div>
 {% endif %}
 
-  </div>
-
-  <div class="col-md-3">
-    {% include 'partials/donate.html' %}
-    {% include 'partials/story_feed.html' %}
   </div>
 </div>
 
