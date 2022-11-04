@@ -57,7 +57,7 @@ body {
   margin: 0;
   font-family: "ibm-plex-serif", Helvetica, Arial, sans-serif;
   font-size: 1rem;
-  font-weight: 400;
+  font-weight: 300;
   line-height: 1.5;
   color: #333333;
   text-align: left;
@@ -326,7 +326,7 @@ h6, .h6 {
 .lead {
   line-height: 1.2;
   font-size: 150%;
-  font-weight: 400; }
+  font-weight: 300; }
 
 .display-1 {
   font-size: 6rem;
