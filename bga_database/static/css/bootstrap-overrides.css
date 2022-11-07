@@ -6609,9 +6609,10 @@ button.bg-dark:focus {
 
   .text-lg-center {
     text-align: center !important; } }
-@media (min-width: 1015px) {
+/*TODO:  remove when done*/
+/*@media (min-width: 1015px) {
   .inspiration {
-    height: 491px;} }
+    height: 491px;} }*/
 @media (min-width: 1200px) {
   .text-xl-left {
     text-align: left !important; }

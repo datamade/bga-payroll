@@ -62,7 +62,7 @@
   </head>
 
   <body>
-    <header>
+    <header class="pb-1">
       <div class="header-top va-container">
         <a class="navbar-brand" href="https://www.bettergov.org/data-tools">
           <img src="{{ static('img/logo-subtitled.svg') }}" alt="Home" class="header__logo-image">
@@ -118,9 +118,10 @@
     <div class="container-fluid" id="main-content">
       {% block content %}{% endblock %}
 
-      {% block inspiration %}
+      <!-- TODO: remove when done -->
+      <!-- {% block inspiration %}
       <div class="row my-5">
-        <div class="text-smaller inspiration">
+        <div class="text-smaller inspiration d-flex">
           <div class="inspiration-left">
             <h3 class="text-black">What are you curious about?</h3>
             <p class="mt-3 body-sans-serif">
@@ -134,7 +135,7 @@
         </div>
       </div>
 
-      {% endblock %}
+      {% endblock %} -->
     </div> <!-- /container -->
     <footer class="footer mt-5 pt-5 pb-3">
       <div class="container-fluid text-center">

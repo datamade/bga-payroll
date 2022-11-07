@@ -82,7 +82,7 @@ a:active {
 }
 
 a:active:not(.button) {
-  background-color: transparent;
+  filter: brightness(60%);
 }
 
 a:active,

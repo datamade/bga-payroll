@@ -62,6 +62,10 @@ div[id*="chart"] {
   text-transform: none;
 }
 
+.navbar .nav-link {
+  font-weight: 500;
+}
+
 .collapse.show, .collapsing {
   background-color: #486DAB;
   position: absolute;
@@ -342,7 +346,7 @@ header hr {
     margin-right: 25px;
 }
 
-.header-bottom {
+.header-bottom, .inspiration h3 {
   width: fit-content;
   margin: auto;
 }
@@ -352,6 +356,11 @@ header hr {
   height: 56px;
   text-align: center;
   line-height: 56px;
+  transition: filter 150ms ease-in-out;
+}
+
+.support-btn:hover, .btn-newsletter:hover {
+  filter: brightness(85%);
 }
 
 .fill-btn {
@@ -531,7 +540,6 @@ input[type=checkbox] {
 }
 
 .inspiration {
-  display: flex;
   background-color: #D8E3FC;
   background-image: url("../img/background-icon-chat-dollar.webp");
   background-size: cover;
@@ -539,6 +547,7 @@ input[type=checkbox] {
   align-items: center;
   width: 90%;
   margin: auto;
+  background-position: 15%;
 }
 
 .inspiration-left {
@@ -555,7 +564,6 @@ input[type=checkbox] {
 }
 
 .inspiration-card .transparent-btn {
-  width: 229px;
   height: 56px;
   line-height: 40px;
 }
@@ -584,11 +592,11 @@ input[type=checkbox] {
   }
 
   .donate-card .center {
-    width: 50% !important;
+    width: 70% !important;
     margin: auto;
   }
 
-  .donate-aside-text {
+  .aside-text {
     display: none;
   }
 
@@ -627,7 +635,7 @@ input[type=checkbox] {
   .inspiration {
     flex-direction: column;
     padding-top: 1rem;
-    background-position: 15%;
+    width: 100%;
   }
 
   .inspiration-left {
@@ -714,6 +722,10 @@ input[type=checkbox] {
   letter-spacing: 1px;
 }
 
+.explore-sm {
+  display: none;
+}
+
 @media (min-width: 1018px) {
   .col-md-2-half {
     flex: 0 0 22%;
@@ -723,5 +735,14 @@ input[type=checkbox] {
 @media (max-width: 1018px) {
   .inspiration-icon {
     display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .explore-lg {
+    display: none;
+  }
+  .explore-sm {
+    display: inline;
   }
 }
