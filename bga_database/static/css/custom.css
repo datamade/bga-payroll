@@ -533,7 +533,7 @@ input[type=checkbox] {
 .inspiration {
   display: flex;
   background-color: #D8E3FC;
-  background-image: url("../img/inspiration-bg.png");
+  background-image: url("../img/background-icon-chat-dollar.webp");
   background-size: cover;
   background-repeat: no-repeat;
   align-items: center;
@@ -627,7 +627,7 @@ input[type=checkbox] {
   .inspiration {
     flex-direction: column;
     padding-top: 1rem;
-    background-image: none;
+    background-position: 15%;
   }
 
   .inspiration-left {
