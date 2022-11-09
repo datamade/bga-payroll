@@ -15,7 +15,7 @@
     <!-- End Google Tag Manager -->
 
     <meta content="Review, explore and compare compensation for public employees throughout Illinois." name="description" />
-    <meta content="Better Government Association" name="author" />
+    <meta content="Illinois Answers Project" name="author" />
 
     <!-- Facebook metadata -->
     <meta content="Illinois Public Salaries Database" property="og:site_name">
@@ -23,16 +23,16 @@
     <meta content="website" property="og:type">
     <meta content="Review, explore and compare compensation for public employees throughout Illinois." property="og:description">
     <meta content="{{ request.build_absolute_uri() }}" property="og:url">
-    <meta content="https://{{ request.get_host() }}{{ static('img/share_card.jpg') }}" property="og:image">
+    <meta content="https://{{ request.get_host() }}{{ static('img/salaries_share_card.png') }}" property="og:image">
 
     <!-- Twitter metadata -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="Illinois Public Salaries Database">
-    <meta name="twitter:creator" content="Better Government Association">
+    <meta name="twitter:creator" content="Illinois Answers Project">
     <meta name="twitter:title" content="{{ self.title() }}">
     <meta name="twitter:url" content="{{ request.build_absolute_uri() }}">
     <meta name="twitter:description" content="Review, explore and compare compensation for public employees throughout Illinois.">
-    <meta name="twitter:image" content="https://{{ request.get_host() }}{{ static('img/share_card.jpg') }}">
+    <meta name="twitter:image" content="https://{{ request.get_host() }}{{ static('img/salaries_share_card.png') }}">
 
     {% if noindex %}
     <meta name="robots" content="noindex">
@@ -40,8 +40,8 @@
 
     {% block extra_meta %}{% endblock %}
 
-    <link rel="icon" type="image/png" href="{{ static('img/favicon-32x32.png') }}" sizes="32x32" />
-    <link rel="icon" type="image/png" href="{{ static('img/favicon-16x16.png') }}" sizes="16x16" />
+    <link rel="icon" type="image/webp" href="{{ static('img/cropped-favicon.webp') }}" sizes="32x32" />
+    <link rel="icon" type="image/webp" href="{{ static('img/cropped-favicon.webp') }}" sizes="16x16" />
 
     <!-- Bootstrap core CSS -->
     <link href="{{ static('css/bga-styles.css') }}" rel="stylesheet">
