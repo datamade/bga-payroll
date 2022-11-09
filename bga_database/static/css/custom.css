@@ -66,7 +66,7 @@ div[id*="chart"] {
   font-weight: 500;
 }
 
-.collapse.show, .collapsing {
+header .collapse.show, header .collapsing {
   background-color: #486DAB;
   position: absolute;
   z-index: 1;
@@ -576,6 +576,10 @@ input[type=checkbox] {
   display: none;
 }
 
+.w-fit {
+  width: fit-content !important;
+}
+
 @media (max-width: 768px) {
   .header-buttons {
     display: none;
@@ -596,7 +600,7 @@ input[type=checkbox] {
     margin: auto;
   }
 
-  .aside-text {
+  .aside-content {
     display: none;
   }
 
@@ -656,10 +660,9 @@ input[type=checkbox] {
     justify-content: center;
   }
 
-  /* Bring this back when images are retrieved dynamically */
-  /*.story-img {   
+  .story-img {   
     display: none;
-  }*/
+  }
 
   footer .transparent-btn {
     margin-right: 0;
@@ -677,11 +680,6 @@ input[type=checkbox] {
     flex-wrap: wrap;
     justify-content: space-around;
   }
-}
-
-/* Remove when images are retrieved dynamically */
-.story-img {
-  display: none;
 }
 
 .vl {
@@ -724,6 +722,16 @@ input[type=checkbox] {
 
 .explore-sm {
   display: none;
+}
+
+@media (max-width: 400px) {
+  .flex-xs-column {
+    flex-direction: column !important;
+  }
+
+  .pt-2-xs {
+    padding-top: .5rem;
+  }
 }
 
 @media (min-width: 1018px) {

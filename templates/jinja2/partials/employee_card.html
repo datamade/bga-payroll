@@ -3,9 +3,9 @@
     <h3 class="card-title">
       Employees
     </h3>
-    <div class="d-flex justify-content-end col-lg-9">
-      <a class="btn transparent-btn-gray text-uppercase py-2 mr-2" id="employee-search-link" href="/search/?entity_type=person&employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all (<span class="entity-headcount"></span>)</a>
-      <div>
+    <div class="d-flex justify-content-end col-lg-9 flex-xs-column">
+      <a class="btn transparent-btn-gray text-uppercase py-2 mr-2 w-fit" id="employee-search-link" href="/search/?entity_type=person&employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}">View all (<span class="entity-headcount"></span>)</a>
+      <div class="pt-2-xs">
         <a class="btn transparent-btn text-uppercase py-2 h-100" id="employee-download-link" href="/download/?employer={{ entity.slug }}&year={{ request.GET.get('data_year', data_years.0) }}" rel="nofollow">Download Data</a>
       </div>
     </div>
