@@ -141,7 +141,7 @@ MEDIA_URL = '/media/'
 
 LOGIN_URL = '/admin/login/'
 
-SEARCH_LIMIT = 1000
+SEARCH_LIMIT = 1
 
 # Remote storage options
 if not DEBUG:  # noqa

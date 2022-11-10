@@ -371,7 +371,7 @@ class EntityLookup(ListView, PayrollSearchMixin):
 class StoryFeed(ListView):
 
     response_class = JsonResponse
-    rss_feed_url = 'https://www.bettergov.org/feed/1555/rss.xml'
+    rss_feed_url = 'https://illinois-answers.newspackstaging.com/feed/'
     n_entries = 4
 
     def render_to_response(self, context, **response_kwargs):
@@ -399,6 +399,8 @@ class StoryFeed(ListView):
                     'summary': story['summary'],
                     'date': self._get_date(story['published_parsed']),
                     'link': story['link'],
+                    'tags': story['tags'],
+                    'author': story['author']
                 } for story in feed['entries'][:4]]
             }
 

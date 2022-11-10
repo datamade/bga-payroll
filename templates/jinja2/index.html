@@ -24,6 +24,25 @@
 
 <div class="row px-3">
   <div class="col-md-3 donate-mt-lg overgrow-mx">
+
+    {% block inspiration_card %}
+    <div class="row mb-5 aside-content">
+      <div class="text-smaller inspiration">
+        <div class="px-3 py-3">
+          <h3 class="text-black">What are you curious about?</h3>
+          <p class="mt-3 body-sans-serif">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+          </p>
+        </div>
+        <hr>
+        <div class="row p-1">
+          {% include 'partials/inspiration_card.html' %}
+        </div>
+      </div>
+    </div>
+
+    {% endblock %}
+
     {% if not show_donate_banner %}
       {% include 'partials/donate.html' %}
     {% endif %}
@@ -70,6 +89,14 @@
             </div>
           </div>
 
+          <div class="row">
+            <div class="col-md mt-3 body-sans-serif text-smaller">
+              <strong class="pr-2 display-block-md">For example,</strong>
+              <a href="/search/?name=Cook County&entity_type=unit" class="pr-2"><i class="fa-fw fas fa-building"></i> Cook County</a>
+              <a href="/search/?name=Chicago Police Department&entity_type=department" class="pr-2"><i class="fa-fw far fa-building"></i> Chicago Police Department</a>
+              <a href="/search/?name=Toni Preckwinkle&entity_type=person" class="pr-2"><i class="fa-fw far fa-address-card"></i> Toni Preckwinkle</a>
+            </div>
+          </div>
           
         </form>
       </div><!-- .jumbotron -->

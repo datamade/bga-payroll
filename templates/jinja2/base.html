@@ -15,7 +15,7 @@
     <!-- End Google Tag Manager -->
 
     <meta content="Review, explore and compare compensation for public employees throughout Illinois." name="description" />
-    <meta content="Better Government Association" name="author" />
+    <meta content="Illinois Answers Project" name="author" />
 
     <!-- Facebook metadata -->
     <meta content="Illinois Public Salaries Database" property="og:site_name">
@@ -23,16 +23,16 @@
     <meta content="website" property="og:type">
     <meta content="Review, explore and compare compensation for public employees throughout Illinois." property="og:description">
     <meta content="{{ request.build_absolute_uri() }}" property="og:url">
-    <meta content="https://{{ request.get_host() }}{{ static('img/share_card.jpg') }}" property="og:image">
+    <meta content="https://{{ request.get_host() }}{{ static('img/salaries_share_card.png') }}" property="og:image">
 
     <!-- Twitter metadata -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="Illinois Public Salaries Database">
-    <meta name="twitter:creator" content="Better Government Association">
+    <meta name="twitter:creator" content="Illinois Answers Project">
     <meta name="twitter:title" content="{{ self.title() }}">
     <meta name="twitter:url" content="{{ request.build_absolute_uri() }}">
     <meta name="twitter:description" content="Review, explore and compare compensation for public employees throughout Illinois.">
-    <meta name="twitter:image" content="https://{{ request.get_host() }}{{ static('img/share_card.jpg') }}">
+    <meta name="twitter:image" content="https://{{ request.get_host() }}{{ static('img/salaries_share_card.png') }}">
 
     {% if noindex %}
     <meta name="robots" content="noindex">
@@ -40,8 +40,8 @@
 
     {% block extra_meta %}{% endblock %}
 
-    <link rel="icon" type="image/png" href="{{ static('img/favicon-32x32.png') }}" sizes="32x32" />
-    <link rel="icon" type="image/png" href="{{ static('img/favicon-16x16.png') }}" sizes="16x16" />
+    <link rel="icon" type="image/webp" href="{{ static('img/cropped-favicon.webp') }}" sizes="32x32" />
+    <link rel="icon" type="image/webp" href="{{ static('img/cropped-favicon.webp') }}" sizes="16x16" />
 
     <!-- Bootstrap core CSS -->
     <link href="{{ static('css/bga-styles.css') }}" rel="stylesheet">
@@ -62,7 +62,7 @@
   </head>
 
   <body>
-    <header>
+    <header class="pb-1">
       <div class="header-top va-container">
         <a class="navbar-brand" href="https://www.bettergov.org/data-tools">
           <img src="{{ static('img/logo-subtitled.svg') }}" alt="Home" class="header__logo-image">
@@ -83,13 +83,13 @@
           <div class="collapse navbar-collapse pl-3" id="navbarSupportedContent">
             <ul class="navbar-nav text-uppercase">
               <li class="nav-item">
-                <a class="nav-link" href="/">Investigations <i class="fas fa-thin fa-chevron-down"></i></a>
+                <a class="nav-link" href="https://www.illinoisanswers.org/investigations">Investigations</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/">Solutions</a>
+                <a class="nav-link" href="https://www.illinoisanswers.org/solutions">Solutions</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/">Opinion</a>
+                <a class="nav-link" href="https://www.illinoisanswers.org/opinion">Opinion</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="https://www.bettergov.org/data-tools/">Databases</a>
@@ -110,31 +110,13 @@
       <hr>
       <div class="header-bottom">
         <h1>Illinois Public Salaries Database</h1>
-        <p class="text-uppercase">Search Illinois Public Employee Salary Data</p>
+        <p class="text-uppercase display-sans-serif">Search Illinois Public Employee Salary Data</p>
       </div>
       
     </header>
 
     <div class="container-fluid" id="main-content">
       {% block content %}{% endblock %}
-
-      {% block inspiration %}
-      <div class="row my-5">
-        <div class="text-smaller inspiration">
-          <div class="inspiration-left">
-            <h3 class="text-black">What are you curious about?</h3>
-            <p class="mt-3 body-sans-serif">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-            </p>
-          </div>
-          <div class="vl"></div>
-          <div class="row inspiration-right">
-            {% include 'partials/inspiration.html' %}
-          </div>
-        </div>
-      </div>
-
-      {% endblock %}
     </div> <!-- /container -->
     <footer class="footer mt-5 pt-5 pb-3">
       <div class="container-fluid text-center">
@@ -146,7 +128,7 @@
               citizens to engage and act.
             </p>
             <div>
-              <a href="/" class="support-btn transparent-btn text-uppercase">Subscribe</a>
+              <a href="https://www.bettergov.org/sign-up-for-e-alerts/" class="support-btn transparent-btn text-uppercase">Subscribe</a>
               <a href="https://bettergov.salsalabs.org/donationform/index.html" class="support-btn fill-btn text-uppercase">Support Us</a>
             </div>
           </div>
@@ -158,13 +140,13 @@
             <div>
               <ul class="navbar-nav text-uppercase footer-nav">
                 <li class="nav-item">
-                  <a class="nav-link" href="/">Investigations</a>
+                  <a class="nav-link" href="https://www.illinoisanswers.org/investigations">Investigations</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="/">Solutions</a>
+                  <a class="nav-link" href="https://www.illinoisanswers.org/solutions">Solutions</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="/">Opinion</a>
+                  <a class="nav-link" href="https://www.illinoisanswers.org/opinion">Opinion</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="https://www.bettergov.org/data-tools/">Databases</a>
@@ -189,7 +171,7 @@
                 (312) 427-8330
               </span>
               <a href="https://www.bettergov.org/privacy-policy/">Privacy Policy</a>
-              <a href="/">Cookie Policy</a>
+              <a href="https://www.illinoisanswers.org/about/privacy-policy">Cookie Policy</a>
             </div>
             <div>
               <a href="https://www.facebook.com/bettergov?_rdr=p">
@@ -209,9 +191,6 @@
               </a>
             </div>
           </div>
-          <p class="mt-5">
-            Website by <a href="https://datamade.us"><img src="{{ static('img/datamade_logo.png') }}" alt="Home" class="datamade-logo align-top ml-1" /></a>
-          </p>
       </div>
     </footer>
     {% block modals %}{% endblock %}

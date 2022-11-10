@@ -8,21 +8,25 @@ function populateStoryFeed() {
             var itemLeft = $('<div class="story-img col-md-4"/>');
             var itemRight = $('<div />');
 
+            var summary = $('<p class="text-serif my-2" />').html(entry.summary);
+            var summaryEl = document.createElement('div');
+            summaryEl.innerHTML = entry.summary;
+
+            imgSrc = summaryEl.querySelectorAll('img')[0].src;
+
             var image = $('<a />').attr({
                 'href': entry.link,
                 'target': '_blank'
             });
             
             image.append(
-                // Images from articles not currently available
                 $('<img />').attr({
-                    'src': '/static/img/newsroom-placeholder.png'
+                    'src': imgSrc
                 })
             );
 
             var type = $('<div class="text-uppercase story-detail mb-2"/>').text(
-                    // TODO: grab type of story if possible
-                    'Investigations'
+                    entry.tags[entry.tags.length - 1].term
                 );
 
             // Giving this a class of h3 applies size
@@ -33,11 +37,14 @@ function populateStoryFeed() {
                 }).text(entry.title)
             );
 
-            var summary = $('<p class="text-serif my-2" />').text(entry.summary);
-            var date = $('<p class="mb-0 story-detail" />').text(entry.date);
+            var brief = summaryEl.querySelectorAll('p')[0].innerText;
+
+            var details = $('<p class="mb-0 mt-2 story-detail" />').text(
+                entry.date + " - By " + entry.author
+            );
 
             itemLeft.append(image);
-            itemRight.append(type, title, summary, date);
+            itemRight.append(type, title, brief, details);
             storyItem.append(itemLeft, itemRight);
 
             container.append(storyItem);
