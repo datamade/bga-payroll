@@ -371,7 +371,7 @@ class EntityLookup(ListView, PayrollSearchMixin):
 class StoryFeed(ListView):
 
     response_class = JsonResponse
-    rss_feed_url = 'https://illinois-answers.newspackstaging.com/feed/'
+    rss_feed_url = 'https://illinoisanswers.org/feed/'
     n_entries = 4
 
     def render_to_response(self, context, **response_kwargs):
