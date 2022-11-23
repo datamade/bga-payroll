@@ -17,16 +17,16 @@ import/% : data/output/%
 amend/% : data/output/%
 	python manage.py import_data --data_file $< \
 		--reporting_year $$(echo "$<" | grep -Eo "[0-9]{4}") \
-		--amend
+		--amend --no_input
 
 data/output/payroll-actual-%.csv : %-with-data-year.csv
 	# Rename fields.
 	(echo employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,_,responding_agency,data_year; \
-	tail -n +2 $<) > $@
+	csvcut -c employer,last_name,first_name,title,department,base_salary,extra_pay,date_started,id,year,Employer,data_year $< | tail -n +2) > $@
 
 %-with-data-year.csv : %-no-salary-omitted.csv
 	# Add required data year field.
-	perl -pe "s/$$/,$$(cut -d '-' -f1 <<< $*)/" $< > $@
+	csvstack -g `echo $* | cut -c1-4` -n data_year $< > $@
 
 %-no-salary-omitted.csv : %-with-valid-start-dates.csv
 	# Remove records where no salary was reported.
