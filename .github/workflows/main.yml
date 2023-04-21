@@ -12,7 +12,7 @@ on:
 jobs:
   test:
     name: Run tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       postgres:
         image: postgres:10
@@ -33,11 +33,11 @@ jobs:
         
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.6.15
+    - name: Set up Python 3.5
       uses: actions/setup-python@v2
       with:
         # Semantic version range syntax or exact version of a Python version
-        python-version: '3.6.15'
+        python-version: '3.5'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -58,7 +58,7 @@ jobs:
       ', github.ref)
     needs: test
     name: Deploy to AWS
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
