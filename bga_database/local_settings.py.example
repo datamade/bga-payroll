@@ -95,6 +95,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'testing@example.com'
 EMAIL_HOST_PASSWORD = 'secret password'
+DEFAULT_FROM_EMAIL = ''  # e.g., 'DataMade <testing@example.com>'
 
 # Configure salsa_auth
 SALSA_AUTH_API_KEY = ''  # https://help.salsalabs.com/hc/en-us/articles/224470007-Getting-Started#acquiring-a-token  # noqa
