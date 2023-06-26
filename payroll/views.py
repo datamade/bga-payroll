@@ -273,7 +273,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
         self.facets = {}
 
-        authenticated = self.request.COOKIES.get(settings.SALSA_AUTH_COOKIE_NAME)
+        authenticated = self.request.COOKIES.get(settings.MAILCHIMP_AUTH_COOKIE_NAME)
         under_limit = self.request.session['search_count'] <= settings.SEARCH_LIMIT
 
         if authenticated or under_limit:

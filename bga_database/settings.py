@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'postgres_stats',
     'django_pgviews',
-    'salsa_auth',
+    'mailchimp_auth',
     'rest_framework',
     'extra_settings',
     'debug_toolbar',
