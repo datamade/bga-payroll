@@ -54,7 +54,7 @@ urlpatterns = [
     path('download/', payroll_views.DownloadView.as_view(), name='download'),
 
     # user auth
-    path('salsa/', include('salsa_auth.urls')),
+    path('mailchimp/', include('mailchimp_auth.urls')),
 
     # admin
     path('admin/', admin.site.urls),

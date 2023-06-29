@@ -2,7 +2,7 @@ FROM python:3.5-slim
 LABEL maintainer "DataMade <info@datamade.us>"
 
 RUN apt-get update && \
-    apt-get install -y build-essential make git
+    apt-get install -y build-essential make git libpq-dev gcc libxml2-dev libxslt1-dev zlib1g-dev
 
 RUN mkdir /app
 WORKDIR /app

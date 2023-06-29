@@ -1,6 +1,6 @@
 Django==2.2.9
 djangorestframework==3.11.0
-psycopg2-binary==2.7.4
+psycopg2-binary>=2.7.4
 numpy==1.14.1
 csvkit==1.0.3
 cchardet==2.1.1
@@ -14,7 +14,7 @@ django-storages==1.6.5
 boto3==1.16.63
 django-fsm==2.6.0
 django-postgres-stats==1.0.0
-https://github.com/datamade/django-salsa-auth/archive/b8881a425d8bf9ec3a9adbbc05eba71ff37e99d2.zip
+https://github.com/datamade/django-mailchimp-auth/archive/refs/heads/master.zip
 boto==2.48.0
 gunicorn==19.7.1
 celery==4.2.1
