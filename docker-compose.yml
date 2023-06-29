@@ -25,7 +25,7 @@ services:
       # Mount the development directory as a volume into the container, so
       # Docker automatically recognizes your changes.
       - .:/app
-      - ${PWD}/bga_database/local_settings.py:/app/bga_database/local_settings.py
+      - ${PWD}/bga_database/local_settings.py.example:/app/bga_database/local_settings.py
     environment:
       DJANGO_MANAGEPY_MIGRATE: "on"
     entrypoint: /app/docker-entrypoint.sh
@@ -39,7 +39,7 @@ services:
     volumes:
       # These should generally be the same as your application volumes.
       - .:/app
-      - ${PWD}/bga_database/local_settings.py:/app/bga_database/local_settings.py
+      - ${PWD}/bga_database/local_settings.py.example:/app/bga_database/local_settings.py
     command: celery --app=bga_database.celery:app worker --loglevel=DEBUG
 
   postgres:
