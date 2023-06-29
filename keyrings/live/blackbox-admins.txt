@@ -1,4 +1,3 @@
 bga-payroll-prod@datamade.us
 datamade@payroll.datamade.us
 fgregg@datamade.us
-hannah.cushman@gmail.com
