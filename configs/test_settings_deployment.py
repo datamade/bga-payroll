@@ -62,6 +62,7 @@ DEFAULT_FROM_EMAIL = ''  # e.g., 'testing@example.com'
 MAILCHIMP_API_KEY = '<secret key>'
 MAILCHIMP_SERVER = '<server code>'
 MAILCHIMP_LIST_ID = '<id of list to search within>'
+MAILCHIMP_INTEREST_ID = '<id of an interest/group>'
 
 # Name and domain for cookie set for authorized users
 MAILCHIMP_AUTH_COOKIE_NAME = ''  # e.g., mailchimp-auth
