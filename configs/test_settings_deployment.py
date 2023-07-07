@@ -63,6 +63,7 @@ MAILCHIMP_API_KEY = '<secret key>'
 MAILCHIMP_SERVER = '<server code>'
 MAILCHIMP_LIST_ID = '<id of list to search within>'
 MAILCHIMP_INTEREST_ID = '<id of an interest/group>'
+MAILCHIMP_TAG = '<name of the tag to attach to users>'  # e.g. 'Database Sign-up'
 
 # Name and domain for cookie set for authorized users
 MAILCHIMP_AUTH_COOKIE_NAME = ''  # e.g., mailchimp-auth
