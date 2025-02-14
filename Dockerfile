@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.5-slim
 LABEL maintainer "DataMade <info@datamade.us>"
 
 RUN apt-get update && \
@@ -8,6 +8,6 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY ./requirements.txt /app/requirements.txt
-RUN pip install pip==24.0 && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app

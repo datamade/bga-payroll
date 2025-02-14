@@ -1,14 +1,14 @@
-Django==2.2.17
+Django==2.2.9
 djangorestframework==3.11.0
 psycopg2-binary>=2.7.4
-numpy==1.19.5
+numpy==1.14.1
 csvkit==1.0.3
-cchardet==2.1.7
+cchardet==2.1.1
 census==0.8.7
 us==1.0.0
 inflect==1.0.1
 jinja2==2.10.1
-lxml==4.6.5
+lxml==4.2.1
 django-debug-toolbar==1.9.1
 django-storages==1.6.5
 boto3==1.16.63
@@ -24,7 +24,7 @@ pysolr==3.7.0
 python-dateutil==2.8.1
 sentry-sdk==0.5.1
 kombu==4.3.0
-feedparser==6.0.11
+feedparser==5.2.1
 django-extra-settings==0.1.1
 django-pgviews==0.5.7
 bleach
