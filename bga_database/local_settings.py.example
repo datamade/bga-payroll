@@ -44,7 +44,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 # and we should increase the visibility timeout.
 
 CELERY_TASK_ACKS_LATE = True
-CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600*5}
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600 * 5}
 
 CENSUS_API_KEY = '<A KEY>'
 
