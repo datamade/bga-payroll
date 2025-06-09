@@ -48,6 +48,8 @@ def order_of_magnitude(floating_point):
 
 
 def get_ballpark_parts(i):
+    i = float(i)
+    
     buckets = [
         (1000, 'k'),
         (1000000, ' million'),

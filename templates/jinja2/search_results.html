@@ -22,7 +22,7 @@ Search results
         </div>
 
         <div class="row">
-            {% if results %}
+            {% if results.results %}
             <div class="col-md-3">
                 {% if request.GET.entity_type %}
                     {% set requested_entities = request.GET.entity_type.split(',') %}
@@ -68,7 +68,7 @@ Search results
                 <div class="card search-results">
                     <table class="table">
                         <tbody>
-                            {% for result in results %}
+                            {% for result in results.results %}
                                 <tr>
                                     <td class="px-0">
                                         {% include 'partials/search_result.html' %}

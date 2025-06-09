@@ -1,19 +1,15 @@
-{% if is_paginated %}
+{% if results.previous or results.next %}
     <nav class="mt-4">
         <ul class="pagination justify-content-between border-top">
-            <li class="page-item">
-                <a class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a>
-            </li>
-
             <div class="d-flex text-uppercase bold">
-               <li class="page-item pr-2 border-right{% if not page_obj.has_previous() %} disabled{% endif %}">
-                   <a class="page-link {% if not page_obj.has_previous() %}text-light disabled{% else %}text-dark{% endif %}" {% if page_obj.has_previous() %}href="{{ request.path }}?{{ request|query_transform }}{% if request|query_transform %}&{% endif %}page={{ page_obj.previous_page_number() }}"{% else %}tabindex="-1"{% endif %}>
+               <li class="page-item pr-2 border-right{% if not results.previous %} disabled{% endif %}">
+                   <a class="page-link {% if not results.previous %}text-light disabled{% else %}text-dark{% endif %}" {% if results.previous %}href="{{ results.previous }}"{% else %}tabindex="-1"{% endif %}>
                        Prev
                    </a>
                </li>
 
-               <li class="page-item pl-2{% if not page_obj.has_next() %} text-light disabled{% endif %}">
-                   <a class="page-link {% if not page_obj.has_next() %} disabled{% else %} text-dark{% endif %}" {% if page_obj.has_next() %}href="{{ request.path }}?{{ request|query_transform }}{% if request|query_transform %}&{% endif %}page={{ page_obj.next_page_number() }}"{% else %}tabindex="-1"{% endif %}>
+               <li class="page-item pl-2{% if not results.next %} text-light disabled{% endif %}">
+                   <a class="page-link {% if not results.next %} disabled{% else %} text-dark{% endif %}" {% if results.next %}href="{{ results.next }}"{% else %},tabindex="-1"{% endif %}>
                        Next
                    </a>
                </li> 

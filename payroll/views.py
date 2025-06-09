@@ -24,8 +24,7 @@ from data_import.models import StandardizedFile
 
 from payroll.charts import ChartHelperMixin
 from payroll.models import Person, Unit, Department, Employer
-from payroll.search import PayrollSearchMixin, FacetingMixin, \
-    DisallowedSearchException
+from payroll.search_postgres import PostgresSearchMixin
 from payroll.serializers import PersonSerializer
 
 
@@ -242,11 +241,11 @@ class DownloadView(TemplateView):
         return response
 
 
-class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
+class SearchView(ListView, PostgresSearchMixin):
     queryset = []
     template_name = 'search_results.html'
     context_object_name = 'results'
-    paginate_by = 25
+    #paginate_by = 25
 
     def get_queryset(self, **kwargs):
         '''
@@ -281,12 +280,15 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
                 self.allowed = True
                 results = self.search(params, pagesize=self.paginate_by)
 
-            except DisallowedSearchException:
-                self.allowed = False
+            except Exception as e:
+                raise
+                self.allowed = True
                 results = []
         else:
             self.allowed = False
             results = []
+
+        print(results)
 
         return results
 
@@ -295,7 +297,8 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
 
         context['allowed'] = self.allowed
 
-        facets = self.parse_facets(self.facets)
+        # facets = self.parse_facets(self.facets)
+        facets = {}
         context['facets'] = facets
         context['search_limit'] = settings.SEARCH_LIMIT
 
@@ -310,7 +313,7 @@ class SearchView(ListView, PayrollSearchMixin, FacetingMixin):
         return context
 
 
-class EntityLookup(ListView, PayrollSearchMixin):
+class EntityLookup(ListView, PostgresSearchMixin):
 
     def _endpoint_from_result(self, result):
         return result['id'].split('.')[0]

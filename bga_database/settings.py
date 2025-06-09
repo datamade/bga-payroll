@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'storages',
     'payroll',
     'data_import',
+    'search',
     'django.contrib.postgres',
     'postgres_stats',
     'django_pgviews',
@@ -141,7 +142,7 @@ MEDIA_URL = '/media/'
 
 LOGIN_URL = '/admin/login/'
 
-SEARCH_LIMIT = 1
+SEARCH_LIMIT = 99999
 
 # Remote storage options
 if not DEBUG:  # noqa
@@ -157,7 +158,9 @@ except NameError:
 # off basic authentication, which gets confused because Nginx is sending an
 # unrelated authorization header for the staging site.
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': []
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 25,
 }
 
 LOGGING = {

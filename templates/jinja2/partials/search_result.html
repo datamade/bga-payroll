@@ -1,16 +1,16 @@
-{% with endpoint=result.id.split('.')[0] %}
-    {% if endpoint == 'person' %}
+{% with endpoint=result.endpoint %}
+    {% if result.endpoint == 'person' %}
         <span class="body-sans-serif text-uppercase">
             Person
         </span><br /><br />
 
         <h3 class="my-2">
-            <a href="/{{ endpoint }}/{{ result.slug }}/{% if endpoint != 'person' %}?data_year={{ result['year'] }}{% endif %}" class="search-result text-black">{{ result.name }}</a>
+            <a href="/{{ endpoint }}/{{ result.slug }}/" class="search-result text-black">{{ result.name }}</a>
         </h3>
 
         <p>
-            <strong>Position:</strong> {{ result.title_s }} at {{ result.employer_ss[-1] }}<br />
-            <strong class="line-height-m">Salary:</strong> {{ result.salary_d|format_salary }}
+            <strong>Position:</strong> {{ result.title }} at {{ result.employer }}<br />
+            <strong class="line-height-m">Salary:</strong> {{ result.salary|format_salary }}
         </p>
 
     {% elif endpoint == 'department' %}
@@ -19,12 +19,12 @@
         </span>
 
         <h3 class="my-2">
-            <a href="/{{ endpoint }}/{{ result.slug }}/{% if endpoint != 'person' %}?data_year={{ result['year'] }}{% endif %}" class="search-result text-black">{{ result.name }}</a>
+            <a href="/{{ endpoint }}/{{ result.slug }}/{% if endpoint != 'person' %}?data_year={{ result.reporting_year }}{% endif %}" class="search-result text-black">{{ result.name }}</a>
         </h3>
 
         <p>
-            <strong>Salary expenditure:</strong> ${{ result.expenditure_d|format_ballpark_number }}<br />
-            <strong class="line-height-m">Number of positions:</strong> {{ result.headcount_i|format_ballpark_number }}
+            <strong>Salary expenditure:</strong> ${{ result.expenditure|format_ballpark_number }}<br />
+            <strong class="line-height-m">Number of positions:</strong> {{ result.headcount|format_ballpark_number }}
         </p>
 
     {% elif endpoint == 'unit' %}
@@ -33,15 +33,15 @@
         </span>
 
         <h3 class="my-2">
-            <a href="/{{ endpoint }}/{{ result.slug }}/{% if endpoint != 'person' %}?data_year={{ result['year'] }}{% endif %}" class="search-result text-black">{{ result.name }}</a>
+            <a href="/{{ endpoint }}/{{ result.slug }}/{% if endpoint != 'person' %}?data_year={{ result.reporting_year }}{% endif %}" class="search-result text-black">{{ result.name }}</a>
         </h3>
 
         <p>
-            <strong>Salary expenditure:</strong> ${{ result.expenditure_d|format_ballpark_number }}<br />
-            <strong class="line-height-m">Number of positions:</strong> {{ result.headcount_i|format_ballpark_number }}
+            <strong>Salary expenditure:</strong> ${{ result.expenditure|format_ballpark_number }}<br />
+            <strong class="line-height-m">Number of positions:</strong> {{ result.headcount|format_ballpark_number }}
         </p>
 
     {% endif %}
 
-    <small class="text-secondary">Data year: {{ result['year'] }}</small>
+    <small class="text-secondary">Data year: {{ result.reporting_year }}</small>
 {% endwith %}

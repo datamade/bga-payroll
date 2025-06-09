@@ -143,3 +143,4 @@ keyrings/live/.gpg-v21-migrated
 node_modules/
 static/
 !bga_database/static/
+*.dump

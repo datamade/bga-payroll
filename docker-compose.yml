@@ -19,8 +19,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      solr:
-        condition: service_started
     volumes:
       # Mount the development directory as a volume into the container, so
       # Docker automatically recognizes your changes.
@@ -44,7 +42,7 @@ services:
 
   postgres:
     container_name: bga-payroll-postgres
-    image: postgres:10
+    image: postgres:14
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -66,18 +64,6 @@ services:
     ports:
       - 32001:5432
 
-  solr:
-    image: solr:7.1
-    container_name: bga-payroll-solr
-    volumes:
-      - ./solr_configs:/bga-payroll_configs
-      - bga-payroll-solr-data:/opt/solr/server/solr
-    command: sh -c 'solr-create -c bga -d /bga-payroll_configs'
-    ports:
-      - '127.0.0.1:8986:8983'
-    environment:
-      SOLR_LOG_LEVEL: INFO
-
   redis:
     image: redis
     container_name: bga-payroll-redis
@@ -89,4 +75,3 @@ services:
 
 volumes:
   bga-payroll-db-data:
-  bga-payroll-solr-data:

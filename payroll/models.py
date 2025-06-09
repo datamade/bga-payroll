@@ -65,6 +65,7 @@ class Employer(SluggedModel, VintagedModel):
                                  blank=True,
                                  on_delete=models.SET_NULL,
                                  related_name='employers')
+    search_name = models.CharField(max_length=255*2)
 
     class Meta:
         constraints = [
