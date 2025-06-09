@@ -16,12 +16,7 @@ class SearchView(ListAPIView):
     def get_queryset(self):
         return self.model.objects.all()
     
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-        
-        query = self.request.GET.get('name')
-        year = self.request.GET.get("year", 2020)
-        
+    def filter_on_search_name(self, queryset, query):
         search_vector = None
         weights = ("A", "B", "C", "D")
         
@@ -38,7 +33,19 @@ class SearchView(ListAPIView):
         return queryset.annotate(
             search=search_vector,
             rank=search_rank,
-        ).filter(search=search_query, reporting_year=year)
+        ).filter(search=search_query)
+    
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        
+        query = self.request.GET.get('name')
+        
+        if query:
+            self.filter_on_search_name(queryset, query)
+            
+        year = self.request.GET.get("year", 2020)
+        
+        return queryset.filter(reporting_year=year)
 
 
 class EmployerSearchView(SearchView):
@@ -77,27 +84,11 @@ class PersonSearchView(SearchView):
             return []
         
         if query:
-            search_vector = None
-            weights = ("A", "B", "C", "D")
-        
-            for weight_index, field in enumerate(self.search_fields):
-                field_vector = SearchVector(field, weight=weights[weight_index])
-                if search_vector is None:
-                    search_vector = field_vector
-                else:
-                    search_vector.bitand(field_vector)
-                
-                search_query = SearchQuery(query)
-                search_rank = SearchRank(search_vector, search_query)
-                
-                queryset = queryset.annotate(
-                    search=search_vector,
-                    rank=search_rank,
-                ).filter(search=search_query)
+            queryset = self.filter_on_search_name(queryset, query)
 
         if employer:
             queryset = queryset.filter(
                 Q(jobs__position__employer__slug=employer) | Q(jobs__position__employer__parent__slug=employer)
             )
 
-        return queryset
+        return queryset.order_by("last_name")
