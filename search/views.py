@@ -1,46 +1,10 @@
-from django.shortcuts import render
-import re
-from django.contrib.postgres.search import (
-    SearchVector, SearchQuery, SearchRank,
-    TrigramSimilarity
-)
-from django.contrib.postgres.aggregates import StringAgg
-from django.db.models import Q, F, Value, CharField, DecimalField, IntegerField
-from django.db.models.functions import Cast, Coalesce
-from django.core.paginator import Paginator
-from django.db import models
-
-from data_import.models import StandardizedFile
-from payroll.models import Unit, Department, Person, Salary
-
-import datetime
 from itertools import chain
-import csv
 
-from django.core.cache import caches
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.db.models import Max
-from django.http import JsonResponse, HttpResponse, \
-    HttpResponsePermanentRedirect, HttpResponseGone, StreamingHttpResponse
-from django.shortcuts import render
-from django.urls import reverse
-from django.views.generic.base import TemplateView
-from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
 from django.conf import settings
-from extra_settings.models import Setting
-import feedparser
-import bleach
-
-from bga_database.chart_settings import BAR_HIGHLIGHT
-from bga_database.local_settings import CACHE_SECRET_KEY
+from django.http import JsonResponse
+from django.views.generic.list import ListView
 
 from data_import.models import StandardizedFile
-
-from payroll.charts import ChartHelperMixin
-from payroll.models import Person, Unit, Department, Employer
-from payroll.search_postgres import PostgresSearchMixin
-from payroll.serializers import PersonSerializer
 
 
 class SearchView(ListView):
@@ -62,8 +26,6 @@ class SearchView(ListView):
         LazyPaginatedResults, which provides a mocked inteface for count/len
         and slicing to facilitate returning partial result sets.
         '''
-        params = self.request.GET.dict()  # contains page number as URL param
-
         if self.request.session.get('search_count'):
             self.request.session['search_count'] += 1
 
@@ -84,7 +46,7 @@ class SearchView(ListView):
                 view_cls = PersonSearchView if entity_type == "person" else EmployerSearchView
                 results = view_cls.as_view()(self.request).data
 
-            except Exception as e:
+            except Exception:
                 self.allowed = True
                 results = []
         else:
@@ -105,13 +67,12 @@ class SearchView(ListView):
                                              .values_list('reporting_year', flat=True)
 
         context['data_years'] = list(data_years)
-
         context['captcha_site_key'] = getattr(settings, 'RECAPTCHA_PUBLIC_KEY')
 
         return context
 
 
-class EntityLookup(ListView, PostgresSearchMixin):
+class EntityLookup(ListView):
     """
     TODO: Fix this
     """

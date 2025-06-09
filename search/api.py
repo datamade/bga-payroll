@@ -18,7 +18,6 @@ class SearchView(ListAPIView):
     
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
-        print(queryset)
         
         query = self.request.GET.get('name')
         year = self.request.GET.get("year", 2020)
