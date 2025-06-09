@@ -44,7 +44,7 @@ class SearchView(ListAPIView):
 class EmployerSearchView(SearchView):
     model = EmployerSearchIndex
     serializer_class = EmployerSerializer
-    search_fields = ("instance__search_name", "instance__aliases__name")
+    search_fields = ("search_name", "instance__aliases__name")
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)

@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('payroll', '0036_postgres_fts'),
+        ('payroll', '0035_reflect_aliases'),
     ]
 
     operations = [
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('reporting_year', models.IntegerField()),
                 ('instance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='payroll.Person')),
+                ('search_name', models.CharField(default="dummy search name", max_length=1000)),
             ],
             options={
                 'abstract': False,
@@ -32,6 +33,7 @@ class Migration(migrations.Migration):
                 ('headcount', models.IntegerField()),
                 ('expenditure', models.DecimalField(decimal_places=2, max_digits=100)),
                 ('instance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='payroll.Employer')),
+                ('search_name', models.CharField(default="dummy search name", max_length=1000)),
             ],
             options={
                 'abstract': False,

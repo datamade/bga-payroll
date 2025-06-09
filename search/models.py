@@ -2,6 +2,8 @@ from django.db import models
 
 
 class SearchIndex(models.Model):
+    
+    search_name = models.CharField(max_length=1000)
     reporting_year = models.IntegerField()    
 
     class Meta:

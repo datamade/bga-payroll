@@ -4,6 +4,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views.generic.list import ListView
 
+from .api import EmployerSearchView, PersonSearchView
 from data_import.models import StandardizedFile
 
 
@@ -12,20 +13,6 @@ class SearchView(ListView):
     context_object_name = 'results'
 
     def get_queryset(self, **kwargs):
-        '''
-        For efficiency, we only want to return `pagesize` results at a time.
-
-        This is accomplished by passing the number of results per page and the
-        ordinal page number to the `search` method. The search method, in turn,
-        uses the page size and number to query Solr for the appropriate number
-        of results, from the appropriate page offset.
-
-        The return value of this method is passed to Django's Pagination class,
-        which uses count/len methods and slice functionality. Because we're only
-        querying for `pagesize` results, this method returns a instance of
-        LazyPaginatedResults, which provides a mocked inteface for count/len
-        and slicing to facilitate returning partial result sets.
-        '''
         if self.request.session.get('search_count'):
             self.request.session['search_count'] += 1
 
@@ -38,7 +25,6 @@ class SearchView(ListView):
         under_limit = self.request.session['search_count'] <= settings.SEARCH_LIMIT
         
         entity_type = self.request.GET.get("entity_type", "unit")
-        from .api import EmployerSearchView, PersonSearchView
 
         if authenticated or under_limit:
             try:

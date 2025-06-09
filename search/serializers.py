@@ -8,7 +8,6 @@ from payroll.models import Person
 class EmployerSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(source="instance.slug")
     name = serializers.CharField(source="instance.name")
-    search_name = serializers.CharField(source="instance.search_name")
     parent = serializers.SlugRelatedField(read_only=True, slug_field="slug", source="instance.parent")
     endpoint = serializers.SerializerMethodField()
     
