@@ -27,6 +27,9 @@ class EmployerSearchIndex(SearchIndex):
 class PersonSearchIndex(SearchIndex):
     
     instance = models.ForeignKey("payroll.Person", on_delete=models.CASCADE)
+    employer = models.ForeignKey("payroll.Employer", on_delete=models.CASCADE, to_field="slug")
+    search_title = models.CharField(max_length=1000)
+    total_pay = models.DecimalField(decimal_places=2, max_digits=20)
     
     class Meta:
         abstract = False

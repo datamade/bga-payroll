@@ -5,8 +5,7 @@ from rest_framework import filters
 from rest_framework.generics import ListAPIView
 
 from .serializers import EmployerSerializer, PersonSerializer
-from payroll.models import Person
-from .models import EmployerSearchIndex
+from .models import EmployerSearchIndex, PersonSearchIndex
 
 
 class SearchView(ListAPIView):
@@ -33,7 +32,7 @@ class SearchView(ListAPIView):
         return queryset.annotate(
             search=search_vector,
             rank=search_rank,
-        ).filter(search=search_query)
+        ).filter(Q(search=search_query) | Q(search_name__trigram_similar=query))
     
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
@@ -72,9 +71,9 @@ class EmployerSearchView(SearchView):
     
 
 class PersonSearchView(SearchView):
-    model = Person
+    model = PersonSearchIndex
     serializer_class = PersonSerializer
-    search_fields = ("last_name", "first_name",)
+    search_fields = ("search_name", "search_title",)
     
     def filter_queryset(self, queryset):        
         query = self.request.GET.get("name")
@@ -88,7 +87,7 @@ class PersonSearchView(SearchView):
 
         if employer:
             queryset = queryset.filter(
-                Q(jobs__position__employer__slug=employer) | Q(jobs__position__employer__parent__slug=employer)
+                Q(employer_id=employer) | Q(employer_id=employer)
             )
 
-        return queryset.order_by("last_name")
+        return queryset#.order_by("instance__last_name")

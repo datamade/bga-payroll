@@ -1,13 +1,13 @@
 INSERT INTO search_employersearchindex (
     instance_id,
-    search_name,
     reporting_year,
+    search_name,
     headcount,
     expenditure
 )
 SELECT
     COALESCE(employer.parent_id, employer.id) AS instance_id,
-    COALESCE(parent_employer.name, employer.name) AS s_search_name,
+    COALESCE(parent_employer.name, employer.name) AS search_name,
     s_file.reporting_year AS reporting_year,
     COUNT(job_id) AS headcount,
     SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS expenditure
@@ -21,19 +21,20 @@ LEFT JOIN payroll_employer parent_employer ON employer.parent_id = parent_employ
 GROUP BY instance_id, s_search_name, reporting_year
 ON CONFLICT (instance_id, reporting_year) DO UPDATE
 SET
+    search_name = EXCLUDED.search_name,
     headcount = EXCLUDED.headcount,
     expenditure = EXCLUDED.expenditure;
 
 INSERT INTO search_employersearchindex (
     instance_id,
-    search_name,
     reporting_year,
+    search_name,
     headcount,
     expenditure
 )
 SELECT
     employer.id AS instance_id,
-    parent_employer.name || ' ' || employer.name AS s_search_name,
+    parent_employer.name || ' ' || employer.name AS search_name,
     s_file.reporting_year AS reporting_year,
     COUNT(job_id) AS headcount,
     SUM(COALESCE(salary.amount, 0) + COALESCE(salary.extra_pay, 0)) AS expenditure
@@ -47,5 +48,6 @@ JOIN payroll_employer parent_employer ON employer.parent_id = parent_employer.id
 GROUP BY instance_id, s_search_name, reporting_year
 ON CONFLICT (instance_id, reporting_year) DO UPDATE
 SET
+    search_name = EXCLUDED.search_name,
     headcount = EXCLUDED.headcount,
     expenditure = EXCLUDED.expenditure;

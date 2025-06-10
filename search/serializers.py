@@ -20,14 +20,15 @@ class EmployerSerializer(serializers.ModelSerializer):
 
 
 class PersonSerializer(serializers.ModelSerializer):
-    employer = serializers.CharField(source="most_recent_job.position.employer", read_only=True)
-    title = serializers.CharField(source="most_recent_job.position.title", read_only=True)
-    salary = serializers.CharField(source="most_recent_job.salaries.last.amount", read_only=True)
+    name = serializers.CharField(source="search_name", read_only=True)
+    employer = serializers.SlugRelatedField(read_only=True, slug_field="slug")
+    title = serializers.CharField(source="search_title", read_only=True)
+    total_pay = serializers.CharField(read_only=True)
     endpoint = serializers.SerializerMethodField()
     
     class Meta:
-        model = Person
-        fields = ("slug", "first_name", "last_name", "employer", "title", "salary", "endpoint")
+        model = PersonSearchIndex
+        fields = ("name", "employer", "title", "total_pay", "reporting_year", "endpoint")
         
     def get_endpoint(self, obj):
         return "person"
