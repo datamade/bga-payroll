@@ -380,13 +380,13 @@ class Command(BaseCommand):
 
         if isinstance(update_object, Employer):
             if update_object.is_department:
-                index_func = self._make_department_index
+                index_func = self.index_department
                 id_kwargs['type'] = 'department'
             else:
-                index_func = self._make_unit_index
+                index_func = self.index_unit
                 id_kwargs['type'] = 'unit'
         elif isinstance(update_object, Person):
-            index_func = self._make_person_index
+            index_func = self.index_person
             id_kwargs['type'] = 'person'
 
         index_id = '{type}.{id}*'.format(**id_kwargs)
@@ -403,7 +403,7 @@ class Command(BaseCommand):
         success_message = 'Added {0} documents for {1} to the index'.format(len(documents), update_object)
         self.stdout.write(self.style.SUCCESS(success_message))
 
-    def _make_unit_index(self, unit):
+    def index_unit(self, unit):
         name = unit.name
         taxonomy = str(unit.taxonomy) if unit.taxonomy else ''
 
@@ -433,7 +433,7 @@ class Command(BaseCommand):
                 }
                 yield document
 
-    def _make_department_index(self, department):
+    def index_department(self, department):
         name = str(department)
         of_department = Q(job__position__employer=department)
 
@@ -464,7 +464,7 @@ class Command(BaseCommand):
 
                 yield document
 
-    def _make_person_index(self, person):
+    def index_person(self, person):
         name = str(person)
 
         for year in self.reporting_years:
