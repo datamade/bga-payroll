@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Sum, Q, Count, Case, When, DecimalField
+from django.db.models import Sum, Q
 from django.db.models.functions import Coalesce
 from django.db import connection
 import pysolr
@@ -11,7 +11,7 @@ from payroll.models import Employer, Person, Salary
 
 
 class Command(BaseCommand):
-    help = 'Populate the Solr index'
+    help = "Populate the Solr index"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,90 +19,95 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--entity-types',
-            dest='entity_types',
-            help='Comma separated list of entity types to index',
-            default='units,departments,people'
+            "--entity-types",
+            dest="entity_types",
+            help="Comma separated list of entity types to index",
+            default="units,departments,people",
         )
         parser.add_argument(
-            '--recreate',
-            action='store_true',
-            dest='recreate',
+            "--recreate",
+            action="store_true",
+            dest="recreate",
             default=False,
-            help='Delete all existing documents before creating the search index'
+            help="Delete all existing documents before creating the search index",
         )
         parser.add_argument(
-            '--chunksize',
-            dest='chunksize',
+            "--chunksize",
+            dest="chunksize",
             default=10000,
-            help='Number of documents to add at once'
+            help="Number of documents to add at once",
         )
         parser.add_argument(
-            '--employer',
+            "--employer",
             default=None,
-            help='ID of specific Employer instance to reindex'
+            help="ID of specific Employer instance to reindex",
         )
         parser.add_argument(
-            '--person',
-            default=None,
-            help='ID of specific Person instance to reindex'
+            "--person", default=None, help="ID of specific Person instance to reindex"
         )
         parser.add_argument(
-            '--reporting_year',
+            "--reporting_year",
             type=int,
-            dest='reporting_year',
+            dest="reporting_year",
             default=None,
-            help='Specify a specific reporting year to index'
+            help="Specify a specific reporting year to index",
         )
         parser.add_argument(
-            '--s_file',
-            dest='s_file_id',
+            "--s_file",
+            dest="s_file_id",
             default=None,
-            help='Specify a specific standardized file to index'
+            help="Specify a specific standardized file to index",
         )
 
     def handle(self, *args, **options):
-        if options.get('reporting_year'):
-            self.reporting_years = [options['reporting_year']]
+        if options.get("reporting_year"):
+            self.reporting_years = [options["reporting_year"]]
         else:
-            self.reporting_years = list(StandardizedFile.objects.distinct('reporting_year')
-                                                                .values_list('reporting_year', flat=True))
+            self.reporting_years = list(
+                StandardizedFile.objects.distinct("reporting_year").values_list(
+                    "reporting_year", flat=True
+                )
+            )
 
-        self.stdout.write('Building index for reporting years: {}'.format(self.reporting_years))
+        self.stdout.write(
+            "Building index for reporting years: {}".format(self.reporting_years)
+        )
 
-        if options['employer']:
-            self.reindex_one('employer', options['employer'])
-        elif options['person']:
-            self.reindex_one('person', options['person'])
+        if options["employer"]:
+            self.reindex_one("employer", options["employer"])
+        elif options["person"]:
+            self.reindex_one("person", options["person"])
         else:
-            self.recreate = options['recreate']
-            self.chunksize = int(options['chunksize'])
+            self.recreate = options["recreate"]
+            self.chunksize = int(options["chunksize"])
 
-            entities = options['entity_types'].split(',')
+            entities = options["entity_types"].split(",")
 
             for entity in entities:
-                getattr(self, 'index_{}'.format(entity))()
+                getattr(self, "index_{}".format(entity))()
 
     def _make_search_string(self, initial_params):
-        search_fmt = '{initial_params} AND ({year_params})'
-        year_params = ' OR '.join('year:{}'.format(year) for year in self.reporting_years)
+        search_fmt = "{initial_params} AND ({year_params})"
+        year_params = " OR ".join(
+            "year:{}".format(year) for year in self.reporting_years
+        )
         return search_fmt.format(initial_params=initial_params, year_params=year_params)
 
     def index_units(self):
         if self.recreate:
-            message = 'Dropping units from {} from index'.format(
-                ', '.join(str(year) for year in self.reporting_years)
+            message = "Dropping units from {} from index".format(
+                ", ".join(str(year) for year in self.reporting_years)
             )
             self.stdout.write(message)
-            search_string = self._make_search_string('id:unit*')
+            search_string = self._make_search_string("id:unit*")
             self.searcher.delete(q=search_string)
-            self.stdout.write(self.style.SUCCESS('Units dropped from index'))
+            self.stdout.write(self.style.SUCCESS("Units dropped from index"))
 
-        self.stdout.write('Indexing units')
+        self.stdout.write("Indexing units")
 
         sql = """
         WITH unit_stats AS (
-            SELECT 
+            SELECT
                 e.id as employer_id,
                 e.name,
                 e.slug,
@@ -126,7 +131,7 @@ class Command(BaseCommand):
             GROUP BY e.id, e.name, e.slug, et.entity_type, ep.population, sf.reporting_year
             HAVING COUNT(s.id) > 0
         )
-        SELECT 
+        SELECT
             employer_id,
             name,
             slug,
@@ -134,7 +139,7 @@ class Command(BaseCommand):
             reporting_year,
             expenditure,
             headcount,
-            CASE 
+            CASE
                 WHEN population >= 1000000 THEN 'Large'
                 WHEN population >= 50000 THEN 'Medium'
                 WHEN population >= 10000 THEN 'Small'
@@ -149,58 +154,73 @@ class Command(BaseCommand):
 
         with connection.cursor() as cursor:
             cursor.execute(sql, [self.reporting_years])
-            
+
             for row in cursor:
-                employer_id, name, slug, taxonomy, year, expenditure, headcount, size_class = row
-                
+                (
+                    employer_id,
+                    name,
+                    slug,
+                    taxonomy,
+                    year,
+                    expenditure,
+                    headcount,
+                    size_class,
+                ) = row
+
                 if headcount and expenditure:  # Only index units with actual data
                     document = {
-                        'id': 'unit.{}.{}'.format(employer_id, year),
-                        'slug': slug,
-                        'name': name,
-                        'entity_type': 'Employer',
-                        'year': year,
-                        'taxonomy_s': taxonomy or '',
-                        'size_class_s': size_class or '',
-                        'expenditure_d': float(expenditure),
-                        'headcount_i': headcount,
-                        'text': name,
+                        "id": "unit.{}.{}".format(employer_id, year),
+                        "slug": slug,
+                        "name": name,
+                        "entity_type": "Employer",
+                        "year": year,
+                        "taxonomy_s": taxonomy or "",
+                        "size_class_s": size_class or "",
+                        "expenditure_d": float(expenditure),
+                        "headcount_i": headcount,
+                        "text": name,
                     }
-                    
+
                     documents.append(document)
-                    
+
                     if len(documents) >= self.chunksize:
                         self.searcher.add(documents)
                         document_count += len(documents)
                         documents = []
-                        self.stdout.write('Indexed {} unit documents...'.format(document_count))
+                        self.stdout.write(
+                            "Indexed {} unit documents...".format(document_count)
+                        )
 
         if documents:
             self.searcher.add(documents)
             document_count += len(documents)
 
-        self.stdout.write(self.style.SUCCESS('Added {} unit documents to the index'.format(document_count)))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Added {} unit documents to the index".format(document_count)
+            )
+        )
 
     def index_departments(self):
         if self.recreate:
-            message = 'Dropping departments from {} from index'.format(
-                ', '.join(str(year) for year in self.reporting_years)
+            message = "Dropping departments from {} from index".format(
+                ", ".join(str(year) for year in self.reporting_years)
             )
             self.stdout.write(message)
-            search_string = self._make_search_string('id:department*')
+            search_string = self._make_search_string("id:department*")
             self.searcher.delete(q=search_string)
-            self.stdout.write(self.style.SUCCESS('Departments dropped from index'))
+            self.stdout.write(self.style.SUCCESS("Departments dropped from index"))
 
-        self.stdout.write('Indexing departments')
+        self.stdout.write("Indexing departments")
 
         sql = """
         WITH dept_stats AS (
-            SELECT 
+            SELECT
                 e.id as employer_id,
-                CASE 
-                    WHEN parent.name ilike '%%' || e.name || '%%' 
-                    THEN e.name 
-                    ELSE parent.name || ' ' || e.name 
+                CASE
+                    WHEN parent.name ilike '%%' || e.name || '%%'
+                    THEN e.name
+                    ELSE parent.name || ' ' || e.name
                 END as name,
                 e.slug,
                 parent.slug as parent_slug,
@@ -221,7 +241,7 @@ class Command(BaseCommand):
             GROUP BY e.id, e.name, e.slug, parent.slug, parent.name, eu.name, sf.reporting_year
             HAVING COUNT(s.id) > 0
         )
-        SELECT 
+        SELECT
             employer_id,
             name,
             slug,
@@ -239,53 +259,68 @@ class Command(BaseCommand):
 
         with connection.cursor() as cursor:
             cursor.execute(sql, [self.reporting_years])
-            
+
             for row in cursor:
-                employer_id, name, slug, parent_slug, universe, year, expenditure, headcount = row
-                
+                (
+                    employer_id,
+                    name,
+                    slug,
+                    parent_slug,
+                    universe,
+                    year,
+                    expenditure,
+                    headcount,
+                ) = row
+
                 if headcount and expenditure:
                     display_name = str(name)
-                    
+
                     document = {
-                        'id': 'department.{}.{}'.format(employer_id, year),
-                        'slug': slug,
-                        'name': display_name,
-                        'entity_type': 'Employer',
-                        'year': year,
-                        'expenditure_d': float(expenditure),
-                        'headcount_i': headcount,
-                        'parent_s': parent_slug,
-                        'text': display_name,
+                        "id": "department.{}.{}".format(employer_id, year),
+                        "slug": slug,
+                        "name": display_name,
+                        "entity_type": "Employer",
+                        "year": year,
+                        "expenditure_d": float(expenditure),
+                        "headcount_i": headcount,
+                        "parent_s": parent_slug,
+                        "text": display_name,
                     }
-                    
+
                     if universe:
-                        document['universe_s'] = universe
-                    
+                        document["universe_s"] = universe
+
                     documents.append(document)
-                    
+
                     if len(documents) >= self.chunksize:
                         self.searcher.add(documents)
                         document_count += len(documents)
                         documents = []
-                        self.stdout.write('Indexed {} department documents...'.format(document_count))
+                        self.stdout.write(
+                            "Indexed {} department documents...".format(document_count)
+                        )
 
         if documents:
             self.searcher.add(documents)
             document_count += len(documents)
 
-        self.stdout.write(self.style.SUCCESS('Added {} department documents to the index'.format(document_count)))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Added {} department documents to the index".format(document_count)
+            )
+        )
 
     def index_people(self):
         if self.recreate:
-            message = 'Dropping people from {} from index'.format(
-                ', '.join(str(year) for year in self.reporting_years)
+            message = "Dropping people from {} from index".format(
+                ", ".join(str(year) for year in self.reporting_years)
             )
             self.stdout.write(message)
-            search_string = self._make_search_string('id:person*')
+            search_string = self._make_search_string("id:person*")
             self.searcher.delete(q=search_string)
-            self.stdout.write(self.style.SUCCESS('People dropped from index'))
+            self.stdout.write(self.style.SUCCESS("People dropped from index"))
 
-        self.stdout.write('Indexing people')
+        self.stdout.write("Indexing people")
 
         sql = """
         WITH person_data AS (
@@ -311,7 +346,7 @@ class Command(BaseCommand):
             WHERE sf.reporting_year = ANY(%s)
             ORDER BY p.id, sf.reporting_year, s.id DESC  -- Get most recent salary if multiple
         )
-        SELECT 
+        SELECT
             person_id,
             slug,
             first_name,
@@ -331,83 +366,108 @@ class Command(BaseCommand):
 
         with connection.cursor() as cursor:
             cursor.execute(sql, [self.reporting_years])
-            
+
             for row in cursor:
-                person_id, slug, first_name, last_name, year, title, employer_slug, parent_slug, employer_name, total_salary = row
-                
-                name = "{} {}".format(first_name or '', last_name or '').strip()
-                text = "{} {} {}".format(name, employer_name, title or '')
-                
+                (
+                    person_id,
+                    slug,
+                    first_name,
+                    last_name,
+                    year,
+                    title,
+                    employer_slug,
+                    parent_slug,
+                    employer_name,
+                    total_salary,
+                ) = row
+
+                name = "{} {}".format(first_name or "", last_name or "").strip()
+                text = "{} {} {}".format(name, employer_name, title or "")
+
                 # Build employer slug list
-                employer_slugs = [parent_slug, employer_slug] if parent_slug else [employer_slug]
+                employer_slugs = (
+                    [parent_slug, employer_slug] if parent_slug else [employer_slug]
+                )
                 employer_slugs = [s for s in employer_slugs if s]  # Remove None values
-                
+
                 document = {
-                    'id': 'person.{}.{}'.format(person_id, year),
-                    'slug': slug,
-                    'name': name,
-                    'entity_type': 'Person',
-                    'year': year,
-                    'title_s': title or '',
-                    'salary_d': float(total_salary),
-                    'employer_ss': employer_slugs,
-                    'text': text,
+                    "id": "person.{}.{}".format(person_id, year),
+                    "slug": slug,
+                    "name": name,
+                    "entity_type": "Person",
+                    "year": year,
+                    "title_s": title or "",
+                    "salary_d": float(total_salary),
+                    "employer_ss": employer_slugs,
+                    "text": text,
                 }
-                
+
                 documents.append(document)
-                
+
                 if len(documents) >= self.chunksize:
                     self.searcher.add(documents)
                     document_count += len(documents)
                     documents = []
-                    self.stdout.write('Indexed {} person documents...'.format(document_count))
+                    self.stdout.write(
+                        "Indexed {} person documents...".format(document_count)
+                    )
 
         if documents:
             self.searcher.add(documents)
             document_count += len(documents)
 
-        self.stdout.write(self.style.SUCCESS('Added {} person documents to the index'.format(document_count)))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Added {} person documents to the index".format(document_count)
+            )
+        )
 
     def reindex_one(self, entity_type, entity_id):
         """Keep the existing reindex_one method for individual updates"""
         entity_model_map = {
-            'employer': Employer,
-            'person': Person,
+            "employer": Employer,
+            "person": Person,
         }
 
         update_object = entity_model_map[entity_type].objects.get(id=entity_id)
-        id_kwargs = {'id': entity_id}
+        id_kwargs = {"id": entity_id}
 
         if isinstance(update_object, Employer):
             if update_object.is_department:
                 index_func = self.index_department
-                id_kwargs['type'] = 'department'
+                id_kwargs["type"] = "department"
             else:
                 index_func = self.index_unit
-                id_kwargs['type'] = 'unit'
+                id_kwargs["type"] = "unit"
         elif isinstance(update_object, Person):
             index_func = self.index_person
-            id_kwargs['type'] = 'person'
+            id_kwargs["type"] = "person"
 
-        index_id = '{type}.{id}*'.format(**id_kwargs)
+        index_id = "{type}.{id}*".format(**id_kwargs)
 
-        self.stdout.write('Dropping {} from index'.format(update_object))
+        self.stdout.write("Dropping {} from index".format(update_object))
         self.searcher.delete(q=index_id)
-        self.stdout.write(self.style.SUCCESS('{} dropped from index'.format(update_object)))
+        self.stdout.write(
+            self.style.SUCCESS("{} dropped from index".format(update_object))
+        )
 
         documents = []
         for document in index_func(update_object):
             documents.append(document)
 
         self.searcher.add(documents)
-        success_message = 'Added {0} documents for {1} to the index'.format(len(documents), update_object)
+        success_message = "Added {0} documents for {1} to the index".format(
+            len(documents), update_object
+        )
         self.stdout.write(self.style.SUCCESS(success_message))
 
     def index_unit(self, unit):
         name = unit.name
-        taxonomy = str(unit.taxonomy) if unit.taxonomy else ''
+        taxonomy = str(unit.taxonomy) if unit.taxonomy else ""
 
-        of_unit = Q(job__position__employer=unit) | Q(job__position__employer__parent=unit)
+        of_unit = Q(job__position__employer=unit) | Q(
+            job__position__employer__parent=unit
+        )
 
         for year in self.reporting_years:
             in_year = Q(vintage__standardized_file__reporting_year=year)
@@ -416,20 +476,21 @@ class Command(BaseCommand):
 
             if headcount:
                 expenditure = salaries.aggregate(
-                    expenditure=Sum(Coalesce('amount', 0)) + Sum(Coalesce('extra_pay', 0))
-                )['expenditure']
+                    expenditure=Sum(Coalesce("amount", 0))
+                    + Sum(Coalesce("extra_pay", 0))
+                )["expenditure"]
 
                 document = {
-                    'id': 'unit.{0}.{1}'.format(unit.id, year),
-                    'slug': unit.slug,
-                    'name': name,
-                    'entity_type': 'Employer',
-                    'year': year,
-                    'taxonomy_s': taxonomy,
-                    'size_class_s': unit.size_class or '',
-                    'expenditure_d': expenditure,
-                    'headcount_i': headcount,
-                    'text': name,
+                    "id": "unit.{0}.{1}".format(unit.id, year),
+                    "slug": unit.slug,
+                    "name": name,
+                    "entity_type": "Employer",
+                    "year": year,
+                    "taxonomy_s": taxonomy,
+                    "size_class_s": unit.size_class or "",
+                    "expenditure_d": expenditure,
+                    "headcount_i": headcount,
+                    "text": name,
                 }
                 yield document
 
@@ -444,23 +505,24 @@ class Command(BaseCommand):
 
             if headcount:
                 expenditure = salaries.aggregate(
-                    expenditure=Sum(Coalesce('amount', 0)) + Sum(Coalesce('extra_pay', 0))
-                )['expenditure']
+                    expenditure=Sum(Coalesce("amount", 0))
+                    + Sum(Coalesce("extra_pay", 0))
+                )["expenditure"]
 
                 document = {
-                    'id': 'department.{0}.{1}'.format(department.id, year),
-                    'slug': department.slug,
-                    'name': name,
-                    'entity_type': 'Employer',
-                    'year': year,
-                    'expenditure_d': expenditure,
-                    'headcount_i': headcount,
-                    'parent_s': department.parent.slug,
-                    'text': name,
+                    "id": "department.{0}.{1}".format(department.id, year),
+                    "slug": department.slug,
+                    "name": name,
+                    "entity_type": "Employer",
+                    "year": year,
+                    "expenditure_d": expenditure,
+                    "headcount_i": headcount,
+                    "parent_s": department.parent.slug,
+                    "text": name,
                 }
 
                 if department.universe:
-                    document['universe_s'] = str(department.universe)
+                    document["universe_s"] = str(department.universe)
 
                 yield document
 
@@ -469,14 +531,18 @@ class Command(BaseCommand):
 
         for year in self.reporting_years:
             try:
-                salary = Salary.objects.filter(
-                    vintage__standardized_file__reporting_year=year,
-                    job__person=person
-                ).select_related(
-                    'job__position',
-                    'job__position__employer',
-                    'job__position__employer__parent'
-                ).get()
+                salary = (
+                    Salary.objects.filter(
+                        vintage__standardized_file__reporting_year=year,
+                        job__person=person,
+                    )
+                    .select_related(
+                        "job__position",
+                        "job__position__employer",
+                        "job__position__employer__parent",
+                    )
+                    .get()
+                )
 
                 job = salary.job
             except Salary.DoesNotExist:
@@ -484,7 +550,7 @@ class Command(BaseCommand):
 
             position = job.position
             employer = position.employer
-            text = '{0} {1} {2}'.format(name, employer, position)
+            text = "{0} {1} {2}".format(name, employer, position)
 
             if employer.is_department:
                 employer_slug = [employer.parent.slug, employer.slug]
@@ -492,15 +558,15 @@ class Command(BaseCommand):
                 employer_slug = [employer.slug]
 
             document = {
-                'id': 'person.{0}.{1}'.format(person.id, year),
-                'slug': person.slug,
-                'name': name,
-                'entity_type': 'Person',
-                'year': year,
-                'title_s': job.position.title or '',
-                'salary_d': (salary.amount or 0) + (salary.extra_pay or 0),
-                'employer_ss': employer_slug,
-                'text': text,
+                "id": "person.{0}.{1}".format(person.id, year),
+                "slug": person.slug,
+                "name": name,
+                "entity_type": "Person",
+                "year": year,
+                "title_s": job.position.title or "",
+                "salary_d": (salary.amount or 0) + (salary.extra_pay or 0),
+                "employer_ss": employer_slug,
+                "text": text,
             }
 
             yield document
