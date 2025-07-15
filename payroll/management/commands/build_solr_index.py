@@ -100,7 +100,6 @@ class Command(BaseCommand):
 
         self.stdout.write('Indexing units')
 
-        # Use raw SQL for maximum efficiency
         sql = """
         WITH unit_stats AS (
             SELECT 
@@ -198,7 +197,11 @@ class Command(BaseCommand):
         WITH dept_stats AS (
             SELECT 
                 e.id as employer_id,
-                e.name,
+                CASE 
+                    WHEN parent.name ilike '%%' || e.name || '%%' 
+                    THEN e.name 
+                    ELSE parent.name || ' ' || e.name 
+                END as name,
                 e.slug,
                 parent.slug as parent_slug,
                 eu.name as universe,
@@ -215,7 +218,7 @@ class Command(BaseCommand):
             LEFT JOIN data_import_standardizedfile sf ON u.id = sf.upload_id
             WHERE e.parent_id IS NOT NULL
             AND sf.reporting_year = ANY(%s)
-            GROUP BY e.id, e.name, e.slug, parent.slug, eu.name, sf.reporting_year
+            GROUP BY e.id, e.name, e.slug, parent.slug, parent.name, eu.name, sf.reporting_year
             HAVING COUNT(s.id) > 0
         )
         SELECT 
@@ -241,8 +244,7 @@ class Command(BaseCommand):
                 employer_id, name, slug, parent_slug, universe, year, expenditure, headcount = row
                 
                 if headcount and expenditure:
-                    # Build full department name like the __str__ method
-                    display_name = str(name)  # This would need the actual logic from Department.__str__
+                    display_name = str(name)
                     
                     document = {
                         'id': 'department.{}.{}'.format(employer_id, year),
@@ -285,7 +287,6 @@ class Command(BaseCommand):
 
         self.stdout.write('Indexing people')
 
-        # Use raw SQL for people too - this is the most complex one
         sql = """
         WITH person_data AS (
             SELECT DISTINCT ON (p.id, sf.reporting_year)
@@ -402,9 +403,7 @@ class Command(BaseCommand):
         success_message = 'Added {0} documents for {1} to the index'.format(len(documents), update_object)
         self.stdout.write(self.style.SUCCESS(success_message))
 
-    # Keep the original methods for the reindex_one functionality
     def _make_unit_index(self, unit):
-        # Original implementation for single unit reindexing
         name = unit.name
         taxonomy = str(unit.taxonomy) if unit.taxonomy else ''
 
@@ -435,7 +434,6 @@ class Command(BaseCommand):
                 yield document
 
     def _make_department_index(self, department):
-        # Original implementation for single department reindexing
         name = str(department)
         of_department = Q(job__position__employer=department)
 
@@ -467,7 +465,6 @@ class Command(BaseCommand):
                 yield document
 
     def _make_person_index(self, person):
-        # Original implementation for single person reindexing
         name = str(person)
 
         for year in self.reporting_years:
