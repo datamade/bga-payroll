@@ -476,8 +476,7 @@ class Command(BaseCommand):
 
             if headcount:
                 expenditure = salaries.aggregate(
-                    expenditure=Sum(Coalesce("amount", 0))
-                    + Sum(Coalesce("extra_pay", 0))
+                    expenditure=Sum(Coalesce("amount", 0)) + Sum(Coalesce("extra_pay", 0))
                 )["expenditure"]
 
                 document = {
@@ -505,8 +504,7 @@ class Command(BaseCommand):
 
             if headcount:
                 expenditure = salaries.aggregate(
-                    expenditure=Sum(Coalesce("amount", 0))
-                    + Sum(Coalesce("extra_pay", 0))
+                    expenditure=Sum(Coalesce("amount", 0)) + Sum(Coalesce("extra_pay", 0))
                 )["expenditure"]
 
                 document = {
