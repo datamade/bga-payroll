@@ -22,7 +22,7 @@ cd bga-payroll
 Next, copy `bga_database/local_settings.py.example` from `bga_database/local-settings.py`.
 
 ```bash
-cp bga_database/local-settings.example.py bga_database/local-settings.py
+cp bga_database/local_settings.py.example bga_database/local_settings.py
 ```
 
 Finally, build and run the applicaton.
